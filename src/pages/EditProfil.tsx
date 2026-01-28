@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { Camera, Trash2 } from 'lucide-react';
 import Card from '../components/ui/Card';
+import { useAuth } from '../context/AuthContext';
 
 const EditProfil: React.FC = () => {
+    const { user } = useAuth();
+
     const [profileData, setProfileData] = useState({
-        namaLengkap: 'Amelia',
+        namaLengkap: user.name,
         nik: '1234567890123456',
         noTelepon: '081234567890',
-        jenisKelamin: 'Perempuan'
+        jenisKelamin: user.name === 'Amelia' ? 'Perempuan' : 'Laki-Laki'
     });
 
     const [passwordData, setPasswordData] = useState({
@@ -16,9 +19,7 @@ const EditProfil: React.FC = () => {
         konfirmasiPassword: ''
     });
 
-    const [avatarPreview, setAvatarPreview] = useState<string>(
-        'https://ui-avatars.com/api/?name=Amelia&background=10B981&color=fff'
-    );
+    const [avatarPreview, setAvatarPreview] = useState<string>(user.avatar);
 
     const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -48,7 +49,7 @@ const EditProfil: React.FC = () => {
     };
 
     const handleDeleteAvatar = () => {
-        setAvatarPreview('https://ui-avatars.com/api/?name=User&background=CCCCCC&color=fff');
+        setAvatarPreview(user.avatar);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
