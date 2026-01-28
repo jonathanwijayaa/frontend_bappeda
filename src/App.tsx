@@ -9,6 +9,7 @@ import SuratKeputusan from './pages/SuratKeputusan';
 import LogAktifitas from './pages/LogAktifitas';
 import Statistik from './pages/Statistik';
 import SaranHotline from './pages/SaranHotline';
+import EditProfil from './pages/EditProfil';
 
 function App() {
     return (
@@ -25,6 +26,7 @@ function App() {
                         <Route path="/log-aktifitas" element={<LogAktifitas />} />
                         <Route path="/statistik" element={<Statistik />} />
                         <Route path="/saran-hotline" element={<SaranHotline />} />
+                        <Route path="/edit-profil" element={<EditProfil />} />
                     </Routes>
                 </Layout>
             </Router>

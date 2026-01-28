@@ -25,6 +25,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             '/log-aktifitas': 'Log / Aktifitas',
             '/statistik': 'Statistik',
             '/saran-hotline': 'Saran/Hotline',
+            '/edit-profil': 'Edit Profil',
         };
         return titles[location.pathname] || 'Dashboard';
     };
