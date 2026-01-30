@@ -8,6 +8,7 @@ interface ModalProps {
     subtitle?: string;
     children: ReactNode;
     maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+    showCloseButton?: boolean;
 }
 
 const Modal: React.FC<ModalProps> = ({
@@ -16,12 +17,13 @@ const Modal: React.FC<ModalProps> = ({
     title,
     subtitle,
     children,
-    maxWidth = 'lg'
+    maxWidth = 'lg',
+    showCloseButton = true
 }) => {
     // Close modal on ESC key press
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
+            if (e.key === 'Escape' && showCloseButton) {
                 onClose();
             }
         };
@@ -36,7 +38,7 @@ const Modal: React.FC<ModalProps> = ({
             document.removeEventListener('keydown', handleEscape);
             document.body.style.overflow = 'unset';
         };
-    }, [isOpen, onClose]);
+    }, [isOpen, onClose, showCloseButton]);
 
     if (!isOpen) return null;
 
@@ -53,7 +55,7 @@ const Modal: React.FC<ModalProps> = ({
             {/* Backdrop */}
             <div
                 className="absolute inset-0 bg-black bg-opacity-50"
-                onClick={onClose}
+                onClick={showCloseButton ? onClose : undefined}
             />
 
             {/* Modal Content */}
@@ -67,12 +69,14 @@ const Modal: React.FC<ModalProps> = ({
                                 <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
                             )}
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="text-gray-400 hover:text-gray-600 transition-colors p-1"
-                        >
-                            <X size={24} />
-                        </button>
+                        {showCloseButton && (
+                            <button
+                                onClick={onClose}
+                                className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                            >
+                                <X size={24} />
+                            </button>
+                        )}
                     </div>
                 </div>
 
