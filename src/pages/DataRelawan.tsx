@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, Upload } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Plus, Upload, ChevronLeft, ChevronRight } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
@@ -12,6 +12,11 @@ import { mockPengajuanData, mockRelawanData } from '../data/relawan.data';
 const DataRelawan: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
+    const [selectedRelawan, setSelectedRelawan] = useState<RelawanData | null>(null);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const itemsPerPage = 5;
+
     const [formData, setFormData] = useState({
         namaRelawan: '',
         nik: '',
@@ -25,7 +30,23 @@ const DataRelawan: React.FC = () => {
     });
 
     const pengajuanData: PengajuanData[] = mockPengajuanData;
-    const relawanData: RelawanData[] = mockRelawanData;
+
+    // Pagination logic for relawan data
+    const filteredRelawanData = useMemo(() => {
+        return mockRelawanData.filter(relawan =>
+            relawan.namaLengkap.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            relawan.nik.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [searchTerm]);
+
+    const totalPages = Math.ceil(filteredRelawanData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentRelawanData = filteredRelawanData.slice(startIndex, endIndex);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
 
     const pengajuanColumns = [
         { header: 'NIK', accessor: 'nik' as keyof PengajuanData },
@@ -49,12 +70,17 @@ const DataRelawan: React.FC = () => {
         { header: 'NO. TELEPON', accessor: 'noTelepon' as keyof RelawanData },
     ];
 
+    const handleDetailClick = (relawan: RelawanData) => {
+        setSelectedRelawan(relawan);
+        setIsDetailModalOpen(true);
+    };
+
     const pengajuanActions = (row: PengajuanData) => (
         <Button variant="secondary" size="sm">Review</Button>
     );
 
     const relawanActions = (row: RelawanData) => (
-        <Button variant="secondary" size="sm">Detail</Button>
+        <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
     );
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,7 +103,6 @@ const DataRelawan: React.FC = () => {
         e.preventDefault();
         console.log('Form data:', formData);
         setIsModalOpen(false);
-        // Reset form
         setFormData({
             namaRelawan: '',
             nik: '',
@@ -134,7 +159,47 @@ const DataRelawan: React.FC = () => {
 
             {/* Daftar Relawan */}
             <Card title="Daftar Relawan">
-                <Table columns={relawanColumns} data={relawanData} actions={relawanActions} />
+                <Table columns={relawanColumns} data={currentRelawanData} actions={relawanActions} minRows={5} />
+
+                {/* Pagination */}
+                <div className="mt-4 flex justify-between items-center">
+                    <div className="text-sm text-gray-500">
+                        Menampilkan {startIndex + 1}-{Math.min(endIndex, filteredRelawanData.length)} dari {filteredRelawanData.length} Relawan
+                    </div>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ChevronLeft size={16} />
+                            Previous
+                        </Button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <Button
+                                key={page}
+                                variant={currentPage === page ? "primary" : "outline"}
+                                size="sm"
+                                onClick={() => handlePageChange(page)}
+                                className="min-w-[40px]"
+                            >
+                                {page}
+                            </Button>
+                        ))}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Next
+                            <ChevronRight size={16} />
+                        </Button>
+                    </div>
+                </div>
             </Card>
 
             {/* Add Relawan Modal */}
@@ -333,6 +398,190 @@ const DataRelawan: React.FC = () => {
                         </Button>
                     </div>
                 </form>
+            </Modal>
+
+            {/* Detail Relawan Modal */}
+            <Modal
+                isOpen={isDetailModalOpen}
+                onClose={() => setIsDetailModalOpen(false)}
+                title="Detail Relawan"
+                subtitle="Halaman untuk melihat detail Relawan"
+                maxWidth="2xl"
+            >
+                {selectedRelawan && (
+                    <div className="space-y-6">
+                        {/* Nama Relawan */}
+                        <div className="grid grid-cols-4 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">Nama Relawan</label>
+                            <input
+                                type="text"
+                                value={selectedRelawan.namaLengkap}
+                                placeholder="Nama Relawan"
+                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
+                                disabled
+                            />
+                        </div>
+
+                        {/* NIK */}
+                        <div className="grid grid-cols-4 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">NIK</label>
+                            <input
+                                type="text"
+                                value={selectedRelawan.nik}
+                                placeholder="NIK Relawan"
+                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
+                                disabled
+                            />
+                        </div>
+
+                        {/* Jenis Kelamin */}
+                        <div className="grid grid-cols-4 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">Jenis Kelamin</label>
+                            <div className="col-span-3 flex gap-6">
+                                <label className="flex items-center gap-2">
+                                    <input
+                                        type="radio"
+                                        checked={selectedRelawan.jenisKelamin === 'Laki-Laki'}
+                                        className="w-4 h-4 text-blue-500"
+                                        disabled
+                                    />
+                                    <span className="text-gray-700">Laki-Laki</span>
+                                </label>
+                                <label className="flex items-center gap-2">
+                                    <input
+                                        type="radio"
+                                        checked={selectedRelawan.jenisKelamin === 'Perempuan'}
+                                        className="w-4 h-4 text-blue-500"
+                                        disabled
+                                    />
+                                    <span className="text-gray-700">Perempuan</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {/* Alamat */}
+                        <div className="grid grid-cols-4 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">Alamat</label>
+                            <input
+                                type="text"
+                                value="Jl. Contoh Alamat No. 123"
+                                placeholder="Alamat Relawan"
+                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
+                                disabled
+                            />
+                        </div>
+
+                        {/* No. HP */}
+                        <div className="grid grid-cols-4 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">No. HP</label>
+                            <input
+                                type="text"
+                                value={selectedRelawan.noTelepon}
+                                placeholder="No HP Relawan"
+                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
+                                disabled
+                            />
+                        </div>
+
+                        {/* Daftar Penugasan Section */}
+                        <div className="border-t border-gray-200 pt-4">
+                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Daftar Penugasan:</h3>
+
+                            {/* OPD */}
+                            <div className="grid grid-cols-4 gap-4 items-center mb-4">
+                                <label className="text-lg font-medium text-gray-900 pl-8">OPD</label>
+                                <Select
+                                    name="opd"
+                                    value=""
+                                    onChange={() => { }}
+                                    placeholder="Pilih OPD"
+                                    className="col-span-3"
+                                    options={[
+                                        { value: 'opd1', label: 'OPD 1' },
+                                        { value: 'opd2', label: 'OPD 2' },
+                                    ]}
+                                    disabled
+                                />
+                            </div>
+
+                            {/* Komunitas */}
+                            <div className="grid grid-cols-4 gap-4 items-center mb-4">
+                                <label className="text-lg font-medium text-gray-900 pl-8">Komunitas</label>
+                                <Select
+                                    name="komunitas"
+                                    value=""
+                                    onChange={() => { }}
+                                    placeholder="Pilih Komunitas"
+                                    className="col-span-3"
+                                    options={[
+                                        { value: 'kader1', label: 'Kader 1' },
+                                        { value: 'kader2', label: 'Kader 2' },
+                                    ]}
+                                    disabled
+                                />
+                            </div>
+
+                            {/* Peran */}
+                            <div className="grid grid-cols-4 gap-4 items-center mb-4">
+                                <label className="text-lg font-medium text-gray-900 pl-8">Peran</label>
+                                <Select
+                                    name="peran"
+                                    value=""
+                                    onChange={() => { }}
+                                    placeholder="Pilih Peran"
+                                    className="col-span-3"
+                                    options={[
+                                        { value: 'koordinator', label: 'Koordinator' },
+                                        { value: 'anggota', label: 'Anggota' },
+                                    ]}
+                                    disabled
+                                />
+                            </div>
+
+                            {/* Status Keaktifan */}
+                            <div className="grid grid-cols-4 gap-4 items-center">
+                                <label className="text-lg font-medium text-gray-900 pl-8">Status Keaktifan</label>
+                                <div className="col-span-3 flex gap-6">
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            checked={true}
+                                            className="w-4 h-4 text-blue-500"
+                                            disabled
+                                        />
+                                        <span className="text-gray-700">Aktif</span>
+                                    </label>
+                                    <label className="flex items-center gap-2">
+                                        <input
+                                            type="radio"
+                                            checked={false}
+                                            className="w-4 h-4 text-blue-500"
+                                            disabled
+                                        />
+                                        <span className="text-gray-700">Nonaktif</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* Tambah Data Penugasan Button */}
+                            <div className="flex justify-center mt-4">
+                                <Button type="button" variant="primary" size="sm">
+                                    Tambah Data Penugasan
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Action Button */}
+                        <div className="flex justify-end pt-6">
+                            <Button
+                                type="button"
+                                className="bg-green-600 hover:bg-green-700 text-white px-12"
+                            >
+                                Simpan
+                            </Button>
+                        </div>
+                    </div>
+                )}
             </Modal>
         </div>
     );

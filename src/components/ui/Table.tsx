@@ -10,9 +10,13 @@ interface TableProps<T> {
     columns: Column<T>[];
     data: T[];
     actions?: (row: T) => ReactNode;
+    minRows?: number;
 }
 
-function Table<T extends Record<string, any>>({ columns, data, actions }: TableProps<T>) {
+function Table<T extends Record<string, any>>({ columns, data, actions, minRows = 0 }: TableProps<T>) {
+    // Calculate how many empty rows we need to add
+    const emptyRowsCount = Math.max(0, minRows - data.length);
+
     return (
         <div className="overflow-x-auto">
             <table className="w-full">
@@ -46,6 +50,21 @@ function Table<T extends Record<string, any>>({ columns, data, actions }: TableP
                                     <div className="flex gap-2">
                                         {actions(row)}
                                     </div>
+                                </td>
+                            )}
+                        </tr>
+                    ))}
+                    {/* Empty placeholder rows to maintain consistent height */}
+                    {Array.from({ length: emptyRowsCount }).map((_, index) => (
+                        <tr key={`empty-${index}`} className="h-[57px]">
+                            {columns.map((_, colIndex) => (
+                                <td key={colIndex} className="px-6 py-4 text-sm text-gray-900">
+                                    &nbsp;
+                                </td>
+                            ))}
+                            {actions && (
+                                <td className="px-6 py-4 text-sm">
+                                    &nbsp;
                                 </td>
                             )}
                         </tr>

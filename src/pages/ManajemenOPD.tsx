@@ -144,7 +144,7 @@ const ManajemenOPD: React.FC = () => {
                     </Button>
                 </div>
 
-                <Table columns={columns} data={currentData} actions={actions} />
+                <Table columns={columns} data={currentData} actions={actions} minRows={5} />
 
                 {/* Pagination */}
                 <div className="mt-4 flex justify-between items-center">
