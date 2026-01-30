@@ -5,15 +5,8 @@ import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
 import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
-
-interface KaderData {
-    id: number;
-    namaKader: string;
-    kode: string;
-    status: string;
-    pic: string;
-    kontak: string;
-}
+import { KaderData } from '../types/kader.types';
+import { mockKaderData } from '../data/kader.data';
 
 const DaftarKader: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -25,16 +18,7 @@ const DaftarKader: React.FC = () => {
         kontak: ''
     });
 
-    const kaderData: KaderData[] = [
-        {
-            id: 1,
-            namaKader: 'Kader 1',
-            kode: 'B001',
-            status: 'Aktif',
-            pic: 'Jonathan Wijaya',
-            kontak: '0812-3456-7890'
-        },
-    ];
+    const kaderData: KaderData[] = mockKaderData;
 
     const columns = [
         { header: 'NAMA KADER', accessor: 'namaKader' as keyof KaderData },
@@ -111,7 +95,7 @@ const DaftarKader: React.FC = () => {
                         Export
                     </Button>
                 </div>
-                
+
                 <Table columns={columns} data={kaderData} actions={actions} />
                 <div className="mt-4 text-sm text-gray-500">
                     Menampilkan 1-8 dari 8 Kader

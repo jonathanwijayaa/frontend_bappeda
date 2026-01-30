@@ -5,16 +5,8 @@ import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
 import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
-
-interface OPDData {
-    id: number;
-    namaOpd: string;
-    kode: string;
-    status: string;
-    alamat: string;
-    pic: string;
-    kontak: string;
-}
+import { OPDData } from '../types/opd.types';
+import { mockOPDData } from '../data/opd.data';
 
 const ManajemenOPD: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -27,17 +19,7 @@ const ManajemenOPD: React.FC = () => {
         kontak: ''
     });
 
-    const opdData: OPDData[] = [
-        {
-            id: 1,
-            namaOpd: 'OPD 1',
-            kode: 'A001',
-            status: 'Aktif',
-            alamat: 'Jl. Sagan',
-            pic: 'Jonathan Wijaya',
-            kontak: '0812-3456-7890'
-        },
-    ];
+    const opdData: OPDData[] = mockOPDData;
 
     const columns = [
         { header: 'NAMA OPD', accessor: 'namaOpd' as keyof OPDData },

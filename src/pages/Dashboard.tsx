@@ -2,35 +2,17 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import Card from '../components/ui/Card';
 import BarChart from '../components/charts/BarChart';
-
-interface ChartDataItem {
-    name: string;
-    [key: string]: string | number;
-}
+import { ChartDataItem } from '../types/dashboard.types';
+import { mockOPDChartData, mockKaderChartData } from '../data/dashboard.data';
 
 const Dashboard: React.FC = () => {
     const { isSuperAdmin } = useAuth();
 
     // Sample data for Super Admin
-    const opdData: ChartDataItem[] = [
-        { name: 'OPD 1', jumlah: 450 },
-        { name: 'OPD 2', jumlah: 350 },
-        { name: 'OPD 3', jumlah: 320 },
-        { name: 'OPD 4', jumlah: 480 },
-        { name: 'OPD 5', jumlah: 390 },
-        { name: 'OPD 6', jumlah: 430 },
-        { name: 'OPD 7', jumlah: 360 },
-        { name: 'OPD 8', jumlah: 330 },
-    ];
+    const opdData: ChartDataItem[] = mockOPDChartData;
 
     // Sample data for OPD
-    const kaderData: ChartDataItem[] = [
-        { name: 'Kader 1', jumlah: 30 },
-        { name: 'Kader 2', jumlah: 40 },
-        { name: 'Kader 3', jumlah: 47 },
-        { name: 'Kader 4', jumlah: 43 },
-        { name: 'Kader 5', jumlah: 48 },
-    ];
+    const kaderData: ChartDataItem[] = mockKaderChartData;
 
     return (
         <div className="space-y-6">

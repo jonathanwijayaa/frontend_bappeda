@@ -3,13 +3,8 @@ import Card from '../components/ui/Card';
 import { SearchInput } from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
-
-interface LogData {
-    waktu: string;
-    pengguna: string;
-    aktifitas: string;
-    objek: string;
-}
+import { LogData } from '../types/log.types';
+import { mockLogData } from '../data/log.data';
 
 const LogAktifitas: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -17,62 +12,7 @@ const LogAktifitas: React.FC = () => {
     const [filterJenis, setFilterJenis] = useState<string>('');
     const [filterPengguna, setFilterPengguna] = useState<string>('');
 
-    const logData: LogData[] = [
-        {
-            waktu: '04-12-2025 10:15',
-            pengguna: 'Amelia (SA)',
-            aktifitas: 'Setujui perubahan',
-            objek: 'Relawan: Jonathan Wijaya (NIK 123456...)'
-        },
-        {
-            waktu: '04-12-2025 9:40',
-            pengguna: 'OPD Dinkes',
-            aktifitas: 'Ubah Data Relawan',
-            objek: 'Relawan: Siti Aminah (NIK 987654...)'
-        },
-        {
-            waktu: '04-12-2025 9:15',
-            pengguna: 'Amelia (SA)',
-            aktifitas: 'Tolak pengajuan perubahan data',
-            objek: 'Relawan: Budi Santoso (NIK 111222...)'
-        },
-        {
-            waktu: '04-12-2025 8:10',
-            pengguna: 'Relawan: Jonathan',
-            aktifitas: 'Ajukan perubahan data',
-            objek: 'Relawan: Jonathan Wijaya (NIK 123456...)'
-        },
-        {
-            waktu: '04-12-2025 8:10',
-            pengguna: 'Relawan: Jonathan',
-            aktifitas: 'Ajukan perubahan data',
-            objek: 'Relawan: Jonathan Wijaya (NIK 123456...)'
-        },
-        {
-            waktu: '04-12-2025 8:10',
-            pengguna: 'Relawan: Jonathan',
-            aktifitas: 'Ajukan perubahan data',
-            objek: 'Relawan: Jonathan Wijaya (NIK 123456...)'
-        },
-        {
-            waktu: '04-12-2025 8:10',
-            pengguna: 'Relawan: Jonathan',
-            aktifitas: 'Ajukan perubahan data',
-            objek: 'Relawan: Jonathan Wijaya (NIK 123456...)'
-        },
-        {
-            waktu: '04-12-2025 8:10',
-            pengguna: 'Relawan: Jonathan',
-            aktifitas: 'Ajukan perubahan data',
-            objek: 'Relawan: Jonathan Wijaya (NIK 123456...)'
-        },
-        {
-            waktu: '04-12-2025 8:10',
-            pengguna: 'Relawan: Jonathan',
-            aktifitas: 'Ajukan perubahan data',
-            objek: 'Relawan: Jonathan Wijaya (NIK 123456...)'
-        },
-    ];
+    const logData: LogData[] = mockLogData;
 
     const columns = [
         { header: 'WAKTU', accessor: 'waktu' as keyof LogData },

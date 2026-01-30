@@ -6,20 +6,8 @@ import { SearchInput } from '../components/ui/Input';
 import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
 import Select from '../components/ui/Select';
-
-interface PengajuanData {
-    nik: string;
-    namaLengkap: string;
-    tanggalPengajuan: string;
-    status: string;
-}
-
-interface RelawanData {
-    nik: string;
-    namaLengkap: string;
-    jenisKelamin: string;
-    noTelepon: string;
-}
+import { PengajuanData, RelawanData } from '../types/relawan.types';
+import { mockPengajuanData, mockRelawanData } from '../data/relawan.data';
 
 const DataRelawan: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -36,53 +24,8 @@ const DataRelawan: React.FC = () => {
         statusKeaktifan: 'Aktif'
     });
 
-    const pengajuanData: PengajuanData[] = [
-        {
-            nik: '1234567890123456',
-            namaLengkap: 'Jonathan Wijaya',
-            tanggalPengajuan: '24-11-2025',
-            status: 'Menunggu',
-        },
-    ];
-
-    const relawanData: RelawanData[] = [
-        {
-            nik: '1234567890123456',
-            namaLengkap: 'Jonathan Wijaya',
-            jenisKelamin: 'Laki-Laki',
-            noTelepon: '081234567890',
-        },
-        {
-            nik: '1234567890123456',
-            namaLengkap: 'Jonathan Wijaya',
-            jenisKelamin: 'Laki-Laki',
-            noTelepon: '081234567890',
-        },
-        {
-            nik: '1234567890123456',
-            namaLengkap: 'Jonathan Wijaya',
-            jenisKelamin: 'Laki-Laki',
-            noTelepon: '081234567890',
-        },
-        {
-            nik: '1234567890123456',
-            namaLengkap: 'Jonathan Wijaya',
-            jenisKelamin: 'Laki-Laki',
-            noTelepon: '081234567890',
-        },
-        {
-            nik: '1234567890123456',
-            namaLengkap: 'Jonathan Wijaya',
-            jenisKelamin: 'Laki-Laki',
-            noTelepon: '081234567890',
-        },
-        {
-            nik: '1234567890123456',
-            namaLengkap: 'Jonathan Wijaya',
-            jenisKelamin: 'Laki-Laki',
-            noTelepon: '081234567890',
-        },
-    ];
+    const pengajuanData: PengajuanData[] = mockPengajuanData;
+    const relawanData: RelawanData[] = mockRelawanData;
 
     const pengajuanColumns = [
         { header: 'NIK', accessor: 'nik' as keyof PengajuanData },
