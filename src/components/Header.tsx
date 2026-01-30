@@ -9,7 +9,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ title, caption }) => {
-    const { user } = useAuth();
+    const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -38,9 +38,8 @@ const Header: React.FC<HeaderProps> = ({ title, caption }) => {
 
     const handleLogout = () => {
         setIsDropdownOpen(false);
-        // In production, this would clear auth tokens and redirect to login
-        console.log('Logout clicked');
-        alert('Logout functionality will be implemented');
+        logout();
+        navigate('/login');
     };
 
     return (
@@ -52,16 +51,16 @@ const Header: React.FC<HeaderProps> = ({ title, caption }) => {
                 </div>
                 <div className="flex items-center gap-3 relative" ref={dropdownRef}>
                     <div className="text-right">
-                        <p className="text-sm font-medium text-gray-800">{user.name}</p>
-                        <p className="text-xs text-gray-500">{user.roleDisplay}</p>
+                        <p className="text-sm font-medium text-gray-800">{user?.name}</p>
+                        <p className="text-xs text-gray-500">{user?.roleDisplay}</p>
                     </div>
                     <button
                         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                         className="focus:outline-none"
                     >
                         <img
-                            src={user.avatar}
-                            alt={user.name}
+                            src={user?.avatar}
+                            alt={user?.name}
                             className="w-10 h-10 rounded-full cursor-pointer hover:ring-2 hover:ring-emerald-500 transition-all"
                         />
                     </button>
@@ -87,11 +86,6 @@ const Header: React.FC<HeaderProps> = ({ title, caption }) => {
                     )}
                 </div>
             </div>
-            {title === 'Dashboard' && (
-                <div className="mt-4 text-right">
-                    <p className="text-sm italic text-gray-600">Data Ditampilkan secara real-time</p>
-                </div>
-            )}
         </div>
     );
 };

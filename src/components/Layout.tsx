@@ -2,7 +2,6 @@ import React, { ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import Header from './Header';
-import UserSwitcher from './UserSwitcher';
 
 interface LayoutProps {
     children: ReactNode;
@@ -39,7 +38,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                     {children}
                 </main>
             </div>
-            <UserSwitcher />
         </div>
     );
 };

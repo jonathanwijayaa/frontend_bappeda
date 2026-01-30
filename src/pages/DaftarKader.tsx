@@ -86,10 +86,16 @@ const DaftarKader: React.FC = () => {
         <div className="space-y-6">
             {/* Header Actions */}
             <div className="flex justify-between items-center">
-                <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-                    <Plus size={18} />
-                    Ajukan Kader Baru
-                </Button>
+                <div className="flex gap-3">
+                    <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+                        <Plus size={18} />
+                        Ajukan Kader Baru
+                    </Button>
+                    <Button variant="outline">
+                        <Upload size={18} />
+                        Unggah dari Excel
+                    </Button>
+                </div>
                 <SearchInput
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -105,6 +111,7 @@ const DaftarKader: React.FC = () => {
                         Export
                     </Button>
                 </div>
+                
                 <Table columns={columns} data={kaderData} actions={actions} />
                 <div className="mt-4 text-sm text-gray-500">
                     Menampilkan 1-8 dari 8 Kader
@@ -117,15 +124,8 @@ const DaftarKader: React.FC = () => {
                 onClose={handleCancel}
                 title="Tambah Data"
                 subtitle="Halaman untuk menambah Kader"
-                maxWidth="lg"
+                maxWidth="2xl"
             >
-                <div className="flex justify-end mb-4">
-                    <Button variant="primary" size="sm">
-                        <Upload size={16} />
-                        Import dari Excel
-                    </Button>
-                </div>
-
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Nama Kader */}
                     <div className="grid grid-cols-3 gap-4 items-center">

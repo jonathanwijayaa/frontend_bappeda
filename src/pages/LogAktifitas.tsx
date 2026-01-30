@@ -109,11 +109,11 @@ const LogAktifitas: React.FC = () => {
                 <Select
                     value={filterPengguna}
                     onChange={(e: ChangeEvent<HTMLSelectElement>) => setFilterPengguna(e.target.value)}
-                    placeholder="Pengguna"
+                    placeholder="Semua"
                     options={[
-                        { value: 'all', label: 'Semua' },
                         { value: 'admin', label: 'Admin' },
                         { value: 'opd', label: 'OPD' },
+                        { value: 'relawan', label: 'Relawan' },
                     ]}
                 />
             </div>

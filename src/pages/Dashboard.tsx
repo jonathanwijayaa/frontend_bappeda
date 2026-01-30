@@ -34,6 +34,11 @@ const Dashboard: React.FC = () => {
 
     return (
         <div className="space-y-6">
+            {/* Real-time Data Notice */}
+            <div className="text-right">
+                <p className="text-sm italic text-gray-600">Data Ditampilkan secara real-time</p>
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Chart Section */}
                 <div className="lg:col-span-2">

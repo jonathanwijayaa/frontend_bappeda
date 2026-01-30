@@ -94,10 +94,16 @@ const ManajemenOPD: React.FC = () => {
         <div className="space-y-6">
             {/* Header Actions */}
             <div className="flex justify-between items-center">
-                <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-                    <Plus size={18} />
-                    Ajukan OPD Baru
-                </Button>
+                <div className="flex gap-3">
+                    <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+                        <Plus size={18} />
+                        Ajukan OPD Baru
+                    </Button>
+                    <Button variant="outline">
+                        <Upload size={18} />
+                        Unggah dari Excel
+                    </Button>
+                </div>
                 <SearchInput
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -125,15 +131,8 @@ const ManajemenOPD: React.FC = () => {
                 onClose={handleCancel}
                 title="Tambah Data"
                 subtitle="Halaman untuk menambah OPD"
-                maxWidth="lg"
+                maxWidth="2xl"
             >
-                <div className="flex justify-end mb-4">
-                    <Button variant="primary" size="sm">
-                        <Upload size={16} />
-                        Import dari Excel
-                    </Button>
-                </div>
-
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Nama OPD */}
                     <div className="grid grid-cols-3 gap-4 items-center">

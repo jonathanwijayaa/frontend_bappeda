@@ -8,7 +8,10 @@ interface User {
 }
 
 interface AuthContextType {
-    user: User;
+    user: User | null;
+    isAuthenticated: boolean;
+    login: (nik: string, password: string) => Promise<{ success: boolean; message?: string }>;
+    logout: () => void;
     switchUser: (userType: 'super_admin' | 'opd') => void;
     isSuperAdmin: boolean;
     isOPD: boolean;
@@ -29,21 +32,73 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-    const [user, setUser] = useState<User>(() => {
-        // Load user from localStorage or default to Super Admin
+    const [user, setUser] = useState<User | null>(() => {
+        // Load user from localStorage
         const savedUser = localStorage.getItem('currentUser');
-        return savedUser ? JSON.parse(savedUser) : {
-            name: 'Amelia',
-            role: 'super_admin',
-            roleDisplay: 'Super Admin',
-            avatar: 'https://ui-avatars.com/api/?name=Amelia&background=10B981&color=fff'
-        };
+        const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+        return savedUser && isAuthenticated ? JSON.parse(savedUser) : null;
+    });
+
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+        return localStorage.getItem('isAuthenticated') === 'true';
     });
 
     useEffect(() => {
         // Save user to localStorage whenever it changes
-        localStorage.setItem('currentUser', JSON.stringify(user));
+        if (user) {
+            localStorage.setItem('currentUser', JSON.stringify(user));
+        } else {
+            localStorage.removeItem('currentUser');
+        }
     }, [user]);
+
+    useEffect(() => {
+        // Save authentication state
+        localStorage.setItem('isAuthenticated', isAuthenticated.toString());
+    }, [isAuthenticated]);
+
+    // Mock login function - will be replaced with backend API call
+    const login = async (nik: string, password: string): Promise<{ success: boolean; message?: string }> => {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // Mock credentials - replace with actual backend authentication
+        const mockCredentials = [
+            {
+                nik: '123456', password: 'admin123', user: {
+                    name: 'Amelia',
+                    role: 'super_admin' as const,
+                    roleDisplay: 'Super Admin',
+                    avatar: 'https://ui-avatars.com/api/?name=Amelia&background=10B981&color=fff'
+                }
+            },
+            {
+                nik: '654321', password: 'opd123', user: {
+                    name: 'Jonathan',
+                    role: 'opd' as const,
+                    roleDisplay: 'OPD',
+                    avatar: 'https://ui-avatars.com/api/?name=Jonathan&background=3B82F6&color=fff'
+                }
+            }
+        ];
+
+        const credential = mockCredentials.find(c => c.nik === nik && c.password === password);
+
+        if (credential) {
+            setUser(credential.user);
+            setIsAuthenticated(true);
+            return { success: true };
+        } else {
+            return { success: false, message: 'NIK atau password salah' };
+        }
+    };
+
+    const logout = () => {
+        setUser(null);
+        setIsAuthenticated(false);
+        localStorage.removeItem('currentUser');
+        localStorage.setItem('isAuthenticated', 'false');
+    };
 
     const switchUser = (userType: 'super_admin' | 'opd') => {
         if (userType === 'super_admin') {
@@ -65,9 +120,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
     const value: AuthContextType = {
         user,
+        isAuthenticated,
+        login,
+        logout,
         switchUser,
-        isSuperAdmin: user.role === 'super_admin',
-        isOPD: user.role === 'opd'
+        isSuperAdmin: user?.role === 'super_admin',
+        isOPD: user?.role === 'opd'
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
