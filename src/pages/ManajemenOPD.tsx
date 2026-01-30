@@ -5,6 +5,7 @@ import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
 import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
+import UploadExcelModal from '../components/ui/UploadExcelModal';
 import { OPDData } from '../types/opd.types';
 import { mockOPDData } from '../data/opd.data';
 
@@ -13,6 +14,7 @@ const ManajemenOPD: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
     const [selectedOPD, setSelectedOPD] = useState<OPDData | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const itemsPerPage = 5;
@@ -122,7 +124,7 @@ const ManajemenOPD: React.FC = () => {
                         <Plus size={18} />
                         Ajukan OPD Baru
                     </Button>
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
                         <Upload size={18} />
                         Unggah dari Excel
                     </Button>
@@ -438,6 +440,14 @@ const ManajemenOPD: React.FC = () => {
                     </div>
                 )}
             </Modal>
+
+            {/* Upload Excel Modal */}
+            <UploadExcelModal
+                isOpen={isUploadModalOpen}
+                onClose={() => setIsUploadModalOpen(false)}
+                title="Unggah Data OPD"
+                templateName="Data OPD"
+            />
         </div>
     );
 };

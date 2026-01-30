@@ -6,6 +6,7 @@ import { SearchInput } from '../components/ui/Input';
 import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
 import Select from '../components/ui/Select';
+import UploadExcelModal from '../components/ui/UploadExcelModal';
 import { PengajuanData, RelawanData } from '../types/relawan.types';
 import { mockPengajuanData, mockRelawanData } from '../data/relawan.data';
 
@@ -13,6 +14,7 @@ const DataRelawan: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
     const [selectedRelawan, setSelectedRelawan] = useState<RelawanData | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const itemsPerPage = 5;
@@ -140,7 +142,7 @@ const DataRelawan: React.FC = () => {
                         <Plus size={18} />
                         Ajukan Relawan Baru
                     </Button>
-                    <Button variant="outline">
+                    <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
                         <Upload size={18} />
                         Unggah dari Excel
                     </Button>
@@ -583,6 +585,14 @@ const DataRelawan: React.FC = () => {
                     </div>
                 )}
             </Modal>
+
+            {/* Upload Excel Modal */}
+            <UploadExcelModal
+                isOpen={isUploadModalOpen}
+                onClose={() => setIsUploadModalOpen(false)}
+                title="Unggah Data Relawan"
+                templateName="Data Relawan"
+            />
         </div>
     );
 };
