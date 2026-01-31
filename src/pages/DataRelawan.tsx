@@ -15,7 +15,11 @@ const DataRelawan: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
     const [selectedRelawan, setSelectedRelawan] = useState<RelawanData | null>(null);
+    const [selectedPengajuan, setSelectedPengajuan] = useState<PengajuanData | null>(null);
+    const [verificationNote, setVerificationNote] = useState<string>('');
+    const [isDataChecked, setIsDataChecked] = useState<boolean>(false);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const itemsPerPage = 5;
 
@@ -77,8 +81,29 @@ const DataRelawan: React.FC = () => {
         setIsDetailModalOpen(true);
     };
 
+    const handleReviewClick = (pengajuan: PengajuanData) => {
+        setSelectedPengajuan(pengajuan);
+        setIsReviewModalOpen(true);
+        setVerificationNote('');
+        setIsDataChecked(false);
+    };
+
+    const handleApprove = () => {
+        console.log('Approved:', selectedPengajuan);
+        console.log('Verification Note:', verificationNote);
+        setIsReviewModalOpen(false);
+        // TODO: Implement actual approval logic
+    };
+
+    const handleReject = () => {
+        console.log('Rejected:', selectedPengajuan);
+        console.log('Verification Note:', verificationNote);
+        setIsReviewModalOpen(false);
+        // TODO: Implement actual rejection logic
+    };
+
     const pengajuanActions = (row: PengajuanData) => (
-        <Button variant="secondary" size="sm">Review</Button>
+        <Button variant="secondary" size="sm" onClick={() => handleReviewClick(row)}>Review</Button>
     );
 
     const relawanActions = (row: RelawanData) => (
@@ -593,6 +618,147 @@ const DataRelawan: React.FC = () => {
                 title="Unggah Data Relawan"
                 templateName="Data Relawan"
             />
+
+            {/* Review Pengajuan Modal */}
+            <Modal
+                isOpen={isReviewModalOpen}
+                onClose={() => setIsReviewModalOpen(false)}
+                title="Review Pengajuan Perubahan Data"
+                subtitle="Halaman untuk review pengajuan perubahan data oleh relawan"
+                maxWidth="2xl"
+            >
+                {selectedPengajuan && (
+                    <div className="space-y-6">
+                        {/* Informasi Relawan */}
+                        <div className="space-y-4">
+                            {/* Nama Relawan */}
+                            <div className="grid grid-cols-4 gap-4 items-center">
+                                <label className="text-base font-medium text-gray-900">Nama Relawan</label>
+                                <input
+                                    type="text"
+                                    value={selectedPengajuan.namaLengkap}
+                                    className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                                    disabled
+                                />
+                            </div>
+
+                            {/* NIK */}
+                            <div className="grid grid-cols-4 gap-4 items-center">
+                                <label className="text-base font-medium text-gray-900">NIK</label>
+                                <input
+                                    type="text"
+                                    value={selectedPengajuan.nik}
+                                    className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                                    disabled
+                                />
+                            </div>
+
+                            {/* Tanggal Pengajuan */}
+                            <div className="grid grid-cols-4 gap-4 items-center">
+                                <label className="text-base font-medium text-gray-900">Tanggal Pengajuan</label>
+                                <input
+                                    type="text"
+                                    value={selectedPengajuan.tanggalPengajuan}
+                                    className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                                    disabled
+                                />
+                            </div>
+
+                            {/* Status */}
+                            <div className="grid grid-cols-4 gap-4 items-center">
+                                <label className="text-base font-medium text-gray-900">Status saat ini</label>
+                                <div className="col-span-3 flex items-center gap-2">
+                                    <span className="w-3 h-3 bg-yellow-400 rounded-full"></span>
+                                    <span className="text-gray-900">{selectedPengajuan.status}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Perubahan Data */}
+                        <div className="border-t border-gray-200 pt-4">
+                            <h3 className="text-lg font-bold text-gray-900 mb-4">Perubahan Data</h3>
+                            <div className="bg-gray-50 rounded-lg overflow-hidden">
+                                <table className="w-full">
+                                    <thead className="bg-gray-200">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Nama Data</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Data Lama</th>
+                                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Data Baru</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {selectedPengajuan.dataLama && selectedPengajuan.dataBaru &&
+                                            Object.keys(selectedPengajuan.dataLama).map((key) => (
+                                                <tr key={key} className="border-t border-gray-300">
+                                                    <td className="px-4 py-3 text-sm text-gray-900">{key}</td>
+                                                    <td className="px-4 py-3 text-sm text-gray-700">{selectedPengajuan.dataLama![key]}</td>
+                                                    <td className="px-4 py-3 text-sm text-gray-700">{selectedPengajuan.dataBaru![key]}</td>
+                                                </tr>
+                                            ))
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {/* Catatan dari Relawan */}
+                        <div className="border-t border-gray-200 pt-4">
+                            <h3 className="text-lg font-bold text-gray-900 mb-3">Catatan dari Relawan</h3>
+                            <textarea
+                                value={selectedPengajuan.catatanRelawan || ''}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 resize-none"
+                                rows={3}
+                                disabled
+                            />
+                        </div>
+
+                        {/* Catatan Verifikasi */}
+                        <div className="border-t border-gray-200 pt-4">
+                            <h3 className="text-lg font-bold text-gray-900 mb-3">Catatan Verifikasi</h3>
+                            <textarea
+                                value={verificationNote}
+                                onChange={(e) => setVerificationNote(e.target.value)}
+                                placeholder="Masukkan catatan verifikasi..."
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                rows={3}
+                            />
+                        </div>
+
+                        {/* Checkbox */}
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                id="dataChecked"
+                                checked={isDataChecked}
+                                onChange={(e) => setIsDataChecked(e.target.checked)}
+                                className="w-4 h-4 text-blue-500 rounded"
+                            />
+                            <label htmlFor="dataChecked" className="text-sm text-gray-700 cursor-pointer">
+                                Saya telah memeriksa data
+                            </label>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex justify-between pt-4">
+                            <Button
+                                type="button"
+                                onClick={handleReject}
+                                className="bg-red-600 hover:bg-red-700 text-white px-8"
+                            >
+                                Tolak
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleApprove}
+                                disabled={!isDataChecked}
+                                className="bg-green-600 hover:bg-green-700 text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Setujui & Update
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </div>
     );
 };

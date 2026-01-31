@@ -4,6 +4,13 @@ export interface PengajuanData {
     namaLengkap: string;
     tanggalPengajuan: string;
     status: string;
+    dataLama?: {
+        [key: string]: string;
+    };
+    dataBaru?: {
+        [key: string]: string;
+    };
+    catatanRelawan?: string;
 }
 
 export interface RelawanData {
