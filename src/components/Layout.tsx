@@ -23,17 +23,25 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             '/surat-keputusan': 'Surat Keputusan',
             '/log-aktifitas': 'Log / Aktifitas',
             '/statistik': 'Statistik',
+            '/dokumen': 'Dokumen',
             '/saran-hotline': 'Saran/Hotline',
             '/edit-profil': 'Edit Profil',
         };
         return titles[location.pathname] || 'Dashboard';
     };
 
+    const getPageCaption = (): string => {
+        const captions: PageTitles = {
+            '/dokumen': 'Akses guidebook dan template Excel untuk mengelola data',
+        };
+        return captions[location.pathname] || 'caption singkat';
+    };
+
     return (
         <div className="flex min-h-screen bg-gray-100">
             <Sidebar />
             <div className="flex-1 flex flex-col">
-                <Header title={getPageTitle()} caption="caption singkat" />
+                <Header title={getPageTitle()} caption={getPageCaption()} />
                 <main className="flex-1 p-8">
                     {children}
                 </main>

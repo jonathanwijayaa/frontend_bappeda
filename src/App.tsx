@@ -8,6 +8,7 @@ import DataRelawan from './pages/DataRelawan';
 import SuratKeputusan from './pages/SuratKeputusan';
 import LogAktifitas from './pages/LogAktifitas';
 import Statistik from './pages/Statistik';
+import Dokumen from './pages/Dokumen';
 import SaranHotline from './pages/SaranHotline';
 import EditProfil from './pages/EditProfil';
 import Login from './pages/Login';
@@ -99,6 +100,13 @@ function AppRoutes() {
                 <ProtectedRoute>
                     <Layout>
                         <Statistik />
+                    </Layout>
+                </ProtectedRoute>
+            } />
+            <Route path="/dokumen" element={
+                <ProtectedRoute>
+                    <Layout>
+                        <Dokumen />
                     </Layout>
                 </ProtectedRoute>
             } />

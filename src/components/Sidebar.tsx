@@ -11,6 +11,7 @@ import {
     ChevronLeft,
     ChevronRight,
     UserCircle,
+    FolderOpen,
     LucideIcon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -40,6 +41,7 @@ const Sidebar: React.FC = () => {
         { path: '/surat-keputusan', icon: FileText, label: 'Surat Keputusan' },
         { path: '/log-aktifitas', icon: Clock, label: 'Log/Aktifitas' },
         { path: '/statistik', icon: BarChart3, label: 'Statistik' },
+        { path: '/dokumen', icon: FolderOpen, label: 'Dokumen' },
     ];
 
     const opdMenu: MenuItem[] = [
@@ -49,6 +51,7 @@ const Sidebar: React.FC = () => {
         { path: '/surat-keputusan', icon: FileText, label: 'Surat Keputusan' },
         { path: '/log-aktifitas', icon: Clock, label: 'Log/Aktifitas' },
         { path: '/statistik', icon: BarChart3, label: 'Statistik' },
+        { path: '/dokumen', icon: FolderOpen, label: 'Dokumen' },
     ];
 
     const menuItems = isSuperAdmin ? superAdminMenu : opdMenu;

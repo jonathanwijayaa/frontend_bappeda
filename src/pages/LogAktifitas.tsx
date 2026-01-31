@@ -1,5 +1,7 @@
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState, ChangeEvent, useMemo } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
@@ -11,8 +13,26 @@ const LogAktifitas: React.FC = () => {
     const [filterHari, setFilterHari] = useState<string>('');
     const [filterJenis, setFilterJenis] = useState<string>('');
     const [filterPengguna, setFilterPengguna] = useState<string>('');
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const itemsPerPage = 5;
 
-    const logData: LogData[] = mockLogData;
+    // Pagination logic
+    const filteredData = useMemo(() => {
+        return mockLogData.filter(log =>
+            log.pengguna.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            log.aktifitas.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            log.objek.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [searchTerm]);
+
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentData = filteredData.slice(startIndex, endIndex);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
 
     const columns = [
         { header: 'WAKTU', accessor: 'waktu' as keyof LogData },
@@ -67,7 +87,47 @@ const LogAktifitas: React.FC = () => {
 
             {/* Table */}
             <Card title="Tabel Log">
-                <Table columns={columns} data={logData} />
+                <Table columns={columns} data={currentData} minRows={5} />
+
+                {/* Pagination */}
+                <div className="mt-4 flex justify-between items-center">
+                    <div className="text-sm text-gray-500">
+                        Menampilkan {startIndex + 1}-{Math.min(endIndex, filteredData.length)} dari {filteredData.length} log
+                    </div>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ChevronLeft size={16} />
+                            Previous
+                        </Button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                            <Button
+                                key={page}
+                                variant={currentPage === page ? "primary" : "outline"}
+                                size="sm"
+                                onClick={() => handlePageChange(page)}
+                                className="min-w-[40px]"
+                            >
+                                {page}
+                            </Button>
+                        ))}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Next
+                            <ChevronRight size={16} />
+                        </Button>
+                    </div>
+                </div>
             </Card>
         </div>
     );

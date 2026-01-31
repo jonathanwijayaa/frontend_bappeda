@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { Link } from 'react-router-dom';
 import { Upload, FileSpreadsheet, X } from 'lucide-react';
 import Modal from './Modal';
 import Button from './Button';
@@ -80,17 +81,13 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
             <div className="space-y-6">
                 {/* Template Download Link */}
                 <div className="flex justify-end">
-                    <a
-                        href="#"
+                    <Link
+                        to="/dokumen"
                         className="text-blue-600 hover:text-blue-800 underline text-sm"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            console.log('Downloading template:', templateName);
-                            // Handle template download
-                        }}
+                        onClick={handleClose}
                     >
                         Template Excel {templateName}
-                    </a>
+                    </Link>
                 </div>
 
                 {/* Dropzone Area */}
