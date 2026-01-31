@@ -15,31 +15,31 @@ const Dokumen: React.FC = () => {
     const documents: DocumentItem[] = [
         {
             id: 'guidebook',
-            title: 'Guidebook Aplikasi',
+            title: 'Buku Panduan Aplikasi',
             description: 'Panduan lengkap penggunaan aplikasi untuk semua pengguna',
             icon: <BookOpen size={24} className="text-blue-600" />,
-            fileName: 'Guidebook_Aplikasi.pdf'
+            fileName: 'Buku_Panduan_Aplikasi.pdf'
         },
         {
             id: 'template-relawan',
-            title: 'Template Excel Data Relawan',
-            description: 'Template untuk mengunggah data relawan secara massal',
+            title: 'Templat Excel Data Relawan',
+            description: 'Templat untuk mengunggah data relawan secara massal',
             icon: <FileText size={24} className="text-green-600" />,
-            fileName: 'Template_Data_Relawan.xlsx'
+            fileName: 'Templat_Data_Relawan.xlsx'
         },
         {
             id: 'template-opd',
-            title: 'Template Excel Data OPD',
-            description: 'Template untuk mengunggah data OPD secara massal',
+            title: 'Templat Excel Data OPD',
+            description: 'Templat untuk mengunggah data OPD secara massal',
             icon: <FileText size={24} className="text-emerald-600" />,
-            fileName: 'Template_Data_OPD.xlsx'
+            fileName: 'Templat_Data_OPD.xlsx'
         },
         {
             id: 'template-kader',
-            title: 'Template Excel Data Kader',
-            description: 'Template untuk mengunggah data kader secara massal',
+            title: 'Templat Excel Data Kader',
+            description: 'Templat untuk mengunggah data kader secara massal',
             icon: <FileText size={24} className="text-teal-600" />,
-            fileName: 'Template_Data_Kader.xlsx'
+            fileName: 'Templat_Data_Kader.xlsx'
         }
     ];
 
@@ -78,7 +78,7 @@ const Dokumen: React.FC = () => {
                                     className="flex items-center gap-2"
                                 >
                                     <Download size={16} />
-                                    Download
+                                    Unduh
                                 </Button>
                             </div>
                         </div>
@@ -93,8 +93,8 @@ const Dokumen: React.FC = () => {
                         Informasi Penting
                     </h4>
                     <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-                        <li>Pastikan menggunakan template Excel yang sesuai saat mengunggah data</li>
-                        <li>Jangan mengubah struktur kolom pada template Excel</li>
+                        <li>Pastikan menggunakan templat Excel yang sesuai saat mengunggah data</li>
+                        <li>Jangan mengubah struktur kolom pada templat Excel</li>
                         <li>Untuk bantuan lebih lanjut, silakan baca guidebook aplikasi</li>
                         <li>Hubungi administrator jika mengalami kendala</li>
                     </ul>

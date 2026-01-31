@@ -13,7 +13,7 @@ const Button: React.FC<ButtonProps> = ({
     className = '',
     ...props
 }) => {
-    const baseStyles = 'font-medium rounded-lg transition-colors duration-200 flex items-center gap-2';
+    const baseStyles = 'font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2';
 
     const variants = {
         primary: 'bg-blue-500 hover:bg-blue-600 text-white',

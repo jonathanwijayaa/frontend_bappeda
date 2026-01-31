@@ -142,7 +142,7 @@ const ManajemenOPD: React.FC = () => {
                     <h2 className="text-xl font-semibold text-gray-900">Daftar OPD</h2>
                     <Button variant="secondary" size="sm">
                         <FileDown size={16} />
-                        Export
+                        Ekspor
                     </Button>
                 </div>
 
@@ -162,7 +162,7 @@ const ManajemenOPD: React.FC = () => {
                             className="disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <ChevronLeft size={16} />
-                            Previous
+                            Sebelumnya
                         </Button>
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                             <Button
@@ -182,7 +182,7 @@ const ManajemenOPD: React.FC = () => {
                             disabled={currentPage === totalPages}
                             className="disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Next
+                            Selanjutnya
                             <ChevronRight size={16} />
                         </Button>
                     </div>

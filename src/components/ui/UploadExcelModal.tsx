@@ -86,7 +86,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                         className="text-blue-600 hover:text-blue-800 underline text-sm"
                         onClick={handleClose}
                     >
-                        Template Excel {templateName}
+                        Templat Excel {templateName}
                     </Link>
                 </div>
 
@@ -145,7 +145,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                             ) : (
                                 <>
                                     <p className="text-gray-700 font-medium">
-                                        Drag & drop file Excel di sini
+                                        Tarik & lepas file Excel di sini
                                     </p>
                                     <p className="text-gray-500 text-sm">
                                         atau klik untuk memilih file

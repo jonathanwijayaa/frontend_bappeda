@@ -103,7 +103,7 @@ const LogAktifitas: React.FC = () => {
                             className="disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <ChevronLeft size={16} />
-                            Previous
+                            Sebelumnya
                         </Button>
                         {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                             <Button
@@ -123,7 +123,7 @@ const LogAktifitas: React.FC = () => {
                             disabled={currentPage === totalPages}
                             className="disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            Next
+                            Selanjutnya
                             <ChevronRight size={16} />
                         </Button>
                     </div>

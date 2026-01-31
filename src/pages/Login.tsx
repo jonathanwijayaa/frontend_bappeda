@@ -101,7 +101,7 @@ const Login = () => {
                             {/* Submit Button */}
                             <Button
                                 type="submit"
-                                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors"
+                                className="mx-auto w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors"
                                 disabled={isLoading}
                             >
                                 {isLoading ? 'Memproses...' : 'Masuk'}
