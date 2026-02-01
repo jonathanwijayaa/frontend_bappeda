@@ -47,7 +47,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
     const handleUpload = () => {
         if (selectedFile) {
             console.log('Uploading file:', selectedFile);
-            // Handle file upload logic here
+            // Handle file upload logic
             handleClose();
         }
     };
@@ -90,7 +90,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                     </Link>
                 </div>
 
-                {/* Dropzone Area */}
+                {/*Area Drop File*/}
                 <div
                     {...getRootProps()}
                     className={`
@@ -159,14 +159,14 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                     </div>
                 </div>
 
-                {/* Error Message */}
+                {/* Pesan Error*/}
                 {error && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                         <p className="text-red-600 text-sm text-center">{error}</p>
                     </div>
                 )}
 
-                {/* Selected File Display */}
+                {/* NNampilin File yang dipilih */}
                 {selectedFile && (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                         <div className="flex items-center justify-between">

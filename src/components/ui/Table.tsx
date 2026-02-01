@@ -14,7 +14,7 @@ interface TableProps<T> {
 }
 
 function Table<T extends Record<string, any>>({ columns, data, actions, minRows = 0 }: TableProps<T>) {
-    // Calculate how many empty rows we need to add
+    // Calculate how many empty rows we need to add 
     const emptyRowsCount = Math.max(0, minRows - data.length);
 
     return (

@@ -39,7 +39,7 @@ const Statistik: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* Top Row - Donut and Pie Charts */}
+            {/* Baris Atas- Donut and Pie Charts Gender dan Umur*/}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                 <Card title="Demografi Gender" collapsible>
                     <DonutChart
@@ -60,7 +60,7 @@ const Statistik: React.FC = () => {
                 </Card>
             </div>
 
-            {/* Bottom Row - Horizontal Bar Charts */}
+            {/* Baris Bawah - Horizontal Bar Charts Jumlah Relawan per Kader dan OPD */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                 <Card title="Jumlah Relawan Per Kader" collapsible>
                     <HorizontalBarChart

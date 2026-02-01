@@ -61,7 +61,7 @@ const Sidebar: React.FC = () => {
             className={`bg-emerald-500 h-screen flex flex-col transition-all duration-300 relative sticky top-0 ${isCollapsed ? 'w-20' : 'w-64'
                 }`}
         >
-            {/* Collapse/Expand Button - Always Visible */}
+            {/* Collapse/Expand Button */}
             <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className={`absolute top-6 z-10 text-white hover:bg-emerald-600 p-2 rounded-lg transition-all ${isCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-2'
@@ -105,7 +105,7 @@ const Sidebar: React.FC = () => {
                 })}
             </nav>
 
-            {/* Footer - Fixed at Bottom */}
+            {/* Footer - Fixed*/}
             <div className={`p-6 border-t border-emerald-600 flex-shrink-0 ${isCollapsed ? 'px-0' : ''
                 }`}>
                 <Link

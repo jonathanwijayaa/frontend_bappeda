@@ -1,6 +1,6 @@
 import { ChartDataItem } from '../types/dashboard.types';
 
-// Sample data for Super Admin - OPD Chart
+// Sample data Super Admin - OPD Chart
 export const mockOPDChartData: ChartDataItem[] = [
     { name: 'OPD 1', jumlah: 450 },
     { name: 'OPD 2', jumlah: 350 },

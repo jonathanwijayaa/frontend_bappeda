@@ -73,7 +73,7 @@ const EditProfil: React.FC = () => {
             }
         }
 
-        // Log submission (in production, this would be an API call)
+        // Log submission (API Call)
         console.log('Profile updated:', profileData);
         console.log('Password changed:', passwordData.passwordLama ? 'Yes' : 'No');
         alert('Profil berhasil diperbarui!');
@@ -90,7 +90,7 @@ const EditProfil: React.FC = () => {
         <div className="space-y-6">
             <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left Section - Avatar */}
+                    {/* Bagian Kiri - Avatar */}
                     <div className="lg:col-span-1">
                         <Card>
                             <div className="flex flex-col items-center space-y-4">
@@ -127,7 +127,7 @@ const EditProfil: React.FC = () => {
                         </Card>
                     </div>
 
-                    {/* Right Section - Combined Form */}
+                    {/* Bagian Kanan - Combined Form */}
                     <div className="lg:col-span-2">
                         <Card>
                             <div className="space-y-8">

@@ -26,7 +26,7 @@ const SaranHotline: React.FC = () => {
             return;
         }
 
-        // Log submission (in production, this would be an API call)
+        // Log submission (API Call)
         console.log('Form submitted:', formData);
         alert('Terima kasih! Saran Anda telah dikirim.');
 
@@ -41,7 +41,7 @@ const SaranHotline: React.FC = () => {
     return (
         <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left Section - Contact Information */}
+                {/* Sisi Kiri - Contact Information */}
                 <Card title="Hotline BAPPEDA Kota Yogyakarta">
                     <div className="space-y-6">
                         {/* Telepon */}
@@ -79,7 +79,7 @@ const SaranHotline: React.FC = () => {
                     </div>
                 </Card>
 
-                {/* Right Section - Feedback Form */}
+                {/* Sisi Kanan - Feedback Form */}
                 <Card>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         {/* Nama Lengkap */}

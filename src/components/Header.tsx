@@ -14,7 +14,7 @@ const Header: React.FC<HeaderProps> = ({ title, caption }) => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Close dropdown when clicking outside
+    // Close dropdown pas ngeklik di luar
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {

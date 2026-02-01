@@ -20,7 +20,6 @@ const Modal: React.FC<ModalProps> = ({
     maxWidth = 'lg',
     showCloseButton = true
 }) => {
-    // Close modal on ESC key press
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && showCloseButton) {

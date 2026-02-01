@@ -33,7 +33,7 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [user, setUser] = useState<User | null>(() => {
-        // Load user from localStorage
+        // Load user localStorage
         const savedUser = localStorage.getItem('currentUser');
         const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
         return savedUser && isAuthenticated ? JSON.parse(savedUser) : null;
@@ -44,7 +44,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     });
 
     useEffect(() => {
-        // Save user to localStorage whenever it changes
+        // Save user ke localStorage
         if (user) {
             localStorage.setItem('currentUser', JSON.stringify(user));
         } else {
@@ -57,12 +57,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.setItem('isAuthenticated', isAuthenticated.toString());
     }, [isAuthenticated]);
 
-    // Mock login function - will be replaced with backend API call
+    // Mock login function - digantiu dengan backend API call
     const login = async (nik: string, password: string): Promise<{ success: boolean; message?: string }> => {
         // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        // Mock credentials - replace with actual backend authentication
+        // Mock credentials - ganti sama qutentikasi asli back end
         const mockCredentials = [
             {
                 nik: '123456', password: 'admin123', user: {

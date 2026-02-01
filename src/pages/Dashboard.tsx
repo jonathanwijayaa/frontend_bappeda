@@ -8,10 +8,10 @@ import { mockOPDChartData, mockKaderChartData } from '../data/dashboard.data';
 const Dashboard: React.FC = () => {
     const { isSuperAdmin } = useAuth();
 
-    // Sample data for Super Admin
+    // Sample data Super Admin
     const opdData: ChartDataItem[] = mockOPDChartData;
 
-    // Sample data for OPD
+    // Sample data OPD
     const kaderData: ChartDataItem[] = mockKaderChartData;
 
     return (

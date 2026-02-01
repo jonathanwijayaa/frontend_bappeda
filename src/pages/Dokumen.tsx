@@ -46,7 +46,6 @@ const Dokumen: React.FC = () => {
     const handleDownload = (fileName: string, title: string) => {
         console.log('Downloading:', fileName, '-', title);
         // TODO: Implement actual file download logic
-        // For now, this is a placeholder that matches the UploadExcelModal behavior
     };
 
     return (
@@ -86,7 +85,7 @@ const Dokumen: React.FC = () => {
                 ))}
             </div>
 
-            {/* Additional Info Card */}
+            {/* Info Card */}
             <Card>
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h4 className="font-semibold text-blue-900 mb-2">

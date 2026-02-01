@@ -1,4 +1,4 @@
-// Central export for all mock data
+// Pusat export untuk data dummy
 export * from './opd.data';
 export * from './kader.data';
 export * from './relawan.data';

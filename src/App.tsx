@@ -14,7 +14,7 @@ import EditProfil from './pages/EditProfil';
 import Login from './pages/Login';
 import { ReactNode } from 'react';
 
-// Protected Route Component
+// Protected Route Component (Langsung ke Page Login kalau belum login)
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     const { isAuthenticated } = useAuth();
 
@@ -25,7 +25,7 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     return <>{children}</>;
 };
 
-// Public Route Component (redirects to dashboard if already logged in)
+// Public Route Component (Langsung ke Dashboard kalau sudah login)
 const PublicRoute = ({ children }: { children: ReactNode }) => {
     const { isAuthenticated } = useAuth();
 

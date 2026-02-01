@@ -37,7 +37,7 @@ const DataRelawan: React.FC = () => {
 
     const pengajuanData: PengajuanData[] = mockPengajuanData;
 
-    // Pagination logic for relawan data
+    // Pagination logic
     const filteredRelawanData = useMemo(() => {
         return mockRelawanData.filter(relawan =>
             relawan.namaLengkap.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -92,14 +92,14 @@ const DataRelawan: React.FC = () => {
         console.log('Approved:', selectedPengajuan);
         console.log('Verification Note:', verificationNote);
         setIsReviewModalOpen(false);
-        // TODO: Implement actual approval logic
+        // Implement approval logic yang asli
     };
 
     const handleReject = () => {
         console.log('Rejected:', selectedPengajuan);
         console.log('Verification Note:', verificationNote);
         setIsReviewModalOpen(false);
-        // TODO: Implement actual rejection logic
+        // Implement rejection logic yang asli
     };
 
     const pengajuanActions = (row: PengajuanData) => (

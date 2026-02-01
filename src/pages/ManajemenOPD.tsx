@@ -65,7 +65,7 @@ const ManajemenOPD: React.FC = () => {
 
     const handleConfirmToggleStatus = () => {
         console.log('Toggling status for OPD:', selectedOPD);
-        // Handle status toggle logic here
+        // Handle status toggle logic
         setIsConfirmModalOpen(false);
         setSelectedOPD(null);
     };
