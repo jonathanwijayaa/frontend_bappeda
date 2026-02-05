@@ -58,7 +58,7 @@ const Sidebar: React.FC = () => {
 
     return (
         <div
-            className={`bg-emerald-500 h-screen flex flex-col transition-all duration-300 relative sticky top-0 ${isCollapsed ? 'w-20' : 'w-64'
+            className={`bg-primary-green h-screen flex flex-col transition-all duration-300 relative sticky top-0 ${isCollapsed ? 'w-20' : 'w-64'
                 }`}
         >
             {/* Collapse/Expand Button */}
