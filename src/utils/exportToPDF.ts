@@ -21,7 +21,6 @@ export const exportToPDF = (options: ExportOptions): void => {
     try {
         const { title, columns, data, filename = 'export.pdf' } = options;
 
-        // Create new PDF document in landscape mode for better table display
         const doc = new jsPDF({
             orientation: 'landscape',
             unit: 'mm',
@@ -33,16 +32,23 @@ export const exportToPDF = (options: ExportOptions): void => {
         doc.setFont('helvetica', 'bold');
         doc.text(title, 14, 15);
 
-        // Add date
+        // Add date and time
         doc.setFontSize(10);
         doc.setFont('helvetica', 'normal');
-        const currentDate = new Date().toLocaleDateString('id-ID', {
+        const now = new Date();
+        const currentDate = now.toLocaleDateString('id-ID', {
             weekday: 'long',
             year: 'numeric',
             month: 'long',
             day: 'numeric'
         });
-        doc.text(`Tanggal: ${currentDate}`, 14, 22);
+        const currentTime = now.toLocaleTimeString('id-ID', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        });
+        doc.text(`Tanggal: ${currentDate}, ${currentTime}`, 14, 22);
 
         // Generate table
         autoTable(doc, {
