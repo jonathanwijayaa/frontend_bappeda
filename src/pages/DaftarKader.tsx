@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, FileDown, Upload, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, FileDown, Upload, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
 import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
 import UploadExcelModal from '../components/ui/UploadExcelModal';
+import Toast, { ToastType } from '../components/ui/Toast';
 import { KaderData } from '../types/kader.types';
 import { mockKaderData } from '../data/kader.data';
+import { exportToPDF } from '../utils/exportToPDF';
 
 const DaftarKader: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -17,6 +19,8 @@ const DaftarKader: React.FC = () => {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
     const [selectedKader, setSelectedKader] = useState<KaderData | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
+    const [isExporting, setIsExporting] = useState<boolean>(false);
+    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const itemsPerPage = 5;
 
     const [formData, setFormData] = useState({
@@ -110,6 +114,42 @@ const DaftarKader: React.FC = () => {
         });
     };
 
+    const handleExportPDF = async () => {
+        try {
+            setIsExporting(true);
+
+            // Prepare data for export
+            const exportData = filteredData.map(kader => ({
+                namaKader: kader.namaKader,
+                kode: kader.kode,
+                status: kader.status,
+                pic: kader.pic,
+                kontak: kader.kontak
+            }));
+
+            // Export to PDF
+            exportToPDF({
+                title: 'Daftar Kader',
+                columns: [
+                    { header: 'NAMA KADER', dataKey: 'namaKader' },
+                    { header: 'KODE', dataKey: 'kode' },
+                    { header: 'STATUS', dataKey: 'status' },
+                    { header: 'PIC', dataKey: 'pic' },
+                    { header: 'KONTAK', dataKey: 'kontak' }
+                ],
+                data: exportData,
+                filename: `daftar-kader-${new Date().toISOString().split('T')[0]}.pdf`
+            });
+
+            setToast({ message: 'Data berhasil diekspor ke PDF', type: 'success' });
+        } catch (error) {
+            console.error('Export error:', error);
+            setToast({ message: 'Gagal mengekspor data ke PDF', type: 'error' });
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Header Actions */}
@@ -135,9 +175,18 @@ const DaftarKader: React.FC = () => {
             <Card>
                 <div className="mb-4 flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-gray-900">Daftar Kader</h2>
-                    <Button variant="secondary" size="sm">
-                        <FileDown size={16} />
-                        Ekspor
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleExportPDF}
+                        disabled={isExporting}
+                    >
+                        {isExporting ? (
+                            <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                            <FileDown size={16} />
+                        )}
+                        {isExporting ? 'Mengekspor...' : 'Ekspor'}
                     </Button>
                 </div>
 
@@ -417,6 +466,15 @@ const DaftarKader: React.FC = () => {
                 title="Unggah Data Kader"
                 templateName="Data Kader"
             />
+
+            {/* Toast Notification */}
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
+            )}
         </div>
     );
 };

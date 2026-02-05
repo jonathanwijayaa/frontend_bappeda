@@ -1,13 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, FileDown, Upload, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, FileDown, Upload, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
 import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
 import UploadExcelModal from '../components/ui/UploadExcelModal';
+import Toast, { ToastType } from '../components/ui/Toast';
 import { OPDData } from '../types/opd.types';
 import { mockOPDData } from '../data/opd.data';
+import { exportToPDF } from '../utils/exportToPDF';
 
 const ManajemenOPD: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -17,6 +19,8 @@ const ManajemenOPD: React.FC = () => {
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
     const [selectedOPD, setSelectedOPD] = useState<OPDData | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
+    const [isExporting, setIsExporting] = useState<boolean>(false);
+    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const itemsPerPage = 5;
 
     const [formData, setFormData] = useState({
@@ -115,6 +119,44 @@ const ManajemenOPD: React.FC = () => {
         });
     };
 
+    const handleExportPDF = async () => {
+        try {
+            setIsExporting(true);
+
+            // Prepare data for export
+            const exportData = filteredData.map(opd => ({
+                namaOpd: opd.namaOpd,
+                kode: opd.kode,
+                status: opd.status,
+                alamat: opd.alamat,
+                pic: opd.pic,
+                kontak: opd.kontak
+            }));
+
+            // Export to PDF
+            exportToPDF({
+                title: 'Daftar OPD',
+                columns: [
+                    { header: 'NAMA OPD', dataKey: 'namaOpd' },
+                    { header: 'KODE', dataKey: 'kode' },
+                    { header: 'STATUS', dataKey: 'status' },
+                    { header: 'ALAMAT', dataKey: 'alamat' },
+                    { header: 'PIC', dataKey: 'pic' },
+                    { header: 'KONTAK', dataKey: 'kontak' }
+                ],
+                data: exportData,
+                filename: `daftar-opd-${new Date().toISOString().split('T')[0]}.pdf`
+            });
+
+            setToast({ message: 'Data berhasil diekspor ke PDF', type: 'success' });
+        } catch (error) {
+            console.error('Export error:', error);
+            setToast({ message: 'Gagal mengekspor data ke PDF', type: 'error' });
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Header Actions */}
@@ -140,9 +182,18 @@ const ManajemenOPD: React.FC = () => {
             <Card>
                 <div className="mb-4 flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-gray-900">Daftar OPD</h2>
-                    <Button variant="secondary" size="sm">
-                        <FileDown size={16} />
-                        Ekspor
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleExportPDF}
+                        disabled={isExporting}
+                    >
+                        {isExporting ? (
+                            <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                            <FileDown size={16} />
+                        )}
+                        {isExporting ? 'Mengekspor...' : 'Ekspor'}
                     </Button>
                 </div>
 
@@ -448,6 +499,15 @@ const ManajemenOPD: React.FC = () => {
                 title="Unggah Data OPD"
                 templateName="Data OPD"
             />
+
+            {/* Toast Notification */}
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
+            )}
         </div>
     );
 };
