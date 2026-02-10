@@ -45,7 +45,6 @@ const SuratKeputusan: React.FC = () => {
         { header: 'NOMOR SK', accessor: 'nomorSK' as keyof SKData },
         { header: 'JUDUL SK', accessor: 'judulSK' as keyof SKData },
         { header: 'TANGGAL TERBIT', accessor: 'tanggalTerbit' as keyof SKData },
-        { header: 'JENIS KEGIATAN', accessor: 'jenisKegiatan' as keyof SKData },
         { header: 'NAMA OPD', accessor: 'namaOPD' as keyof SKData },
         {
             header: 'JUMLAH RELAWAN',
@@ -76,7 +75,7 @@ const SuratKeputusan: React.FC = () => {
                 onClick={() => handleViewDocument(row)}
             >
                 <ExternalLink size={14} />
-                Lihat Dokumen
+                Lihat
             </Button>
         </>
     );
@@ -89,7 +88,6 @@ const SuratKeputusan: React.FC = () => {
                 nomorSK: sk.nomorSK,
                 judulSK: sk.judulSK,
                 tanggalTerbit: sk.tanggalTerbit,
-                jenisKegiatan: sk.jenisKegiatan,
                 namaOPD: sk.namaOPD,
                 jumlahRelawan: `${sk.jumlahRelawan} orang`,
                 status: sk.status
@@ -101,7 +99,6 @@ const SuratKeputusan: React.FC = () => {
                     { header: 'NOMOR SK', dataKey: 'nomorSK' },
                     { header: 'JUDUL SK', dataKey: 'judulSK' },
                     { header: 'TANGGAL TERBIT', dataKey: 'tanggalTerbit' },
-                    { header: 'JENIS KEGIATAN', dataKey: 'jenisKegiatan' },
                     { header: 'NAMA OPD', dataKey: 'namaOPD' },
                     { header: 'JUMLAH RELAWAN', dataKey: 'jumlahRelawan' },
                     { header: 'STATUS', dataKey: 'status' }
@@ -236,17 +233,6 @@ const SuratKeputusan: React.FC = () => {
                             <input
                                 type="text"
                                 value={selectedSK.tanggalTerbit}
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
-                                disabled
-                            />
-                        </div>
-
-                        {/* Jenis Kegiatan */}
-                        <div className="grid grid-cols-3 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">Jenis Kegiatan</label>
-                            <input
-                                type="text"
-                                value={selectedSK.jenisKegiatan}
                                 className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
                                 disabled
                             />

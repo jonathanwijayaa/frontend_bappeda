@@ -4,7 +4,7 @@ export interface SKData {
     nomorSK: string;
     judulSK: string;
     tanggalTerbit: string;
-    jenisKegiatan: 'Kader' | 'OPD';
+    opdId: number;
     namaOPD: string;
     namaKader?: string;
     jumlahRelawan: number;
@@ -16,7 +16,7 @@ export interface SKFormData {
     nomorSK: string;
     judulSK: string;
     tanggalTerbit: string;
-    jenisKegiatan: 'Kader' | 'OPD';
+    opdId: number;
     namaOPD: string;
     namaKader?: string;
     status: 'Aktif' | 'Nonaktif';
