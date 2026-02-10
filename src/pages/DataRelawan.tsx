@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Upload, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Upload, ChevronLeft, ChevronRight, X, ExternalLink } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
@@ -7,10 +8,11 @@ import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
 import Select from '../components/ui/Select';
 import UploadExcelModal from '../components/ui/UploadExcelModal';
-import { PengajuanData, RelawanData } from '../types/relawan.types';
+import { PengajuanData, RelawanData, Assignment } from '../types/relawan.types';
 import { mockPengajuanData, mockRelawanData } from '../data/relawan.data';
 
 const DataRelawan: React.FC = () => {
+    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
@@ -29,10 +31,17 @@ const DataRelawan: React.FC = () => {
         jenisKelamin: 'Laki-Laki',
         alamat: '',
         noHp: '',
-        opd: '',
-        komunitas: '',
-        peran: '',
-        statusKeaktifan: 'Aktif'
+        assignments: [
+            {
+                id: Date.now().toString(),
+                opd: '',
+                kader: '',
+                peran: '',
+                statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
+                nomorSK: '',
+                skId: ''
+            }
+        ]
     });
 
     const pengajuanData: PengajuanData[] = mockPengajuanData;
@@ -92,14 +101,12 @@ const DataRelawan: React.FC = () => {
         console.log('Approved:', selectedPengajuan);
         console.log('Verification Note:', verificationNote);
         setIsReviewModalOpen(false);
-        // Implement approval logic yang asli
     };
 
     const handleReject = () => {
         console.log('Rejected:', selectedPengajuan);
         console.log('Verification Note:', verificationNote);
         setIsReviewModalOpen(false);
-        // Implement rejection logic yang asli
     };
 
     const pengajuanActions = (row: PengajuanData) => (
@@ -118,28 +125,69 @@ const DataRelawan: React.FC = () => {
         }));
     };
 
-    const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const { name, value } = e.target;
+    const handleAssignmentChange = (index: number, field: keyof Assignment, value: string) => {
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            assignments: prev.assignments.map((assignment, i) =>
+                i === index ? { ...assignment, [field]: value } : assignment
+            )
         }));
+    };
+
+    const handleAddAssignment = () => {
+        setFormData(prev => ({
+            ...prev,
+            assignments: [
+                ...prev.assignments,
+                {
+                    id: Date.now().toString(),
+                    opd: '',
+                    kader: '',
+                    peran: '',
+                    statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
+                    nomorSK: '',
+                    skId: ''
+                }
+            ]
+        }));
+    };
+
+    const handleRemoveAssignment = (index: number) => {
+        if (formData.assignments.length > 1) {
+            setFormData(prev => ({
+                ...prev,
+                assignments: prev.assignments.filter((_, i) => i !== index)
+            }));
+        }
+    };
+
+    const handleViewSK = (skId: string) => {
+        // Navigate to SK page with the specific SK highlighted
+        navigate('/surat-keputusan', { state: { highlightSK: skId } });
     };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         console.log('Form data:', formData);
         setIsModalOpen(false);
+        // Reset form
         setFormData({
             namaRelawan: '',
             nik: '',
             jenisKelamin: 'Laki-Laki',
             alamat: '',
             noHp: '',
-            opd: '',
-            komunitas: '',
-            peran: '',
-            statusKeaktifan: 'Aktif'
+            assignments: [
+                {
+                    id: Date.now().toString(),
+                    opd: '',
+                    kader: '',
+                    peran: '',
+                    statusKeaktifan: 'Aktif',
+                    nomorSK: '',
+                    skId: ''
+                }
+            ]
         });
     };
 
@@ -151,12 +199,146 @@ const DataRelawan: React.FC = () => {
             jenisKelamin: 'Laki-Laki',
             alamat: '',
             noHp: '',
-            opd: '',
-            komunitas: '',
-            peran: '',
-            statusKeaktifan: 'Aktif'
+            assignments: [
+                {
+                    id: Date.now().toString(),
+                    opd: '',
+                    kader: '',
+                    peran: '',
+                    statusKeaktifan: 'Aktif',
+                    nomorSK: '',
+                    skId: ''
+                }
+            ]
         });
     };
+
+    const renderAssignmentFields = (assignment: Assignment, index: number, disabled: boolean = false) => (
+        <div key={assignment.id} className="border border-gray-200 rounded-lg p-4 mb-4 relative">
+            {!disabled && formData.assignments.length > 1 && (
+                <button
+                    type="button"
+                    onClick={() => handleRemoveAssignment(index)}
+                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                >
+                    <X size={20} />
+                </button>
+            )}
+
+            <h4 className="text-md font-semibold text-gray-900 mb-4">Penugasan {index + 1}</h4>
+
+            {/* OPD */}
+            <div className="grid grid-cols-4 gap-4 items-center mb-4">
+                <label className="text-lg font-medium text-gray-900 pl-4">OPD</label>
+                <Select
+                    name="opd"
+                    value={assignment.opd}
+                    onChange={(e) => !disabled && handleAssignmentChange(index, 'opd', e.target.value)}
+                    placeholder="Pilih OPD"
+                    className="col-span-3"
+                    options={[
+                        { value: 'Bappeda Kota Bandung', label: 'Bappeda Kota Bandung' },
+                        { value: 'Dinas Sosial Kota Bandung', label: 'Dinas Sosial Kota Bandung' },
+                        { value: 'Dinas Perhubungan Kota Bandung', label: 'Dinas Perhubungan Kota Bandung' },
+                        { value: 'Dinas Pendidikan Kota Bandung', label: 'Dinas Pendidikan Kota Bandung' },
+                    ]}
+                    disabled={disabled}
+                />
+            </div>
+
+            {/* Kader */}
+            <div className="grid grid-cols-4 gap-4 items-center mb-4">
+                <label className="text-lg font-medium text-gray-900 pl-4">Kader</label>
+                <Select
+                    name="kader"
+                    value={assignment.kader}
+                    onChange={(e) => !disabled && handleAssignmentChange(index, 'kader', e.target.value)}
+                    placeholder="Pilih Kader"
+                    className="col-span-3"
+                    options={[
+                        { value: '-', label: 'Tidak Ada (Penugasan OPD)' },
+                        { value: 'Kader Pembangunan Daerah A', label: 'Kader Pembangunan Daerah A' },
+                        { value: 'Kader Pemberdayaan Masyarakat B', label: 'Kader Pemberdayaan Masyarakat B' },
+                        { value: 'Kader Lingkungan Hidup C', label: 'Kader Lingkungan Hidup C' },
+                        { value: 'Kader Kesehatan D', label: 'Kader Kesehatan D' },
+                        { value: 'Kader Ekonomi Kreatif E', label: 'Kader Ekonomi Kreatif E' },
+                    ]}
+                    disabled={disabled}
+                />
+            </div>
+
+            {/* Peran */}
+            <div className="grid grid-cols-4 gap-4 items-center mb-4">
+                <label className="text-lg font-medium text-gray-900 pl-4">Peran</label>
+                <Select
+                    name="peran"
+                    value={assignment.peran}
+                    onChange={(e) => !disabled && handleAssignmentChange(index, 'peran', e.target.value)}
+                    placeholder="Pilih Peran"
+                    className="col-span-3"
+                    options={[
+                        { value: 'Koordinator', label: 'Koordinator' },
+                        { value: 'Anggota', label: 'Anggota' },
+                        { value: 'Pengurus', label: 'Pengurus' },
+                    ]}
+                    disabled={disabled}
+                />
+            </div>
+
+            {/* Nomor SK with link */}
+            <div className="grid grid-cols-4 gap-4 items-center mb-4">
+                <label className="text-lg font-medium text-gray-900 pl-4">Nomor SK</label>
+                <div className="col-span-3 flex gap-2 items-center">
+                    <input
+                        type="text"
+                        value={assignment.nomorSK}
+                        onChange={(e) => !disabled && handleAssignmentChange(index, 'nomorSK', e.target.value)}
+                        placeholder="Nomor SK"
+                        className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:italic"
+                        disabled={disabled}
+                    />
+                    {assignment.skId && (
+                        <button
+                            type="button"
+                            onClick={() => handleViewSK(assignment.skId)}
+                            className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
+                            title="Lihat Surat Keputusan"
+                        >
+                            <ExternalLink size={16} />
+                            Lihat SK
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Status Keaktifan */}
+            <div className="grid grid-cols-4 gap-4 items-center">
+                <label className="text-lg font-medium text-gray-900 pl-4">Status Keaktifan</label>
+                <div className="col-span-3 flex gap-6">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="radio"
+                            checked={assignment.statusKeaktifan === 'Aktif'}
+                            onChange={() => !disabled && handleAssignmentChange(index, 'statusKeaktifan', 'Aktif')}
+                            className="w-4 h-4 text-blue-500"
+                            disabled={disabled}
+                        />
+                        <span className="text-gray-700">Aktif</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="radio"
+                            checked={assignment.statusKeaktifan === 'Nonaktif'}
+                            onChange={() => !disabled && handleAssignmentChange(index, 'statusKeaktifan', 'Nonaktif')}
+                            className="w-4 h-4 text-blue-500"
+                            disabled={disabled}
+                        />
+                        <span className="text-gray-700">Nonaktif</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    );
 
     return (
         <div className="space-y-6">
@@ -324,94 +506,19 @@ const DataRelawan: React.FC = () => {
                     </div>
 
                     {/* Daftar Penugasan Section */}
-                    <div className="pt-4">
+                    <div className="pt-4 border-t border-gray-200">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Daftar Penugasan:</h3>
 
-                        {/* OPD */}
-                        <div className="grid grid-cols-4 gap-4 items-center mb-4">
-                            <label className="text-lg font-medium text-gray-900 pl-8">OPD</label>
-                            <Select
-                                name="opd"
-                                value={formData.opd}
-                                onChange={handleSelectChange}
-                                placeholder="Pilih OPD"
-                                className="col-span-3"
-                                options={[
-                                    { value: 'opd1', label: 'OPD 1' },
-                                    { value: 'opd2', label: 'OPD 2' },
-                                    { value: 'opd3', label: 'OPD 3' },
-                                ]}
-                            />
-                        </div>
-
-                        {/* Komunitas (Kader) */}
-                        <div className="grid grid-cols-4 gap-4 items-center mb-4">
-                            <label className="text-lg font-medium text-gray-900 pl-8">Kader</label>
-                            <Select
-                                name="komunitas"
-                                value={formData.komunitas}
-                                onChange={handleSelectChange}
-                                placeholder="Pilih Kader"
-                                className="col-span-3"
-                                options={[
-                                    { value: 'kader1', label: 'Kader 1' },
-                                    { value: 'kader2', label: 'Kader 2' },
-                                    { value: 'kader3', label: 'Kader 3' },
-                                ]}
-                            />
-                        </div>
-
-                        {/* Peran */}
-                        <div className="grid grid-cols-4 gap-4 items-center mb-4">
-                            <label className="text-lg font-medium text-gray-900 pl-8">Peran</label>
-                            <Select
-                                name="peran"
-                                value={formData.peran}
-                                onChange={handleSelectChange}
-                                placeholder="Pilih Peran"
-                                className="col-span-3"
-                                options={[
-                                    { value: 'koordinator', label: 'Koordinator' },
-                                    { value: 'anggota', label: 'Anggota' },
-                                    { value: 'pengurus', label: 'Pengurus' },
-                                ]}
-                            />
-                        </div>
+                        {formData.assignments.map((assignment, index) =>
+                            renderAssignmentFields(assignment, index, false)
+                        )}
 
                         {/* Tambah Data Penugasan Button */}
                         <div className="flex justify-center mt-4">
-                            <Button type="button" variant="primary" size="sm">
+                            <Button type="button" variant="primary" size="sm" onClick={handleAddAssignment}>
+                                <Plus size={16} />
                                 Tambah Data Penugasan
                             </Button>
-                        </div>
-                    </div>
-
-                    {/* Status Keaktifan */}
-                    <div className="grid grid-cols-4 gap-4 items-center pt-4">
-                        <label className="text-lg font-medium text-gray-900">Status Keaktifan</label>
-                        <div className="col-span-3 flex gap-6">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="statusKeaktifan"
-                                    value="Aktif"
-                                    checked={formData.statusKeaktifan === 'Aktif'}
-                                    onChange={handleInputChange}
-                                    className="w-4 h-4 text-blue-500"
-                                />
-                                <span className="text-gray-700">Aktif</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="statusKeaktifan"
-                                    value="Nonaktif"
-                                    checked={formData.statusKeaktifan === 'Nonaktif'}
-                                    onChange={handleInputChange}
-                                    className="w-4 h-4 text-blue-500"
-                                />
-                                <span className="text-gray-700">Nonaktif</span>
-                            </label>
                         </div>
                     </div>
 
@@ -491,7 +598,7 @@ const DataRelawan: React.FC = () => {
                             <label className="text-lg font-medium text-gray-900">Alamat</label>
                             <input
                                 type="text"
-                                value="Jl. Contoh Alamat No. 123"
+                                value={selectedRelawan.alamat || 'Jl. Contoh Alamat No. 123'}
                                 placeholder="Alamat Relawan"
                                 className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
                                 disabled
@@ -514,88 +621,13 @@ const DataRelawan: React.FC = () => {
                         <div className="border-t border-gray-200 pt-4">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">Daftar Penugasan:</h3>
 
-                            {/* OPD */}
-                            <div className="grid grid-cols-4 gap-4 items-center mb-4">
-                                <label className="text-lg font-medium text-gray-900 pl-8">OPD</label>
-                                <Select
-                                    name="opd"
-                                    value=""
-                                    onChange={() => { }}
-                                    placeholder="Pilih OPD"
-                                    className="col-span-3"
-                                    options={[
-                                        { value: 'opd1', label: 'OPD 1' },
-                                        { value: 'opd2', label: 'OPD 2' },
-                                    ]}
-                                    disabled
-                                />
-                            </div>
-
-                            {/* Komunitas */}
-                            <div className="grid grid-cols-4 gap-4 items-center mb-4">
-                                <label className="text-lg font-medium text-gray-900 pl-8">Komunitas</label>
-                                <Select
-                                    name="komunitas"
-                                    value=""
-                                    onChange={() => { }}
-                                    placeholder="Pilih Komunitas"
-                                    className="col-span-3"
-                                    options={[
-                                        { value: 'kader1', label: 'Kader 1' },
-                                        { value: 'kader2', label: 'Kader 2' },
-                                    ]}
-                                    disabled
-                                />
-                            </div>
-
-                            {/* Peran */}
-                            <div className="grid grid-cols-4 gap-4 items-center mb-4">
-                                <label className="text-lg font-medium text-gray-900 pl-8">Peran</label>
-                                <Select
-                                    name="peran"
-                                    value=""
-                                    onChange={() => { }}
-                                    placeholder="Pilih Peran"
-                                    className="col-span-3"
-                                    options={[
-                                        { value: 'koordinator', label: 'Koordinator' },
-                                        { value: 'anggota', label: 'Anggota' },
-                                    ]}
-                                    disabled
-                                />
-                            </div>
-
-                            {/* Status Keaktifan */}
-                            <div className="grid grid-cols-4 gap-4 items-center">
-                                <label className="text-lg font-medium text-gray-900 pl-8">Status Keaktifan</label>
-                                <div className="col-span-3 flex gap-6">
-                                    <label className="flex items-center gap-2">
-                                        <input
-                                            type="radio"
-                                            checked={true}
-                                            className="w-4 h-4 text-blue-500"
-                                            disabled
-                                        />
-                                        <span className="text-gray-700">Aktif</span>
-                                    </label>
-                                    <label className="flex items-center gap-2">
-                                        <input
-                                            type="radio"
-                                            checked={false}
-                                            className="w-4 h-4 text-blue-500"
-                                            disabled
-                                        />
-                                        <span className="text-gray-700">Nonaktif</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            {/* Tambah Data Penugasan Button */}
-                            <div className="flex justify-center mt-4">
-                                <Button type="button" variant="primary" size="sm">
-                                    Tambah Data Penugasan
-                                </Button>
-                            </div>
+                            {selectedRelawan.assignments && selectedRelawan.assignments.length > 0 ? (
+                                selectedRelawan.assignments.map((assignment, index) =>
+                                    renderAssignmentFields(assignment, index, true)
+                                )
+                            ) : (
+                                <p className="text-gray-500 italic">Belum ada penugasan</p>
+                            )}
                         </div>
 
                         {/* Action Button */}

@@ -1,4 +1,16 @@
 // Relawan (Volunteer) Data Types
+
+// Assignment interface for volunteer assignments
+export interface Assignment {
+    id: string;
+    opd: string;
+    kader: string;
+    peran: string;
+    statusKeaktifan: 'Aktif' | 'Nonaktif';
+    nomorSK: string;
+    skId: string; // Reference to SK document
+}
+
 export interface PengajuanData {
     nik: string;
     namaLengkap: string;
@@ -18,6 +30,8 @@ export interface RelawanData {
     namaLengkap: string;
     jenisKelamin: string;
     noTelepon: string;
+    alamat?: string;
+    assignments?: Assignment[]; // Multiple assignments
 }
 
 export interface RelawanFormData {
@@ -26,8 +40,5 @@ export interface RelawanFormData {
     jenisKelamin: string;
     alamat: string;
     noHp: string;
-    opd: string;
-    komunitas: string;
-    peran: string;
-    statusKeaktifan: string;
+    assignments: Assignment[];
 }
