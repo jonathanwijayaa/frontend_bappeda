@@ -7,10 +7,10 @@ const EditProfil: React.FC = () => {
     const { user } = useAuth();
 
     const [profileData, setProfileData] = useState({
-        namaLengkap: user.name,
+        namaLengkap: user?.name || '',
         nik: '1234567890123456',
         noTelepon: '081234567890',
-        jenisKelamin: user.name === 'Amelia' ? 'Perempuan' : 'Laki-Laki'
+        jenisKelamin: user?.name === 'Amelia' ? 'Perempuan' : 'Laki-Laki'
     });
 
     const [passwordData, setPasswordData] = useState({
@@ -19,7 +19,7 @@ const EditProfil: React.FC = () => {
         konfirmasiPassword: ''
     });
 
-    const [avatarPreview, setAvatarPreview] = useState<string>(user.avatar);
+    const [avatarPreview, setAvatarPreview] = useState<string>(user?.avatar || 'https://ui-avatars.com/api/?name=User&background=gray&color=fff');
 
     const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -49,7 +49,7 @@ const EditProfil: React.FC = () => {
     };
 
     const handleDeleteAvatar = () => {
-        setAvatarPreview(user.avatar);
+        setAvatarPreview(user?.avatar || 'https://ui-avatars.com/api/?name=User&background=gray&color=fff');
     };
 
     const handleSubmit = (e: React.FormEvent) => {

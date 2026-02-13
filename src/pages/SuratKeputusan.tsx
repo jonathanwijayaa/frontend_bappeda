@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, FileDown, Upload, ChevronLeft, ChevronRight, Loader2, ExternalLink } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { FileDown, Upload, ChevronLeft, ChevronRight, Loader2, ExternalLink } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
@@ -13,7 +12,6 @@ import { mockSKData } from '../data/sk.data';
 import { exportToPDF } from '../utils/exportToPDF';
 
 const SuratKeputusan: React.FC = () => {
-    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
@@ -47,6 +45,12 @@ const SuratKeputusan: React.FC = () => {
         { header: 'TANGGAL TERBIT', accessor: 'tanggalTerbit' as keyof SKData },
         { header: 'NAMA OPD', accessor: 'namaOPD' as keyof SKData },
         {
+            header: 'NAMA KADER',
+            render: (row: SKData) => (
+                <span>{row.namaKader || '-'}</span>
+            )
+        },
+        {
             header: 'JUMLAH RELAWAN',
             render: (row: SKData) => (
                 <span>{row.jumlahRelawan} orang</span>
@@ -63,7 +67,7 @@ const SuratKeputusan: React.FC = () => {
     const handleViewDocument = (sk: SKData) => {
         // In a real app, this would open the PDF document
         console.log('Opening document:', sk.filePath);
-        setToast({ message: `Membuka dokumen ${sk.nomorSK}`, type: 'info' });
+        setToast({ message: `Membuka dokumen ${sk.nomorSK}`, type: 'success' });
     };
 
     const actions = (row: SKData) => (
