@@ -4,11 +4,11 @@ export const mockSKData: SKData[] = [
     {
         id: 'SK001',
         nomorSK: 'SK/001/KESEHATAN/2024',
-        judulSK: 'SK Penugasan Relawan Kader Pembangunan Daerah A',
+        judulSK: 'SK Penugasan Relawan Kader Kesehatan A',
         tanggalTerbit: '15 Januari 2024',
         opdId: 1,
         namaOPD: 'Dinas Kesehatan',
-        namaKader: 'Kader Pembangunan Daerah A',
+        namaKader: 'Kader Kesehatan A',
         jumlahRelawan: 15,
         status: 'Aktif',
         filePath: '/documents/sk-001.pdf'
@@ -16,11 +16,11 @@ export const mockSKData: SKData[] = [
     {
         id: 'SK002',
         nomorSK: 'SK/002/PENDIDIKAN/2024',
-        judulSK: 'SK Penugasan Relawan Kader Pemberdayaan Masyarakat B',
+        judulSK: 'SK Penugasan Relawan Kader Pendidikan B',
         tanggalTerbit: '20 Januari 2024',
         opdId: 2,
         namaOPD: 'Dinas Pendidikan',
-        namaKader: 'Kader Pemberdayaan Masyarakat B',
+        namaKader: 'Kader Pendidikan B',
         jumlahRelawan: 12,
         status: 'Aktif',
         filePath: '/documents/sk-002.pdf'
@@ -39,11 +39,11 @@ export const mockSKData: SKData[] = [
     {
         id: 'SK004',
         nomorSK: 'SK/004/PERHUBUNGAN/2024',
-        judulSK: 'SK Penugasan Relawan Kader Lingkungan Hidup C',
+        judulSK: 'SK Penugasan Relawan Kader Lingkungan D',
         tanggalTerbit: '01 Februari 2024',
         opdId: 3,
         namaOPD: 'Dinas Perhubungan',
-        namaKader: 'Kader Lingkungan Hidup C',
+        namaKader: 'Kader Lingkungan D',
         jumlahRelawan: 10,
         status: 'Aktif',
         filePath: '/documents/sk-004.pdf'
@@ -62,11 +62,11 @@ export const mockSKData: SKData[] = [
     {
         id: 'SK006',
         nomorSK: 'SK/006/KESEHATAN/2024',
-        judulSK: 'SK Penugasan Relawan Kader Kesehatan D',
+        judulSK: 'SK Penugasan Relawan Kader Kesehatan A',
         tanggalTerbit: '10 Februari 2024',
         opdId: 1,
         namaOPD: 'Dinas Kesehatan',
-        namaKader: 'Kader Kesehatan D',
+        namaKader: 'Kader Kesehatan A',
         jumlahRelawan: 14,
         status: 'Aktif',
         filePath: '/documents/sk-006.pdf'
@@ -85,11 +85,11 @@ export const mockSKData: SKData[] = [
     {
         id: 'SK008',
         nomorSK: 'SK/008/PARIWISATA/2023',
-        judulSK: 'SK Penugasan Relawan Kader Ekonomi Kreatif E (Nonaktif)',
+        judulSK: 'SK Penugasan Relawan Kader Ekonomi E (Nonaktif)',
         tanggalTerbit: '20 Desember 2023',
         opdId: 6,
         namaOPD: 'Dinas Pariwisata',
-        namaKader: 'Kader Ekonomi Kreatif E',
+        namaKader: 'Kader Ekonomi E',
         jumlahRelawan: 8,
         status: 'Nonaktif',
         filePath: '/documents/sk-008.pdf'

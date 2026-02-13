@@ -31,6 +31,25 @@ const ManajemenOPD: React.FC = () => {
         kontak: ''
     });
 
+    const [detailFormData, setDetailFormData] = useState({
+        namaOpd: '',
+        status: '',
+        alamat: '',
+        pic: '',
+        kontak: ''
+    });
+
+    const hasChanges = useMemo(() => {
+        if (!selectedOPD) return false;
+        return (
+            detailFormData.namaOpd !== selectedOPD.namaOpd ||
+            detailFormData.status !== selectedOPD.status ||
+            detailFormData.alamat !== selectedOPD.alamat ||
+            detailFormData.pic !== selectedOPD.pic ||
+            detailFormData.kontak !== selectedOPD.kontak
+        );
+    }, [selectedOPD, detailFormData]);
+
     // Pagination logic
     const filteredData = useMemo(() => {
         return mockOPDData.filter(opd =>
@@ -59,6 +78,13 @@ const ManajemenOPD: React.FC = () => {
 
     const handleDetailClick = (opd: OPDData) => {
         setSelectedOPD(opd);
+        setDetailFormData({
+            namaOpd: opd.namaOpd,
+            status: opd.status,
+            alamat: opd.alamat,
+            pic: opd.pic,
+            kontak: opd.kontak
+        });
         setIsDetailModalOpen(true);
     };
 
@@ -93,6 +119,19 @@ const ManajemenOPD: React.FC = () => {
             ...prev,
             [name]: value
         }));
+    };
+
+    const handleDetailInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setDetailFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const handleDetailSave = () => {
+        console.log('Saving detail changes:', detailFormData);
+        setIsDetailModalOpen(false);
     };
 
     const handleSubmit = (e: React.FormEvent) => {
@@ -365,10 +404,11 @@ const ManajemenOPD: React.FC = () => {
                             <label className="text-lg font-medium text-gray-900">Nama OPD</label>
                             <input
                                 type="text"
-                                value={selectedOPD.namaOpd}
+                                name="namaOpd"
+                                value={detailFormData.namaOpd}
+                                onChange={handleDetailInputChange}
                                 placeholder="Nama OPD"
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
-                                disabled
+                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
 
@@ -377,10 +417,11 @@ const ManajemenOPD: React.FC = () => {
                             <label className="text-lg font-medium text-gray-900">Status</label>
                             <input
                                 type="text"
-                                value={selectedOPD.status}
+                                name="status"
+                                value={detailFormData.status}
+                                onChange={handleDetailInputChange}
                                 placeholder="Status"
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
-                                disabled
+                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
 
@@ -389,10 +430,11 @@ const ManajemenOPD: React.FC = () => {
                             <label className="text-lg font-medium text-gray-900">Alamat</label>
                             <input
                                 type="text"
-                                value={selectedOPD.alamat}
+                                name="alamat"
+                                value={detailFormData.alamat}
+                                onChange={handleDetailInputChange}
                                 placeholder="Alamat"
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
-                                disabled
+                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
 
@@ -401,10 +443,11 @@ const ManajemenOPD: React.FC = () => {
                             <label className="text-lg font-medium text-gray-900">PIC</label>
                             <input
                                 type="text"
-                                value={selectedOPD.pic}
+                                name="pic"
+                                value={detailFormData.pic}
+                                onChange={handleDetailInputChange}
                                 placeholder="PIC"
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
-                                disabled
+                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
 
@@ -413,25 +456,21 @@ const ManajemenOPD: React.FC = () => {
                             <label className="text-lg font-medium text-gray-900">Kontak</label>
                             <input
                                 type="text"
-                                value={selectedOPD.kontak}
+                                name="kontak"
+                                value={detailFormData.kontak}
+                                onChange={handleDetailInputChange}
                                 placeholder="Kontak"
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
-                                disabled
+                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex justify-between pt-6">
+                        {/* Action Button */}
+                        <div className="flex justify-end pt-6">
                             <Button
                                 type="button"
-                                onClick={() => setIsDetailModalOpen(false)}
-                                className="bg-red-600 hover:bg-red-700 text-white px-8"
-                            >
-                                Batal
-                            </Button>
-                            <Button
-                                type="button"
-                                className="bg-green-600 hover:bg-green-700 text-white px-8"
+                                onClick={handleDetailSave}
+                                disabled={!hasChanges}
+                                className="bg-green-600 hover:bg-green-700 text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Simpan
                             </Button>
