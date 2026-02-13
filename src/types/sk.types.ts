@@ -4,6 +4,7 @@ export interface SKData {
     nomorSK: string;
     judulSK: string;
     tanggalTerbit: string;
+    batasAktif: string;
     opdId: number;
     namaOPD: string;
     namaKader?: string;

@@ -6,6 +6,7 @@ export const mockSKData: SKData[] = [
         nomorSK: 'SK/001/KESEHATAN/2024',
         judulSK: 'SK Penugasan Relawan Kader Kesehatan A',
         tanggalTerbit: '15 Januari 2024',
+        batasAktif: '15 Januari 2025',
         opdId: 1,
         namaOPD: 'Dinas Kesehatan',
         namaKader: 'Kader Kesehatan A',
@@ -18,6 +19,7 @@ export const mockSKData: SKData[] = [
         nomorSK: 'SK/002/PENDIDIKAN/2024',
         judulSK: 'SK Penugasan Relawan Kader Pendidikan B',
         tanggalTerbit: '20 Januari 2024',
+        batasAktif: '20 Januari 2025',
         opdId: 2,
         namaOPD: 'Dinas Pendidikan',
         namaKader: 'Kader Pendidikan B',
@@ -30,8 +32,10 @@ export const mockSKData: SKData[] = [
         nomorSK: 'SK/003/DINSOS/2024',
         judulSK: 'SK Penugasan Relawan OPD Dinas Sosial',
         tanggalTerbit: '25 Januari 2024',
+        batasAktif: '25 Januari 2025',
         opdId: 4,
         namaOPD: 'Dinas Sosial',
+        namaKader: 'Kader Sosial Kemasyarakatan',
         jumlahRelawan: 20,
         status: 'Aktif',
         filePath: '/documents/sk-003.pdf'
@@ -41,6 +45,7 @@ export const mockSKData: SKData[] = [
         nomorSK: 'SK/004/PERHUBUNGAN/2024',
         judulSK: 'SK Penugasan Relawan Kader Lingkungan D',
         tanggalTerbit: '01 Februari 2024',
+        batasAktif: '01 Februari 2025',
         opdId: 3,
         namaOPD: 'Dinas Perhubungan',
         namaKader: 'Kader Lingkungan D',
@@ -53,8 +58,10 @@ export const mockSKData: SKData[] = [
         nomorSK: 'SK/005/DISHUB/2024',
         judulSK: 'SK Penugasan Relawan OPD Dinas Perhubungan',
         tanggalTerbit: '05 Februari 2024',
+        batasAktif: '05 Februari 2025',
         opdId: 3,
         namaOPD: 'Dinas Perhubungan',
+        namaKader: 'Kader Transportasi dan Lalu Lintas',
         jumlahRelawan: 18,
         status: 'Aktif',
         filePath: '/documents/sk-005.pdf'
@@ -64,6 +71,7 @@ export const mockSKData: SKData[] = [
         nomorSK: 'SK/006/KESEHATAN/2024',
         judulSK: 'SK Penugasan Relawan Kader Kesehatan A',
         tanggalTerbit: '10 Februari 2024',
+        batasAktif: '10 Februari 2025',
         opdId: 1,
         namaOPD: 'Dinas Kesehatan',
         namaKader: 'Kader Kesehatan A',
@@ -76,8 +84,10 @@ export const mockSKData: SKData[] = [
         nomorSK: 'SK/007/DISDIK/2024',
         judulSK: 'SK Penugasan Relawan OPD Dinas Pendidikan',
         tanggalTerbit: '15 Februari 2024',
+        batasAktif: '15 Februari 2025',
         opdId: 2,
         namaOPD: 'Dinas Pendidikan',
+        namaKader: 'Kader Literasi dan Pendidikan',
         jumlahRelawan: 25,
         status: 'Aktif',
         filePath: '/documents/sk-007.pdf'
@@ -87,6 +97,7 @@ export const mockSKData: SKData[] = [
         nomorSK: 'SK/008/PARIWISATA/2023',
         judulSK: 'SK Penugasan Relawan Kader Ekonomi E (Nonaktif)',
         tanggalTerbit: '20 Desember 2023',
+        batasAktif: '20 Desember 2024',
         opdId: 6,
         namaOPD: 'Dinas Pariwisata',
         namaKader: 'Kader Ekonomi E',
@@ -95,3 +106,4 @@ export const mockSKData: SKData[] = [
         filePath: '/documents/sk-008.pdf'
     },
 ];
+

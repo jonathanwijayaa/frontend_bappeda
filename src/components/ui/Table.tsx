@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 interface Column<T> {
     header: string;
@@ -11,9 +11,18 @@ interface TableProps<T> {
     data: T[];
     actions?: (row: T) => ReactNode;
     minRows?: number;
+    highlightedRowId?: string | null;
+    rowIdAccessor?: keyof T;
 }
 
-function Table<T extends Record<string, any>>({ columns, data, actions, minRows = 0 }: TableProps<T>) {
+function Table<T extends Record<string, any>>({
+    columns,
+    data,
+    actions,
+    minRows = 0,
+    highlightedRowId = null,
+    rowIdAccessor = 'id' as keyof T
+}: TableProps<T>) {
     // Calculate how many empty rows we need to add 
     const emptyRowsCount = Math.max(0, minRows - data.length);
 
@@ -38,22 +47,32 @@ function Table<T extends Record<string, any>>({ columns, data, actions, minRows 
                     </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                    {data.map((row, rowIndex) => (
-                        <tr key={rowIndex} className="hover:bg-gray-50">
-                            {columns.map((column, colIndex) => (
-                                <td key={colIndex} className="px-6 py-4 text-sm text-gray-900">
-                                    {column.render ? column.render(row) : column.accessor ? row[column.accessor] : ''}
-                                </td>
-                            ))}
-                            {actions && (
-                                <td className="px-6 py-4 text-sm">
-                                    <div className="flex gap-2">
-                                        {actions(row)}
-                                    </div>
-                                </td>
-                            )}
-                        </tr>
-                    ))}
+                    {data.map((row, rowIndex) => {
+                        const rowId = String(row[rowIdAccessor]);
+                        const isHighlighted = highlightedRowId === rowId;
+
+                        return (
+                            <tr
+                                key={rowIndex}
+                                data-sk-id={rowId}
+                                className={`hover:bg-gray-50 transition-colors duration-300 ${isHighlighted ? 'bg-yellow-100 animate-pulse' : ''
+                                    }`}
+                            >
+                                {columns.map((column, colIndex) => (
+                                    <td key={colIndex} className="px-6 py-4 text-sm text-gray-900">
+                                        {column.render ? column.render(row) : column.accessor ? row[column.accessor] : ''}
+                                    </td>
+                                ))}
+                                {actions && (
+                                    <td className="px-6 py-4 text-sm">
+                                        <div className="flex gap-2">
+                                            {actions(row)}
+                                        </div>
+                                    </td>
+                                )}
+                            </tr>
+                        );
+                    })}
                     {/* Empty placeholder rows to maintain consistent height */}
                     {Array.from({ length: emptyRowsCount }).map((_, index) => (
                         <tr key={`empty-${index}`} className="h-[57px]">

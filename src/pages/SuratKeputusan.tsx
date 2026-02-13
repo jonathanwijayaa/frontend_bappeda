@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { FileDown, Upload, ChevronLeft, ChevronRight, Loader2, ExternalLink } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
@@ -9,9 +10,11 @@ import UploadPDFModal from '../components/ui/UploadPDFModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import { SKData } from '../types/sk.types';
 import { mockSKData } from '../data/sk.data';
+import { mockRelawanData } from '../data/relawan.data';
 import { exportToPDF } from '../utils/exportToPDF';
 
 const SuratKeputusan: React.FC = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
@@ -19,6 +22,7 @@ const SuratKeputusan: React.FC = () => {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [isExporting, setIsExporting] = useState<boolean>(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+    const [highlightedSKId, setHighlightedSKId] = useState<string | null>(null);
     const itemsPerPage = 5;
 
     // Pagination logic
@@ -39,6 +43,39 @@ const SuratKeputusan: React.FC = () => {
         setCurrentPage(page);
     };
 
+    // Find which page contains a specific SK
+    const findPageForSK = (skId: string): number => {
+        const index = filteredData.findIndex(sk => sk.id === skId);
+        if (index === -1) return 1;
+        return Math.floor(index / itemsPerPage) + 1;
+    };
+
+    // Handle URL highlight parameter
+    useEffect(() => {
+        const highlightParam = searchParams.get('highlight');
+        if (highlightParam) {
+            setHighlightedSKId(highlightParam);
+            const targetPage = findPageForSK(highlightParam);
+            setCurrentPage(targetPage);
+
+            // Scroll to highlighted row after render
+            setTimeout(() => {
+                const element = document.querySelector(`[data-sk-id="${highlightParam}"]`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+
+            // Clear highlight after 3 seconds
+            const timer = setTimeout(() => {
+                setHighlightedSKId(null);
+                setSearchParams({}, { replace: true });
+            }, 3000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [searchParams, filteredData, itemsPerPage, setSearchParams]);
+
     const columns = [
         { header: 'NOMOR SK', accessor: 'nomorSK' as keyof SKData },
         { header: 'JUDUL SK', accessor: 'judulSK' as keyof SKData },
@@ -56,7 +93,6 @@ const SuratKeputusan: React.FC = () => {
                 <span>{row.jumlahRelawan} orang</span>
             )
         },
-        { header: 'STATUS', accessor: 'status' as keyof SKData },
     ];
 
     const handleDetailClick = (sk: SKData) => {
@@ -72,14 +108,22 @@ const SuratKeputusan: React.FC = () => {
 
     const actions = (row: SKData) => (
         <>
-            <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
+            <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => handleDetailClick(row)}
+                className="flex-1 whitespace-nowrap"
+            >
+                Lihat Detail
+            </Button>
             <Button
                 variant="secondary"
                 size="sm"
                 onClick={() => handleViewDocument(row)}
+                className="flex-1 whitespace-nowrap"
             >
                 <ExternalLink size={14} />
-                Lihat
+                Lihat SK
             </Button>
         </>
     );
@@ -156,7 +200,14 @@ const SuratKeputusan: React.FC = () => {
                     </Button>
                 </div>
 
-                <Table columns={columns} data={currentData} actions={actions} minRows={5} />
+                <Table
+                    columns={columns}
+                    data={currentData}
+                    actions={actions}
+                    minRows={5}
+                    highlightedRowId={highlightedSKId}
+                    rowIdAccessor="id"
+                />
 
                 {/* Pagination */}
                 <div className="mt-4 flex justify-between items-center">
@@ -242,6 +293,17 @@ const SuratKeputusan: React.FC = () => {
                             />
                         </div>
 
+                        {/* Batas Aktif */}
+                        <div className="grid grid-cols-3 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">Batas Aktif</label>
+                            <input
+                                type="text"
+                                value={selectedSK.batasAktif}
+                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
+                                disabled
+                            />
+                        </div>
+
                         {/* Nama OPD */}
                         <div className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">Nama OPD</label>
@@ -277,18 +339,44 @@ const SuratKeputusan: React.FC = () => {
                             />
                         </div>
 
-                        {/* Status */}
-                        <div className="grid grid-cols-3 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">Status</label>
-                            <input
-                                type="text"
-                                value={selectedSK.status}
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 italic"
-                                disabled
-                            />
+                        {/* Daftar Relawan */}
+                        <div className="grid grid-cols-3 gap-4 items-start">
+                            <label className="text-lg font-medium text-gray-900">Daftar Relawan</label>
+                            <div className="col-span-2">
+                                {(() => {
+                                    const relawanList = mockRelawanData.filter(relawan =>
+                                        relawan.assignments?.some(assignment => assignment.skId === selectedSK.id)
+                                    );
+
+                                    if (relawanList.length === 0) {
+                                        return <p className="text-sm text-gray-500 italic">Tidak ada relawan terdaftar</p>;
+                                    }
+
+                                    return (
+                                        <div className="border border-gray-300 rounded-lg overflow-hidden">
+                                            <table className="w-full">
+                                                <thead className="bg-gray-50">
+                                                    <tr>
+                                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">NIK</th>
+                                                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nama Relawan</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="bg-white divide-y divide-gray-200">
+                                                    {relawanList.map((relawan, index) => (
+                                                        <tr key={index} className="hover:bg-gray-50">
+                                                            <td className="px-4 py-2 text-sm text-gray-900">{relawan.nik}</td>
+                                                            <td className="px-4 py-2 text-sm text-gray-900">{relawan.namaLengkap}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
                         </div>
 
-                        {/* Action Buttons */}
+                        {/* Action Buttons
                         <div className="flex justify-between pt-6">
                             <Button
                                 type="button"
@@ -299,13 +387,13 @@ const SuratKeputusan: React.FC = () => {
                             </Button>
                             <Button
                                 type="button"
-                                onClick={() => handleViewDocument(selectedSK)}
+                                onClick={() => selectedSK && handleViewDocument(selectedSK)}
                                 className="bg-blue-600 hover:bg-blue-700 text-white px-8"
                             >
-                                <ExternalLink size={16} />
+                                <ExternalLink size={16} className="mr-2" />
                                 Lihat Dokumen
                             </Button>
-                        </div>
+                        </div> */}
                     </div>
                 )}
             </Modal>
@@ -330,3 +418,4 @@ const SuratKeputusan: React.FC = () => {
 };
 
 export default SuratKeputusan;
+

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, Upload, ChevronLeft, ChevronRight, X, ExternalLink } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
@@ -12,7 +12,6 @@ import { PengajuanData, RelawanData, Assignment } from '../types/relawan.types';
 import { mockPengajuanData, mockRelawanData } from '../data/relawan.data';
 
 const DataRelawan: React.FC = () => {
-    const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
@@ -237,10 +236,7 @@ const DataRelawan: React.FC = () => {
         }
     };
 
-    const handleViewSK = (skId: string) => {
-        // Navigate to SK page with the specific SK highlighted
-        navigate('/surat-keputusan', { state: { highlightSK: skId } });
-    };
+
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -333,10 +329,14 @@ const DataRelawan: React.FC = () => {
                         placeholder="Pilih OPD"
                         className="col-span-3"
                         options={[
-                            { value: 'Bappeda Kota Bandung', label: 'Bappeda Kota Bandung' },
-                            { value: 'Dinas Sosial Kota Bandung', label: 'Dinas Sosial Kota Bandung' },
-                            { value: 'Dinas Perhubungan Kota Bandung', label: 'Dinas Perhubungan Kota Bandung' },
-                            { value: 'Dinas Pendidikan Kota Bandung', label: 'Dinas Pendidikan Kota Bandung' },
+                            { value: 'Dinas Kesehatan', label: 'Dinas Kesehatan' },
+                            { value: 'Dinas Pendidikan', label: 'Dinas Pendidikan' },
+                            { value: 'Dinas Perhubungan', label: 'Dinas Perhubungan' },
+                            { value: 'Dinas Sosial', label: 'Dinas Sosial' },
+                            { value: 'Dinas Pekerjaan Umum', label: 'Dinas Pekerjaan Umum' },
+                            { value: 'Dinas Pariwisata', label: 'Dinas Pariwisata' },
+                            { value: 'Dinas Pertanian', label: 'Dinas Pertanian' },
+                            { value: 'Dinas Perindustrian', label: 'Dinas Perindustrian' },
                         ]}
                         disabled={disabled}
                     />
@@ -394,15 +394,14 @@ const DataRelawan: React.FC = () => {
                             disabled={disabled}
                         />
                         {assignment.skId && (
-                            <button
-                                type="button"
-                                onClick={() => handleViewSK(assignment.skId)}
-                                className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm"
+                            <Link
+                                to={`/surat-keputusan?highlight=${assignment.skId}`}
+                                className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm whitespace-nowrap"
                                 title="Lihat Surat Keputusan"
                             >
                                 <ExternalLink size={16} />
                                 Lihat SK
-                            </button>
+                            </Link>
                         )}
                     </div>
                 </div>

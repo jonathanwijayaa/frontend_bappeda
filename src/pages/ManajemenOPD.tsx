@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Plus, FileDown, Upload, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
@@ -9,6 +10,7 @@ import UploadExcelModal from '../components/ui/UploadExcelModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import { OPDData } from '../types/opd.types';
 import { mockOPDData } from '../data/opd.data';
+import { mockSKData } from '../data/sk.data';
 import { exportToPDF } from '../utils/exportToPDF';
 
 const ManajemenOPD: React.FC = () => {
@@ -462,6 +464,33 @@ const ManajemenOPD: React.FC = () => {
                                 placeholder="Kontak"
                                 className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
+                        </div>
+
+                        {/* Daftar SK Terkait */}
+                        <div className="grid grid-cols-3 gap-4 items-start">
+                            <label className="text-lg font-medium text-gray-900">Daftar SK Terkait</label>
+                            <div className="col-span-2">
+                                {(() => {
+                                    const relatedSKs = mockSKData.filter(sk => sk.opdId === selectedOPD.id);
+                                    if (relatedSKs.length === 0) {
+                                        return <p className="text-sm text-gray-500 italic">Tidak ada SK terkait</p>;
+                                    }
+                                    return (
+                                        <ul className="space-y-2">
+                                            {relatedSKs.map(sk => (
+                                                <li key={sk.id}>
+                                                    <Link
+                                                        to={`/surat-keputusan?highlight=${sk.id}`}
+                                                        className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
+                                                    >
+                                                        {sk.nomorSK}
+                                                    </Link>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    );
+                                })()}
+                            </div>
                         </div>
 
                         {/* Action Button */}
