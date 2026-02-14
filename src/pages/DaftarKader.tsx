@@ -188,6 +188,14 @@ const DaftarKader: React.FC = () => {
         }
     };
 
+    const handleExcelUploadConfirm = (data: any[]) => {
+        console.log('Excel data confirmed:', data);
+        // Here you would typically add the data to your state/database
+        // For now, just show a success message
+        setToast({ message: `Berhasil menambahkan ${data.length} data kader`, type: 'success' });
+        setIsUploadModalOpen(false);
+    };
+
     return (
         <div className="space-y-6">
             {/* Header Actions */}
@@ -527,8 +535,10 @@ const DaftarKader: React.FC = () => {
             <UploadExcelModal
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
+                onConfirm={handleExcelUploadConfirm}
                 title="Unggah Data Kader"
                 templateName="Data Kader"
+                dataType="kader"
             />
 
             {/* Toast Notification */}

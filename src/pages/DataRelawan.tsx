@@ -8,6 +8,7 @@ import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
 import Select from '../components/ui/Select';
 import UploadExcelModal from '../components/ui/UploadExcelModal';
+import Toast, { ToastType } from '../components/ui/Toast';
 import { PengajuanData, RelawanData, Assignment } from '../types/relawan.types';
 import { mockPengajuanData, mockRelawanData } from '../data/relawan.data';
 
@@ -22,6 +23,7 @@ const DataRelawan: React.FC = () => {
     const [verificationNote, setVerificationNote] = useState<string>('');
     const [isDataChecked, setIsDataChecked] = useState<boolean>(false);
     const [currentPage, setCurrentPage] = useState<number>(1);
+    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const itemsPerPage = 5;
 
     // Detail form data for editing
@@ -138,6 +140,14 @@ const DataRelawan: React.FC = () => {
         console.log('Rejected:', selectedPengajuan);
         console.log('Verification Note:', verificationNote);
         setIsReviewModalOpen(false);
+    };
+
+    const handleExcelUploadConfirm = (data: any[]) => {
+        console.log('Excel data confirmed:', data);
+        // Here you would typically add the data to your state/database
+        // For now, just show a success message
+        setToast({ message: `Berhasil menambahkan ${data.length} data relawan`, type: 'success' });
+        setIsUploadModalOpen(false);
     };
 
     const pengajuanActions = (row: PengajuanData) => (
@@ -765,8 +775,10 @@ const DataRelawan: React.FC = () => {
             <UploadExcelModal
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
+                onConfirm={handleExcelUploadConfirm}
                 title="Unggah Data Relawan"
                 templateName="Data Relawan"
+                dataType="relawan"
             />
 
             {/* Review Pengajuan Modal */}
@@ -909,6 +921,15 @@ const DataRelawan: React.FC = () => {
                     </div>
                 )}
             </Modal>
+
+            {/* Toast Notification */}
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
+            )}
         </div>
     );
 };

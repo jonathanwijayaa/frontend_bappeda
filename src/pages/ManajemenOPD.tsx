@@ -198,6 +198,14 @@ const ManajemenOPD: React.FC = () => {
         }
     };
 
+    const handleExcelUploadConfirm = (data: any[]) => {
+        console.log('Excel data confirmed:', data);
+        // Here you would typically add the data to your state/database
+        // For now, just show a success message
+        setToast({ message: `Berhasil menambahkan ${data.length} data OPD`, type: 'success' });
+        setIsUploadModalOpen(false);
+    };
+
     return (
         <div className="space-y-6">
             {/* Header Actions */}
@@ -564,8 +572,10 @@ const ManajemenOPD: React.FC = () => {
             <UploadExcelModal
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
+                onConfirm={handleExcelUploadConfirm}
                 title="Unggah Data OPD"
                 templateName="Data OPD"
+                dataType="opd"
             />
 
             {/* Toast Notification */}

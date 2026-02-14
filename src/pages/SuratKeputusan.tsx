@@ -106,6 +106,15 @@ const SuratKeputusan: React.FC = () => {
         setToast({ message: `Membuka dokumen ${sk.nomorSK}`, type: 'success' });
     };
 
+    const handlePDFUploadConfirm = (file: File, metadata: any) => {
+        console.log('PDF file confirmed:', file);
+        console.log('SK metadata:', metadata);
+        // Here you would typically upload the file and save the metadata to your state/database
+        // For now, just show a success message
+        setToast({ message: `Berhasil menambahkan SK: ${metadata.judulSK}`, type: 'success' });
+        setIsUploadModalOpen(false);
+    };
+
     const actions = (row: SKData) => (
         <>
             <Button
@@ -402,6 +411,7 @@ const SuratKeputusan: React.FC = () => {
             <UploadPDFModal
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
+                onConfirm={handlePDFUploadConfirm}
                 title="Unggah File Surat Keputusan (PDF)"
             />
 
