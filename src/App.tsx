@@ -11,6 +11,7 @@ import Statistik from './pages/Statistik';
 import Dokumen from './pages/Dokumen';
 import SaranHotline from './pages/SaranHotline';
 import EditProfil from './pages/EditProfil';
+import ProfilRelawan from './pages/ProfilRelawan';
 import Login from './pages/Login';
 import { ReactNode } from 'react';
 
@@ -27,13 +28,32 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
 // Public Route Component (Langsung ke Dashboard kalau sudah login)
 const PublicRoute = ({ children }: { children: ReactNode }) => {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, user } = useAuth();
 
     if (isAuthenticated) {
+        // Redirect relawan to their profile page
+        if (user?.role === 'relawan') {
+            return <Navigate to="/profil-relawan" replace />;
+        }
         return <Navigate to="/dashboard" replace />;
     }
 
     return <>{children}</>;
+};
+
+// Component to redirect based on user role
+const RelawanRedirect = () => {
+    const { user } = useAuth();
+
+    if (user?.role === 'relawan') {
+        return <Navigate to="/profil-relawan" replace />;
+    }
+
+    return (
+        <Layout>
+            <Navigate to="/dashboard" replace />
+        </Layout>
+    );
 };
 
 function AppRoutes() {
@@ -49,9 +69,7 @@ function AppRoutes() {
             {/* Protected Routes */}
             <Route path="/" element={
                 <ProtectedRoute>
-                    <Layout>
-                        <Navigate to="/dashboard" replace />
-                    </Layout>
+                    <RelawanRedirect />
                 </ProtectedRoute>
             } />
             <Route path="/dashboard" element={
@@ -122,6 +140,11 @@ function AppRoutes() {
                     <Layout>
                         <EditProfil />
                     </Layout>
+                </ProtectedRoute>
+            } />
+            <Route path="/profil-relawan" element={
+                <ProtectedRoute>
+                    <ProfilRelawan />
                 </ProtectedRoute>
             } />
         </Routes>
