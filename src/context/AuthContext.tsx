@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 
 interface User {
     name: string;
-    role: 'super_admin' | 'opd';
+    role: 'super_admin' | 'opd' | 'relawan';
     roleDisplay: string;
     avatar: string;
 }
@@ -12,7 +12,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
     login: (nik: string, password: string) => Promise<{ success: boolean; message?: string }>;
     logout: () => void;
-    switchUser: (userType: 'super_admin' | 'opd') => void;
+    switchUser: (userType: 'super_admin' | 'opd' | 'relawan') => void;
     isSuperAdmin: boolean;
     isOPD: boolean;
 }
@@ -79,6 +79,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                     roleDisplay: 'OPD',
                     avatar: 'https://ui-avatars.com/api/?name=Jonathan&background=3B82F6&color=fff'
                 }
+            },
+            {
+                nik: '111222', password: 'relawan123', user: {
+                    name: 'Budi Santoso',
+                    role: 'relawan' as const,
+                    roleDisplay: 'Relawan',
+                    avatar: 'https://ui-avatars.com/api/?name=Budi+Santoso&background=F59E0B&color=fff'
+                }
             }
         ];
 
@@ -100,7 +108,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.setItem('isAuthenticated', 'false');
     };
 
-    const switchUser = (userType: 'super_admin' | 'opd') => {
+    const switchUser = (userType: 'super_admin' | 'opd' | 'relawan') => {
         if (userType === 'super_admin') {
             setUser({
                 name: 'Amelia',
@@ -114,6 +122,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 role: 'opd',
                 roleDisplay: 'OPD',
                 avatar: 'https://ui-avatars.com/api/?name=Jonathan&background=3B82F6&color=fff'
+            });
+        } else if (userType === 'relawan') {
+            setUser({
+                name: 'Budi Santoso',
+                role: 'relawan',
+                roleDisplay: 'Relawan',
+                avatar: 'https://ui-avatars.com/api/?name=Budi+Santoso&background=F59E0B&color=fff'
             });
         }
     };

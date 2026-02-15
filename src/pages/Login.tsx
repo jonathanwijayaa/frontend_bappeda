@@ -40,15 +40,15 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4 py-6 sm:p-4">
             <div className="w-full max-w-md">
                 <Card className="shadow-lg">
-                    <div className="p-8">
-                        <h1 className="text-2xl font-bold text-center text-gray-800 mb-8">
+                    <div className="p-5 sm:p-8">
+                        <h1 className="text-xl sm:text-2xl font-bold text-center text-gray-800 mb-6 sm:mb-8">
                             Selamat Datang
                         </h1>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
                             {/* NIK Input */}
                             <div>
                                 <label htmlFor="nik" className="block text-sm font-medium text-gray-700 mb-2">
@@ -109,10 +109,13 @@ const Login = () => {
                         </form>
 
                         {/* Demo Credentials Info */}
-                        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="mt-5 sm:mt-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <p className="text-xs text-blue-800 font-semibold mb-2">Demo Credentials:</p>
-                            <p className="text-xs text-blue-700">Super Admin - NIK: 123456, Password: admin123</p>
-                            <p className="text-xs text-blue-700">OPD - NIK: 654321, Password: opd123</p>
+                            <div className="space-y-1">
+                                <p className="text-xs text-blue-700">Super Admin - NIK: 123456, Password: admin123</p>
+                                <p className="text-xs text-blue-700">OPD - NIK: 654321, Password: opd123</p>
+                                <p className="text-xs text-blue-700">Relawan - NIK: 111222, Password: relawan123</p>
+                            </div>
                         </div>
                     </div>
                 </Card>
