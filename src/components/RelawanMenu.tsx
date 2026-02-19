@@ -38,7 +38,7 @@ const RelawanMenu = ({ title = 'Icon App' }: RelawanMenuProps) => {
             label: 'Komunitas Saya',
             onClick: () => {
                 setIsMenuOpen(false);
-                // TODO: Navigate to komunitas page
+                navigate('/komunitas-saya');
             }
         },
         {

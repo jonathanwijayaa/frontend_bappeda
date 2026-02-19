@@ -13,6 +13,7 @@ import SaranHotline from './pages/SaranHotline';
 import EditProfil from './pages/EditProfil';
 import Profil from './pages/Profil';
 import ProfilRelawan from './pages/ProfilRelawan';
+import KomunitasSaya from './pages/KomunitasSaya';
 import Login from './pages/Login';
 import { ReactNode } from 'react';
 
@@ -141,6 +142,11 @@ function AppRoutes() {
                     <Layout>
                         <EditProfil />
                     </Layout>
+                </ProtectedRoute>
+            } />
+            <Route path="/komunitas-saya" element={
+                <ProtectedRoute>
+                    <KomunitasSaya />
                 </ProtectedRoute>
             } />
             <Route path="/profil-relawan" element={

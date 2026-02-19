@@ -5,45 +5,54 @@ import Button from '../components/ui/Button';
 import RelawanMenu from '../components/RelawanMenu';
 
 const ProfilRelawan = () => {
-    const [isEditing, setIsEditing] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
     // Get relawan data based on logged in user
     const relawanData = mockRelawanData.find(r => r.nik === '3201012345670001') || mockRelawanData[0];
 
-    const [formData, setFormData] = useState({
-        namaLengkap: relawanData.namaLengkap,
-        nik: relawanData.nik,
-        jenisKelamin: relawanData.jenisKelamin,
-        noTelepon: relawanData.noTelepon,
-        alamat: relawanData.alamat || '',
+    // Form state for the update request modal
+    const [updateForm, setUpdateForm] = useState({
+        namaLengkap: '',
+        noTelepon: '',
+        alamat: '',
+        passwordSaatIni: '',
+        passwordBaru: '',
     });
 
-    const handleEdit = () => {
-        setIsEditing(true);
-    };
-
-    const handleCancel = () => {
-        setIsEditing(false);
-        setFormData({
-            namaLengkap: relawanData.namaLengkap,
-            nik: relawanData.nik,
-            jenisKelamin: relawanData.jenisKelamin,
-            noTelepon: relawanData.noTelepon,
-            alamat: relawanData.alamat || '',
+    const handleOpenModal = () => {
+        setUpdateForm({
+            namaLengkap: '',
+            noTelepon: '',
+            alamat: '',
+            passwordSaatIni: '',
+            passwordBaru: '',
         });
+        setIsModalOpen(true);
     };
 
-    const handleSave = () => {
-        // TODO: Implement save functionality
-        console.log('Saving data:', formData);
-        setIsEditing(false);
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setIsConfirmOpen(false);
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setFormData({
-            ...formData,
+    const handleUpdateChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setUpdateForm({
+            ...updateForm,
             [e.target.name]: e.target.value
         });
+    };
+
+    const handleAjukan = () => {
+        setIsConfirmOpen(true);
+    };
+
+    const handleConfirmSubmit = () => {
+        // TODO: Submit update request to backend
+        console.log('Submitting update request:', updateForm);
+        setIsConfirmOpen(false);
+        setIsModalOpen(false);
+        alert('Pengajuan pembaruan data berhasil dikirim!');
     };
 
     return (
@@ -61,7 +70,7 @@ const ProfilRelawan = () => {
                 </Card>
 
                 {/* Quick Stats */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* <div className="grid grid-cols-2 gap-3">
                     <Card className="shadow-md">
                         <div className="p-4 text-center">
                             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -87,22 +96,12 @@ const ProfilRelawan = () => {
                             <p className="text-xs text-gray-600 mt-1">Aktif</p>
                         </div>
                     </Card>
-                </div>
+                </div> */}
 
-                {/* Profile Card - Informasi Pribadi */}
+                {/* Profile Card - Informasi Pribadi (Read-Only) */}
                 <Card className="shadow-md">
                     <div className="p-5">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-gray-800">Informasi Pribadi</h2>
-                            {!isEditing && (
-                                <button
-                                    onClick={handleEdit}
-                                    className="text-green-600 text-sm font-medium hover:text-green-700"
-                                >
-                                    Edit
-                                </button>
-                            )}
-                        </div>
+                        <h2 className="text-lg font-semibold text-gray-800 mb-4">Informasi Pribadi</h2>
 
                         <div className="space-y-4">
                             {/* Nama Lengkap */}
@@ -110,17 +109,7 @@ const ProfilRelawan = () => {
                                 <label className="block text-sm font-medium text-gray-600 mb-1">
                                     Nama Lengkap
                                 </label>
-                                {isEditing ? (
-                                    <input
-                                        type="text"
-                                        name="namaLengkap"
-                                        value={formData.namaLengkap}
-                                        onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                    />
-                                ) : (
-                                    <p className="text-gray-800 font-medium">{formData.namaLengkap}</p>
-                                )}
+                                <p className="text-gray-800 font-medium">{relawanData.namaLengkap}</p>
                             </div>
 
                             {/* NIK */}
@@ -128,7 +117,7 @@ const ProfilRelawan = () => {
                                 <label className="block text-sm font-medium text-gray-600 mb-1">
                                     NIK
                                 </label>
-                                <p className="text-gray-800 font-medium">{formData.nik}</p>
+                                <p className="text-gray-800 font-medium">{relawanData.nik}</p>
                             </div>
 
                             {/* Jenis Kelamin */}
@@ -136,7 +125,7 @@ const ProfilRelawan = () => {
                                 <label className="block text-sm font-medium text-gray-600 mb-1">
                                     Jenis Kelamin
                                 </label>
-                                <p className="text-gray-800 font-medium">{formData.jenisKelamin}</p>
+                                <p className="text-gray-800 font-medium">{relawanData.jenisKelamin}</p>
                             </div>
 
                             {/* No. HP */}
@@ -144,17 +133,7 @@ const ProfilRelawan = () => {
                                 <label className="block text-sm font-medium text-gray-600 mb-1">
                                     No. HP
                                 </label>
-                                {isEditing ? (
-                                    <input
-                                        type="tel"
-                                        name="noTelepon"
-                                        value={formData.noTelepon}
-                                        onChange={handleChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                    />
-                                ) : (
-                                    <p className="text-gray-800 font-medium">{formData.noTelepon}</p>
-                                )}
+                                <p className="text-gray-800 font-medium">{relawanData.noTelepon}</p>
                             </div>
 
                             {/* Alamat */}
@@ -162,42 +141,22 @@ const ProfilRelawan = () => {
                                 <label className="block text-sm font-medium text-gray-600 mb-1">
                                     Alamat
                                 </label>
-                                {isEditing ? (
-                                    <textarea
-                                        name="alamat"
-                                        value={formData.alamat}
-                                        onChange={handleChange}
-                                        rows={3}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
-                                    />
-                                ) : (
-                                    <p className="text-gray-800 font-medium">{formData.alamat}</p>
-                                )}
+                                <p className="text-gray-800 font-medium">{relawanData.alamat || '-'}</p>
                             </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        {isEditing && (
-                            <div className="flex gap-3 mt-5">
-                                <Button
-                                    onClick={handleCancel}
-                                    className="flex-1 bg-gray-200 text-gray-700 hover:bg-gray-300 py-2.5 rounded-lg font-medium"
-                                >
-                                    Batal
-                                </Button>
-                                <Button
-                                    onClick={handleSave}
-                                    className="flex-1 bg-green-600 text-white hover:bg-green-700 py-2.5 rounded-lg font-medium"
-                                >
-                                    Simpan
-                                </Button>
-                            </div>
-                        )}
+                        {/* Ajukan Pembaruan Data Button */}
+                        <Button
+                            onClick={handleOpenModal}
+                            className="w-full mt-5 bg-green-600 text-white hover:bg-green-700 py-2.5 rounded-lg font-medium"
+                        >
+                            Ajukan Pembaruan Data
+                        </Button>
                     </div>
                 </Card>
 
                 {/* Assignments Card - Penugasan Saya */}
-                <Card className="shadow-md">
+                {/* <Card className="shadow-md">
                     <div className="p-5">
                         <h2 className="text-lg font-semibold text-gray-800 mb-4">Penugasan Saya</h2>
 
@@ -249,54 +208,180 @@ const ProfilRelawan = () => {
                             </div>
                         )}
                     </div>
-                </Card>
+                </Card> */}
+            </div>
 
-                {/* Change Password Card */}
-                <Card className="shadow-md">
-                    <div className="p-5">
-                        <h2 className="text-lg font-semibold text-gray-800 mb-4">Ubah Password</h2>
+            {/* Modal - Ajukan Pembaruan Data */}
+            {isModalOpen && (
+                <>
+                    {/* Overlay */}
+                    <div
+                        className="fixed inset-0 bg-black/30 z-40"
+                        onClick={handleCloseModal}
+                    />
 
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">
-                                    Password Saat Ini
-                                </label>
-                                <input
-                                    type="password"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                    placeholder="Masukkan password saat ini"
-                                />
+                    {/* Modal Content */}
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+                                <h2 className="text-lg font-semibold text-gray-800">Ajukan Pembaruan Data</h2>
+                                <button
+                                    onClick={handleCloseModal}
+                                    className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">
-                                    Password Baru
-                                </label>
-                                <input
-                                    type="password"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                    placeholder="Masukkan password baru"
-                                />
+                            {/* Modal Body */}
+                            <div className="p-5 space-y-4">
+                                <p className="text-sm text-gray-500 mb-2">
+                                    Isi data yang ingin diubah. Kosongkan field yang tidak ingin diubah.
+                                </p>
+
+                                {/* Nama Lengkap */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Nama Lengkap
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="namaLengkap"
+                                        value={updateForm.namaLengkap}
+                                        onChange={handleUpdateChange}
+                                        placeholder={relawanData.namaLengkap}
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                    />
+                                </div>
+
+                                {/* No. HP */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        No. HP
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        name="noTelepon"
+                                        value={updateForm.noTelepon}
+                                        onChange={handleUpdateChange}
+                                        placeholder={relawanData.noTelepon}
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                    />
+                                </div>
+
+                                {/* Alamat */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Alamat
+                                    </label>
+                                    <textarea
+                                        name="alamat"
+                                        value={updateForm.alamat}
+                                        onChange={handleUpdateChange}
+                                        placeholder={relawanData.alamat || 'Masukkan alamat baru'}
+                                        rows={3}
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm"
+                                    />
+                                </div>
+
+                                {/* Divider */}
+                                <div className="border-t border-gray-200 pt-2">
+                                    <p className="text-sm font-medium text-gray-700 mb-3">Ubah Password</p>
+                                </div>
+
+                                {/* Password Saat Ini */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Password Saat Ini
+                                    </label>
+                                    <input
+                                        type="password"
+                                        name="passwordSaatIni"
+                                        value={updateForm.passwordSaatIni}
+                                        onChange={handleUpdateChange}
+                                        placeholder="Masukkan password saat ini"
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                    />
+                                </div>
+
+                                {/* Password Baru */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Password Baru
+                                    </label>
+                                    <input
+                                        type="password"
+                                        name="passwordBaru"
+                                        value={updateForm.passwordBaru}
+                                        onChange={handleUpdateChange}
+                                        placeholder="Masukkan password baru"
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                    />
+                                </div>
                             </div>
 
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">
-                                    Konfirmasi Password Baru
-                                </label>
-                                <input
-                                    type="password"
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                    placeholder="Konfirmasi password baru"
-                                />
+                            {/* Modal Footer */}
+                            <div className="flex gap-3 p-5 border-t border-gray-200">
+                                <Button
+                                    onClick={handleCloseModal}
+                                    className="flex-1 bg-gray-200 text-gray-700 hover:bg-gray-300 py-2.5 rounded-lg font-medium"
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    onClick={handleAjukan}
+                                    className="flex-1 bg-green-600 text-white hover:bg-green-700 py-2.5 rounded-lg font-medium"
+                                >
+                                    Ajukan
+                                </Button>
                             </div>
                         </div>
-
-                        <Button className="w-full mt-5 bg-green-600 text-white hover:bg-green-700 py-2.5 rounded-lg font-medium">
-                            Ubah Password
-                        </Button>
                     </div>
-                </Card>
-            </div>
+                </>
+            )}
+
+            {/* Confirmation Dialog */}
+            {isConfirmOpen && (
+                <>
+                    {/* Overlay */}
+                    <div className="fixed inset-0 bg-black/40 z-[60]" />
+
+                    {/* Confirm Dialog */}
+                    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-6 text-center">
+                            {/* Warning Icon */}
+                            <div className="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg className="w-7 h-7 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                            </div>
+
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">Konfirmasi Pengajuan</h3>
+                            <p className="text-sm text-gray-600 mb-6">
+                                Apakah Anda yakin dengan perubahan data yang diajukan?
+                            </p>
+
+                            <div className="flex gap-3">
+                                <Button
+                                    onClick={() => setIsConfirmOpen(false)}
+                                    className="flex-1 bg-gray-200 text-gray-700 hover:bg-gray-300 py-2.5 rounded-lg font-medium"
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    onClick={handleConfirmSubmit}
+                                    className="flex-1 bg-green-600 text-white hover:bg-green-700 py-2.5 rounded-lg font-medium"
+                                >
+                                    Ya, Ajukan
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 };
