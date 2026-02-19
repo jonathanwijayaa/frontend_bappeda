@@ -11,6 +11,7 @@ import Statistik from './pages/Statistik';
 import Dokumen from './pages/Dokumen';
 import SaranHotline from './pages/SaranHotline';
 import EditProfil from './pages/EditProfil';
+import Profil from './pages/Profil';
 import ProfilRelawan from './pages/ProfilRelawan';
 import Login from './pages/Login';
 import { ReactNode } from 'react';
@@ -145,6 +146,13 @@ function AppRoutes() {
             <Route path="/profil-relawan" element={
                 <ProtectedRoute>
                     <ProfilRelawan />
+                </ProtectedRoute>
+            } />
+            <Route path="/profil" element={
+                <ProtectedRoute>
+                    <Layout>
+                        <Profil />
+                    </Layout>
                 </ProtectedRoute>
             } />
         </Routes>

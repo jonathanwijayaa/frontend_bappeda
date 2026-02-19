@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { mockRelawanData } from '../data/relawan.data';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import RelawanMenu from '../components/RelawanMenu';
 
 const ProfilRelawan = () => {
     const [isEditing, setIsEditing] = useState(false);
 
     // Get relawan data based on logged in user
-    // For demo, we'll use the first relawan (Budi Santoso) with NIK 111222
     const relawanData = mockRelawanData.find(r => r.nik === '3201012345670001') || mockRelawanData[0];
 
     const [formData, setFormData] = useState({
@@ -48,21 +48,48 @@ const ProfilRelawan = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Mobile Header */}
-            <div className="bg-green-600 text-white px-4 py-4 shadow-md">
-                <div className="flex items-center justify-between">
-                    <h1 className="text-xl font-bold">Profil Saya</h1>
-                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
+            <RelawanMenu title="Icon App" />
 
             {/* Content */}
             <div className="px-4 py-5 space-y-4">
-                {/* Profile Card */}
+                {/* Welcome Card */}
+                <Card className="shadow-md bg-gradient-to-r from-green-500 to-green-600">
+                    <div className="p-5 text-white">
+                        <h2 className="text-2xl font-bold mb-1">Selamat Datang!</h2>
+                        <p className="text-green-50">{relawanData.namaLengkap}</p>
+                    </div>
+                </Card>
+
+                {/* Quick Stats */}
+                <div className="grid grid-cols-2 gap-3">
+                    <Card className="shadow-md">
+                        <div className="p-4 text-center">
+                            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                                </svg>
+                            </div>
+                            <p className="text-2xl font-bold text-gray-800">{relawanData.assignments?.length || 0}</p>
+                            <p className="text-xs text-gray-600 mt-1">Penugasan</p>
+                        </div>
+                    </Card>
+
+                    <Card className="shadow-md">
+                        <div className="p-4 text-center">
+                            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                                <svg className="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <p className="text-2xl font-bold text-gray-800">
+                                {relawanData.assignments?.filter(a => a.statusKeaktifan === 'Aktif').length || 0}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-1">Aktif</p>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* Profile Card - Informasi Pribadi */}
                 <Card className="shadow-md">
                     <div className="p-5">
                         <div className="flex items-center justify-between mb-4">
@@ -169,7 +196,7 @@ const ProfilRelawan = () => {
                     </div>
                 </Card>
 
-                {/* Assignments Card */}
+                {/* Assignments Card - Penugasan Saya */}
                 <Card className="shadow-md">
                     <div className="p-5">
                         <h2 className="text-lg font-semibold text-gray-800 mb-4">Penugasan Saya</h2>

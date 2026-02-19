@@ -10,7 +10,7 @@ interface User {
 interface AuthContextType {
     user: User | null;
     isAuthenticated: boolean;
-    login: (nik: string, password: string) => Promise<{ success: boolean; message?: string }>;
+    login: (nik: string, password: string) => Promise<{ success: boolean; message?: string; role?: string }>;
     logout: () => void;
     switchUser: (userType: 'super_admin' | 'opd' | 'relawan') => void;
     isSuperAdmin: boolean;
@@ -58,7 +58,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }, [isAuthenticated]);
 
     // Mock login function - digantiu dengan backend API call
-    const login = async (nik: string, password: string): Promise<{ success: boolean; message?: string }> => {
+    const login = async (nik: string, password: string): Promise<{ success: boolean; message?: string; role?: string }> => {
         // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -95,7 +95,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (credential) {
             setUser(credential.user);
             setIsAuthenticated(true);
-            return { success: true };
+            return { success: true, role: credential.user.role };
         } else {
             return { success: false, message: 'NIK atau password salah' };
         }

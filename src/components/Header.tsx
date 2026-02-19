@@ -33,7 +33,7 @@ const Header: React.FC<HeaderProps> = ({ title, caption }) => {
 
     const handleEditProfile = () => {
         setIsDropdownOpen(false);
-        navigate('/edit-profil');
+        navigate('/profil');
     };
 
     const handleLogout = () => {

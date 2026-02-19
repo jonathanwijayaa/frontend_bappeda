@@ -28,7 +28,12 @@ const Login = () => {
         try {
             const result = await login(nik, password);
             if (result.success) {
-                navigate('/dashboard');
+                // Relawan langsung ke halaman Profil Saya, bukan Dashboard
+                if (result.role === 'relawan') {
+                    navigate('/profil-relawan');
+                } else {
+                    navigate('/dashboard');
+                }
             } else {
                 setError(result.message || 'Login gagal');
             }
