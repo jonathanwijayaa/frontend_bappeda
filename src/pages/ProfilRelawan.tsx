@@ -18,6 +18,7 @@ const ProfilRelawan = () => {
         alamat: '',
         passwordSaatIni: '',
         passwordBaru: '',
+        catatan: '',
     });
 
     const handleOpenModal = () => {
@@ -27,6 +28,7 @@ const ProfilRelawan = () => {
             alamat: '',
             passwordSaatIni: '',
             passwordBaru: '',
+            catatan: '',
         });
         setIsModalOpen(true);
     };
@@ -60,10 +62,10 @@ const ProfilRelawan = () => {
             <RelawanMenu title="Icon App" />
 
             {/* Content */}
-            <div className="px-4 py-5 space-y-4">
+            <div className="px-4 py-5 space-y-2">
                 {/* Welcome Card */}
                 <Card className="shadow-md bg-gradient-to-r from-green-500 to-green-600">
-                    <div className="p-5 text-white">
+                    <div className="p-3 text-white">
                         <h2 className="text-2xl font-bold mb-1">Selamat Datang!</h2>
                         <p className="text-green-50">{relawanData.namaLengkap}</p>
                     </div>
@@ -319,6 +321,23 @@ const ProfilRelawan = () => {
                                         onChange={handleUpdateChange}
                                         placeholder="Masukkan password baru"
                                         className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                    />
+                                </div>
+
+                                {/* Divider */}
+                                <div className="border-t border-gray-200 pt-2">
+                                    <p className="text-sm font-medium text-gray-700 mb-3">Catatan</p>
+                                </div>
+
+                                {/* Catatan */}
+                                <div>
+                                    <textarea
+                                        name="catatan"
+                                        value={updateForm.catatan}
+                                        onChange={handleUpdateChange}
+                                        placeholder="Tulis catatan atau alasan perubahan data..."
+                                        rows={3}
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm"
                                     />
                                 </div>
                             </div>

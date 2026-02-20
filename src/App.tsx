@@ -13,6 +13,7 @@ import SaranHotline from './pages/SaranHotline';
 import EditProfil from './pages/EditProfil';
 import Profil from './pages/Profil';
 import ProfilRelawan from './pages/ProfilRelawan';
+import Riwayat from './pages/Riwayat';
 import KomunitasSaya from './pages/KomunitasSaya';
 import Login from './pages/Login';
 import { ReactNode } from 'react';
@@ -54,6 +55,21 @@ const RelawanRedirect = () => {
     return (
         <Layout>
             <Navigate to="/dashboard" replace />
+        </Layout>
+    );
+};
+
+// Wrapper to conditionally apply Layout for non-relawan users
+const SaranHotlineWrapper = () => {
+    const { user } = useAuth();
+
+    if (user?.role === 'relawan') {
+        return <SaranHotline />;
+    }
+
+    return (
+        <Layout>
+            <SaranHotline />
         </Layout>
     );
 };
@@ -132,9 +148,7 @@ function AppRoutes() {
             } />
             <Route path="/saran-hotline" element={
                 <ProtectedRoute>
-                    <Layout>
-                        <SaranHotline />
-                    </Layout>
+                    <SaranHotlineWrapper />
                 </ProtectedRoute>
             } />
             <Route path="/edit-profil" element={
@@ -152,6 +166,11 @@ function AppRoutes() {
             <Route path="/profil-relawan" element={
                 <ProtectedRoute>
                     <ProfilRelawan />
+                </ProtectedRoute>
+            } />
+            <Route path="/riwayat" element={
+                <ProtectedRoute>
+                    <Riwayat />
                 </ProtectedRoute>
             } />
             <Route path="/profil" element={

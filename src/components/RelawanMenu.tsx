@@ -50,7 +50,7 @@ const RelawanMenu = ({ title = 'Icon App' }: RelawanMenuProps) => {
             label: 'Saran/Hotline',
             onClick: () => {
                 setIsMenuOpen(false);
-                // TODO: Navigate to saran/hotline page
+                navigate('/saran-hotline');
             }
         },
         {
@@ -62,7 +62,7 @@ const RelawanMenu = ({ title = 'Icon App' }: RelawanMenuProps) => {
             label: 'Riwayat',
             onClick: () => {
                 setIsMenuOpen(false);
-                // TODO: Navigate to riwayat page
+                navigate('/riwayat');
             }
         },
     ];
