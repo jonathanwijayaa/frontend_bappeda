@@ -61,7 +61,7 @@ const Header: React.FC<HeaderProps> = ({ title, caption }) => {
                         <img
                             src={user?.avatar}
                             alt={user?.name}
-                            className="w-10 h-10 rounded-full cursor-pointer hover:ring-2 hover:ring-emerald-500 transition-all"
+                            className="w-10 h-10 rounded-full cursor-pointer hover:ring-2 hover:ring-green-500 transition-all"
                         />
                     </button>
 

@@ -4,7 +4,6 @@ export const mockOPDData: OPDData[] = [
     {
         id: 1,
         namaOpd: 'Dinas Kesehatan',
-        kode: 'A001',
         status: 'Aktif',
         alamat: 'Jl. Malioboro No. 56, Yogyakarta',
         pic: 'Jonathan Wijaya',
@@ -13,7 +12,6 @@ export const mockOPDData: OPDData[] = [
     {
         id: 2,
         namaOpd: 'Dinas Pendidikan',
-        kode: 'A002',
         status: 'Aktif',
         alamat: 'Jl. Kenari No. 12, Yogyakarta',
         pic: 'Siti Aminah',
@@ -22,7 +20,6 @@ export const mockOPDData: OPDData[] = [
     {
         id: 3,
         namaOpd: 'Dinas Perhubungan',
-        kode: 'A003',
         status: 'Aktif',
         alamat: 'Jl. Sudirman No. 45, Yogyakarta',
         pic: 'Budi Santoso',
@@ -31,7 +28,6 @@ export const mockOPDData: OPDData[] = [
     {
         id: 4,
         namaOpd: 'Dinas Sosial',
-        kode: 'A004',
         status: 'Nonaktif',
         alamat: 'Jl. Ahmad Yani No. 78, Yogyakarta',
         pic: 'Dewi Lestari',
@@ -40,7 +36,6 @@ export const mockOPDData: OPDData[] = [
     {
         id: 5,
         namaOpd: 'Dinas Pekerjaan Umum',
-        kode: 'A005',
         status: 'Aktif',
         alamat: 'Jl. Gajah Mada No. 23, Yogyakarta',
         pic: 'Andi Pratama',
@@ -49,7 +44,6 @@ export const mockOPDData: OPDData[] = [
     {
         id: 6,
         namaOpd: 'Dinas Pariwisata',
-        kode: 'A006',
         status: 'Aktif',
         alamat: 'Jl. Tugu No. 34, Yogyakarta',
         pic: 'Maya Sari',
@@ -58,7 +52,6 @@ export const mockOPDData: OPDData[] = [
     {
         id: 7,
         namaOpd: 'Dinas Pertanian',
-        kode: 'A007',
         status: 'Aktif',
         alamat: 'Jl. Kaliurang KM 5, Yogyakarta',
         pic: 'Rudi Hartono',
@@ -67,7 +60,6 @@ export const mockOPDData: OPDData[] = [
     {
         id: 8,
         namaOpd: 'Dinas Perindustrian',
-        kode: 'A008',
         status: 'Aktif',
         alamat: 'Jl. Ring Road Utara No. 89, Yogyakarta',
         pic: 'Lina Kusuma',

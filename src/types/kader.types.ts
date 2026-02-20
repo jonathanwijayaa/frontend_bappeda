@@ -2,7 +2,6 @@
 export interface KaderData {
     id: number;
     namaKader: string;
-    kode: string;
     status: string;
     pic: string;
     kontak: string;

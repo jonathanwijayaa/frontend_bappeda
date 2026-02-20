@@ -2,7 +2,6 @@
 export interface OPDData {
     id: number;
     namaOpd: string;
-    kode: string;
     status: string;
     alamat: string;
     pic: string;

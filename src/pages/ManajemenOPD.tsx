@@ -55,8 +55,7 @@ const ManajemenOPD: React.FC = () => {
     // Pagination logic
     const filteredData = useMemo(() => {
         return mockOPDData.filter(opd =>
-            opd.namaOpd.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            opd.kode.toLowerCase().includes(searchTerm.toLowerCase())
+            opd.namaOpd.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [searchTerm]);
 
@@ -71,7 +70,6 @@ const ManajemenOPD: React.FC = () => {
 
     const columns = [
         { header: 'NAMA OPD', accessor: 'namaOpd' as keyof OPDData },
-        { header: 'KODE', accessor: 'kode' as keyof OPDData },
         { header: 'STATUS', accessor: 'status' as keyof OPDData },
         { header: 'ALAMAT', accessor: 'alamat' as keyof OPDData },
         { header: 'PIC', accessor: 'pic' as keyof OPDData },
@@ -167,7 +165,6 @@ const ManajemenOPD: React.FC = () => {
             // Prepare data for export
             const exportData = filteredData.map(opd => ({
                 namaOpd: opd.namaOpd,
-                kode: opd.kode,
                 status: opd.status,
                 alamat: opd.alamat,
                 pic: opd.pic,
@@ -179,7 +176,6 @@ const ManajemenOPD: React.FC = () => {
                 title: 'Daftar OPD',
                 columns: [
                     { header: 'NAMA OPD', dataKey: 'namaOpd' },
-                    { header: 'KODE', dataKey: 'kode' },
                     { header: 'STATUS', dataKey: 'status' },
                     { header: 'ALAMAT', dataKey: 'alamat' },
                     { header: 'PIC', dataKey: 'pic' },

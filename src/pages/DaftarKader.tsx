@@ -52,8 +52,7 @@ const DaftarKader: React.FC = () => {
     // Pagination logic
     const filteredData = useMemo(() => {
         return mockKaderData.filter(kader =>
-            kader.namaKader.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            kader.kode.toLowerCase().includes(searchTerm.toLowerCase())
+            kader.namaKader.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [searchTerm]);
 
@@ -68,7 +67,6 @@ const DaftarKader: React.FC = () => {
 
     const columns = [
         { header: 'NAMA KADER', accessor: 'namaKader' as keyof KaderData },
-        { header: 'KODE', accessor: 'kode' as keyof KaderData },
         { header: 'STATUS', accessor: 'status' as keyof KaderData },
         { header: 'PIC', accessor: 'pic' as keyof KaderData },
         { header: 'Kontak', accessor: 'kontak' as keyof KaderData },
@@ -159,7 +157,6 @@ const DaftarKader: React.FC = () => {
             // Prepare data for export
             const exportData = filteredData.map(kader => ({
                 namaKader: kader.namaKader,
-                kode: kader.kode,
                 status: kader.status,
                 pic: kader.pic,
                 kontak: kader.kontak
@@ -170,7 +167,6 @@ const DaftarKader: React.FC = () => {
                 title: 'Daftar Kader',
                 columns: [
                     { header: 'NAMA KADER', dataKey: 'namaKader' },
-                    { header: 'KODE', dataKey: 'kode' },
                     { header: 'STATUS', dataKey: 'status' },
                     { header: 'PIC', dataKey: 'pic' },
                     { header: 'KONTAK', dataKey: 'kontak' }

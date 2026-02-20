@@ -26,7 +26,6 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                     <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama OPD</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PIC</th>
@@ -38,7 +37,6 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                     <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kader</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kode</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PIC</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kontak</th>
@@ -66,7 +64,6 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                         <tr key={index} className="hover:bg-gray-50">
                             <td className="px-4 py-3 text-sm text-gray-900">{index + 1}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{item.namaOpd || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.kode || '-'}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{item.status || '-'}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{item.alamat || '-'}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{item.pic || '-'}</td>
@@ -78,7 +75,6 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                         <tr key={index} className="hover:bg-gray-50">
                             <td className="px-4 py-3 text-sm text-gray-900">{index + 1}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{item.namaKader || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.kode || '-'}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{item.status || '-'}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{item.pic || '-'}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{item.kontak || '-'}</td>

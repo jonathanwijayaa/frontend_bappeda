@@ -64,7 +64,7 @@ const Sidebar: React.FC = () => {
             {/* Collapse/Expand Button */}
             <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className={`absolute top-6 z-10 text-white hover:bg-emerald-600 p-2 rounded-lg transition-all ${isCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-2'
+                className={`absolute top-6 z-10 text-white hover:bg-green-600 p-2 rounded-lg transition-all ${isCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-2'
                     }`}
                 title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
             >
@@ -72,7 +72,7 @@ const Sidebar: React.FC = () => {
             </button>
 
             {/* Header */}
-            <div className={`p-6 border-b border-emerald-600 flex items-center flex-shrink-0 h-[88px] ${isCollapsed ? 'justify-center' : ''
+            <div className={`p-6 border-b border-green-600 flex items-center flex-shrink-0 h-[88px] ${isCollapsed ? 'justify-center' : ''
                 }`}>
                 <h1 className={`text-white font-bold text-xl transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
                     }`}>
@@ -90,7 +90,7 @@ const Sidebar: React.FC = () => {
                         <Link
                             key={item.path}
                             to={item.path}
-                            className={`flex items-center gap-3 py-3 text-white transition-colors ${isActive ? 'bg-emerald-600' : 'hover:bg-emerald-600'
+                            className={`flex items-center gap-3 py-3 text-white transition-colors ${isActive ? 'bg-green-600' : 'hover:bg-green-600'
                                 } ${isCollapsed ? 'justify-center px-0' : 'px-6'
                                 }`}
                             title={isCollapsed ? item.label : ''}
@@ -106,11 +106,11 @@ const Sidebar: React.FC = () => {
             </nav>
 
             {/* Footer - Fixed*/}
-            <div className={`p-6 border-t border-emerald-600 flex-shrink-0 ${isCollapsed ? 'px-0' : ''
+            <div className={`p-6 border-t border-green-600 flex-shrink-0 ${isCollapsed ? 'px-0' : ''
                 }`}>
                 <Link
                     to="/saran-hotline"
-                    className={`flex items-center gap-3 text-white hover:bg-emerald-600 py-3 rounded-lg transition-colors ${isCollapsed ? 'justify-center px-0' : 'px-4'
+                    className={`flex items-center gap-3 text-white hover:bg-green-600 py-3 rounded-lg transition-colors ${isCollapsed ? 'justify-center px-0' : 'px-4'
                         }`}
                     title={isCollapsed ? 'Saran/Hotline' : ''}
                 >

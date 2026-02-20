@@ -24,8 +24,8 @@ export const mockRelawanData: RelawanData[] = [
         noTelepon: '081234567801',
         alamat: 'Jl. Malioboro No. 1, Yogyakarta',
         assignments: [
-            { id: 'A001', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan A', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' },
-            { id: 'A022', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan A', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/KESEHATAN/2024', skId: 'SK006' }
+            { id: 'ASG001', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' },
+            { id: 'ASG022', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/KESEHATAN/2024', skId: 'SK006' }
         ]
     },
     {
@@ -34,7 +34,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Perempuan',
         noTelepon: '081234567802',
         alamat: 'Jl. Solo No. 2, Yogyakarta',
-        assignments: [{ id: 'A002', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan A', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' }]
+        assignments: [{ id: 'ASG002', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' }]
     },
     {
         nik: '3201012345670003',
@@ -42,7 +42,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Laki-Laki',
         noTelepon: '081234567803',
         alamat: 'Jl. Kaliurang No. 3, Yogyakarta',
-        assignments: [{ id: 'A003', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan A', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' }]
+        assignments: [{ id: 'ASG003', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' }]
     },
     {
         nik: '3201012345670004',
@@ -50,7 +50,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Perempuan',
         noTelepon: '081234567804',
         alamat: 'Jl. Gejayan No. 4, Yogyakarta',
-        assignments: [{ id: 'A004', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan A', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' }]
+        assignments: [{ id: 'ASG004', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' }]
     },
     {
         nik: '3201012345670005',
@@ -59,8 +59,8 @@ export const mockRelawanData: RelawanData[] = [
         noTelepon: '081234567805',
         alamat: 'Jl. Affandi No. 5, Yogyakarta',
         assignments: [
-            { id: 'A005', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan A', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' },
-            { id: 'A023', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan A', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/KESEHATAN/2024', skId: 'SK006' }
+            { id: 'ASG005', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' },
+            { id: 'ASG023', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/KESEHATAN/2024', skId: 'SK006' }
         ]
     },
     {
@@ -70,8 +70,8 @@ export const mockRelawanData: RelawanData[] = [
         noTelepon: '081234567806',
         alamat: 'Jl. Seturan No. 6, Yogyakarta',
         assignments: [
-            { id: 'A006', opd: 'Dinas Pendidikan', kader: 'Kader Pendidikan B', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/PENDIDIKAN/2024', skId: 'SK002' },
-            { id: 'A025', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }
+            { id: 'ASG006', opd: 'Dinas Pendidikan', kader: 'Kader Pendidikan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/PENDIDIKAN/2024', skId: 'SK002' },
+            { id: 'ASG025', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }
         ]
     },
     {
@@ -80,7 +80,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Laki-Laki',
         noTelepon: '081234567807',
         alamat: 'Jl. Magelang No. 7, Yogyakarta',
-        assignments: [{ id: 'A007', opd: 'Dinas Pendidikan', kader: 'Kader Pendidikan B', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/PENDIDIKAN/2024', skId: 'SK002' }]
+        assignments: [{ id: 'ASG007', opd: 'Dinas Pendidikan', kader: 'Kader Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/PENDIDIKAN/2024', skId: 'SK002' }]
     },
     {
         nik: '3201012345670008',
@@ -88,7 +88,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Perempuan',
         noTelepon: '081234567808',
         alamat: 'Jl. Godean No. 8, Yogyakarta',
-        assignments: [{ id: 'A008', opd: 'Dinas Pendidikan', kader: 'Kader Pendidikan B', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/PENDIDIKAN/2024', skId: 'SK002' }]
+        assignments: [{ id: 'ASG008', opd: 'Dinas Pendidikan', kader: 'Kader Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/PENDIDIKAN/2024', skId: 'SK002' }]
     },
     {
         nik: '3201012345670009',
@@ -97,8 +97,8 @@ export const mockRelawanData: RelawanData[] = [
         noTelepon: '081234567809',
         alamat: 'Jl. Wates No. 9, Yogyakarta',
         assignments: [
-            { id: 'A009', opd: 'Dinas Pendidikan', kader: 'Kader Pendidikan B', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/PENDIDIKAN/2024', skId: 'SK002' },
-            { id: 'A026', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }
+            { id: 'ASG009', opd: 'Dinas Pendidikan', kader: 'Kader Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/PENDIDIKAN/2024', skId: 'SK002' },
+            { id: 'ASG026', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }
         ]
     },
     {
@@ -107,7 +107,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Perempuan',
         noTelepon: '081234567810',
         alamat: 'Jl. Sudirman No. 10, Yogyakarta',
-        assignments: [{ id: 'A010', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
+        assignments: [{ id: 'ASG010', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
     },
     {
         nik: '3201012345670011',
@@ -115,7 +115,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Laki-Laki',
         noTelepon: '081234567811',
         alamat: 'Jl. Ahmad Yani No. 11, Yogyakarta',
-        assignments: [{ id: 'A011', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
+        assignments: [{ id: 'ASG011', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
     },
     {
         nik: '3201012345670012',
@@ -123,7 +123,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Perempuan',
         noTelepon: '081234567812',
         alamat: 'Jl. Kusumanegara No. 12, Yogyakarta',
-        assignments: [{ id: 'A012', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
+        assignments: [{ id: 'ASG012', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
     },
     {
         nik: '3201012345670013',
@@ -131,7 +131,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Laki-Laki',
         noTelepon: '081234567813',
         alamat: 'Jl. Kenari No. 13, Yogyakarta',
-        assignments: [{ id: 'A013', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
+        assignments: [{ id: 'ASG013', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
     },
     {
         nik: '3201012345670014',
@@ -139,7 +139,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Perempuan',
         noTelepon: '081234567814',
         alamat: 'Jl. Colombo No. 14, Yogyakarta',
-        assignments: [{ id: 'A014', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
+        assignments: [{ id: 'ASG014', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
     },
     {
         nik: '3201012345670015',
@@ -147,7 +147,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Laki-Laki',
         noTelepon: '081234567815',
         alamat: 'Jl. Laksda Adisucipto No. 15, Yogyakarta',
-        assignments: [{ id: 'A015', opd: 'Dinas Perhubungan', kader: 'Kader Lingkungan D', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/PERHUBUNGAN/2024', skId: 'SK004' }]
+        assignments: [{ id: 'ASG015', opd: 'Dinas Perhubungan', kader: 'Kader Lingkungan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/PERHUBUNGAN/2024', skId: 'SK004' }]
     },
     {
         nik: '3201012345670016',
@@ -155,7 +155,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Perempuan',
         noTelepon: '081234567816',
         alamat: 'Jl. Monjali No. 16, Yogyakarta',
-        assignments: [{ id: 'A016', opd: 'Dinas Perhubungan', kader: 'Kader Lingkungan D', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/PERHUBUNGAN/2024', skId: 'SK004' }]
+        assignments: [{ id: 'ASG016', opd: 'Dinas Perhubungan', kader: 'Kader Lingkungan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/PERHUBUNGAN/2024', skId: 'SK004' }]
     },
     {
         nik: '3201012345670017',
@@ -164,8 +164,8 @@ export const mockRelawanData: RelawanData[] = [
         noTelepon: '081234567817',
         alamat: 'Jl. Ringroad Utara No. 17, Yogyakarta',
         assignments: [
-            { id: 'A017', opd: 'Dinas Perhubungan', kader: 'Kader Lingkungan D', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/PERHUBUNGAN/2024', skId: 'SK004' },
-            { id: 'A018', opd: 'Dinas Perhubungan', kader: 'Kader Transportasi dan Lalu Lintas', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISHUB/2024', skId: 'SK005' }
+            { id: 'ASG017', opd: 'Dinas Perhubungan', kader: 'Kader Lingkungan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/PERHUBUNGAN/2024', skId: 'SK004' },
+            { id: 'ASG018', opd: 'Dinas Perhubungan', kader: 'Kader Transportasi dan Lalu Lintas', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISHUB/2024', skId: 'SK005' }
         ]
     },
     {
@@ -174,7 +174,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Perempuan',
         noTelepon: '081234567818',
         alamat: 'Jl. Veteran No. 18, Yogyakarta',
-        assignments: [{ id: 'A019', opd: 'Dinas Perhubungan', kader: 'Kader Transportasi dan Lalu Lintas', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISHUB/2024', skId: 'SK005' }]
+        assignments: [{ id: 'ASG019', opd: 'Dinas Perhubungan', kader: 'Kader Transportasi dan Lalu Lintas', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISHUB/2024', skId: 'SK005' }]
     },
     {
         nik: '3201012345670019',
@@ -182,7 +182,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Laki-Laki',
         noTelepon: '081234567819',
         alamat: 'Jl. Palagan No. 19, Yogyakarta',
-        assignments: [{ id: 'A020', opd: 'Dinas Perhubungan', kader: 'Kader Transportasi dan Lalu Lintas', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISHUB/2024', skId: 'SK005' }]
+        assignments: [{ id: 'ASG020', opd: 'Dinas Perhubungan', kader: 'Kader Transportasi dan Lalu Lintas', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISHUB/2024', skId: 'SK005' }]
     },
     {
         nik: '3201012345670020',
@@ -190,7 +190,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Perempuan',
         noTelepon: '081234567820',
         alamat: 'Jl. Bantul No. 20, Yogyakarta',
-        assignments: [{ id: 'A021', opd: 'Dinas Perhubungan', kader: 'Kader Transportasi dan Lalu Lintas', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISHUB/2024', skId: 'SK005' }]
+        assignments: [{ id: 'ASG021', opd: 'Dinas Perhubungan', kader: 'Kader Transportasi dan Lalu Lintas', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISHUB/2024', skId: 'SK005' }]
     },
     {
         nik: '3201012345670021',
@@ -198,7 +198,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Laki-Laki',
         noTelepon: '081234567821',
         alamat: 'Jl. Imogiri No. 21, Yogyakarta',
-        assignments: [{ id: 'A024', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan A', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/KESEHATAN/2024', skId: 'SK006' }]
+        assignments: [{ id: 'ASG024', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/KESEHATAN/2024', skId: 'SK006' }]
     },
     {
         nik: '3201012345670022',
@@ -206,7 +206,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Perempuan',
         noTelepon: '081234567822',
         alamat: 'Jl. Wonosari No. 22, Yogyakarta',
-        assignments: [{ id: 'A027', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }]
+        assignments: [{ id: 'ASG027', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }]
     },
     {
         nik: '3201012345670023',
@@ -214,7 +214,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Laki-Laki',
         noTelepon: '081234567823',
         alamat: 'Jl. Parangtritis No. 23, Yogyakarta',
-        assignments: [{ id: 'A028', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }]
+        assignments: [{ id: 'ASG028', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }]
     },
     {
         nik: '3201012345670024',
@@ -222,7 +222,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Laki-Laki',
         noTelepon: '081234567824',
         alamat: 'Jl. Prawirotaman No. 24, Yogyakarta',
-        assignments: [{ id: 'A029', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }]
+        assignments: [{ id: 'ASG029', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }]
     },
     {
         nik: '3201012345670025',
@@ -230,7 +230,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Perempuan',
         noTelepon: '081234567825',
         alamat: 'Jl. Dagen No. 25, Yogyakarta',
-        assignments: [{ id: 'A030', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }]
+        assignments: [{ id: 'ASG030', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }]
     },
     {
         nik: '3201012345670026',
@@ -238,7 +238,7 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Laki-Laki',
         noTelepon: '081234567826',
         alamat: 'Jl. Kota Gede No. 26, Yogyakarta',
-        assignments: [{ id: 'A031', opd: 'Dinas Pariwisata', kader: 'Kader Ekonomi E', peran: 'Koordinator', statusKeaktifan: 'Nonaktif', nomorSK: 'SK/008/PARIWISATA/2023', skId: 'SK008' }]
+        assignments: [{ id: 'ASG031', opd: 'Dinas Pariwisata', kader: 'Kader Ekonomi Kreatif', peran: 'Koordinator', statusKeaktifan: 'Nonaktif', nomorSK: 'SK/008/PARIWISATA/2023', skId: 'SK008' }]
     },
     {
         nik: '3201012345670027',
@@ -246,6 +246,6 @@ export const mockRelawanData: RelawanData[] = [
         jenisKelamin: 'Perempuan',
         noTelepon: '081234567827',
         alamat: 'Jl. Taman Siswa No. 27, Yogyakarta',
-        assignments: [{ id: 'A032', opd: 'Dinas Pariwisata', kader: 'Kader Ekonomi E', peran: 'Anggota', statusKeaktifan: 'Nonaktif', nomorSK: 'SK/008/PARIWISATA/2023', skId: 'SK008' }]
+        assignments: [{ id: 'ASG032', opd: 'Dinas Pariwisata', kader: 'Kader Ekonomi Kreatif', peran: 'Anggota', statusKeaktifan: 'Nonaktif', nomorSK: 'SK/008/PARIWISATA/2023', skId: 'SK008' }]
     },
 ];

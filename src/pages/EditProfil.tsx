@@ -145,7 +145,7 @@ const EditProfil: React.FC = () => {
                                                 name="namaLengkap"
                                                 value={profileData.namaLengkap}
                                                 onChange={handleProfileChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                             />
                                         </div>
 
@@ -160,7 +160,7 @@ const EditProfil: React.FC = () => {
                                                 value={profileData.nik}
                                                 onChange={handleProfileChange}
                                                 maxLength={16}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                             />
                                         </div>
 
@@ -174,7 +174,7 @@ const EditProfil: React.FC = () => {
                                                 name="noTelepon"
                                                 value={profileData.noTelepon}
                                                 onChange={handleProfileChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                             />
                                         </div>
 
@@ -191,7 +191,7 @@ const EditProfil: React.FC = () => {
                                                         value="Laki-Laki"
                                                         checked={profileData.jenisKelamin === 'Laki-Laki'}
                                                         onChange={handleProfileChange}
-                                                        className="w-4 h-4 text-emerald-500 focus:ring-emerald-500"
+                                                        className="w-4 h-4 text-green-500 focus:ring-green-500"
                                                     />
                                                     <span className="text-sm text-gray-700">Laki-Laki</span>
                                                 </label>
@@ -202,7 +202,7 @@ const EditProfil: React.FC = () => {
                                                         value="Perempuan"
                                                         checked={profileData.jenisKelamin === 'Perempuan'}
                                                         onChange={handleProfileChange}
-                                                        className="w-4 h-4 text-emerald-500 focus:ring-emerald-500"
+                                                        className="w-4 h-4 text-green-500 focus:ring-green-500"
                                                     />
                                                     <span className="text-sm text-gray-700">Perempuan</span>
                                                 </label>
@@ -228,7 +228,7 @@ const EditProfil: React.FC = () => {
                                                 name="passwordLama"
                                                 value={passwordData.passwordLama}
                                                 onChange={handlePasswordChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                             />
                                         </div>
 
@@ -242,7 +242,7 @@ const EditProfil: React.FC = () => {
                                                 name="passwordBaru"
                                                 value={passwordData.passwordBaru}
                                                 onChange={handlePasswordChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                             />
                                         </div>
 
@@ -256,7 +256,7 @@ const EditProfil: React.FC = () => {
                                                 name="konfirmasiPassword"
                                                 value={passwordData.konfirmasiPassword}
                                                 onChange={handlePasswordChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                             />
                                         </div>
 
@@ -264,7 +264,7 @@ const EditProfil: React.FC = () => {
                                         <div className="pt-4">
                                             <button
                                                 type="submit"
-                                                className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                                             >
                                                 Simpan
                                             </button>

@@ -22,19 +22,19 @@ const Statistik: React.FC = () => {
     ];
 
     const relawanPerKaderData: ChartData[] = [
-        { name: 'Kader A', value: 250 },
-        { name: 'Kader B', value: 200 },
-        { name: 'Kader C', value: 150 },
-        { name: 'Kader D', value: 100 },
-        { name: 'Kader E', value: 50 },
+        { name: 'Kader Kesehatan', value: 250 },
+        { name: 'Kader Pendidikan', value: 200 },
+        { name: 'Kader Sosial Kemasyarakatan', value: 150 },
+        { name: 'Kader Lingkungan', value: 100 },
+        { name: 'Kader Ekonomi Kreatif', value: 50 },
     ];
 
     const kaderPerOPDData: ChartData[] = [
-        { name: 'OPD 1', value: 250 },
-        { name: 'OPD 2', value: 220 },
-        { name: 'OPD 3', value: 150 },
-        { name: 'OPD 4', value: 100 },
-        { name: 'OPD 5', value: 50 },
+        { name: 'Dinas Kesehatan', value: 250 },
+        { name: 'Dinas Pendidikan', value: 220 },
+        { name: 'Dinas Perhubungan', value: 150 },
+        { name: 'Dinas Sosial', value: 100 },
+        { name: 'Dinas Pariwisata', value: 50 },
     ];
 
     return (

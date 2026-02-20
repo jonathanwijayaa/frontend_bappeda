@@ -31,7 +31,7 @@ const Dokumen: React.FC = () => {
             id: 'template-opd',
             title: 'Templat Excel Data OPD',
             description: 'Templat untuk mengunggah data OPD secara massal',
-            icon: <FileText size={24} className="text-emerald-600" />,
+            icon: <FileText size={24} className="text-green-600" />,
             fileName: 'Templat_Data_OPD.xlsx'
         },
         {
