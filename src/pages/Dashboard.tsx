@@ -39,31 +39,40 @@ const Dashboard: React.FC = () => {
                     <Card title="Info Tambahan:">
                         <div className="space-y-4">
                             {isSuperAdmin ? (
-                                <>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-600">Total OPD</span>
-                                        <span className="font-semibold">: 8</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-600">Total Kader</span>
-                                        <span className="font-semibold">: 22</span>
-                                    </div>
-                                    <div className="flex justify-between items-start">
-                                        <span className="text-gray-600">Total Relawan Aktif per OPD</span>
-                                        <span className="font-semibold">: 19.959</span>
-                                    </div>
-                                </>
+                                <table className="w-full">
+                                    <tbody>
+                                        <tr>
+                                            <td className="text-gray-600 py-1.5">Total OPD</td>
+                                            <td className="font-semibold py-1.5 w-4 text-center">:</td>
+                                            <td className="font-semibold py-1.5 text-right">8</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="text-gray-600 py-1.5">Total Kader</td>
+                                            <td className="font-semibold py-1.5 w-4 text-center">:</td>
+                                            <td className="font-semibold py-1.5 text-right">22</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="text-gray-600 py-1.5">Total Relawan Aktif per OPD</td>
+                                            <td className="font-semibold py-1.5 w-4 text-center">:</td>
+                                            <td className="font-semibold py-1.5 text-right">19.959</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             ) : (
-                                <>
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-gray-600">Total Kader</span>
-                                        <span className="font-semibold">: 5</span>
-                                    </div>
-                                    <div className="flex justify-between items-start">
-                                        <span className="text-gray-600">Total Relawan Aktif per Kader</span>
-                                        <span className="font-semibold">: 250</span>
-                                    </div>
-                                </>
+                                <table className="w-full">
+                                    <tbody>
+                                        <tr>
+                                            <td className="text-gray-600 py-1.5">Total Kader</td>
+                                            <td className="font-semibold py-1.5 w-4 text-center">:</td>
+                                            <td className="font-semibold py-1.5 text-right">5</td>
+                                        </tr>
+                                        <tr>
+                                            <td className="text-gray-600 py-1.5">Total Relawan Aktif per Kader</td>
+                                            <td className="font-semibold py-1.5 w-4 text-center">:</td>
+                                            <td className="font-semibold py-1.5 text-right">250</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                             )}
                         </div>
                     </Card>
