@@ -3,12 +3,17 @@ import { FileText, Download, BookOpen } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 
+import templateRelawan from '../excel/Template_Data_Relawan.xlsx';
+import templateOPD from '../excel/Template_Data_OPD.xlsx';
+import templateKader from '../excel/Template_Data_Kader.xlsx';
+
 interface DocumentItem {
     id: string;
     title: string;
     description: string;
     icon: React.ReactNode;
     fileName: string;
+    downloadUrl?: string;
 }
 
 const Dokumen: React.FC = () => {
@@ -25,27 +30,39 @@ const Dokumen: React.FC = () => {
             title: 'Templat Excel Data Relawan',
             description: 'Templat untuk mengunggah data relawan secara massal',
             icon: <FileText size={24} className="text-green-600" />,
-            fileName: 'Templat_Data_Relawan.xlsx'
+            fileName: 'Template_Data_Relawan.xlsx',
+            downloadUrl: templateRelawan
         },
         {
             id: 'template-opd',
             title: 'Templat Excel Data OPD',
             description: 'Templat untuk mengunggah data OPD secara massal',
             icon: <FileText size={24} className="text-green-600" />,
-            fileName: 'Templat_Data_OPD.xlsx'
+            fileName: 'Template_Data_OPD.xlsx',
+            downloadUrl: templateOPD
         },
         {
             id: 'template-kader',
             title: 'Templat Excel Data Kader',
             description: 'Templat untuk mengunggah data kader secara massal',
             icon: <FileText size={24} className="text-teal-600" />,
-            fileName: 'Templat_Data_Kader.xlsx'
+            fileName: 'Template_Data_Kader.xlsx',
+            downloadUrl: templateKader
         }
     ];
 
-    const handleDownload = (fileName: string, title: string) => {
-        console.log('Downloading:', fileName, '-', title);
-        // TODO: Implement actual file download logic
+    const handleDownload = (doc: DocumentItem) => {
+        if (!doc.downloadUrl) {
+            console.log('File belum tersedia:', doc.fileName);
+            return;
+        }
+
+        const link = document.createElement('a');
+        link.href = doc.downloadUrl;
+        link.download = doc.fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     return (
@@ -73,7 +90,7 @@ const Dokumen: React.FC = () => {
                                 <Button
                                     variant="primary"
                                     size="sm"
-                                    onClick={() => handleDownload(doc.fileName, doc.title)}
+                                    onClick={() => handleDownload(doc)}
                                     className="flex items-center gap-2"
                                 >
                                     <Download size={16} />
