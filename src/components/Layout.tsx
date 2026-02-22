@@ -32,9 +32,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
     const getPageCaption = (): string => {
         const captions: PageTitles = {
+            '/dashboard': 'Ringkasan data dan informasi utama sistem',
+            '/manajemen-opd': 'Kelola data Organisasi Perangkat Daerah (OPD)',
+            '/daftar-kader': 'Kelola data kader yang terdaftar dalam sistem',
+            '/data-relawan': 'Kelola data relawan dan penugasan mereka',
+            '/surat-keputusan': 'Kelola Surat Keputusan (SK) terkait penugasan',
+            '/log-aktifitas': 'Riwayat aktivitas pengguna dalam sistem',
+            '/statistik': 'Visualisasi dan analisis data secara keseluruhan',
             '/dokumen': 'Akses guidebook dan template Excel untuk mengelola data',
+            '/saran-hotline': 'Kirim saran, masukan, atau laporan ke administrator',
+            '/edit-profil': 'Ubah informasi pribadi dan pengaturan akun',
         };
-        return captions[location.pathname] || 'caption singkat';
+        return captions[location.pathname] || '';
     };
 
     return (
