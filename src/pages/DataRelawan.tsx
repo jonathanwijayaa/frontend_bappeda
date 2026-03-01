@@ -114,9 +114,9 @@ const DataRelawan: React.FC = () => {
         { header: 'NIK', accessor: 'nik' as keyof RelawanData },
         { header: 'ALAMAT', accessor: 'alamat' as keyof RelawanData },
         { header: 'KELURAHAN', accessor: 'kelurahan' as keyof RelawanData },
-        { header: 'kader', accessor: 'kader' as keyof RelawanData },
+        { header: 'KADER', accessor: 'kader' as keyof RelawanData },
         { header: 'JABATAN', accessor: 'jabatan' as keyof RelawanData },
-        { header: 'kedinasan', accessor: 'kedinasan' as keyof RelawanData },
+        { header: 'KEDINASAN', accessor: 'kedinasan' as keyof RelawanData },
     ];
 
     const handleDetailClick = (relawan: RelawanData) => {
