@@ -7,12 +7,12 @@ export const mockPengajuanData: PengajuanData[] = [
         tanggalPengajuan: 'Senin, 01-01-2021 07:07:07',
         status: 'Menunggu',
         dataLama: {
-            'No. Telepon': '081234xxxxxx'
+            'Alamat': 'Jl. Lama No. 1'
         },
         dataBaru: {
-            'No. Telepon': '089876xxxxxx'
+            'Alamat': 'Jl. Baru No. 99'
         },
-        catatanRelawan: 'Nomor yang lama udah mati kartunya'
+        catatanRelawan: 'Pindah alamat rumah baru'
     },
 ];
 
@@ -20,232 +20,286 @@ export const mockRelawanData: RelawanData[] = [
     {
         nik: '3201012345670001',
         namaLengkap: 'Budi Santoso',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567801',
-        alamat: 'Jl. Malioboro No. 1, Yogyakarta',
+        alamat: 'Jl. Malioboro No. 1',
+        kelurahan: 'Suryatmajan',
+        kader: 'KADER KESEHATAN',
+        jabatan: 'Koordinator',
+        kedinasan: 'Alun-Alun',
         assignments: [
-            { id: 'ASG001', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' },
-            { id: 'ASG022', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/KESEHATAN/2024', skId: 'SK006' }
+            { id: 'ASG001', opd: 'Dinas Kesehatan', kader: 'KADER KESEHATAN', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' },
+            { id: 'ASG022', opd: 'Dinas Kesehatan', kader: 'KADER KESEHATAN', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/KESEHATAN/2024', skId: 'SK006' }
         ]
     },
     {
         nik: '3201012345670002',
         namaLengkap: 'Siti Nurhaliza',
-        jenisKelamin: 'Perempuan',
-        noTelepon: '081234567802',
-        alamat: 'Jl. Solo No. 2, Yogyakarta',
-        assignments: [{ id: 'ASG002', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' }]
+        alamat: 'Jl. Solo No. 2',
+        kelurahan: 'Gondokusuman',
+        kader: 'PKK',
+        jabatan: 'Anggota',
+        kedinasan: 'Baciro',
+        assignments: [{ id: 'ASG002', opd: 'Dinas Kesehatan', kader: 'PKK', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' }]
     },
     {
         nik: '3201012345670003',
         namaLengkap: 'Ahmad Fauzi',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567803',
-        alamat: 'Jl. Kaliurang No. 3, Yogyakarta',
-        assignments: [{ id: 'ASG003', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' }]
+        alamat: 'Jl. Kaliurang No. 3',
+        kelurahan: 'Caturtunggal',
+        kader: 'LPMK',
+        jabatan: 'Anggota',
+        kedinasan: 'Bausasran',
+        assignments: [{ id: 'ASG003', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'LPMK', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/LKK/2024', skId: 'SK001' }]
     },
     {
         nik: '3201012345670004',
         namaLengkap: 'Dewi Lestari',
-        jenisKelamin: 'Perempuan',
-        noTelepon: '081234567804',
-        alamat: 'Jl. Gejayan No. 4, Yogyakarta',
-        assignments: [{ id: 'ASG004', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' }]
+        alamat: 'Jl. Gejayan No. 4',
+        kelurahan: 'Demangan',
+        kader: 'Posyandu_DP3AP2KB',
+        jabatan: 'Anggota',
+        kedinasan: 'Demangan',
+        assignments: [{ id: 'ASG004', opd: 'Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana', kader: 'Posyandu_DP3AP2KB', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/DP3AP2KB/2024', skId: 'SK002' }]
     },
     {
         nik: '3201012345670005',
         namaLengkap: 'Rudi Hermawan',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567805',
-        alamat: 'Jl. Affandi No. 5, Yogyakarta',
+        alamat: 'Jl. Affandi No. 5',
+        kelurahan: 'Caturtunggal',
+        kader: 'RT',
+        jabatan: 'Anggota',
+        kedinasan: 'Cokrodiningratan',
         assignments: [
-            { id: 'ASG005', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' },
-            { id: 'ASG023', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/KESEHATAN/2024', skId: 'SK006' }
+            { id: 'ASG005', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'RT', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/LKK/2024', skId: 'SK003' },
+            { id: 'ASG023', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'RT', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/LKK/2024', skId: 'SK006' }
         ]
     },
     {
         nik: '3201012345670006',
         namaLengkap: 'Linda Wijaya',
-        jenisKelamin: 'Perempuan',
-        noTelepon: '081234567806',
-        alamat: 'Jl. Seturan No. 6, Yogyakarta',
+        alamat: 'Jl. Seturan No. 6',
+        kelurahan: 'Caturtunggal',
+        kader: 'RW',
+        jabatan: 'Koordinator',
+        kedinasan: 'Gedongkiwo',
         assignments: [
-            { id: 'ASG006', opd: 'Dinas Pendidikan', kader: 'Kader Pendidikan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/PENDIDIKAN/2024', skId: 'SK002' },
-            { id: 'ASG025', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }
+            { id: 'ASG006', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'RW', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/LKK/2024', skId: 'SK004' },
+            { id: 'ASG025', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'RW', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }
         ]
     },
     {
         nik: '3201012345670007',
         namaLengkap: 'Andi Prasetyo',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567807',
-        alamat: 'Jl. Magelang No. 7, Yogyakarta',
-        assignments: [{ id: 'ASG007', opd: 'Dinas Pendidikan', kader: 'Kader Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/PENDIDIKAN/2024', skId: 'SK002' }]
+        alamat: 'Jl. Magelang No. 7',
+        kelurahan: 'Sinduadi',
+        kader: 'KARANGTARUNA',
+        jabatan: 'Anggota',
+        kedinasan: 'Gowongan',
+        assignments: [{ id: 'ASG007', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'KARANGTARUNA', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/DISDIK/2024', skId: 'SK005' }]
     },
     {
         nik: '3201012345670008',
         namaLengkap: 'Maya Sari',
-        jenisKelamin: 'Perempuan',
-        noTelepon: '081234567808',
-        alamat: 'Jl. Godean No. 8, Yogyakarta',
-        assignments: [{ id: 'ASG008', opd: 'Dinas Pendidikan', kader: 'Kader Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/PENDIDIKAN/2024', skId: 'SK002' }]
+        alamat: 'Jl. Godean No. 8',
+        kelurahan: 'Sidoarum',
+        kader: 'FBSK',
+        jabatan: 'Anggota',
+        kedinasan: 'Bumijo',
+        assignments: [{ id: 'ASG008', opd: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', kader: 'FBSK', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/DINSOS/2024', skId: 'SK008' }]
     },
     {
         nik: '3201012345670009',
         namaLengkap: 'Hendra Gunawan',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567809',
-        alamat: 'Jl. Wates No. 9, Yogyakarta',
+        alamat: 'Jl. Wates No. 9',
+        kelurahan: 'Ngestiharjo',
+        kader: 'TAGANA',
+        jabatan: 'Anggota',
+        kedinasan: 'Jogokariyan',
         assignments: [
-            { id: 'ASG009', opd: 'Dinas Pendidikan', kader: 'Kader Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/PENDIDIKAN/2024', skId: 'SK002' },
-            { id: 'ASG026', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }
+            { id: 'ASG009', opd: 'Badan Penanggulangan Bencana Daerah', kader: 'TAGANA', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/BPBD/2024', skId: 'SK009' },
+            { id: 'ASG026', opd: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', kader: 'TAGANA', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/DINSOS/2024', skId: 'SK010' }
         ]
     },
     {
         nik: '3201012345670010',
         namaLengkap: 'Rina Marlina',
-        jenisKelamin: 'Perempuan',
-        noTelepon: '081234567810',
-        alamat: 'Jl. Sudirman No. 10, Yogyakarta',
-        assignments: [{ id: 'ASG010', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
+        alamat: 'Jl. Sudirman No. 10',
+        kelurahan: 'Kotabaru',
+        kader: 'TKSK',
+        jabatan: 'Koordinator',
+        kedinasan: 'Kotabaru',
+        assignments: [{ id: 'ASG010', opd: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', kader: 'TKSK', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK011' }]
     },
     {
         nik: '3201012345670011',
         namaLengkap: 'Bambang Sutrisno',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567811',
-        alamat: 'Jl. Ahmad Yani No. 11, Yogyakarta',
-        assignments: [{ id: 'ASG011', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
+        alamat: 'Jl. Ahmad Yani No. 11',
+        kelurahan: 'Ngupasan',
+        kader: 'SATLINMAS',
+        jabatan: 'Anggota',
+        kedinasan: 'Ketandan',
+        assignments: [{ id: 'ASG011', opd: 'Satuan Polisi Pamong Praja (PP)', kader: 'SATLINMAS', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/SATPOLPP/2024', skId: 'SK012' }]
     },
     {
         nik: '3201012345670012',
         namaLengkap: 'Fitri Handayani',
-        jenisKelamin: 'Perempuan',
-        noTelepon: '081234567812',
-        alamat: 'Jl. Kusumanegara No. 12, Yogyakarta',
-        assignments: [{ id: 'ASG012', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
+        alamat: 'Jl. Kusumanegara No. 12',
+        kelurahan: 'Semaki',
+        kader: 'FKI',
+        jabatan: 'Anggota',
+        kedinasan: 'Bintaran',
+        assignments: [{ id: 'ASG012', opd: 'Dinas Kesehatan', kader: 'FKI', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/KESEHATAN/2024', skId: 'SK013' }]
     },
     {
         nik: '3201012345670013',
         namaLengkap: 'Dedi Kurniawan',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567813',
-        alamat: 'Jl. Kenari No. 13, Yogyakarta',
-        assignments: [{ id: 'ASG013', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
+        alamat: 'Jl. Kenari No. 13',
+        kelurahan: 'Muja Muju',
+        kader: 'KSB',
+        jabatan: 'Anggota',
+        kedinasan: 'Danukusuman',
+        assignments: [{ id: 'ASG013', opd: 'Badan Penanggulangan Bencana Daerah', kader: 'KSB', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/BPBD/2024', skId: 'SK014' }]
     },
     {
         nik: '3201012345670014',
         namaLengkap: 'Yuni Astuti',
-        jenisKelamin: 'Perempuan',
-        noTelepon: '081234567814',
-        alamat: 'Jl. Colombo No. 14, Yogyakarta',
-        assignments: [{ id: 'ASG014', opd: 'Dinas Sosial', kader: 'Kader Sosial Kemasyarakatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK003' }]
+        alamat: 'Jl. Colombo No. 14',
+        kelurahan: 'Caturtunggal',
+        kader: 'PORDAM',
+        jabatan: 'Anggota',
+        kedinasan: 'Glagahsari',
+        assignments: [{ id: 'ASG014', opd: 'Dinas Pemadam Kebakaran', kader: 'PORDAM', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/DAMKAR/2024', skId: 'SK015' }]
     },
     {
         nik: '3201012345670015',
         namaLengkap: 'Agus Setiawan',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567815',
-        alamat: 'Jl. Laksda Adisucipto No. 15, Yogyakarta',
-        assignments: [{ id: 'ASG015', opd: 'Dinas Perhubungan', kader: 'Kader Lingkungan', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/PERHUBUNGAN/2024', skId: 'SK004' }]
+        alamat: 'Jl. Laksda Adisucipto No. 15',
+        kelurahan: 'Demangan',
+        kader: 'SIGRAK',
+        jabatan: 'Koordinator',
+        kedinasan: 'Klitren Lor',
+        assignments: [{ id: 'ASG015', opd: 'Dinas Kesehatan', kader: 'SIGRAK', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/KESEHATAN/2024', skId: 'SK016' }]
     },
     {
         nik: '3201012345670016',
         namaLengkap: 'Nurul Hidayah',
-        jenisKelamin: 'Perempuan',
-        noTelepon: '081234567816',
-        alamat: 'Jl. Monjali No. 16, Yogyakarta',
-        assignments: [{ id: 'ASG016', opd: 'Dinas Perhubungan', kader: 'Kader Lingkungan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/PERHUBUNGAN/2024', skId: 'SK004' }]
+        alamat: 'Jl. Monjali No. 16',
+        kelurahan: 'Sinduadi',
+        kader: 'FPRB',
+        jabatan: 'Anggota',
+        kedinasan: 'Karangwaru Lor',
+        assignments: [{ id: 'ASG016', opd: 'Badan Penanggulangan Bencana Daerah', kader: 'FPRB', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/BPBD/2024', skId: 'SK017' }]
     },
     {
         nik: '3201012345670017',
         namaLengkap: 'Irfan Hakim',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567817',
-        alamat: 'Jl. Ringroad Utara No. 17, Yogyakarta',
+        alamat: 'Jl. Ringroad Utara No. 17',
+        kelurahan: 'Maguwoharjo',
+        kader: 'REDCAR',
+        jabatan: 'Koordinator',
+        kedinasan: 'Kadipaten Kulon',
         assignments: [
-            { id: 'ASG017', opd: 'Dinas Perhubungan', kader: 'Kader Lingkungan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/PERHUBUNGAN/2024', skId: 'SK004' },
-            { id: 'ASG018', opd: 'Dinas Perhubungan', kader: 'Kader Transportasi dan Lalu Lintas', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISHUB/2024', skId: 'SK005' }
+            { id: 'ASG017', opd: 'Dinas Kesehatan', kader: 'REDCAR', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/KESEHATAN/2024', skId: 'SK018' },
+            { id: 'ASG018', opd: 'Dinas Pemadam Kebakaran', kader: 'REDCAR', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/DAMKAR/2024', skId: 'SK019' }
         ]
     },
     {
         nik: '3201012345670018',
         namaLengkap: 'Wati Suryani',
-        jenisKelamin: 'Perempuan',
-        noTelepon: '081234567818',
-        alamat: 'Jl. Veteran No. 18, Yogyakarta',
-        assignments: [{ id: 'ASG019', opd: 'Dinas Perhubungan', kader: 'Kader Transportasi dan Lalu Lintas', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISHUB/2024', skId: 'SK005' }]
+        alamat: 'Jl. Veteran No. 18',
+        kelurahan: 'Warungboto',
+        kader: 'IPSM',
+        jabatan: 'Anggota',
+        kedinasan: 'Giwangan',
+        assignments: [{ id: 'ASG019', opd: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', kader: 'IPSM', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/DINSOS/2024', skId: 'SK020' }]
     },
     {
         nik: '3201012345670019',
         namaLengkap: 'Rizki Ramadhan',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567819',
-        alamat: 'Jl. Palagan No. 19, Yogyakarta',
-        assignments: [{ id: 'ASG020', opd: 'Dinas Perhubungan', kader: 'Kader Transportasi dan Lalu Lintas', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISHUB/2024', skId: 'SK005' }]
+        alamat: 'Jl. Palagan No. 19',
+        kelurahan: 'Sariharjo',
+        kader: 'ATLIT',
+        jabatan: 'Anggota',
+        kedinasan: 'Juminahan',
+        assignments: [{ id: 'ASG020', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'ATLIT', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DISDIK/2024', skId: 'SK021' }]
     },
     {
         nik: '3201012345670020',
         namaLengkap: 'Indah Permata',
-        jenisKelamin: 'Perempuan',
-        noTelepon: '081234567820',
-        alamat: 'Jl. Bantul No. 20, Yogyakarta',
-        assignments: [{ id: 'ASG021', opd: 'Dinas Perhubungan', kader: 'Kader Transportasi dan Lalu Lintas', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISHUB/2024', skId: 'SK005' }]
+        alamat: 'Jl. Bantul No. 20',
+        kelurahan: 'Panggungharjo',
+        kader: 'KTB',
+        jabatan: 'Anggota',
+        kedinasan: 'Kauman',
+        assignments: [{ id: 'ASG021', opd: 'Dinas Kesehatan', kader: 'KTB', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/KESEHATAN/2024', skId: 'SK022' }]
     },
     {
         nik: '3201012345670021',
         namaLengkap: 'Fajar Sidik',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567821',
-        alamat: 'Jl. Imogiri No. 21, Yogyakarta',
-        assignments: [{ id: 'ASG024', opd: 'Dinas Kesehatan', kader: 'Kader Kesehatan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/KESEHATAN/2024', skId: 'SK006' }]
+        alamat: 'Jl. Imogiri No. 21',
+        kelurahan: 'Trimulyo',
+        kader: 'KETUA KAMPUNG',
+        jabatan: 'Anggota',
+        kedinasan: 'Lempuyangan',
+        assignments: [{ id: 'ASG024', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'KETUA KAMPUNG', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/LKK/2024', skId: 'SK023' }]
     },
     {
         nik: '3201012345670022',
         namaLengkap: 'Sri Wahyuni',
-        jenisKelamin: 'Perempuan',
-        noTelepon: '081234567822',
-        alamat: 'Jl. Wonosari No. 22, Yogyakarta',
-        assignments: [{ id: 'ASG027', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }]
+        alamat: 'Jl. Wonosari No. 22',
+        kelurahan: 'Wonosari',
+        kader: 'TPK',
+        jabatan: 'Anggota',
+        kedinasan: 'Mangkuyudan',
+        assignments: [{ id: 'ASG027', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'TPK', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/DISDIK/2024', skId: 'SK024' }]
     },
     {
         nik: '3201012345670023',
         namaLengkap: 'Tono Sugiarto',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567823',
-        alamat: 'Jl. Parangtritis No. 23, Yogyakarta',
-        assignments: [{ id: 'ASG028', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }]
+        alamat: 'Jl. Parangtritis No. 23',
+        kelurahan: 'Parangtritis',
+        kader: 'KARANGTARUNA',
+        jabatan: 'Anggota',
+        kedinasan: 'Brontokusuman',
+        assignments: [{ id: 'ASG028', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'KARANGTARUNA', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISDIK/2024', skId: 'SK025' }]
     },
     {
         nik: '3201012345670024',
         namaLengkap: 'Eko Prasetyo',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567824',
-        alamat: 'Jl. Prawirotaman No. 24, Yogyakarta',
-        assignments: [{ id: 'ASG029', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }]
+        alamat: 'Jl. Prawirotaman No. 24',
+        kelurahan: 'Brontokusuman',
+        kader: 'SATLINMAS',
+        jabatan: 'Anggota',
+        kedinasan: 'Celeban',
+        assignments: [{ id: 'ASG029', opd: 'Satuan Polisi Pamong Praja (PP)', kader: 'SATLINMAS', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/SATPOLPP/2024', skId: 'SK026' }]
     },
     {
         nik: '3201012345670025',
         namaLengkap: 'Ratna Sari',
-        jenisKelamin: 'Perempuan',
-        noTelepon: '081234567825',
-        alamat: 'Jl. Dagen No. 25, Yogyakarta',
-        assignments: [{ id: 'ASG030', opd: 'Dinas Pendidikan', kader: 'Kader Literasi dan Pendidikan', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }]
+        alamat: 'Jl. Dagen No. 25',
+        kelurahan: 'Sosromenduran',
+        kader: 'PKK',
+        jabatan: 'Anggota',
+        kedinasan: 'Kepatihan',
+        assignments: [{ id: 'ASG030', opd: 'Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana', kader: 'PKK', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/DP3AP2KB/2024', skId: 'SK027' }]
     },
     {
         nik: '3201012345670026',
         namaLengkap: 'Joko Widodo',
-        jenisKelamin: 'Laki-Laki',
-        noTelepon: '081234567826',
-        alamat: 'Jl. Kota Gede No. 26, Yogyakarta',
-        assignments: [{ id: 'ASG031', opd: 'Dinas Pariwisata', kader: 'Kader Ekonomi Kreatif', peran: 'Koordinator', statusKeaktifan: 'Nonaktif', nomorSK: 'SK/008/PARIWISATA/2023', skId: 'SK008' }]
+        alamat: 'Jl. Kota Gede No. 26',
+        kelurahan: 'Prenggan',
+        kader: 'SIGRAK',
+        jabatan: 'Koordinator',
+        kedinasan: 'Gamelan',
+        assignments: [{ id: 'ASG031', opd: 'Dinas Kesehatan', kader: 'SIGRAK', peran: 'Koordinator', statusKeaktifan: 'Nonaktif', nomorSK: 'SK/006/KESEHATAN/2023', skId: 'SK028' }]
     },
     {
         nik: '3201012345670027',
         namaLengkap: 'Sinta Dewi',
-        jenisKelamin: 'Perempuan',
-        noTelepon: '081234567827',
-        alamat: 'Jl. Taman Siswa No. 27, Yogyakarta',
-        assignments: [{ id: 'ASG032', opd: 'Dinas Pariwisata', kader: 'Kader Ekonomi Kreatif', peran: 'Anggota', statusKeaktifan: 'Nonaktif', nomorSK: 'SK/008/PARIWISATA/2023', skId: 'SK008' }]
+        alamat: 'Jl. Taman Siswa No. 27',
+        kelurahan: 'Wirogunan',
+        kader: 'TAGANA',
+        jabatan: 'Anggota',
+        kedinasan: 'Dipowinatan',
+        assignments: [{ id: 'ASG032', opd: 'Badan Penanggulangan Bencana Daerah', kader: 'TAGANA', peran: 'Anggota', statusKeaktifan: 'Nonaktif', nomorSK: 'SK/004/BPBD/2023', skId: 'SK029' }]
     },
 ];

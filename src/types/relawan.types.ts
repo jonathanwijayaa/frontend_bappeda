@@ -28,17 +28,21 @@ export interface PengajuanData {
 export interface RelawanData {
     nik: string;
     namaLengkap: string;
-    jenisKelamin: string;
-    noTelepon: string;
-    alamat?: string;
+    alamat: string;
+    kelurahan: string;
+    kader: string;
+    jabatan: string;
+    kedinasan: string;
     assignments?: Assignment[]; // Multiple assignments
 }
 
 export interface RelawanFormData {
     namaRelawan: string;
     nik: string;
-    jenisKelamin: string;
     alamat: string;
-    noHp: string;
+    kelurahan: string;
+    kader: string;
+    jabatan: string;
+    kedinasan: string;
     assignments: Assignment[];
 }

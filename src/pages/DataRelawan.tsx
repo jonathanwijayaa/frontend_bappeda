@@ -30,9 +30,11 @@ const DataRelawan: React.FC = () => {
     const [detailFormData, setDetailFormData] = useState({
         namaRelawan: '',
         nik: '',
-        jenisKelamin: 'Laki-Laki',
         alamat: '',
-        noHp: '',
+        kelurahan: '',
+        kader: '',
+        jabatan: '',
+        kedinasan: '',
         assignments: [] as Assignment[]
     });
 
@@ -43,9 +45,11 @@ const DataRelawan: React.FC = () => {
         return (
             detailFormData.namaRelawan !== selectedRelawan.namaLengkap ||
             detailFormData.nik !== selectedRelawan.nik ||
-            detailFormData.jenisKelamin !== selectedRelawan.jenisKelamin ||
-            detailFormData.alamat !== (selectedRelawan.alamat || 'Jl. Contoh Alamat No. 123') ||
-            detailFormData.noHp !== selectedRelawan.noTelepon ||
+            detailFormData.alamat !== selectedRelawan.alamat ||
+            detailFormData.kelurahan !== selectedRelawan.kelurahan ||
+            detailFormData.kader !== selectedRelawan.kader ||
+            detailFormData.jabatan !== selectedRelawan.jabatan ||
+            detailFormData.kedinasan !== selectedRelawan.kedinasan ||
             JSON.stringify(detailFormData.assignments) !== JSON.stringify(selectedRelawan.assignments || [])
         );
     }, [selectedRelawan, detailFormData]);
@@ -53,9 +57,11 @@ const DataRelawan: React.FC = () => {
     const [formData, setFormData] = useState({
         namaRelawan: '',
         nik: '',
-        jenisKelamin: 'Laki-Laki',
         alamat: '',
-        noHp: '',
+        kelurahan: '',
+        kader: '',
+        jabatan: '',
+        kedinasan: '',
         assignments: [
             {
                 id: Date.now().toString(),
@@ -104,10 +110,13 @@ const DataRelawan: React.FC = () => {
     ];
 
     const relawanColumns = [
+        { header: 'NAMA', accessor: 'namaLengkap' as keyof RelawanData },
         { header: 'NIK', accessor: 'nik' as keyof RelawanData },
-        { header: 'NAMA LENGKAP', accessor: 'namaLengkap' as keyof RelawanData },
-        { header: 'JENIS KELAMIN', accessor: 'jenisKelamin' as keyof RelawanData },
-        { header: 'NO. TELEPON', accessor: 'noTelepon' as keyof RelawanData },
+        { header: 'ALAMAT', accessor: 'alamat' as keyof RelawanData },
+        { header: 'KELURAHAN', accessor: 'kelurahan' as keyof RelawanData },
+        { header: 'kader', accessor: 'kader' as keyof RelawanData },
+        { header: 'JABATAN', accessor: 'jabatan' as keyof RelawanData },
+        { header: 'kedinasan', accessor: 'kedinasan' as keyof RelawanData },
     ];
 
     const handleDetailClick = (relawan: RelawanData) => {
@@ -115,9 +124,11 @@ const DataRelawan: React.FC = () => {
         setDetailFormData({
             namaRelawan: relawan.namaLengkap,
             nik: relawan.nik,
-            jenisKelamin: relawan.jenisKelamin,
-            alamat: relawan.alamat || 'Jl. Contoh Alamat No. 123',
-            noHp: relawan.noTelepon,
+            alamat: relawan.alamat,
+            kelurahan: relawan.kelurahan,
+            kader: relawan.kader,
+            jabatan: relawan.jabatan,
+            kedinasan: relawan.kedinasan,
             assignments: relawan.assignments || []
         });
         setIsDetailModalOpen(true);
@@ -256,9 +267,11 @@ const DataRelawan: React.FC = () => {
         setFormData({
             namaRelawan: '',
             nik: '',
-            jenisKelamin: 'Laki-Laki',
             alamat: '',
-            noHp: '',
+            kelurahan: '',
+            kader: '',
+            jabatan: '',
+            kedinasan: '',
             assignments: [
                 {
                     id: Date.now().toString(),
@@ -278,9 +291,11 @@ const DataRelawan: React.FC = () => {
         setFormData({
             namaRelawan: '',
             nik: '',
-            jenisKelamin: 'Laki-Laki',
             alamat: '',
-            noHp: '',
+            kelurahan: '',
+            kader: '',
+            jabatan: '',
+            kedinasan: '',
             assignments: [
                 {
                     id: Date.now().toString(),
@@ -339,14 +354,14 @@ const DataRelawan: React.FC = () => {
                         placeholder="Pilih OPD"
                         className="col-span-3"
                         options={[
+                            { value: 'Badan Penanggulangan Bencana Daerah', label: 'Badan Penanggulangan Bencana Daerah' },
                             { value: 'Dinas Kesehatan', label: 'Dinas Kesehatan' },
-                            { value: 'Dinas Pendidikan', label: 'Dinas Pendidikan' },
-                            { value: 'Dinas Perhubungan', label: 'Dinas Perhubungan' },
-                            { value: 'Dinas Sosial', label: 'Dinas Sosial' },
-                            { value: 'Dinas Pekerjaan Umum', label: 'Dinas Pekerjaan Umum' },
-                            { value: 'Dinas Pariwisata', label: 'Dinas Pariwisata' },
-                            { value: 'Dinas Pertanian', label: 'Dinas Pertanian' },
-                            { value: 'Dinas Perindustrian', label: 'Dinas Perindustrian' },
+                            { value: 'Dinas Pemadam Kebakaran', label: 'Dinas Pemadam Kebakaran' },
+                            { value: 'Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana', label: 'Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana' },
+                            { value: 'Dinas Pendidikan, Pemuda, dan Olahraga', label: 'Dinas Pendidikan, Pemuda, dan Olahraga' },
+                            { value: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', label: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi' },
+                            { value: 'Lembaga Kemasyarakatan Kelurahan', label: 'Lembaga Kemasyarakatan Kelurahan' },
+                            { value: 'Satuan Polisi Pamong Praja (PP)', label: 'Satuan Polisi Pamong Praja (PP)' },
                         ]}
                         disabled={disabled}
                     />
@@ -554,35 +569,6 @@ const DataRelawan: React.FC = () => {
                         />
                     </div>
 
-                    {/* Jenis Kelamin */}
-                    <div className="grid grid-cols-4 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">Jenis Kelamin</label>
-                        <div className="col-span-3 flex gap-6">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="jenisKelamin"
-                                    value="Laki-Laki"
-                                    checked={formData.jenisKelamin === 'Laki-Laki'}
-                                    onChange={handleInputChange}
-                                    className="w-4 h-4 text-blue-500"
-                                />
-                                <span className="text-gray-700">Laki-Laki</span>
-                            </label>
-                            <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                    type="radio"
-                                    name="jenisKelamin"
-                                    value="Perempuan"
-                                    checked={formData.jenisKelamin === 'Perempuan'}
-                                    onChange={handleInputChange}
-                                    className="w-4 h-4 text-blue-500"
-                                />
-                                <span className="text-gray-700">Perempuan</span>
-                            </label>
-                        </div>
-                    </div>
-
                     {/* Alamat */}
                     <div className="grid grid-cols-4 gap-4 items-center">
                         <label className="text-lg font-medium text-gray-900">Alamat</label>
@@ -597,15 +583,57 @@ const DataRelawan: React.FC = () => {
                         />
                     </div>
 
-                    {/* No. HP */}
+                    {/* Kelurahan */}
                     <div className="grid grid-cols-4 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">No. HP</label>
+                        <label className="text-lg font-medium text-gray-900">Kelurahan</label>
                         <input
                             type="text"
-                            name="noHp"
-                            value={formData.noHp}
+                            name="kelurahan"
+                            value={formData.kelurahan}
                             onChange={handleInputChange}
-                            placeholder="No HP Relawan"
+                            placeholder="Kelurahan"
+                            className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                        />
+                    </div>
+
+                    {/* kader */}
+                    <div className="grid grid-cols-4 gap-4 items-center">
+                        <label className="text-lg font-medium text-gray-900">kader</label>
+                        <input
+                            type="text"
+                            name="kader"
+                            value={formData.kader}
+                            onChange={handleInputChange}
+                            placeholder="kader"
+                            className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                        />
+                    </div>
+
+                    {/* Jabatan */}
+                    <div className="grid grid-cols-4 gap-4 items-center">
+                        <label className="text-lg font-medium text-gray-900">Jabatan</label>
+                        <input
+                            type="text"
+                            name="jabatan"
+                            value={formData.jabatan}
+                            onChange={handleInputChange}
+                            placeholder="Jabatan"
+                            className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                        />
+                    </div>
+
+                    {/* kedinasan */}
+                    <div className="grid grid-cols-4 gap-4 items-center">
+                        <label className="text-lg font-medium text-gray-900">kedinasan</label>
+                        <input
+                            type="text"
+                            name="kedinasan"
+                            value={formData.kedinasan}
+                            onChange={handleInputChange}
+                            placeholder="kedinasan"
                             className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
@@ -676,35 +704,6 @@ const DataRelawan: React.FC = () => {
                             />
                         </div>
 
-                        {/* Jenis Kelamin */}
-                        <div className="grid grid-cols-4 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">Jenis Kelamin</label>
-                            <div className="col-span-3 flex gap-6">
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="jenisKelamin"
-                                        value="Laki-Laki"
-                                        checked={detailFormData.jenisKelamin === 'Laki-Laki'}
-                                        onChange={handleDetailInputChange}
-                                        className="w-4 h-4 text-blue-500"
-                                    />
-                                    <span className="text-gray-700">Laki-Laki</span>
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="radio"
-                                        name="jenisKelamin"
-                                        value="Perempuan"
-                                        checked={detailFormData.jenisKelamin === 'Perempuan'}
-                                        onChange={handleDetailInputChange}
-                                        className="w-4 h-4 text-blue-500"
-                                    />
-                                    <span className="text-gray-700">Perempuan</span>
-                                </label>
-                            </div>
-                        </div>
-
                         {/* Alamat */}
                         <div className="grid grid-cols-4 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">Alamat</label>
@@ -718,15 +717,54 @@ const DataRelawan: React.FC = () => {
                             />
                         </div>
 
-                        {/* No. HP */}
+                        {/* Kelurahan */}
                         <div className="grid grid-cols-4 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">No. HP</label>
+                            <label className="text-lg font-medium text-gray-900">Kelurahan</label>
                             <input
                                 type="text"
-                                name="noHp"
-                                value={detailFormData.noHp}
+                                name="kelurahan"
+                                value={detailFormData.kelurahan}
                                 onChange={handleDetailInputChange}
-                                placeholder="No HP Relawan"
+                                placeholder="Kelurahan"
+                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+
+                        {/* kader */}
+                        <div className="grid grid-cols-4 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">kader</label>
+                            <input
+                                type="text"
+                                name="kader"
+                                value={detailFormData.kader}
+                                onChange={handleDetailInputChange}
+                                placeholder="kader"
+                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+
+                        {/* Jabatan */}
+                        <div className="grid grid-cols-4 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">Jabatan</label>
+                            <input
+                                type="text"
+                                name="jabatan"
+                                value={detailFormData.jabatan}
+                                onChange={handleDetailInputChange}
+                                placeholder="Jabatan"
+                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+
+                        {/* kedinasan */}
+                        <div className="grid grid-cols-4 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">kedinasan</label>
+                            <input
+                                type="text"
+                                name="kedinasan"
+                                value={detailFormData.kedinasan}
+                                onChange={handleDetailInputChange}
+                                placeholder="kedinasan"
                                 className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>

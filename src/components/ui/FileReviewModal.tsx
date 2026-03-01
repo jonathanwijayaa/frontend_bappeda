@@ -46,11 +46,13 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                 return (
                     <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Lengkap</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jenis Kelamin</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. HP</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelurahan</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">kader</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jabatan</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">kedinasan</th>
                     </tr>
                 );
         }
@@ -84,11 +86,13 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                     return (
                         <tr key={index} className="hover:bg-gray-50">
                             <td className="px-4 py-3 text-sm text-gray-900">{index + 1}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.nik || '-'}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{item.namaLengkap || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.jenisKelamin || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{item.nik || '-'}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{item.alamat || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.noTelepon || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{item.kelurahan || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{item.kader || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{item.jabatan || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{item.kedinasan || '-'}</td>
                         </tr>
                     );
             }
