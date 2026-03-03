@@ -6,6 +6,7 @@ export interface Assignment {
     opd: string;
     kader: string;
     peran: string;
+    detail: string;
     statusKeaktifan: 'Aktif' | 'Nonaktif';
     nomorSK: string;
     skId: string; // Reference to SK document
@@ -32,7 +33,7 @@ export interface RelawanData {
     kelurahan: string;
     kader: string;
     jabatan: string;
-    kedinasan: string;
+    penugasan: string;
     assignments?: Assignment[]; // Multiple assignments
 }
 
@@ -43,6 +44,6 @@ export interface RelawanFormData {
     kelurahan: string;
     kader: string;
     jabatan: string;
-    kedinasan: string;
+    penugasan: string;
     assignments: Assignment[];
 }

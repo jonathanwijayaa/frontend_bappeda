@@ -61,7 +61,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
         const requiredFields: { [key: string]: string[] } = {
             opd: ['namaOpd', 'status', 'alamat', 'pic', 'kontak'],
             kader: ['namaKader', 'status', 'pic', 'kontak'],
-            relawan: ['nik', 'namaLengkap', 'alamat', 'kelurahan', 'kader', 'jabatan', 'kedinasan']
+            relawan: ['nik', 'namaLengkap', 'alamat', 'kelurahan', 'kader', 'jabatan', 'penugasan']
         };
 
         const fields = requiredFields[dataType];

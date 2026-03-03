@@ -9,7 +9,6 @@ const Profil: React.FC = () => {
     const [profileData, setProfileData] = useState({
         namaLengkap: user?.name || '',
         nik: '1234567890123456',
-        noTelepon: '081234567890',
         jenisKelamin: user?.name === 'Amelia' ? 'Perempuan' : 'Laki-Laki'
     });
 
@@ -162,51 +161,6 @@ const Profil: React.FC = () => {
                                                 maxLength={16}
                                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                             />
-                                        </div>
-
-                                        {/* No. Telepon */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                No. Telepon
-                                            </label>
-                                            <input
-                                                type="tel"
-                                                name="noTelepon"
-                                                value={profileData.noTelepon}
-                                                onChange={handleProfileChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                            />
-                                        </div>
-
-                                        {/* Jenis Kelamin */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Jenis Kelamin
-                                            </label>
-                                            <div className="flex gap-6">
-                                                <label className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                        type="radio"
-                                                        name="jenisKelamin"
-                                                        value="Laki-Laki"
-                                                        checked={profileData.jenisKelamin === 'Laki-Laki'}
-                                                        onChange={handleProfileChange}
-                                                        className="w-4 h-4 text-green-500 focus:ring-green-500"
-                                                    />
-                                                    <span className="text-sm text-gray-700">Laki-Laki</span>
-                                                </label>
-                                                <label className="flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                        type="radio"
-                                                        name="jenisKelamin"
-                                                        value="Perempuan"
-                                                        checked={profileData.jenisKelamin === 'Perempuan'}
-                                                        onChange={handleProfileChange}
-                                                        className="w-4 h-4 text-green-500 focus:ring-green-500"
-                                                    />
-                                                    <span className="text-sm text-gray-700">Perempuan</span>
-                                                </label>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>

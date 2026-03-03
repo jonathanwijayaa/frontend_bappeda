@@ -46,9 +46,9 @@ export const kaderOptions: DropdownOption[] = [
 ];
 
 // ========================
-// Kedinasan Options
+// Penugasan Options
 // ========================
-export const kedinasanOptions: DropdownOption[] = [
+export const penugasanOptions: DropdownOption[] = [
     { value: 'Alun-Alun', label: 'Alun-Alun' },
     { value: 'Baciro', label: 'Baciro' },
     { value: 'Baciro Sanggrahan', label: 'Baciro Sanggrahan' },

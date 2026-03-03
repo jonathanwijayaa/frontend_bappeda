@@ -77,6 +77,12 @@ const KomunitasSaya = () => {
                                                 <span className="text-gray-600 w-20">Peran:</span>
                                                 <span className="text-gray-800 font-medium">{assignment.peran}</span>
                                             </div>
+                                            {assignment.detail && (
+                                                <div className="flex items-center text-xs">
+                                                    <span className="text-gray-600 w-20">Detail:</span>
+                                                    <span className="text-gray-800 font-medium">{assignment.detail}</span>
+                                                </div>
+                                            )}
                                             <div className="flex items-center text-xs">
                                                 <span className="text-gray-600 w-20">No. SK:</span>
                                                 <span className="text-gray-800 font-medium">{assignment.nomorSK}</span>

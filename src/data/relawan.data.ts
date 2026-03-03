@@ -24,10 +24,10 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Suryatmajan',
         kader: 'KADER KESEHATAN',
         jabatan: 'Koordinator',
-        kedinasan: 'Alun-Alun',
+        penugasan: 'Alun-Alun',
         assignments: [
-            { id: 'ASG001', opd: 'Dinas Kesehatan', kader: 'KADER KESEHATAN', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' },
-            { id: 'ASG022', opd: 'Dinas Kesehatan', kader: 'KADER KESEHATAN', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/KESEHATAN/2024', skId: 'SK006' }
+            { id: 'ASG001', opd: 'Dinas Kesehatan', kader: 'KADER KESEHATAN', peran: 'Ketua', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' },
+            { id: 'ASG022', opd: 'Dinas Kesehatan', kader: 'KADER KESEHATAN', peran: 'Ketua', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/KESEHATAN/2024', skId: 'SK006' }
         ]
     },
     {
@@ -37,8 +37,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Gondokusuman',
         kader: 'PKK',
         jabatan: 'Anggota',
-        kedinasan: 'Baciro',
-        assignments: [{ id: 'ASG002', opd: 'Dinas Kesehatan', kader: 'PKK', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' }]
+        penugasan: 'Baciro',
+        assignments: [{ id: 'ASG002', opd: 'Dinas Kesehatan', kader: 'PKK', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/KESEHATAN/2024', skId: 'SK001' }]
     },
     {
         nik: '3201012345670003',
@@ -47,8 +47,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Caturtunggal',
         kader: 'LPMK',
         jabatan: 'Anggota',
-        kedinasan: 'Bausasran',
-        assignments: [{ id: 'ASG003', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'LPMK', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/LKK/2024', skId: 'SK001' }]
+        penugasan: 'Bausasran',
+        assignments: [{ id: 'ASG003', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'LPMK', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/LKK/2024', skId: 'SK001' }]
     },
     {
         nik: '3201012345670004',
@@ -57,8 +57,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Demangan',
         kader: 'Posyandu_DP3AP2KB',
         jabatan: 'Anggota',
-        kedinasan: 'Demangan',
-        assignments: [{ id: 'ASG004', opd: 'Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana', kader: 'Posyandu_DP3AP2KB', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/DP3AP2KB/2024', skId: 'SK002' }]
+        penugasan: 'Demangan',
+        assignments: [{ id: 'ASG004', opd: 'Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana', kader: 'Posyandu_DP3AP2KB', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/DP3AP2KB/2024', skId: 'SK002' }]
     },
     {
         nik: '3201012345670005',
@@ -67,10 +67,10 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Caturtunggal',
         kader: 'RT',
         jabatan: 'Anggota',
-        kedinasan: 'Cokrodiningratan',
+        penugasan: 'Cokrodiningratan',
         assignments: [
-            { id: 'ASG005', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'RT', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/LKK/2024', skId: 'SK003' },
-            { id: 'ASG023', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'RT', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/LKK/2024', skId: 'SK006' }
+            { id: 'ASG005', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'RT', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/LKK/2024', skId: 'SK003' },
+            { id: 'ASG023', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'RT', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/006/LKK/2024', skId: 'SK006' }
         ]
     },
     {
@@ -80,10 +80,10 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Caturtunggal',
         kader: 'RW',
         jabatan: 'Koordinator',
-        kedinasan: 'Gedongkiwo',
+        penugasan: 'Gedongkiwo',
         assignments: [
-            { id: 'ASG006', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'RW', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/LKK/2024', skId: 'SK004' },
-            { id: 'ASG025', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'RW', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }
+            { id: 'ASG006', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'RW', peran: 'Ketua', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/LKK/2024', skId: 'SK004' },
+            { id: 'ASG025', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'RW', peran: 'Ketua', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/007/DISDIK/2024', skId: 'SK007' }
         ]
     },
     {
@@ -93,8 +93,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Sinduadi',
         kader: 'KARANGTARUNA',
         jabatan: 'Anggota',
-        kedinasan: 'Gowongan',
-        assignments: [{ id: 'ASG007', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'KARANGTARUNA', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/DISDIK/2024', skId: 'SK005' }]
+        penugasan: 'Gowongan',
+        assignments: [{ id: 'ASG007', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'KARANGTARUNA', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/DISDIK/2024', skId: 'SK005' }]
     },
     {
         nik: '3201012345670008',
@@ -103,8 +103,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Sidoarum',
         kader: 'FBSK',
         jabatan: 'Anggota',
-        kedinasan: 'Bumijo',
-        assignments: [{ id: 'ASG008', opd: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', kader: 'FBSK', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/DINSOS/2024', skId: 'SK008' }]
+        penugasan: 'Bumijo',
+        assignments: [{ id: 'ASG008', opd: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', kader: 'FBSK', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/DINSOS/2024', skId: 'SK008' }]
     },
     {
         nik: '3201012345670009',
@@ -113,10 +113,10 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Ngestiharjo',
         kader: 'TAGANA',
         jabatan: 'Anggota',
-        kedinasan: 'Jogokariyan',
+        penugasan: 'Jogokariyan',
         assignments: [
-            { id: 'ASG009', opd: 'Badan Penanggulangan Bencana Daerah', kader: 'TAGANA', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/BPBD/2024', skId: 'SK009' },
-            { id: 'ASG026', opd: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', kader: 'TAGANA', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/DINSOS/2024', skId: 'SK010' }
+            { id: 'ASG009', opd: 'Badan Penanggulangan Bencana Daerah', kader: 'TAGANA', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/BPBD/2024', skId: 'SK009' },
+            { id: 'ASG026', opd: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', kader: 'TAGANA', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/DINSOS/2024', skId: 'SK010' }
         ]
     },
     {
@@ -126,8 +126,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Kotabaru',
         kader: 'TKSK',
         jabatan: 'Koordinator',
-        kedinasan: 'Kotabaru',
-        assignments: [{ id: 'ASG010', opd: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', kader: 'TKSK', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK011' }]
+        penugasan: 'Kotabaru',
+        assignments: [{ id: 'ASG010', opd: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', kader: 'TKSK', peran: 'Ketua', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DINSOS/2024', skId: 'SK011' }]
     },
     {
         nik: '3201012345670011',
@@ -136,8 +136,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Ngupasan',
         kader: 'SATLINMAS',
         jabatan: 'Anggota',
-        kedinasan: 'Ketandan',
-        assignments: [{ id: 'ASG011', opd: 'Satuan Polisi Pamong Praja (PP)', kader: 'SATLINMAS', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/SATPOLPP/2024', skId: 'SK012' }]
+        penugasan: 'Ketandan',
+        assignments: [{ id: 'ASG011', opd: 'Satuan Polisi Pamong Praja (PP)', kader: 'SATLINMAS', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/SATPOLPP/2024', skId: 'SK012' }]
     },
     {
         nik: '3201012345670012',
@@ -146,8 +146,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Semaki',
         kader: 'FKI',
         jabatan: 'Anggota',
-        kedinasan: 'Bintaran',
-        assignments: [{ id: 'ASG012', opd: 'Dinas Kesehatan', kader: 'FKI', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/KESEHATAN/2024', skId: 'SK013' }]
+        penugasan: 'Bintaran',
+        assignments: [{ id: 'ASG012', opd: 'Dinas Kesehatan', kader: 'FKI', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/KESEHATAN/2024', skId: 'SK013' }]
     },
     {
         nik: '3201012345670013',
@@ -156,8 +156,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Muja Muju',
         kader: 'KSB',
         jabatan: 'Anggota',
-        kedinasan: 'Danukusuman',
-        assignments: [{ id: 'ASG013', opd: 'Badan Penanggulangan Bencana Daerah', kader: 'KSB', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/BPBD/2024', skId: 'SK014' }]
+        penugasan: 'Danukusuman',
+        assignments: [{ id: 'ASG013', opd: 'Badan Penanggulangan Bencana Daerah', kader: 'KSB', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/BPBD/2024', skId: 'SK014' }]
     },
     {
         nik: '3201012345670014',
@@ -166,8 +166,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Caturtunggal',
         kader: 'PORDAM',
         jabatan: 'Anggota',
-        kedinasan: 'Glagahsari',
-        assignments: [{ id: 'ASG014', opd: 'Dinas Pemadam Kebakaran', kader: 'PORDAM', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/DAMKAR/2024', skId: 'SK015' }]
+        penugasan: 'Glagahsari',
+        assignments: [{ id: 'ASG014', opd: 'Dinas Pemadam Kebakaran', kader: 'PORDAM', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/001/DAMKAR/2024', skId: 'SK015' }]
     },
     {
         nik: '3201012345670015',
@@ -176,8 +176,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Demangan',
         kader: 'SIGRAK',
         jabatan: 'Koordinator',
-        kedinasan: 'Klitren Lor',
-        assignments: [{ id: 'ASG015', opd: 'Dinas Kesehatan', kader: 'SIGRAK', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/KESEHATAN/2024', skId: 'SK016' }]
+        penugasan: 'Klitren Lor',
+        assignments: [{ id: 'ASG015', opd: 'Dinas Kesehatan', kader: 'SIGRAK', peran: 'Ketua', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/KESEHATAN/2024', skId: 'SK016' }]
     },
     {
         nik: '3201012345670016',
@@ -186,8 +186,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Sinduadi',
         kader: 'FPRB',
         jabatan: 'Anggota',
-        kedinasan: 'Karangwaru Lor',
-        assignments: [{ id: 'ASG016', opd: 'Badan Penanggulangan Bencana Daerah', kader: 'FPRB', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/BPBD/2024', skId: 'SK017' }]
+        penugasan: 'Karangwaru Lor',
+        assignments: [{ id: 'ASG016', opd: 'Badan Penanggulangan Bencana Daerah', kader: 'FPRB', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/BPBD/2024', skId: 'SK017' }]
     },
     {
         nik: '3201012345670017',
@@ -196,10 +196,10 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Maguwoharjo',
         kader: 'REDCAR',
         jabatan: 'Koordinator',
-        kedinasan: 'Kadipaten Kulon',
+        penugasan: 'Kadipaten Kulon',
         assignments: [
-            { id: 'ASG017', opd: 'Dinas Kesehatan', kader: 'REDCAR', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/KESEHATAN/2024', skId: 'SK018' },
-            { id: 'ASG018', opd: 'Dinas Pemadam Kebakaran', kader: 'REDCAR', peran: 'Koordinator', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/DAMKAR/2024', skId: 'SK019' }
+            { id: 'ASG017', opd: 'Dinas Kesehatan', kader: 'REDCAR', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/KESEHATAN/2024', skId: 'SK018' },
+            { id: 'ASG018', opd: 'Dinas Pemadam Kebakaran', kader: 'REDCAR', peran: 'Ketua', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/DAMKAR/2024', skId: 'SK019' }
         ]
     },
     {
@@ -209,8 +209,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Warungboto',
         kader: 'IPSM',
         jabatan: 'Anggota',
-        kedinasan: 'Giwangan',
-        assignments: [{ id: 'ASG019', opd: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', kader: 'IPSM', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/DINSOS/2024', skId: 'SK020' }]
+        penugasan: 'Giwangan',
+        assignments: [{ id: 'ASG019', opd: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', kader: 'IPSM', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/DINSOS/2024', skId: 'SK020' }]
     },
     {
         nik: '3201012345670019',
@@ -219,8 +219,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Sariharjo',
         kader: 'ATLIT',
         jabatan: 'Anggota',
-        kedinasan: 'Juminahan',
-        assignments: [{ id: 'ASG020', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'ATLIT', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DISDIK/2024', skId: 'SK021' }]
+        penugasan: 'Juminahan',
+        assignments: [{ id: 'ASG020', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'ATLIT', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/003/DISDIK/2024', skId: 'SK021' }]
     },
     {
         nik: '3201012345670020',
@@ -229,8 +229,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Panggungharjo',
         kader: 'KTB',
         jabatan: 'Anggota',
-        kedinasan: 'Kauman',
-        assignments: [{ id: 'ASG021', opd: 'Dinas Kesehatan', kader: 'KTB', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/KESEHATAN/2024', skId: 'SK022' }]
+        penugasan: 'Kauman',
+        assignments: [{ id: 'ASG021', opd: 'Dinas Kesehatan', kader: 'KTB', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/KESEHATAN/2024', skId: 'SK022' }]
     },
     {
         nik: '3201012345670021',
@@ -239,8 +239,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Trimulyo',
         kader: 'KETUA KAMPUNG',
         jabatan: 'Anggota',
-        kedinasan: 'Lempuyangan',
-        assignments: [{ id: 'ASG024', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'KETUA KAMPUNG', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/LKK/2024', skId: 'SK023' }]
+        penugasan: 'Lempuyangan',
+        assignments: [{ id: 'ASG024', opd: 'Lembaga Kemasyarakatan Kelurahan', kader: 'KETUA KAMPUNG', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/LKK/2024', skId: 'SK023' }]
     },
     {
         nik: '3201012345670022',
@@ -249,8 +249,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Wonosari',
         kader: 'TPK',
         jabatan: 'Anggota',
-        kedinasan: 'Mangkuyudan',
-        assignments: [{ id: 'ASG027', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'TPK', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/DISDIK/2024', skId: 'SK024' }]
+        penugasan: 'Mangkuyudan',
+        assignments: [{ id: 'ASG027', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'TPK', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/004/DISDIK/2024', skId: 'SK024' }]
     },
     {
         nik: '3201012345670023',
@@ -259,8 +259,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Parangtritis',
         kader: 'KARANGTARUNA',
         jabatan: 'Anggota',
-        kedinasan: 'Brontokusuman',
-        assignments: [{ id: 'ASG028', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'KARANGTARUNA', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISDIK/2024', skId: 'SK025' }]
+        penugasan: 'Brontokusuman',
+        assignments: [{ id: 'ASG028', opd: 'Dinas Pendidikan, Pemuda, dan Olahraga', kader: 'KARANGTARUNA', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/005/DISDIK/2024', skId: 'SK025' }]
     },
     {
         nik: '3201012345670024',
@@ -269,8 +269,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Brontokusuman',
         kader: 'SATLINMAS',
         jabatan: 'Anggota',
-        kedinasan: 'Celeban',
-        assignments: [{ id: 'ASG029', opd: 'Satuan Polisi Pamong Praja (PP)', kader: 'SATLINMAS', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/SATPOLPP/2024', skId: 'SK026' }]
+        penugasan: 'Celeban',
+        assignments: [{ id: 'ASG029', opd: 'Satuan Polisi Pamong Praja (PP)', kader: 'SATLINMAS', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/SATPOLPP/2024', skId: 'SK026' }]
     },
     {
         nik: '3201012345670025',
@@ -279,8 +279,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Sosromenduran',
         kader: 'PKK',
         jabatan: 'Anggota',
-        kedinasan: 'Kepatihan',
-        assignments: [{ id: 'ASG030', opd: 'Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana', kader: 'PKK', peran: 'Anggota', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/DP3AP2KB/2024', skId: 'SK027' }]
+        penugasan: 'Kepatihan',
+        assignments: [{ id: 'ASG030', opd: 'Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana', kader: 'PKK', peran: 'Anggota', detail: '', statusKeaktifan: 'Aktif', nomorSK: 'SK/002/DP3AP2KB/2024', skId: 'SK027' }]
     },
     {
         nik: '3201012345670026',
@@ -289,8 +289,8 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Prenggan',
         kader: 'SIGRAK',
         jabatan: 'Koordinator',
-        kedinasan: 'Gamelan',
-        assignments: [{ id: 'ASG031', opd: 'Dinas Kesehatan', kader: 'SIGRAK', peran: 'Koordinator', statusKeaktifan: 'Nonaktif', nomorSK: 'SK/006/KESEHATAN/2023', skId: 'SK028' }]
+        penugasan: 'Gamelan',
+        assignments: [{ id: 'ASG031', opd: 'Dinas Kesehatan', kader: 'SIGRAK', peran: 'Ketua', detail: '', statusKeaktifan: 'Nonaktif', nomorSK: 'SK/006/KESEHATAN/2023', skId: 'SK028' }]
     },
     {
         nik: '3201012345670027',
@@ -299,7 +299,7 @@ export const mockRelawanData: RelawanData[] = [
         kelurahan: 'Wirogunan',
         kader: 'TAGANA',
         jabatan: 'Anggota',
-        kedinasan: 'Dipowinatan',
-        assignments: [{ id: 'ASG032', opd: 'Badan Penanggulangan Bencana Daerah', kader: 'TAGANA', peran: 'Anggota', statusKeaktifan: 'Nonaktif', nomorSK: 'SK/004/BPBD/2023', skId: 'SK029' }]
+        penugasan: 'Dipowinatan',
+        assignments: [{ id: 'ASG032', opd: 'Badan Penanggulangan Bencana Daerah', kader: 'TAGANA', peran: 'Anggota', detail: '', statusKeaktifan: 'Nonaktif', nomorSK: 'SK/004/BPBD/2023', skId: 'SK029' }]
     },
 ];

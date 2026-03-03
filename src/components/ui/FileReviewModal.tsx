@@ -52,7 +52,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelurahan</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kader</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jabatan</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kedinasan</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penugasan</th>
                     </tr>
                 );
         }
@@ -92,7 +92,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                             <td className="px-4 py-3 text-sm text-gray-900">{item.kelurahan || '-'}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{item.kader || '-'}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{item.jabatan || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.kedinasan || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{item.penugasan || '-'}</td>
                         </tr>
                     );
             }

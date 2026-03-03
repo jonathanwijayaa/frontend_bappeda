@@ -34,7 +34,7 @@ const DataRelawan: React.FC = () => {
         kelurahan: '',
         kader: '',
         jabatan: '',
-        kedinasan: '',
+        penugasan: '',
         assignments: [] as Assignment[]
     });
 
@@ -49,7 +49,7 @@ const DataRelawan: React.FC = () => {
             detailFormData.kelurahan !== selectedRelawan.kelurahan ||
             detailFormData.kader !== selectedRelawan.kader ||
             detailFormData.jabatan !== selectedRelawan.jabatan ||
-            detailFormData.kedinasan !== selectedRelawan.kedinasan ||
+            detailFormData.penugasan !== selectedRelawan.penugasan ||
             JSON.stringify(detailFormData.assignments) !== JSON.stringify(selectedRelawan.assignments || [])
         );
     }, [selectedRelawan, detailFormData]);
@@ -61,13 +61,14 @@ const DataRelawan: React.FC = () => {
         kelurahan: '',
         kader: '',
         jabatan: '',
-        kedinasan: '',
+        penugasan: '',
         assignments: [
             {
                 id: Date.now().toString(),
                 opd: '',
                 kader: '',
                 peran: '',
+                detail: '',
                 statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
                 nomorSK: '',
                 skId: ''
@@ -116,7 +117,7 @@ const DataRelawan: React.FC = () => {
         { header: 'KELURAHAN', accessor: 'kelurahan' as keyof RelawanData },
         { header: 'KADER', accessor: 'kader' as keyof RelawanData },
         { header: 'JABATAN', accessor: 'jabatan' as keyof RelawanData },
-        { header: 'KEDINASAN', accessor: 'kedinasan' as keyof RelawanData },
+        { header: 'PENUGASAN', accessor: 'penugasan' as keyof RelawanData },
     ];
 
     const handleDetailClick = (relawan: RelawanData) => {
@@ -128,7 +129,7 @@ const DataRelawan: React.FC = () => {
             kelurahan: relawan.kelurahan,
             kader: relawan.kader,
             jabatan: relawan.jabatan,
-            kedinasan: relawan.kedinasan,
+            penugasan: relawan.penugasan,
             assignments: relawan.assignments || []
         });
         setIsDetailModalOpen(true);
@@ -213,6 +214,7 @@ const DataRelawan: React.FC = () => {
                     opd: '',
                     kader: '',
                     peran: '',
+                    detail: '',
                     statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
                     nomorSK: '',
                     skId: ''
@@ -240,6 +242,7 @@ const DataRelawan: React.FC = () => {
                     opd: '',
                     kader: '',
                     peran: '',
+                    detail: '',
                     statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
                     nomorSK: '',
                     skId: ''
@@ -271,13 +274,14 @@ const DataRelawan: React.FC = () => {
             kelurahan: '',
             kader: '',
             jabatan: '',
-            kedinasan: '',
+            penugasan: '',
             assignments: [
                 {
                     id: Date.now().toString(),
                     opd: '',
                     kader: '',
                     peran: '',
+                    detail: '',
                     statusKeaktifan: 'Aktif',
                     nomorSK: '',
                     skId: ''
@@ -295,13 +299,14 @@ const DataRelawan: React.FC = () => {
             kelurahan: '',
             kader: '',
             jabatan: '',
-            kedinasan: '',
+            penugasan: '',
             assignments: [
                 {
                     id: Date.now().toString(),
                     opd: '',
                     kader: '',
                     peran: '',
+                    detail: '',
                     statusKeaktifan: 'Aktif',
                     nomorSK: '',
                     skId: ''
@@ -398,10 +403,26 @@ const DataRelawan: React.FC = () => {
                         placeholder="Pilih Peran"
                         className="col-span-3"
                         options={[
-                            { value: 'Koordinator', label: 'Koordinator' },
+                            { value: 'Ketua', label: 'Ketua' },
+                            { value: 'Wakil', label: 'Wakil' },
+                            { value: 'Sekretaris', label: 'Sekretaris' },
+                            { value: 'Bendahara', label: 'Bendahara' },
+                            { value: 'Seksi', label: 'Seksi' },
                             { value: 'Anggota', label: 'Anggota' },
-                            { value: 'Pengurus', label: 'Pengurus' },
                         ]}
+                        disabled={disabled}
+                    />
+                </div>
+
+                {/* Detail */}
+                <div className="grid grid-cols-4 gap-4 items-center mb-4">
+                    <label className="text-lg font-medium text-gray-900 pl-4">Detail</label>
+                    <input
+                        type="text"
+                        value={assignment.detail}
+                        onChange={(e) => !disabled && handleChange(index, 'detail', e.target.value)}
+                        placeholder="Detail"
+                        className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:italic"
                         disabled={disabled}
                     />
                 </div>
@@ -599,13 +620,13 @@ const DataRelawan: React.FC = () => {
 
                     {/* kader */}
                     <div className="grid grid-cols-4 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">kader</label>
+                        <label className="text-lg font-medium text-gray-900">Kader</label>
                         <input
                             type="text"
                             name="kader"
                             value={formData.kader}
                             onChange={handleInputChange}
-                            placeholder="kader"
+                            placeholder="Kader"
                             className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
@@ -625,15 +646,15 @@ const DataRelawan: React.FC = () => {
                         />
                     </div>
 
-                    {/* kedinasan */}
+                    {/* Penugasan */}
                     <div className="grid grid-cols-4 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">kedinasan</label>
+                        <label className="text-lg font-medium text-gray-900">Penugasan</label>
                         <input
                             type="text"
-                            name="kedinasan"
-                            value={formData.kedinasan}
+                            name="penugasan"
+                            value={formData.penugasan}
                             onChange={handleInputChange}
-                            placeholder="kedinasan"
+                            placeholder="Penugasan"
                             className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             required
                         />
@@ -732,13 +753,13 @@ const DataRelawan: React.FC = () => {
 
                         {/* kader */}
                         <div className="grid grid-cols-4 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">kader</label>
+                            <label className="text-lg font-medium text-gray-900">Kader</label>
                             <input
                                 type="text"
                                 name="kader"
                                 value={detailFormData.kader}
                                 onChange={handleDetailInputChange}
-                                placeholder="kader"
+                                placeholder="Kader"
                                 className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
@@ -756,15 +777,15 @@ const DataRelawan: React.FC = () => {
                             />
                         </div>
 
-                        {/* kedinasan */}
+                        {/* Penugasan */}
                         <div className="grid grid-cols-4 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">kedinasan</label>
+                            <label className="text-lg font-medium text-gray-900">Penugasan</label>
                             <input
                                 type="text"
-                                name="kedinasan"
-                                value={detailFormData.kedinasan}
+                                name="penugasan"
+                                value={detailFormData.penugasan}
                                 onChange={handleDetailInputChange}
-                                placeholder="kedinasan"
+                                placeholder="Penugasan"
                                 className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>

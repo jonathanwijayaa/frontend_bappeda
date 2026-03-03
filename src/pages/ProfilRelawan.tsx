@@ -122,22 +122,6 @@ const ProfilRelawan = () => {
                                 <p className="text-gray-800 font-medium">{relawanData.nik}</p>
                             </div>
 
-                            {/* Jenis Kelamin */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">
-                                    Jenis Kelamin
-                                </label>
-                                <p className="text-gray-800 font-medium">{relawanData.jenisKelamin}</p>
-                            </div>
-
-                            {/* No. HP */}
-                            <div>
-                                <label className="block text-sm font-medium text-gray-600 mb-1">
-                                    No. HP
-                                </label>
-                                <p className="text-gray-800 font-medium">{relawanData.noTelepon}</p>
-                            </div>
-
                             {/* Alamat */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-600 mb-1">
@@ -193,6 +177,12 @@ const ProfilRelawan = () => {
                                                 <span className="text-gray-600 w-20">Peran:</span>
                                                 <span className="text-gray-800 font-medium">{assignment.peran}</span>
                                             </div>
+                                            {assignment.detail && (
+                                                <div className="flex items-center text-xs">
+                                                    <span className="text-gray-600 w-20">Detail:</span>
+                                                    <span className="text-gray-800 font-medium">{assignment.detail}</span>
+                                                </div>
+                                            )}
                                             <div className="flex items-center text-xs">
                                                 <span className="text-gray-600 w-20">No. SK:</span>
                                                 <span className="text-gray-800 font-medium">{assignment.nomorSK}</span>
@@ -255,21 +245,6 @@ const ProfilRelawan = () => {
                                         value={updateForm.namaLengkap}
                                         onChange={handleUpdateChange}
                                         placeholder={relawanData.namaLengkap}
-                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                                    />
-                                </div>
-
-                                {/* No. HP */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        No. HP
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        name="noTelepon"
-                                        value={updateForm.noTelepon}
-                                        onChange={handleUpdateChange}
-                                        placeholder={relawanData.noTelepon}
                                         className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
                                     />
                                 </div>
