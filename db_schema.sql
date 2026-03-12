@@ -1,0 +1,274 @@
+-- =====================================================
+-- SKEMA DATABASE: db_bappeda
+-- Jalankan script ini di pgAdmin4 pada database db_bappeda
+-- =====================================================
+
+BEGIN;
+
+-- Definisi Tipe Data ENUM
+CREATE TYPE public.jenis_kelamin AS ENUM ('L', 'P');
+CREATE TYPE public.status_keaktifan AS ENUM ('Aktif', 'Tidak Aktif', 'Cuti');
+CREATE TYPE public.status_kegiatan AS ENUM ('Berjalan', 'Selesai', 'Ditunda', 'Dibatalkan');
+CREATE TYPE public.status_pengajuan AS ENUM ('Menunggu Review', 'Diterima', 'Ditolak');
+CREATE TYPE public.user_role AS ENUM ('super_admin', 'opd', 'relawan');
+
+
+CREATE TABLE IF NOT EXISTS public.audit_logs
+(
+    log_id serial NOT NULL,
+    user_id integer,
+    action_type character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    table_name character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    record_id integer,
+    old_value jsonb,
+    new_value jsonb,
+    ip_address character varying(45) COLLATE pg_catalog."default",
+    "timestamp" timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT audit_logs_pkey PRIMARY KEY (log_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.kegiatan_relawan
+(
+    kegiatan_id serial NOT NULL,
+    penugasan_id integer NOT NULL,
+    judul_kegiatan character varying(150) COLLATE pg_catalog."default" NOT NULL,
+    deskripsi text COLLATE pg_catalog."default",
+    lokasi_kegiatan character varying(100) COLLATE pg_catalog."default",
+    tanggal_mulai date,
+    tanggal_selesai date,
+    status_penyelesaian status_kegiatan DEFAULT 'Berjalan'::status_kegiatan,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT kegiatan_relawan_pkey PRIMARY KEY (kegiatan_id)
+);
+
+ALTER TABLE IF EXISTS public.kegiatan_relawan
+    ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.komunitas
+(
+    komunitas_id serial NOT NULL,
+    opd_id integer NOT NULL,
+    nama_komunitas character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    deskripsi text COLLATE pg_catalog."default",
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT komunitas_pkey PRIMARY KEY (komunitas_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.opd
+(
+    opd_id serial NOT NULL,
+    nama_opd character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    alamat text COLLATE pg_catalog."default",
+    kontak character varying(50) COLLATE pg_catalog."default",
+    pic character varying(100) COLLATE pg_catalog."default",
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    is_active boolean DEFAULT true,
+    CONSTRAINT opd_pkey PRIMARY KEY (opd_id)
+);
+
+ALTER TABLE IF EXISTS public.opd
+    ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.pengajuan_perubahan_data
+(
+    pengajuan_id serial NOT NULL,
+    relawan_id integer NOT NULL,
+    jenis_perubahan character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    data_lama jsonb,
+    data_baru jsonb NOT NULL,
+    status status_pengajuan DEFAULT 'Menunggu Review'::status_pengajuan,
+    catatan_relawan text COLLATE pg_catalog."default",
+    catatan_verifikator text COLLATE pg_catalog."default",
+    tanggal_pengajuan timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    tanggal_verifikasi timestamp with time zone,
+    verifikator_id integer,
+    CONSTRAINT pengajuan_perubahan_data_pkey PRIMARY KEY (pengajuan_id)
+);
+
+ALTER TABLE IF EXISTS public.pengajuan_perubahan_data
+    ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.pengelola_opd
+(
+    id serial NOT NULL,
+    user_id integer NOT NULL,
+    opd_id integer NOT NULL,
+    CONSTRAINT pengelola_opd_pkey PRIMARY KEY (id),
+    CONSTRAINT pengelola_opd_user_id_key UNIQUE (user_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.penugasan_relawan
+(
+    penugasan_id serial NOT NULL,
+    relawan_id integer NOT NULL,
+    opd_id integer NOT NULL,
+    komunitas_id integer,
+    sk_id integer,
+    jabatan character varying(100) COLLATE pg_catalog."default",
+    status_keaktifan status_keaktifan DEFAULT 'Aktif'::status_keaktifan,
+    nomor_sk_manual character varying(100) COLLATE pg_catalog."default",
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT penugasan_relawan_pkey PRIMARY KEY (penugasan_id),
+    CONSTRAINT uniq_penugasan_relawan_opd UNIQUE (relawan_id, opd_id)
+);
+
+ALTER TABLE IF EXISTS public.penugasan_relawan
+    ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.relawan
+(
+    relawan_id serial NOT NULL,
+    user_id integer NOT NULL,
+    jenis_kelamin jenis_kelamin NOT NULL,
+    tempat_lahir character varying(50) COLLATE pg_catalog."default",
+    tanggal_lahir date,
+    alamat_ktp text COLLATE pg_catalog."default" NOT NULL,
+    alamat_domisili text COLLATE pg_catalog."default",
+    kelurahan character varying(100) COLLATE pg_catalog."default",
+    penugasan character varying(100) COLLATE pg_catalog."default",
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT relawan_pkey PRIMARY KEY (relawan_id),
+    CONSTRAINT relawan_user_id_key UNIQUE (user_id)
+);
+
+ALTER TABLE IF EXISTS public.relawan
+    ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.saran_masukan
+(
+    saran_id serial NOT NULL,
+    user_id integer NOT NULL,
+    subjek character varying(255) COLLATE pg_catalog."default",
+    pesan text COLLATE pg_catalog."default" NOT NULL,
+    status_baca boolean DEFAULT false,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT saran_masukan_pkey PRIMARY KEY (saran_id)
+);
+
+CREATE TABLE IF NOT EXISTS public.surat_keputusan
+(
+    sk_id serial NOT NULL,
+    nomor_sk character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    judul_sk character varying(255) COLLATE pg_catalog."default",
+    tanggal_terbit date,
+    opd_id integer NOT NULL,
+    file_path text COLLATE pg_catalog."default" NOT NULL,
+    status status_keaktifan DEFAULT 'Aktif'::status_keaktifan,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    batas_aktit date,
+    CONSTRAINT surat_keputusan_pkey PRIMARY KEY (sk_id),
+    CONSTRAINT surat_keputusan_nomor_sk_key UNIQUE (nomor_sk)
+);
+
+CREATE TABLE IF NOT EXISTS public.users
+(
+    user_id serial NOT NULL,
+    nik character varying(16) COLLATE pg_catalog."default" NOT NULL,
+    password character varying(255) COLLATE pg_catalog."default" NOT NULL,
+    role user_role NOT NULL,
+    nama_lengkap character varying(100) COLLATE pg_catalog."default" NOT NULL,
+    email character varying(100) COLLATE pg_catalog."default",
+    no_hp character varying(15) COLLATE pg_catalog."default",
+    foto_profil text COLLATE pg_catalog."default",
+    is_active boolean DEFAULT true,
+    created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    last_login timestamp with time zone,
+    updated_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT users_pkey PRIMARY KEY (user_id),
+    CONSTRAINT users_email_key UNIQUE (email),
+    CONSTRAINT users_nik_key UNIQUE (nik)
+);
+
+-- === FOREIGN KEYS & INDEX ===
+
+ALTER TABLE IF EXISTS public.audit_logs
+    ADD CONSTRAINT fk_audit_user FOREIGN KEY (user_id)
+    REFERENCES public.users (user_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE SET NULL;
+
+ALTER TABLE IF EXISTS public.kegiatan_relawan
+    ADD CONSTRAINT fk_kegiatan_penugasan FOREIGN KEY (penugasan_id)
+    REFERENCES public.penugasan_relawan (penugasan_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS idx_kegiatan_penugasan
+    ON public.kegiatan_relawan(penugasan_id);
+
+ALTER TABLE IF EXISTS public.komunitas
+    ADD CONSTRAINT fk_komunitas_opd FOREIGN KEY (opd_id)
+    REFERENCES public.opd (opd_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS idx_komunitas_opd
+    ON public.komunitas(opd_id);
+
+ALTER TABLE IF EXISTS public.pengajuan_perubahan_data
+    ADD CONSTRAINT fk_pengajuan_relawan FOREIGN KEY (relawan_id)
+    REFERENCES public.relawan (relawan_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE IF EXISTS public.pengajuan_perubahan_data
+    ADD CONSTRAINT fk_pengajuan_verifikator FOREIGN KEY (verifikator_id)
+    REFERENCES public.users (user_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE SET NULL;
+
+ALTER TABLE IF EXISTS public.pengelola_opd
+    ADD CONSTRAINT fk_pengelola_opd FOREIGN KEY (opd_id)
+    REFERENCES public.opd (opd_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE IF EXISTS public.pengelola_opd
+    ADD CONSTRAINT fk_pengelola_user FOREIGN KEY (user_id)
+    REFERENCES public.users (user_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS pengelola_opd_user_id_key
+    ON public.pengelola_opd(user_id);
+
+ALTER TABLE IF EXISTS public.penugasan_relawan
+    ADD CONSTRAINT fk_penugasan_komunitas FOREIGN KEY (komunitas_id)
+    REFERENCES public.komunitas (komunitas_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_penugasan_komunitas
+    ON public.penugasan_relawan(komunitas_id);
+
+ALTER TABLE IF EXISTS public.penugasan_relawan
+    ADD CONSTRAINT fk_penugasan_opd FOREIGN KEY (opd_id)
+    REFERENCES public.opd (opd_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS idx_penugasan_opd
+    ON public.penugasan_relawan(opd_id);
+
+ALTER TABLE IF EXISTS public.penugasan_relawan
+    ADD CONSTRAINT fk_penugasan_relawan FOREIGN KEY (relawan_id)
+    REFERENCES public.relawan (relawan_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS idx_penugasan_relawan
+    ON public.penugasan_relawan(relawan_id);
+
+ALTER TABLE IF EXISTS public.penugasan_relawan
+    ADD CONSTRAINT fk_penugasan_sk FOREIGN KEY (sk_id)
+    REFERENCES public.surat_keputusan (sk_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE SET NULL;
+
+ALTER TABLE IF EXISTS public.relawan
+    ADD CONSTRAINT fk_relawan_user FOREIGN KEY (user_id)
+    REFERENCES public.users (user_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS relawan_user_id_key
+    ON public.relawan(user_id);
+
+ALTER TABLE IF EXISTS public.saran_masukan
+    ADD CONSTRAINT fk_saran_user FOREIGN KEY (user_id)
+    REFERENCES public.users (user_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE CASCADE;
+
+ALTER TABLE IF EXISTS public.surat_keputusan
+    ADD CONSTRAINT fk_sk_opd FOREIGN KEY (opd_id)
+    REFERENCES public.opd (opd_id) MATCH SIMPLE
+    ON UPDATE CASCADE ON DELETE CASCADE;
+
+END;

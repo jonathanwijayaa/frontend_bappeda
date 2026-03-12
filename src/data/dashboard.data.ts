@@ -1,3 +1,4 @@
+// TODO: File ini sudah tidak dipakai untuk Super Admin (sudah fetch dari API). Hapus setelah OPD dashboard juga disambungkan.
 import { ChartDataItem } from '../types/dashboard.types';
 
 // Sample data Super Admin - OPD Chart

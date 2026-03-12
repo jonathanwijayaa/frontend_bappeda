@@ -117,7 +117,7 @@ const Login = () => {
                         <div className="mt-5 sm:mt-6 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
                             <p className="text-xs text-blue-800 font-semibold mb-2">Demo Credentials:</p>
                             <div className="space-y-1">
-                                <p className="text-xs text-blue-700">Super Admin - NIK: 123456, Password: admin123</p>
+                                <p className="text-xs text-blue-700">Super Admin - NIK: 1234567890123411, Password: rahasia123</p>
                                 <p className="text-xs text-blue-700">OPD - NIK: 654321, Password: opd123</p>
                                 <p className="text-xs text-blue-700">Relawan - NIK: 111222, Password: relawan123</p>
                             </div>

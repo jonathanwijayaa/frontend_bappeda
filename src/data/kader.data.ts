@@ -1,3 +1,4 @@
+// TODO: Ganti mock data ini dengan API call ke GET /api/opd-admin/kader
 import { KaderData } from '../types/kader.types';
 
 export const mockKaderData: KaderData[] = [

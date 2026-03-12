@@ -1,3 +1,4 @@
+// TODO: Ganti mock data ini dengan API call ke GET /api/admin/logs
 import { LogData } from '../types/log.types';
 
 export const mockLogData: LogData[] = [

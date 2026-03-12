@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { apiFetch } from '../utils/api';
 
 interface User {
     name: string;
@@ -12,7 +13,6 @@ interface AuthContextType {
     isAuthenticated: boolean;
     login: (nik: string, password: string) => Promise<{ success: boolean; message?: string; role?: string }>;
     logout: () => void;
-    switchUser: (userType: 'super_admin' | 'opd' | 'relawan') => void;
     isSuperAdmin: boolean;
     isOPD: boolean;
 }
@@ -31,9 +31,29 @@ interface AuthProviderProps {
     children: ReactNode;
 }
 
+// Helper untuk membuat display role
+const getRoleDisplay = (role: string): string => {
+    switch (role) {
+        case 'super_admin': return 'Super Admin';
+        case 'opd': return 'OPD';
+        case 'relawan': return 'Relawan';
+        default: return role;
+    }
+};
+
+// Helper untuk membuat avatar URL
+const getAvatarUrl = (name: string, role: string): string => {
+    const colors: Record<string, string> = {
+        super_admin: '10B981',
+        opd: '3B82F6',
+        relawan: 'F59E0B'
+    };
+    const bg = colors[role] || '6B7280';
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${bg}&color=fff`;
+};
+
 export const AuthProvider = ({ children }: AuthProviderProps) => {
     const [user, setUser] = useState<User | null>(() => {
-        // Load user localStorage
         const savedUser = localStorage.getItem('currentUser');
         const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
         return savedUser && isAuthenticated ? JSON.parse(savedUser) : null;
@@ -44,7 +64,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     });
 
     useEffect(() => {
-        // Save user ke localStorage
         if (user) {
             localStorage.setItem('currentUser', JSON.stringify(user));
         } else {
@@ -53,51 +72,40 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }, [user]);
 
     useEffect(() => {
-        // Save authentication state
         localStorage.setItem('isAuthenticated', isAuthenticated.toString());
     }, [isAuthenticated]);
 
-    // Mock login function - digantiu dengan backend API call
+    // Login via Backend API
     const login = async (nik: string, password: string): Promise<{ success: boolean; message?: string; role?: string }> => {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 500));
+        try {
+            const response = await apiFetch('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({ nik, password }),
+            });
 
-        // Mock credentials - ganti sama qutentikasi asli back end
-        const mockCredentials = [
-            {
-                nik: '123456', password: 'admin123', user: {
-                    name: 'Amelia',
-                    role: 'super_admin' as const,
-                    roleDisplay: 'Super Admin',
-                    avatar: 'https://ui-avatars.com/api/?name=Amelia&background=10B981&color=fff'
-                }
-            },
-            {
-                nik: '654321', password: 'opd123', user: {
-                    name: 'Jonathan',
-                    role: 'opd' as const,
-                    roleDisplay: 'OPD',
-                    avatar: 'https://ui-avatars.com/api/?name=Jonathan&background=3B82F6&color=fff'
-                }
-            },
-            {
-                nik: '111222', password: 'relawan123', user: {
-                    name: 'Budi Santoso',
-                    role: 'relawan' as const,
-                    roleDisplay: 'Relawan',
-                    avatar: 'https://ui-avatars.com/api/?name=Budi+Santoso&background=F59E0B&color=fff'
-                }
+            const data = await response.json();
+
+            if (response.ok && data.token) {
+                // Simpan JWT token
+                localStorage.setItem('token', data.token);
+
+                // Buat user object dari response backend
+                const loggedInUser: User = {
+                    name: data.user.nama,
+                    role: data.user.role,
+                    roleDisplay: getRoleDisplay(data.user.role),
+                    avatar: getAvatarUrl(data.user.nama, data.user.role),
+                };
+
+                setUser(loggedInUser);
+                setIsAuthenticated(true);
+                return { success: true, role: loggedInUser.role };
+            } else {
+                return { success: false, message: data.message || 'Login gagal' };
             }
-        ];
-
-        const credential = mockCredentials.find(c => c.nik === nik && c.password === password);
-
-        if (credential) {
-            setUser(credential.user);
-            setIsAuthenticated(true);
-            return { success: true, role: credential.user.role };
-        } else {
-            return { success: false, message: 'NIK atau password salah' };
+        } catch (err) {
+            console.error('Login error:', err);
+            return { success: false, message: 'Tidak dapat terhubung ke server. Pastikan backend berjalan.' };
         }
     };
 
@@ -105,32 +113,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(null);
         setIsAuthenticated(false);
         localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
         localStorage.setItem('isAuthenticated', 'false');
-    };
-
-    const switchUser = (userType: 'super_admin' | 'opd' | 'relawan') => {
-        if (userType === 'super_admin') {
-            setUser({
-                name: 'Amelia',
-                role: 'super_admin',
-                roleDisplay: 'Super Admin',
-                avatar: 'https://ui-avatars.com/api/?name=Amelia&background=10B981&color=fff'
-            });
-        } else if (userType === 'opd') {
-            setUser({
-                name: 'Jonathan',
-                role: 'opd',
-                roleDisplay: 'OPD',
-                avatar: 'https://ui-avatars.com/api/?name=Jonathan&background=3B82F6&color=fff'
-            });
-        } else if (userType === 'relawan') {
-            setUser({
-                name: 'Budi Santoso',
-                role: 'relawan',
-                roleDisplay: 'Relawan',
-                avatar: 'https://ui-avatars.com/api/?name=Budi+Santoso&background=F59E0B&color=fff'
-            });
-        }
     };
 
     const value: AuthContextType = {
@@ -138,7 +122,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         isAuthenticated,
         login,
         logout,
-        switchUser,
         isSuperAdmin: user?.role === 'super_admin',
         isOPD: user?.role === 'opd'
     };

@@ -1,3 +1,4 @@
+// TODO: Ganti mock data ini dengan API call ke GET /api/admin/sk
 import { SKData } from '../types/sk.types';
 
 export const mockSKData: SKData[] = [
