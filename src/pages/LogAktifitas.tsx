@@ -1,77 +1,147 @@
-import React, { useState, ChangeEvent, useMemo } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
-import { LogData } from '../types/log.types';
-import { mockLogData } from '../data/log.data';
+import Toast, { ToastType } from '../components/ui/Toast';
+import { apiFetch } from '../utils/api';
+import { ChangeEvent } from 'react';
+
+// Interface sesuai response backend getAuditLogs
+interface LogData {
+    log_id: number;
+    action_type: string;
+    table_name: string;
+    record_id: number | null;
+    old_value: any | null;
+    new_value: any | null;
+    ip_address: string | null;
+    timestamp: string;
+    nama_pengguna: string | null;
+    role_pengguna: string | null;
+    nik: string | null;
+}
 
 const LogAktifitas: React.FC = () => {
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [filterHari, setFilterHari] = useState<string>('');
-    const [filterJenis, setFilterJenis] = useState<string>('');
-    const [filterPengguna, setFilterPengguna] = useState<string>('');
-    const [currentPage, setCurrentPage] = useState<number>(1);
-    const itemsPerPage = 5;
+    const [logList, setLogList] = useState<LogData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
-    // Pagination logic
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [filterJenis, setFilterJenis] = useState<string>('');
+    const [filterRole, setFilterRole] = useState<string>('');
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const itemsPerPage = 10;
+
+    // ── Fetch ────────────────────────────────────
+    const fetchLogs = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const res = await apiFetch('/admin/logs?limit=200');
+            const result = await res.json();
+            if (result.success) {
+                setLogList(result.data);
+            } else {
+                setToast({ message: result.message || 'Gagal memuat log aktifitas', type: 'error' });
+            }
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => { fetchLogs(); }, [fetchLogs]);
+
+    // ── Filter & Pagination ──────────────────────
     const filteredData = useMemo(() => {
-        return mockLogData.filter(log =>
-            log.pengguna.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.aktifitas.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            log.objek.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [searchTerm]);
+        return logList.filter(log => {
+            const matchSearch = !searchTerm || (
+                (log.nama_pengguna || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                log.action_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                log.table_name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+            const matchJenis = !filterJenis || log.action_type.toUpperCase() === filterJenis.toUpperCase();
+            const matchRole = !filterRole || (log.role_pengguna || '') === filterRole;
+            return matchSearch && matchJenis && matchRole;
+        });
+    }, [logList, searchTerm, filterJenis, filterRole]);
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentData = filteredData.slice(startIndex, endIndex);
+    const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
-
+    // ── Columns ──────────────────────────────────
     const columns = [
-        { header: 'WAKTU', accessor: 'waktu' as keyof LogData },
-        { header: 'PENGGUNA', accessor: 'pengguna' as keyof LogData },
-        { header: 'AKTIFITAS', accessor: 'aktifitas' as keyof LogData },
-        { header: 'OBJEK', accessor: 'objek' as keyof LogData },
+        {
+            header: 'WAKTU',
+            render: (row: LogData) => (
+                <span className="text-xs">{new Date(row.timestamp).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' })}</span>
+            )
+        },
+        {
+            header: 'PENGGUNA',
+            render: (row: LogData) => (
+                <div>
+                    <p className="font-medium text-sm">{row.nama_pengguna || '-'}</p>
+                    <p className="text-xs text-gray-400">{row.role_pengguna || ''}</p>
+                </div>
+            )
+        },
+        {
+            header: 'AKTIFITAS',
+            render: (row: LogData) => (
+                <span className={`px-2 py-1 rounded text-xs font-semibold uppercase ${
+                    row.action_type === 'INSERT' ? 'bg-green-100 text-green-700' :
+                    row.action_type === 'UPDATE' ? 'bg-blue-100 text-blue-700' :
+                    row.action_type === 'DELETE' ? 'bg-red-100 text-red-700' :
+                    'bg-gray-100 text-gray-700'
+                }`}>
+                    {row.action_type}
+                </span>
+            )
+        },
+        {
+            header: 'TABEL / OBJEK',
+            render: (row: LogData) => (
+                <div>
+                    <p className="text-sm font-medium">{row.table_name}</p>
+                    {row.record_id && <p className="text-xs text-gray-400">ID: {row.record_id}</p>}
+                </div>
+            )
+        },
+        {
+            header: 'IP ADDRESS',
+            render: (row: LogData) => (
+                <span className="text-xs text-gray-500">{row.ip_address || '-'}</span>
+            )
+        },
     ];
 
     return (
         <div className="space-y-6">
             {/* Filters */}
-            <div className="flex gap-4 items-center">
-                <Select
-                    value={filterHari}
-                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setFilterHari(e.target.value)}
-                    placeholder="Hari ini"
-                    options={[
-                        { value: 'today', label: 'Hari ini' },
-                        { value: 'yesterday', label: 'Kemarin' },
-                        { value: 'week', label: 'Minggu ini' },
-                    ]}
-                />
+            <div className="flex gap-4 items-center flex-wrap">
                 <Select
                     value={filterJenis}
-                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setFilterJenis(e.target.value)}
-                    placeholder="Jenis Aktifitas"
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) => { setFilterJenis(e.target.value); setCurrentPage(1); }}
+                    placeholder="Semua Jenis"
                     options={[
-                        { value: 'all', label: 'Semua' },
-                        { value: 'create', label: 'Tambah' },
-                        { value: 'update', label: 'Ubah' },
-                        { value: 'delete', label: 'Hapus' },
+                        { value: '', label: 'Semua Jenis' },
+                        { value: 'INSERT', label: 'Tambah (INSERT)' },
+                        { value: 'UPDATE', label: 'Ubah (UPDATE)' },
+                        { value: 'DELETE', label: 'Hapus (DELETE)' },
                     ]}
                 />
                 <Select
-                    value={filterPengguna}
-                    onChange={(e: ChangeEvent<HTMLSelectElement>) => setFilterPengguna(e.target.value)}
-                    placeholder="Semua"
+                    value={filterRole}
+                    onChange={(e: ChangeEvent<HTMLSelectElement>) => { setFilterRole(e.target.value); setCurrentPage(1); }}
+                    placeholder="Semua Role"
                     options={[
-                        { value: 'admin', label: 'Admin' },
+                        { value: '', label: 'Semua Role' },
+                        { value: 'super_admin', label: 'Super Admin' },
                         { value: 'opd', label: 'OPD' },
                         { value: 'relawan', label: 'Relawan' },
                     ]}
@@ -81,54 +151,53 @@ const LogAktifitas: React.FC = () => {
             {/* Search */}
             <SearchInput
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                 className="w-full"
             />
 
             {/* Table */}
-            <Card title="Tabel Log">
-                <Table columns={columns} data={currentData} minRows={5} />
+            <Card title="Tabel Log Aktifitas">
+                {isLoading ? (
+                    <div className="flex items-center justify-center h-40">
+                        <Loader2 size={28} className="animate-spin text-gray-400" />
+                        <span className="ml-3 text-gray-500">Memuat log aktifitas...</span>
+                    </div>
+                ) : (
+                    <Table columns={columns} data={currentData} minRows={5} />
+                )}
 
                 {/* Pagination */}
-                <div className="mt-4 flex justify-between items-center">
-                    <div className="text-sm text-gray-500">
-                        Menampilkan {startIndex + 1}-{Math.min(endIndex, filteredData.length)} dari {filteredData.length} log
-                    </div>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className="disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <ChevronLeft size={16} />
-                            Sebelumnya
-                        </Button>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                            <Button
-                                key={page}
-                                variant={currentPage === page ? "primary" : "outline"}
-                                size="sm"
-                                onClick={() => handlePageChange(page)}
-                                className="min-w-[40px]"
-                            >
-                                {page}
+                {!isLoading && filteredData.length > 0 && (
+                    <div className="mt-4 flex justify-between items-center">
+                        <div className="text-sm text-gray-500">
+                            Menampilkan {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredData.length)} dari {filteredData.length} log
+                        </div>
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} className="disabled:opacity-50 disabled:cursor-not-allowed">
+                                <ChevronLeft size={16} /> Sebelumnya
                             </Button>
-                        ))}
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage === totalPages}
-                            className="disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Selanjutnya
-                            <ChevronRight size={16} />
-                        </Button>
+                            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i + 1).map((page) => (
+                                <Button key={page} variant={currentPage === page ? "primary" : "outline"} size="sm" onClick={() => setCurrentPage(page)} className="min-w-[40px]">
+                                    {page}
+                                </Button>
+                            ))}
+                            {totalPages > 7 && <span className="px-2 py-1 text-gray-400">...</span>}
+                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages} className="disabled:opacity-50 disabled:cursor-not-allowed">
+                                Selanjutnya <ChevronRight size={16} />
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                )}
+
+                {!isLoading && filteredData.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                        Tidak ada log yang sesuai dengan filter
+                    </div>
+                )}
             </Card>
+
+            {/* Toast */}
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
 };

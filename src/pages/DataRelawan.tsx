@@ -1,25 +1,81 @@
-import React, { useState, useMemo } from 'react';
-import { Plus, Upload, ChevronLeft, ChevronRight, X, ExternalLink } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { Plus, Upload, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
 import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
-import Select from '../components/ui/Select';
+import AutocompleteInput from '../components/ui/AutocompleteInput';
 import UploadExcelModal from '../components/ui/UploadExcelModal';
 import Toast, { ToastType } from '../components/ui/Toast';
-import { PengajuanData, RelawanData, Assignment } from '../types/relawan.types';
-import { mockPengajuanData, mockRelawanData } from '../data/relawan.data';
+import { RelawanData, Assignment } from '../types/relawan.types';
+import { apiFetch } from '../utils/api';
+
+// Tipe data dari backend API (mapping ke RelawanData untuk keperluan UI)
+interface RelawanAPIData {
+    user_id: number;
+    nik: string;
+    nama_lengkap: string;
+    email: string | null;
+    no_hp: string | null;
+    is_active: boolean;
+    relawan_id: number;
+    jenis_kelamin: string;
+    alamat_ktp: string | null;       // dari tabel relawan
+    kelurahan: string | null;        // dari tabel relawan
+    penugasan: string | null;        // dari tabel penugasan_relawan
+    status_penugasan: string | null; // dari penugasan_relawan
+    nama_opd: string | null;         // dari join ke opd
+    nama_komunitas: string | null;   // dari join ke komunitas
+}
+
+
+// Tipe pengajuan dari backend
+interface PengajuanAPIData {
+    pengajuan_id: number;
+    jenis_perubahan: string;
+    status: string;
+    tanggal_pengajuan: string;
+    catatan_relawan: string | null;
+    nama_lengkap: string;
+    nik: string;
+    relawan_id: number;
+}
+
+// Helper: mapping backend data ke UI RelawanData
+const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
+    nik: r.nik,
+    namaLengkap: r.nama_lengkap,
+    alamat: r.alamat_ktp || '-',
+    kelurahan: r.kelurahan || '-',
+    kader: r.nama_komunitas || '-',
+    jabatan: r.status_penugasan || '-',
+    penugasan: r.nama_opd || r.penugasan || '-',  // nama OPD dari join, atau teks penugasan dari penugasan_relawan
+    assignments: []
+});
+
+// Tipe option untuk autocomplete
+interface AutoOption { label: string; value: string; }
 
 const DataRelawan: React.FC = () => {
+    const [relawanList, setRelawanList] = useState<RelawanData[]>([]);
+    const [pengajuanList, setPengajuanList] = useState<PengajuanAPIData[]>([]);
+    const [isLoadingRelawan, setIsLoadingRelawan] = useState(true);
+    const [isLoadingPengajuan, setIsLoadingPengajuan] = useState(true);
+    const [isReviewing, setIsReviewing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+
+    // Autocomplete options (diambil dari API)
+    const [opdOptions, setOpdOptions] = useState<AutoOption[]>([]);
+    const [komunitasOptions, setKomunitasOptions] = useState<AutoOption[]>([]);
+
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
     const [selectedRelawan, setSelectedRelawan] = useState<RelawanData | null>(null);
-    const [selectedPengajuan, setSelectedPengajuan] = useState<PengajuanData | null>(null);
+    const [selectedPengajuan, setSelectedPengajuan] = useState<PengajuanAPIData | null>(null);
     const [verificationNote, setVerificationNote] = useState<string>('');
     const [isDataChecked, setIsDataChecked] = useState<boolean>(false);
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -38,10 +94,9 @@ const DataRelawan: React.FC = () => {
         assignments: [] as Assignment[]
     });
 
-    // Track if there are any changes
+    // Track if there are any changes (digunakan untuk enable/disable tombol Simpan di detail modal)
     const hasChanges = useMemo(() => {
         if (!selectedRelawan) return false;
-
         return (
             detailFormData.namaRelawan !== selectedRelawan.namaLengkap ||
             detailFormData.nik !== selectedRelawan.nik ||
@@ -53,15 +108,18 @@ const DataRelawan: React.FC = () => {
             JSON.stringify(detailFormData.assignments) !== JSON.stringify(selectedRelawan.assignments || [])
         );
     }, [selectedRelawan, detailFormData]);
+    void hasChanges; // Suppress unused warning - digunakan di template nanti
 
     const [formData, setFormData] = useState({
         namaRelawan: '',
         nik: '',
+        jenisKelamin: 'L' as 'L' | 'P',
         alamat: '',
         kelurahan: '',
         kader: '',
         jabatan: '',
         penugasan: '',
+        detail_penugasan: '', // ✨ Field baru ditambahkan ke state
         assignments: [
             {
                 id: Date.now().toString(),
@@ -76,15 +134,68 @@ const DataRelawan: React.FC = () => {
         ]
     });
 
-    const pengajuanData: PengajuanData[] = mockPengajuanData;
+    // ── Fetch Functions ─────────────────────────
+    const fetchRelawan = useCallback(async () => {
+        setIsLoadingRelawan(true);
+        try {
+            const res = await apiFetch('/admin/relawan');
+            const result = await res.json();
+            if (result.success) {
+                setRelawanList(result.data.map(mapToRelawanData));
+            } else {
+                setToast({ message: result.message || 'Gagal memuat data relawan', type: 'error' });
+            }
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } finally {
+            setIsLoadingRelawan(false);
+        }
+    }, []);
+
+    const fetchPengajuan = useCallback(async () => {
+        setIsLoadingPengajuan(true);
+        try {
+            const res = await apiFetch('/admin/relawan/pengajuan');
+            const result = await res.json();
+            if (result.success) {
+                setPengajuanList(result.data);
+            } else {
+                setToast({ message: result.message || 'Gagal memuat data pengajuan', type: 'error' });
+            }
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } finally {
+            setIsLoadingPengajuan(false);
+        }
+    }, []);
+
+    // Fetch OPD & Komunitas untuk autocomplete
+    useEffect(() => {
+        fetchRelawan();
+        fetchPengajuan();
+
+        // Fetch OPD options
+        apiFetch('/opd').then(r => r.json()).then(result => {
+            if (result.success) {
+                setOpdOptions(result.data.map((o: any) => ({ label: o.nama_opd, value: o.nama_opd })));
+            }
+        }).catch(() => { });
+
+        // Fetch Komunitas options
+        apiFetch('/komunitas').then(r => r.json()).then(result => {
+            if (result.success) {
+                setKomunitasOptions(result.data.map((k: any) => ({ label: k.nama_komunitas, value: k.nama_komunitas })));
+            }
+        }).catch(() => { });
+    }, [fetchRelawan, fetchPengajuan]);
 
     // Pagination logic
     const filteredRelawanData = useMemo(() => {
-        return mockRelawanData.filter(relawan =>
+        return relawanList.filter(relawan =>
             relawan.namaLengkap.toLowerCase().includes(searchTerm.toLowerCase()) ||
             relawan.nik.toLowerCase().includes(searchTerm.toLowerCase())
         );
-    }, [searchTerm]);
+    }, [relawanList, searchTerm]);
 
     const totalPages = Math.ceil(filteredRelawanData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -95,13 +206,22 @@ const DataRelawan: React.FC = () => {
         setCurrentPage(page);
     };
 
+    // Map pengajuan API to UI-friendly format
+    const pengajuanUIData = pengajuanList.map(p => ({
+        nik: p.nik,
+        namaLengkap: p.nama_lengkap,
+        tanggalPengajuan: new Date(p.tanggal_pengajuan).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }),
+        status: p.status,
+        _raw: p // simpan raw untuk keperluan review
+    }));
+
     const pengajuanColumns = [
-        { header: 'NIK', accessor: 'nik' as keyof PengajuanData },
-        { header: 'NAMA LENGKAP', accessor: 'namaLengkap' as keyof PengajuanData },
-        { header: 'TANGGAL PENGAJUAN', accessor: 'tanggalPengajuan' as keyof PengajuanData },
+        { header: 'NIK', accessor: 'nik' as const },
+        { header: 'NAMA LENGKAP', accessor: 'namaLengkap' as const },
+        { header: 'TANGGAL PENGAJUAN', accessor: 'tanggalPengajuan' as const },
         {
             header: 'STATUS',
-            render: (row: PengajuanData) => (
+            render: (row: any) => (
                 <div className="flex items-center gap-2">
                     <span className="w-3 h-3 bg-yellow-400 rounded-full"></span>
                     {row.status}
@@ -117,7 +237,6 @@ const DataRelawan: React.FC = () => {
         { header: 'KELURAHAN', accessor: 'kelurahan' as keyof RelawanData },
         { header: 'KADER', accessor: 'kader' as keyof RelawanData },
         { header: 'JABATAN', accessor: 'jabatan' as keyof RelawanData },
-        { header: 'PENUGASAN', accessor: 'penugasan' as keyof RelawanData },
     ];
 
     const handleDetailClick = (relawan: RelawanData) => {
@@ -135,695 +254,359 @@ const DataRelawan: React.FC = () => {
         setIsDetailModalOpen(true);
     };
 
-    const handleReviewClick = (pengajuan: PengajuanData) => {
-        setSelectedPengajuan(pengajuan);
-        setIsReviewModalOpen(true);
+    const handleReviewClick = (rawPengajuan: PengajuanAPIData) => {
+        setSelectedPengajuan(rawPengajuan);
         setVerificationNote('');
         setIsDataChecked(false);
+        setIsReviewModalOpen(true);
     };
 
-    const handleApprove = () => {
-        console.log('Approved:', selectedPengajuan);
-        console.log('Verification Note:', verificationNote);
-        setIsReviewModalOpen(false);
+    const handleReview = async (status: 'Disetujui' | 'Ditolak') => {
+        if (!selectedPengajuan) return;
+        setIsReviewing(true);
+        try {
+            const res = await apiFetch(`/admin/relawan/pengajuan/${selectedPengajuan.pengajuan_id}/review`, {
+                method: 'POST',
+                body: JSON.stringify({ status, catatan_verifikator: verificationNote })
+            });
+            const result = await res.json();
+            if (result.success) {
+                setToast({ message: result.message, type: 'success' });
+                setIsReviewModalOpen(false);
+                fetchPengajuan();
+            } else {
+                setToast({ message: result.message || 'Gagal memproses pengajuan', type: 'error' });
+            }
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } finally {
+            setIsReviewing(false);
+        }
     };
 
-    const handleReject = () => {
-        console.log('Rejected:', selectedPengajuan);
-        console.log('Verification Note:', verificationNote);
-        setIsReviewModalOpen(false);
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!formData.namaRelawan || !formData.nik) return;
+        setIsSaving(true);
+        try {
+            const res = await apiFetch('/admin/relawan/bulk', {
+                method: 'POST',
+                body: JSON.stringify([{
+                    namaLengkap: formData.namaRelawan,
+                    nik: formData.nik,
+                    jenis_kelamin: formData.jenisKelamin,
+                    alamat_ktp: formData.alamat,
+                    kelurahan: formData.kelurahan,
+                    kader: formData.kader,
+                    jabatan: formData.jabatan,
+                    penugasan: formData.penugasan,
+                    detail_penugasan: formData.detail_penugasan // ✨ Dikirim ke backend
+                }])
+            });
+            // Cek HTTP status sebelum parse JSON
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                setToast({ message: errData.message || `Server error: ${res.status} ${res.statusText}`, type: 'error' });
+                return;
+            }
+            const result = await res.json();
+            if (result.success) {
+                setToast({ message: result.message, type: 'success' });
+                setIsModalOpen(false);
+                setFormData(prev => ({ ...prev, namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '' }));
+                fetchRelawan();
+            } else {
+                setToast({ message: result.message || 'Gagal menambahkan relawan', type: 'error' });
+            }
+        } catch (err: any) {
+            // Network error (bukan HTTP error) - tampilkan pesan yang informatif
+            setToast({ message: `Koneksi gagal: ${err?.message || 'unknown error'}`, type: 'error' });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
-    const handleExcelUploadConfirm = (data: any[]) => {
-        console.log('Excel data confirmed:', data);
-        // Here you would typically add the data to your state/database
-        // For now, just show a success message
-        setToast({ message: `Berhasil menambahkan ${data.length} data relawan`, type: 'success' });
-        setIsUploadModalOpen(false);
+    const handleExcelUploadConfirm = async (data: any[]) => {
+        try {
+            const res = await apiFetch('/admin/relawan/bulk', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (result.success) {
+                setToast({ message: result.message, type: 'success' });
+                fetchRelawan();
+            } else {
+                setToast({ message: result.message || 'Gagal import Excel', type: 'error' });
+            }
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } finally {
+            setIsUploadModalOpen(false);
+        }
     };
 
-    const pengajuanActions = (row: PengajuanData) => (
-        <Button variant="secondary" size="sm" onClick={() => handleReviewClick(row)}>Review</Button>
+    const pengajuanActions = (row: any) => (
+        row.status === 'Menunggu Review' ? (
+            <Button variant="secondary" size="sm" onClick={() => handleReviewClick(row._raw)}>Review</Button>
+        ) : null
     );
 
     const relawanActions = (row: RelawanData) => (
         <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
     );
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleAssignmentChange = (index: number, field: keyof Assignment, value: string) => {
-        setFormData(prev => ({
-            ...prev,
-            assignments: prev.assignments.map((assignment, i) =>
-                i === index ? { ...assignment, [field]: value } : assignment
-            )
-        }));
-    };
-
-    const handleDetailInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setDetailFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleDetailAssignmentChange = (index: number, field: keyof Assignment, value: string) => {
-        setDetailFormData(prev => ({
-            ...prev,
-            assignments: prev.assignments.map((assignment, i) =>
-                i === index ? { ...assignment, [field]: value } : assignment
-            )
-        }));
-    };
-
-    const handleDetailAddAssignment = () => {
-        setDetailFormData(prev => ({
-            ...prev,
-            assignments: [
-                ...prev.assignments,
-                {
-                    id: Date.now().toString(),
-                    opd: '',
-                    kader: '',
-                    peran: '',
-                    detail: '',
-                    statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
-                    nomorSK: '',
-                    skId: ''
-                }
-            ]
-        }));
-    };
-
-    const handleDetailRemoveAssignment = (index: number) => {
-        if (detailFormData.assignments.length > 1) {
-            setDetailFormData(prev => ({
-                ...prev,
-                assignments: prev.assignments.filter((_, i) => i !== index)
-            }));
-        }
-    };
-
-    const handleAddAssignment = () => {
-        setFormData(prev => ({
-            ...prev,
-            assignments: [
-                ...prev.assignments,
-                {
-                    id: Date.now().toString(),
-                    opd: '',
-                    kader: '',
-                    peran: '',
-                    detail: '',
-                    statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
-                    nomorSK: '',
-                    skId: ''
-                }
-            ]
-        }));
-    };
-
-    const handleRemoveAssignment = (index: number) => {
-        if (formData.assignments.length > 1) {
-            setFormData(prev => ({
-                ...prev,
-                assignments: prev.assignments.filter((_, i) => i !== index)
-            }));
-        }
-    };
-
-
-
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        console.log('Form data:', formData);
-        setIsModalOpen(false);
-        // Reset form
-        setFormData({
-            namaRelawan: '',
-            nik: '',
-            alamat: '',
-            kelurahan: '',
-            kader: '',
-            jabatan: '',
-            penugasan: '',
-            assignments: [
-                {
-                    id: Date.now().toString(),
-                    opd: '',
-                    kader: '',
-                    peran: '',
-                    detail: '',
-                    statusKeaktifan: 'Aktif',
-                    nomorSK: '',
-                    skId: ''
-                }
-            ]
-        });
-    };
-
-    const handleCancel = () => {
-        setIsModalOpen(false);
-        setFormData({
-            namaRelawan: '',
-            nik: '',
-            alamat: '',
-            kelurahan: '',
-            kader: '',
-            jabatan: '',
-            penugasan: '',
-            assignments: [
-                {
-                    id: Date.now().toString(),
-                    opd: '',
-                    kader: '',
-                    peran: '',
-                    detail: '',
-                    statusKeaktifan: 'Aktif',
-                    nomorSK: '',
-                    skId: ''
-                }
-            ]
-        });
-    };
-
-    const handleDetailSave = () => {
-        console.log('Saving detail changes:', detailFormData);
-        // Here you would typically update the data
-        setIsDetailModalOpen(false);
-    };
-
-    const renderAssignmentFields = (
-        assignment: Assignment,
-        index: number,
-        disabled: boolean = false,
-        handlers?: {
-            onChange: (index: number, field: keyof Assignment, value: string) => void;
-            onRemove: (index: number) => void;
-            assignments: Assignment[];
-        }
-    ) => {
-        const assignmentList = handlers?.assignments || formData.assignments;
-        const handleChange = handlers?.onChange || handleAssignmentChange;
-        const handleRemove = handlers?.onRemove || handleRemoveAssignment;
-
-        return (
-            <div key={assignment.id} className="border border-gray-200 rounded-lg p-4 mb-4 relative">
-                {!disabled && assignmentList.length > 1 && (
-                    <button
-                        type="button"
-                        onClick={() => handleRemove(index)}
-                        className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                    >
-                        <X size={20} />
-                    </button>
-                )}
-
-                <h4 className="text-md font-semibold text-gray-900 mb-4">Penugasan {index + 1}</h4>
-
-                {/* OPD */}
-                <div className="grid grid-cols-4 gap-4 items-center mb-4">
-                    <label className="text-lg font-medium text-gray-900 pl-4">OPD</label>
-                    <Select
-                        name="opd"
-                        value={assignment.opd}
-                        onChange={(e) => !disabled && handleChange(index, 'opd', e.target.value)}
-                        placeholder="Pilih OPD"
-                        className="col-span-3"
-                        options={[
-                            { value: 'Badan Penanggulangan Bencana Daerah', label: 'Badan Penanggulangan Bencana Daerah' },
-                            { value: 'Dinas Kesehatan', label: 'Dinas Kesehatan' },
-                            { value: 'Dinas Pemadam Kebakaran', label: 'Dinas Pemadam Kebakaran' },
-                            { value: 'Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana', label: 'Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana' },
-                            { value: 'Dinas Pendidikan, Pemuda, dan Olahraga', label: 'Dinas Pendidikan, Pemuda, dan Olahraga' },
-                            { value: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi', label: 'Dinas Sosial, Tenaga Kerja, dan Transmigrasi' },
-                            { value: 'Lembaga Kemasyarakatan Kelurahan', label: 'Lembaga Kemasyarakatan Kelurahan' },
-                            { value: 'Satuan Polisi Pamong Praja (PP)', label: 'Satuan Polisi Pamong Praja (PP)' },
-                        ]}
-                        disabled={disabled}
-                    />
-                </div>
-
-                {/* Kader */}
-                <div className="grid grid-cols-4 gap-4 items-center mb-4">
-                    <label className="text-lg font-medium text-gray-900 pl-4">Kader</label>
-                    <Select
-                        name="kader"
-                        value={assignment.kader}
-                        onChange={(e) => !disabled && handleChange(index, 'kader', e.target.value)}
-                        placeholder="Pilih Kader"
-                        className="col-span-3"
-                        options={[
-                            { value: '-', label: 'Tidak Ada (Penugasan OPD)' },
-                            { value: 'Kader Pembangunan Daerah A', label: 'Kader Pembangunan Daerah A' },
-                            { value: 'Kader Pemberdayaan Masyarakat B', label: 'Kader Pemberdayaan Masyarakat B' },
-                            { value: 'Kader Lingkungan Hidup C', label: 'Kader Lingkungan Hidup C' },
-                            { value: 'Kader Kesehatan D', label: 'Kader Kesehatan D' },
-                            { value: 'Kader Ekonomi Kreatif E', label: 'Kader Ekonomi Kreatif E' },
-                        ]}
-                        disabled={disabled}
-                    />
-                </div>
-
-                {/* Peran */}
-                <div className="grid grid-cols-4 gap-4 items-center mb-4">
-                    <label className="text-lg font-medium text-gray-900 pl-4">Peran</label>
-                    <Select
-                        name="peran"
-                        value={assignment.peran}
-                        onChange={(e) => !disabled && handleChange(index, 'peran', e.target.value)}
-                        placeholder="Pilih Peran"
-                        className="col-span-3"
-                        options={[
-                            { value: 'Ketua', label: 'Ketua' },
-                            { value: 'Wakil', label: 'Wakil' },
-                            { value: 'Sekretaris', label: 'Sekretaris' },
-                            { value: 'Bendahara', label: 'Bendahara' },
-                            { value: 'Seksi', label: 'Seksi' },
-                            { value: 'Anggota', label: 'Anggota' },
-                        ]}
-                        disabled={disabled}
-                    />
-                </div>
-
-                {/* Detail */}
-                <div className="grid grid-cols-4 gap-4 items-center mb-4">
-                    <label className="text-lg font-medium text-gray-900 pl-4">Detail</label>
-                    <input
-                        type="text"
-                        value={assignment.detail}
-                        onChange={(e) => !disabled && handleChange(index, 'detail', e.target.value)}
-                        placeholder="Detail"
-                        className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:italic"
-                        disabled={disabled}
-                    />
-                </div>
-
-                {/* Nomor SK with link */}
-                <div className="grid grid-cols-4 gap-4 items-center mb-4">
-                    <label className="text-lg font-medium text-gray-900 pl-4">Nomor SK</label>
-                    <div className="col-span-3 flex gap-2 items-center">
-                        <input
-                            type="text"
-                            value={assignment.nomorSK}
-                            onChange={(e) => !disabled && handleChange(index, 'nomorSK', e.target.value)}
-                            placeholder="Nomor SK"
-                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:italic"
-                            disabled={disabled}
-                        />
-                        {assignment.skId && (
-                            <Link
-                                to={`/surat-keputusan?highlight=${assignment.skId}`}
-                                className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm whitespace-nowrap"
-                                title="Lihat Surat Keputusan"
-                            >
-                                <ExternalLink size={16} />
-                                Lihat SK
-                            </Link>
-                        )}
-                    </div>
-                </div>
-
-                {/* Status Keaktifan */}
-                <div className="grid grid-cols-4 gap-4 items-center">
-                    <label className="text-lg font-medium text-gray-900 pl-4">Status Keaktifan</label>
-                    <div className="col-span-3 flex gap-6">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="radio"
-                                checked={assignment.statusKeaktifan === 'Aktif'}
-                                onChange={() => !disabled && handleChange(index, 'statusKeaktifan', 'Aktif')}
-                                className="w-4 h-4 text-blue-500"
-                                disabled={disabled}
-                            />
-                            <span className="text-gray-700">Aktif</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                                type="radio"
-                                checked={assignment.statusKeaktifan === 'Nonaktif'}
-                                onChange={() => !disabled && handleChange(index, 'statusKeaktifan', 'Nonaktif')}
-                                className="w-4 h-4 text-blue-500"
-                                disabled={disabled}
-                            />
-                            <span className="text-gray-700">Nonaktif</span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
     return (
         <div className="space-y-6">
-            {/* Header Actions */}
-            <div className="flex justify-between items-center">
-                <div className="flex gap-3">
-                    <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-                        <Plus size={18} />
-                        Ajukan Relawan Baru
-                    </Button>
-                    <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
-                        <Upload size={18} />
-                        Unggah dari Excel
-                    </Button>
-                </div>
-                <SearchInput
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-80"
-                />
-            </div>
-
             {/* Pengajuan Perubahan Data */}
-            <Card title="Pengajuan Perubahan Data (Perlu Review)">
-                <Table columns={pengajuanColumns} data={pengajuanData} actions={pengajuanActions} />
+            <Card title="Pengajuan Perubahan Data">
+                {isLoadingPengajuan ? (
+                    <div className="flex items-center justify-center h-32">
+                        <Loader2 size={24} className="animate-spin text-gray-400" />
+                        <span className="ml-3 text-gray-500">Memuat data pengajuan...</span>
+                    </div>
+                ) : (
+                    <Table columns={pengajuanColumns} data={pengajuanUIData} actions={pengajuanActions} minRows={3} />
+                )}
             </Card>
 
             {/* Daftar Relawan */}
-            <Card title="Daftar Relawan">
-                <Table columns={relawanColumns} data={currentRelawanData} actions={relawanActions} minRows={5} />
-
-                {/* Pagination */}
-                <div className="mt-4 flex justify-between items-center">
-                    <div className="text-sm text-gray-500">
-                        Menampilkan {startIndex + 1}-{Math.min(endIndex, filteredRelawanData.length)} dari {filteredRelawanData.length} Relawan
-                    </div>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className="disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <ChevronLeft size={16} />
-                            Sebelumnya
+            <Card>
+                <div className="mb-4 flex justify-between items-center">
+                    <h2 className="text-xl font-semibold text-gray-900">Daftar Relawan</h2>
+                    <div className="flex gap-3 items-center">
+                        <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+                            <Plus size={18} />
+                            Tambah Relawan
                         </Button>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                            <Button
-                                key={page}
-                                variant={currentPage === page ? "primary" : "outline"}
-                                size="sm"
-                                onClick={() => handlePageChange(page)}
-                                className="min-w-[40px]"
-                            >
-                                {page}
-                            </Button>
-                        ))}
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage === totalPages}
-                            className="disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Selanjutnya
-                            <ChevronRight size={16} />
+                        <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
+                            <Upload size={18} />
+                            Unggah dari Excel
                         </Button>
+                        <SearchInput
+                            value={searchTerm}
+                            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                            className="w-64"
+                        />
                     </div>
                 </div>
-            </Card>
 
-            {/* Add Relawan Modal */}
-            <Modal
-                isOpen={isModalOpen}
-                onClose={handleCancel}
-                title="Tambah Relawan Baru"
-                subtitle="Halaman untuk menambahkan relawan baru"
-                maxWidth="2xl"
-            >
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Nama Relawan */}
-                    <div className="grid grid-cols-4 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">Nama Relawan</label>
-                        <input
-                            type="text"
-                            name="namaRelawan"
-                            value={formData.namaRelawan}
-                            onChange={handleInputChange}
-                            placeholder="Nama Relawan"
-                            className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
+                {isLoadingRelawan ? (
+                    <div className="flex items-center justify-center h-40">
+                        <Loader2 size={28} className="animate-spin text-gray-400" />
+                        <span className="ml-3 text-gray-500">Memuat data relawan...</span>
                     </div>
+                ) : (
+                    <Table columns={relawanColumns} data={currentRelawanData} actions={relawanActions} minRows={5} />
+                )}
 
-                    {/* NIK */}
-                    <div className="grid grid-cols-4 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">NIK</label>
-                        <input
-                            type="text"
-                            name="nik"
-                            value={formData.nik}
-                            onChange={handleInputChange}
-                            placeholder="NIK Relawan"
-                            className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-
-                    {/* Alamat */}
-                    <div className="grid grid-cols-4 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">Alamat</label>
-                        <input
-                            type="text"
-                            name="alamat"
-                            value={formData.alamat}
-                            onChange={handleInputChange}
-                            placeholder="Alamat Relawan"
-                            className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-
-                    {/* Kelurahan */}
-                    <div className="grid grid-cols-4 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">Kelurahan</label>
-                        <input
-                            type="text"
-                            name="kelurahan"
-                            value={formData.kelurahan}
-                            onChange={handleInputChange}
-                            placeholder="Kelurahan"
-                            className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-
-                    {/* kader */}
-                    <div className="grid grid-cols-4 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">Kader</label>
-                        <input
-                            type="text"
-                            name="kader"
-                            value={formData.kader}
-                            onChange={handleInputChange}
-                            placeholder="Kader"
-                            className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-
-                    {/* Jabatan */}
-                    <div className="grid grid-cols-4 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">Jabatan</label>
-                        <input
-                            type="text"
-                            name="jabatan"
-                            value={formData.jabatan}
-                            onChange={handleInputChange}
-                            placeholder="Jabatan"
-                            className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-
-                    {/* Penugasan */}
-                    <div className="grid grid-cols-4 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">Penugasan</label>
-                        <input
-                            type="text"
-                            name="penugasan"
-                            value={formData.penugasan}
-                            onChange={handleInputChange}
-                            placeholder="Penugasan"
-                            className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-
-                    {/* Daftar Penugasan Section */}
-                    <div className="pt-4 border-t border-gray-200">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Daftar Penugasan:</h3>
-
-                        {formData.assignments.map((assignment, index) =>
-                            renderAssignmentFields(assignment, index, false)
-                        )}
-
-                        {/* Tambah Data Penugasan Button */}
-                        <div className="flex justify-center mt-4">
-                            <Button type="button" variant="primary" size="sm" onClick={handleAddAssignment}>
-                                <Plus size={16} />
-                                Tambah Data Penugasan
+                {/* Pagination */}
+                {!isLoadingRelawan && filteredRelawanData.length > 0 && (
+                    <div className="mt-4 flex justify-between items-center">
+                        <div className="text-sm text-gray-500">
+                            Menampilkan {startIndex + 1}-{Math.min(endIndex, filteredRelawanData.length)} dari {filteredRelawanData.length} Relawan
+                        </div>
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="disabled:opacity-50 disabled:cursor-not-allowed">
+                                <ChevronLeft size={16} /> Sebelumnya
+                            </Button>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                <Button key={page} variant={currentPage === page ? "primary" : "outline"} size="sm" onClick={() => handlePageChange(page)} className="min-w-[40px]">
+                                    {page}
+                                </Button>
+                            ))}
+                            <Button variant="outline" size="sm" onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="disabled:opacity-50 disabled:cursor-not-allowed">
+                                Selanjutnya <ChevronRight size={16} />
                             </Button>
                         </div>
                     </div>
+                )}
+            </Card>
 
-                    {/* Action Button */}
-                    <div className="flex justify-end pt-6">
-                        <Button
-                            type="submit"
-                            className="bg-green-600 hover:bg-green-700 text-white px-12"
+            {/* Modal Tambah Relawan */}
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Tambah Relawan Baru" subtitle="Isi data relawan yang ingin ditambahkan" maxWidth="2xl">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Fields input teks biasa */}
+                    {[
+                        { label: 'Nama Relawan', name: 'namaRelawan', required: true, placeholder: 'Nama Lengkap Relawan' },
+                        { label: 'NIK', name: 'nik', required: true, placeholder: '16 digit NIK', maxLength: 16 }, // Sudah ditambahkan batasan digit di sini
+                        { label: 'Alamat KTP', name: 'alamat', placeholder: 'Alamat sesuai KTP' },
+                        { label: 'Kelurahan', name: 'kelurahan', placeholder: 'Kelurahan/Desa' },
+                        { label: 'Jabatan', name: 'jabatan', placeholder: 'Jabatan Relawan' },
+                    ].map(field => (
+                        <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">
+                                {field.label}{field.required && <span className="text-red-500 ml-1">*</span>}
+                            </label>
+                            <input
+                                type="text"
+                                name={field.name}
+                                value={(formData as any)[field.name]}
+                                onChange={(e) => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                placeholder={field.placeholder}
+                                required={field.required}
+                                maxLength={field.maxLength} // Ini mengaktifkan batasan digit di input
+                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    ))}
+
+                    {/* Field Penugasan (OPD) - Autocomplete */}
+                    <div className="grid grid-cols-3 gap-4 items-start">
+                        <label className="text-lg font-medium text-gray-900 pt-2">OPD</label>
+                        <div className="col-span-2">
+                            <AutocompleteInput
+                                name="penugasan"
+                                value={formData.penugasan}
+                                options={opdOptions}
+                                onChange={(val) => setFormData(prev => ({ ...prev, penugasan: val }))}
+                                placeholder="Cari nama OPD..."
+                                warnMessage="OPD ini belum terdaftar di database. Silakan tambahkan di Manajemen OPD terlebih dahulu."
+                            />
+                        </div>
+                    </div>
+
+                    {/* Field Kader/Komunitas - Autocomplete */}
+                    <div className="grid grid-cols-3 gap-4 items-start">
+                        <label className="text-lg font-medium text-gray-900 pt-2">Kader / Komunitas</label>
+                        <div className="col-span-2">
+                            <AutocompleteInput
+                                name="kader"
+                                value={formData.kader}
+                                options={komunitasOptions}
+                                onChange={(val) => setFormData(prev => ({ ...prev, kader: val }))}
+                                placeholder="Cari nama Kader / Komunitas..."
+                                warnMessage="Kader ini belum terdaftar di database. Silakan tambahkan di Daftar Kader terlebih dahulu."
+                            />
+                        </div>
+                    </div>
+
+                    {/* ✨ Field Text Penugasan✨ */}
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                        <label className="text-lg font-medium text-gray-900">Penugasan</label>
+                        <input
+                            type="text"
+                            name="detail_penugasan"
+                            value={formData.detail_penugasan}
+                            onChange={(e) => setFormData(prev => ({ ...prev, detail_penugasan: e.target.value }))}
+                            placeholder="Detail Penugasan"
+                            className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    {/* Field Jenis Kelamin (dropdown) */}
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                        <label className="text-lg font-medium text-gray-900">
+                            Jenis Kelamin <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <select
+                            name="jenisKelamin"
+                            value={formData.jenisKelamin}
+                            onChange={(e) => setFormData(prev => ({ ...prev, jenisKelamin: e.target.value as 'L' | 'P' }))}
+                            required
+                            className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                         >
-                            Simpan
+                            <option value="L">Laki-laki (L)</option>
+                            <option value="P">Perempuan (P)</option>
+                        </select>
+                    </div>
+
+                    <div className="flex justify-between pt-6">
+                        <Button type="button" onClick={() => setIsModalOpen(false)} className="bg-red-600 hover:bg-red-700 text-white px-8">Batal</Button>
+                        <Button type="submit" disabled={isSaving} className="bg-green-600 hover:bg-green-700 text-white px-8 disabled:opacity-70">
+                            {isSaving ? <><Loader2 size={16} className="animate-spin mr-1" />Menyimpan...</> : 'Simpan'
+                            }
                         </Button>
                     </div>
                 </form>
             </Modal>
 
-            {/* Detail Relawan Modal */}
-            <Modal
-                isOpen={isDetailModalOpen}
-                onClose={() => setIsDetailModalOpen(false)}
-                title="Detail Relawan"
-                subtitle="Halaman untuk melihat detail Relawan"
-                maxWidth="2xl"
-            >
+            {/* Modal Detail Relawan */}
+            <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Detail Relawan" subtitle="Informasi lengkap relawan" maxWidth="2xl">
                 {selectedRelawan && (
                     <div className="space-y-6">
-                        {/* Nama Relawan */}
-                        <div className="grid grid-cols-4 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">Nama Relawan</label>
-                            <input
-                                type="text"
-                                name="namaRelawan"
-                                value={detailFormData.namaRelawan}
-                                onChange={handleDetailInputChange}
-                                placeholder="Nama Relawan"
-                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
+                        {[
+                            { label: 'Nama Relawan', name: 'namaRelawan', value: detailFormData.namaRelawan },
+                            { label: 'NIK', name: 'nik', value: detailFormData.nik },
+                            { label: 'Alamat', name: 'alamat', value: detailFormData.alamat },
+                            { label: 'Kelurahan', name: 'kelurahan', value: detailFormData.kelurahan },
+                            { label: 'Kader', name: 'kader', value: detailFormData.kader },
+                            { label: 'Jabatan', name: 'jabatan', value: detailFormData.jabatan },
+                            { label: 'Penugasan', name: 'penugasan', value: detailFormData.penugasan },
+                        ].map(field => (
+                            <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
+                                <label className="text-lg font-medium text-gray-900">{field.label}</label>
+                                <input
+                                    type="text"
+                                    value={field.value}
+                                    onChange={(e) => setDetailFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                    className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                        ))}
 
-                        {/* NIK */}
-                        <div className="grid grid-cols-4 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">NIK</label>
-                            <input
-                                type="text"
-                                name="nik"
-                                value={detailFormData.nik}
-                                onChange={handleDetailInputChange}
-                                placeholder="NIK Relawan"
-                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
+                        {/* Riwayat Penugasan */}
+                        {detailFormData.assignments && detailFormData.assignments.length > 0 && (
+                            <div className="pt-4 border-t border-gray-200">
+                                <h3 className="text-lg font-semibold text-gray-800 mb-3">Riwayat Penugasan</h3>
+                                <div className="space-y-2">
+                                    {detailFormData.assignments.map((assignment) => (
+                                        <div key={assignment.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                                            <div>
+                                                <p className="font-medium text-gray-800">{assignment.opd}</p>
+                                                <p className="text-sm text-gray-500">Kader: {assignment.kader} · Peran: {assignment.peran} · SK: {assignment.nomorSK}</p>
+                                            </div>
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.statusKeaktifan === 'Aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                                                {assignment.statusKeaktifan}
+                                            </span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </Modal>
 
-                        {/* Alamat */}
-                        <div className="grid grid-cols-4 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">Alamat</label>
-                            <input
-                                type="text"
-                                name="alamat"
-                                value={detailFormData.alamat}
-                                onChange={handleDetailInputChange}
-                                placeholder="Alamat Relawan"
-                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        {/* Kelurahan */}
-                        <div className="grid grid-cols-4 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">Kelurahan</label>
-                            <input
-                                type="text"
-                                name="kelurahan"
-                                value={detailFormData.kelurahan}
-                                onChange={handleDetailInputChange}
-                                placeholder="Kelurahan"
-                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        {/* kader */}
-                        <div className="grid grid-cols-4 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">Kader</label>
-                            <input
-                                type="text"
-                                name="kader"
-                                value={detailFormData.kader}
-                                onChange={handleDetailInputChange}
-                                placeholder="Kader"
-                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        {/* Jabatan */}
-                        <div className="grid grid-cols-4 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">Jabatan</label>
-                            <input
-                                type="text"
-                                name="jabatan"
-                                value={detailFormData.jabatan}
-                                onChange={handleDetailInputChange}
-                                placeholder="Jabatan"
-                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        {/* Penugasan */}
-                        <div className="grid grid-cols-4 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">Penugasan</label>
-                            <input
-                                type="text"
-                                name="penugasan"
-                                value={detailFormData.penugasan}
-                                onChange={handleDetailInputChange}
-                                placeholder="Penugasan"
-                                className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        {/* Daftar Penugasan Section */}
-                        <div className="border-t border-gray-200 pt-4">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Daftar Penugasan:</h3>
-
-                            {detailFormData.assignments && detailFormData.assignments.length > 0 ? (
-                                detailFormData.assignments.map((assignment, index) =>
-                                    renderAssignmentFields(assignment, index, false, {
-                                        onChange: handleDetailAssignmentChange,
-                                        onRemove: handleDetailRemoveAssignment,
-                                        assignments: detailFormData.assignments
-                                    })
-                                )
-                            ) : (
-                                <p className="text-gray-500 italic">Belum ada penugasan</p>
-                            )}
-
-                            {/* Tambah Data Penugasan Button */}
-                            <div className="flex justify-center mt-4">
-                                <Button type="button" variant="primary" size="sm" onClick={handleDetailAddAssignment}>
-                                    <Plus size={16} />
-                                    Tambah Data Penugasan
-                                </Button>
+            {/* Modal Review Pengajuan */}
+            <Modal isOpen={isReviewModalOpen} onClose={() => setIsReviewModalOpen(false)} title="Review Pengajuan Perubahan Data" maxWidth="2xl">
+                {selectedPengajuan && (
+                    <div className="space-y-6">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
+                            <p className="text-sm font-medium text-blue-800">Informasi Pengajuan</p>
+                            <div className="grid grid-cols-2 gap-2 text-sm text-blue-700">
+                                <span className="font-medium">NIK:</span><span>{selectedPengajuan.nik}</span>
+                                <span className="font-medium">Nama:</span><span>{selectedPengajuan.nama_lengkap}</span>
+                                <span className="font-medium">Jenis Perubahan:</span><span>{selectedPengajuan.jenis_perubahan}</span>
+                                <span className="font-medium">Catatan Relawan:</span><span>{selectedPengajuan.catatan_relawan || '-'}</span>
                             </div>
                         </div>
 
-                        {/* Action Button */}
-                        <div className="flex justify-end pt-6">
-                            <Button
-                                type="button"
-                                onClick={handleDetailSave}
-                                disabled={!hasChanges}
-                                className="bg-green-600 hover:bg-green-700 text-white px-12 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Simpan
+                        <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg">
+                            <input type="checkbox" id="dataChecked" checked={isDataChecked} onChange={(e) => setIsDataChecked(e.target.checked)} className="w-4 h-4 text-blue-600" />
+                            <label htmlFor="dataChecked" className="text-sm text-gray-700">
+                                Saya telah memverifikasi kebenaran data yang diajukan
+                            </label>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Catatan Verifikator (opsional)</label>
+                            <textarea
+                                value={verificationNote}
+                                onChange={(e) => setVerificationNote(e.target.value)}
+                                placeholder="Tuliskan catatan untuk relawan..."
+                                rows={3}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            />
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                            <Button onClick={() => setIsReviewModalOpen(false)} className="bg-gray-200 text-gray-700 hover:bg-gray-300 px-6">Batal</Button>
+                            <Button onClick={() => handleReview('Ditolak')} disabled={!isDataChecked || isReviewing} className="bg-red-600 hover:bg-red-700 text-white px-6 disabled:opacity-50 disabled:cursor-not-allowed">
+                                {isReviewing ? <Loader2 size={16} className="animate-spin" /> : 'Tolak'}
+                            </Button>
+                            <Button onClick={() => handleReview('Disetujui')} disabled={!isDataChecked || isReviewing} className="bg-green-600 hover:bg-green-700 text-white px-6 disabled:opacity-50 disabled:cursor-not-allowed">
+                                {isReviewing ? <Loader2 size={16} className="animate-spin" /> : 'Setujui'}
                             </Button>
                         </div>
                     </div>
@@ -840,155 +623,8 @@ const DataRelawan: React.FC = () => {
                 dataType="relawan"
             />
 
-            {/* Review Pengajuan Modal */}
-            <Modal
-                isOpen={isReviewModalOpen}
-                onClose={() => setIsReviewModalOpen(false)}
-                title="Review Pengajuan Perubahan Data"
-                subtitle="Halaman untuk review pengajuan perubahan data oleh relawan"
-                maxWidth="2xl"
-            >
-                {selectedPengajuan && (
-                    <div className="space-y-6">
-                        {/* Informasi Relawan */}
-                        <div className="space-y-4">
-                            {/* Nama Relawan */}
-                            <div className="grid grid-cols-4 gap-4 items-center">
-                                <label className="text-base font-medium text-gray-900">Nama Relawan</label>
-                                <input
-                                    type="text"
-                                    value={selectedPengajuan.namaLengkap}
-                                    className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                                    disabled
-                                />
-                            </div>
-
-                            {/* NIK */}
-                            <div className="grid grid-cols-4 gap-4 items-center">
-                                <label className="text-base font-medium text-gray-900">NIK</label>
-                                <input
-                                    type="text"
-                                    value={selectedPengajuan.nik}
-                                    className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                                    disabled
-                                />
-                            </div>
-
-                            {/* Tanggal Pengajuan */}
-                            <div className="grid grid-cols-4 gap-4 items-center">
-                                <label className="text-base font-medium text-gray-900">Tanggal Pengajuan</label>
-                                <input
-                                    type="text"
-                                    value={selectedPengajuan.tanggalPengajuan}
-                                    className="col-span-3 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
-                                    disabled
-                                />
-                            </div>
-
-                            {/* Status */}
-                            <div className="grid grid-cols-4 gap-4 items-center">
-                                <label className="text-base font-medium text-gray-900">Status saat ini</label>
-                                <div className="col-span-3 flex items-center gap-2">
-                                    <span className="w-3 h-3 bg-yellow-400 rounded-full"></span>
-                                    <span className="text-gray-900">{selectedPengajuan.status}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Perubahan Data */}
-                        <div className="border-t border-gray-200 pt-4">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">Perubahan Data</h3>
-                            <div className="bg-gray-50 rounded-lg overflow-hidden">
-                                <table className="w-full">
-                                    <thead className="bg-gray-200">
-                                        <tr>
-                                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Nama Data</th>
-                                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Data Lama</th>
-                                            <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Data Baru</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {selectedPengajuan.dataLama && selectedPengajuan.dataBaru &&
-                                            Object.keys(selectedPengajuan.dataLama).map((key) => (
-                                                <tr key={key} className="border-t border-gray-300">
-                                                    <td className="px-4 py-3 text-sm text-gray-900">{key}</td>
-                                                    <td className="px-4 py-3 text-sm text-gray-700">{selectedPengajuan.dataLama![key]}</td>
-                                                    <td className="px-4 py-3 text-sm text-gray-700">{selectedPengajuan.dataBaru![key]}</td>
-                                                </tr>
-                                            ))
-                                        }
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* Catatan dari Relawan */}
-                        <div className="border-t border-gray-200 pt-4">
-                            <h3 className="text-lg font-bold text-gray-900 mb-3">Catatan dari Relawan</h3>
-                            <textarea
-                                value={selectedPengajuan.catatanRelawan || ''}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 resize-none"
-                                rows={3}
-                                disabled
-                            />
-                        </div>
-
-                        {/* Catatan Verifikasi */}
-                        <div className="border-t border-gray-200 pt-4">
-                            <h3 className="text-lg font-bold text-gray-900 mb-3">Catatan Verifikasi</h3>
-                            <textarea
-                                value={verificationNote}
-                                onChange={(e) => setVerificationNote(e.target.value)}
-                                placeholder="Masukkan catatan verifikasi..."
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                                rows={3}
-                            />
-                        </div>
-
-                        {/* Checkbox */}
-                        <div className="flex items-center gap-2">
-                            <input
-                                type="checkbox"
-                                id="dataChecked"
-                                checked={isDataChecked}
-                                onChange={(e) => setIsDataChecked(e.target.checked)}
-                                className="w-4 h-4 text-blue-500 rounded"
-                            />
-                            <label htmlFor="dataChecked" className="text-sm text-gray-700 cursor-pointer">
-                                Saya telah memeriksa data
-                            </label>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex justify-between pt-4">
-                            <Button
-                                type="button"
-                                onClick={handleReject}
-                                className="bg-red-600 hover:bg-red-700 text-white px-8"
-                            >
-                                Tolak
-                            </Button>
-                            <Button
-                                type="button"
-                                onClick={handleApprove}
-                                disabled={!isDataChecked}
-                                className="bg-green-600 hover:bg-green-700 text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Setujui & Update
-                            </Button>
-                        </div>
-                    </div>
-                )}
-            </Modal>
-
-            {/* Toast Notification */}
-            {toast && (
-                <Toast
-                    message={toast.message}
-                    type={toast.type}
-                    onClose={() => setToast(null)}
-                />
-            )}
+            {/* Toast */}
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
 };

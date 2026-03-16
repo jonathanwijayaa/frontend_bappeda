@@ -1,132 +1,71 @@
-import React, { useState } from 'react';
-import { Phone, MessageCircle, Clock, Check, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Phone, MessageCircle, Clock, Check, Eye, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import RelawanMenu from '../components/RelawanMenu';
 import Table from '../components/ui/Table';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
+import Toast, { ToastType } from '../components/ui/Toast';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../utils/api';
 
-// --- MOCK DATA UNTUK SUPER ADMIN ---
-// TODO: Ganti dengan API call ke backend (misal: GET /api/admin/saran)
+// Interface data dari backend
 interface SaranData {
-    id: number;
-    namaPengirim: string;
-    noTelepon: string;
-    saran: string;
-    tanggalKirim: string;
-    isResolved: boolean;
+    saran_id: number;
+    nama_lengkap: string;
+    no_hp: string;
+    subjek: string | null;
+    pesan: string;
+    status_baca: boolean;
+    created_at: string;
+    role: string;
 }
-
-const mockSaranList: SaranData[] = [
-    {
-        id: 1,
-        namaPengirim: 'Budi Santoso',
-        noTelepon: '081234567890',
-        saran: 'Mohon agar jadwal kegiatan diperbarui di sistem lebih cepat, karena kadang kami mendapat info mendadak.',
-        tanggalKirim: '12 Mar 2026 10:30',
-        isResolved: false
-    },
-    {
-        id: 2,
-        namaPengirim: 'Siti Aminah',
-        noTelepon: '081987654321',
-        saran: 'Aplikasi sudah bagus, tapi mohon tambahkan fitur notifikasi via WhatsApp agar lebih mudah dan efisien untuk tim lapangan.',
-        tanggalKirim: '11 Mar 2026 14:15',
-        isResolved: true
-    },
-    {
-        id: 3,
-        namaPengirim: 'Jonathan Wijaya',
-        noTelepon: '08122334455',
-        saran: 'Ada beberapa kader yang belum terdaftar di sistem, mohon bantuannya untuk import data kader terbaru dari dinas.',
-        tanggalKirim: '10 Mar 2026 09:00',
-        isResolved: false
-    },
-    {
-        id: 4,
-        namaPengirim: 'Ahmad Faisal',
-        noTelepon: '085611223344',
-        saran: 'Aplikasi sering logout sendiri jika didiamkan lebih dari 15 menit, bisa tolong durasi login diperpanjang?',
-        tanggalKirim: '09 Mar 2026 15:20',
-        isResolved: true
-    },
-    {
-        id: 5,
-        namaPengirim: 'Maya Indahsari',
-        noTelepon: '081399887766',
-        saran: 'Tolong tambahkan fitur export data relawan ke format PDF juga selain Excel. Terima kasih.',
-        tanggalKirim: '09 Mar 2026 10:10',
-        isResolved: false
-    },
-    {
-        id: 6,
-        namaPengirim: 'Dedi Kusuma',
-        noTelepon: '082144556677',
-        saran: 'SK yang saya upload kemarin ternyata salah file, apakah ada cara untuk menghapusnya atau menimpanya langsung tanpa harus buat pengajuan baru?',
-        tanggalKirim: '08 Mar 2026 14:45',
-        isResolved: true
-    },
-    {
-        id: 7,
-        namaPengirim: 'Rini Yulianti',
-        noTelepon: '085733221100',
-        saran: 'Menu OPD Dashboard kadang lemot loading datanya saat pagi hari, mohon dioptimalkan servernya.',
-        tanggalKirim: '08 Mar 2026 08:30',
-        isResolved: false
-    },
-    {
-        id: 8,
-        namaPengirim: 'Kunto Wibisono',
-        noTelepon: '081199998888',
-        saran: 'Mohon panduan atau buku manual ditambahkan di menu bantuan agar relawan baru mudah belajar.',
-        tanggalKirim: '07 Mar 2026 11:20',
-        isResolved: false
-    },
-    {
-        id: 9,
-        namaPengirim: 'Siska Noviana',
-        noTelepon: '082233445566',
-        saran: 'Alamat kelurahan di dropdown ada yang salah ketik (typo), tolong admin Bappeda diperbaiki.',
-        tanggalKirim: '07 Mar 2026 09:15',
-        isResolved: true
-    },
-    {
-        id: 10,
-        namaPengirim: 'Heru Pramono',
-        noTelepon: '081877665544',
-        saran: 'Apakah memungkinkan aplikasi ini dibuatkan versi Android (APK)? Biar lebih mudah akses tanpa browser.',
-        tanggalKirim: '06 Mar 2026 16:00',
-        isResolved: false
-    },
-    {
-        id: 11,
-        namaPengirim: 'Andi Saputra',
-        noTelepon: '085211223344',
-        saran: 'Data log audit kurang lengkap, tolong dicantumkan juga IP Address user yang mengubah data.',
-        tanggalKirim: '05 Mar 2026 10:30',
-        isResolved: true
-    }
-];
 
 const SaranHotline: React.FC = () => {
     const { user, isSuperAdmin } = useAuth();
     const isRelawan = user?.role === 'relawan';
 
-    // State untuk form
+    // State untuk form kirim saran
     const [formData, setFormData] = useState({
         namaLengkap: user?.name || '',
         noTelepon: '',
         saran: ''
     });
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
     // State untuk tabel Super Admin
-    const [saranList, setSaranList] = useState<SaranData[]>(mockSaranList);
+    const [saranList, setSaranList] = useState<SaranData[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [selectedSaran, setSelectedSaran] = useState<SaranData | null>(null);
 
     // Pagination State
     const [currentPage, setCurrentPage] = useState<number>(1);
     const itemsPerPage = 5;
+
+    // Fetch data saran dari backend (hanya Super Admin)
+    useEffect(() => {
+        if (!isSuperAdmin) return;
+
+        const fetchSaran = async () => {
+            setIsLoading(true);
+            try {
+                const response = await apiFetch('/saran/admin?limit=100');
+                const result = await response.json();
+                if (result.success) {
+                    setSaranList(result.data);
+                } else {
+                    setToast({ message: result.message || 'Gagal memuat saran masukan', type: 'error' });
+                }
+            } catch (err) {
+                setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchSaran();
+    }, [isSuperAdmin]);
 
     // Pagination Logic
     const totalPages = Math.ceil(saranList.length / itemsPerPage);
@@ -146,45 +85,86 @@ const SaranHotline: React.FC = () => {
         }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.namaLengkap || !formData.noTelepon || !formData.saran) {
-            alert('Mohon lengkapi semua field');
+            setToast({ message: 'Mohon lengkapi semua field', type: 'error' });
             return;
         }
 
-        // TODO: Ganti dengan POST /api/saran
-        console.log('Form submitted:', formData);
-        alert('Terima kasih! Saran Anda telah dikirim.');
+        setIsSubmitting(true);
+        try {
+            const response = await apiFetch('/saran', {
+                method: 'POST',
+                body: JSON.stringify({
+                    subjek: `Dari: ${formData.namaLengkap} (${formData.noTelepon})`,
+                    pesan: formData.saran
+                })
+            });
+            const result = await response.json();
 
-        setFormData({ namaLengkap: user?.name || '', noTelepon: '', saran: '' });
+            if (response.ok && result.success) {
+                setToast({ message: 'Saran berhasil dikirim. Terima kasih!', type: 'success' });
+                setFormData({ namaLengkap: user?.name || '', noTelepon: '', saran: '' });
+            } else {
+                setToast({ message: result.message || 'Gagal mengirim saran', type: 'error' });
+            }
+        } catch (err) {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
-    const handleResolve = (id: number) => {
-        // TODO: Ganti dengan PATCH /api/admin/saran/:id/resolve
-        setSaranList(prev => prev.map(s => s.id === id ? { ...s, isResolved: !s.isResolved } : s));
+    const handleResolve = async (saranId: number, currentStatus: boolean) => {
+        try {
+            const response = await apiFetch(`/saran/admin/${saranId}/baca`, {
+                method: 'PATCH',
+                body: JSON.stringify({ status_baca: !currentStatus })
+            });
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                setSaranList(prev => prev.map(s =>
+                    s.saran_id === saranId ? { ...s, status_baca: !currentStatus } : s
+                ));
+                if (selectedSaran?.saran_id === saranId) {
+                    setSelectedSaran(prev => prev ? { ...prev, status_baca: !currentStatus } : null);
+                }
+            } else {
+                setToast({ message: result.message || 'Gagal memperbarui status', type: 'error' });
+            }
+        } catch (err) {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        }
     };
 
     const saranColumns = [
-        { header: 'NAMA PENGIRIM', accessor: 'namaPengirim' as keyof SaranData },
-        { header: 'NO. TELEPON', accessor: 'noTelepon' as keyof SaranData },
+        { header: 'NAMA PENGIRIM', accessor: 'nama_lengkap' as keyof SaranData },
+        { header: 'NO. TELEPON', accessor: 'no_hp' as keyof SaranData },
         {
             header: 'SARAN',
             render: (row: SaranData) => (
-                <div className="truncate max-w-[250px]" title={row.saran}>
-                    {row.saran}
+                <div className="truncate max-w-[250px]" title={row.pesan}>
+                    {row.pesan}
                 </div>
             )
         },
-        { header: 'TANGGAL TERKIRIM', accessor: 'tanggalKirim' as keyof SaranData },
+        {
+            header: 'TANGGAL TERKIRIM',
+            render: (row: SaranData) => (
+                <span>{new Date(row.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}</span>
+            )
+        },
         {
             header: 'STATUS',
             render: (row: SaranData) => (
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${row.isResolved
-                    ? 'bg-green-50 text-green-700 border-green-200'
-                    : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                    }`}>
-                    {row.isResolved ? 'Resolved' : 'Pending'}
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                    row.status_baca
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : 'bg-yellow-50 text-yellow-700 border-yellow-200'
+                }`}>
+                    {row.status_baca ? 'Resolved' : 'Pending'}
                 </span>
             )
         }
@@ -200,12 +180,13 @@ const SaranHotline: React.FC = () => {
                 <Eye size={18} />
             </button>
             <button
-                onClick={() => handleResolve(row.id)}
-                className={`p-1.5 rounded-lg transition-colors ${row.isResolved
-                    ? 'text-gray-400 hover:bg-gray-200'
-                    : 'text-green-600 hover:bg-green-100'
-                    }`}
-                title={row.isResolved ? "Batal Resolve" : "Tandai Resolved"}
+                onClick={() => handleResolve(row.saran_id, row.status_baca)}
+                className={`p-1.5 rounded-lg transition-colors ${
+                    row.status_baca
+                        ? 'text-gray-400 hover:bg-gray-200'
+                        : 'text-green-600 hover:bg-green-100'
+                }`}
+                title={row.status_baca ? 'Batal Resolve' : 'Tandai Resolved'}
             >
                 <Check size={18} />
             </button>
@@ -280,9 +261,15 @@ const SaranHotline: React.FC = () => {
             </div>
             <Button
                 type="submit"
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors justify-center"
+                disabled={isSubmitting}
+                className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors justify-center disabled:opacity-70 disabled:cursor-not-allowed"
             >
-                Kirim Saran
+                {isSubmitting ? (
+                    <span className="flex items-center justify-center gap-2">
+                        <Loader2 size={18} className="animate-spin" />
+                        Mengirim...
+                    </span>
+                ) : 'Kirim Saran'}
             </Button>
         </form>
     );
@@ -293,56 +280,63 @@ const SaranHotline: React.FC = () => {
     if (isSuperAdmin) {
         return (
             <div className="space-y-6">
-                <Card title="Kotak Masuk Saran & Kendala">
-                    <Table
-                        columns={saranColumns}
-                        data={currentSaranData}
-                        actions={saranActions}
-                        minRows={5}
-                    />
+                {isLoading ? (
+                    <div className="flex items-center justify-center h-48">
+                        <Loader2 size={28} className="animate-spin text-gray-400" />
+                        <span className="ml-3 text-gray-500">Memuat saran masukan...</span>
+                    </div>
+                ) : (
+                    <Card title="Kotak Masuk Saran & Kendala">
+                        <Table
+                            columns={saranColumns}
+                            data={currentSaranData}
+                            actions={saranActions}
+                            minRows={5}
+                        />
 
-                    {/* Pagination */}
-                    {saranList.length > 0 && (
-                        <div className="mt-4 flex justify-between items-center">
-                            <div className="text-sm text-gray-500">
-                                Menampilkan {startIndex + 1}-{Math.min(endIndex, saranList.length)} dari {saranList.length} Saran
-                            </div>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handlePageChange(currentPage - 1)}
-                                    disabled={currentPage === 1}
-                                    className="disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    <ChevronLeft size={16} />
-                                    Sebelumnya
-                                </Button>
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        {/* Pagination */}
+                        {saranList.length > 0 && (
+                            <div className="mt-4 flex justify-between items-center">
+                                <div className="text-sm text-gray-500">
+                                    Menampilkan {startIndex + 1}-{Math.min(endIndex, saranList.length)} dari {saranList.length} Saran
+                                </div>
+                                <div className="flex gap-2">
                                     <Button
-                                        key={page}
-                                        variant={currentPage === page ? "primary" : "outline"}
+                                        variant="outline"
                                         size="sm"
-                                        onClick={() => handlePageChange(page)}
-                                        className="min-w-[40px]"
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                        className="disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {page}
+                                        <ChevronLeft size={16} />
+                                        Sebelumnya
                                     </Button>
-                                ))}
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handlePageChange(currentPage + 1)}
-                                    disabled={currentPage === totalPages}
-                                    className="disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    Selanjutnya
-                                    <ChevronRight size={16} />
-                                </Button>
+                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                        <Button
+                                            key={page}
+                                            variant={currentPage === page ? "primary" : "outline"}
+                                            size="sm"
+                                            onClick={() => handlePageChange(page)}
+                                            className="min-w-[40px]"
+                                        >
+                                            {page}
+                                        </Button>
+                                    ))}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                        className="disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Selanjutnya
+                                        <ChevronRight size={16} />
+                                    </Button>
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </Card>
+                        )}
+                    </Card>
+                )}
 
                 {/* MODAL DETAIL SARAN */}
                 <Modal
@@ -355,37 +349,38 @@ const SaranHotline: React.FC = () => {
                         <div className="space-y-5 text-sm">
                             <div>
                                 <p className="text-gray-500 mb-1">Pengirim</p>
-                                <p className="font-medium text-gray-800 text-base">{selectedSaran.namaPengirim}</p>
+                                <p className="font-medium text-gray-800 text-base">{selectedSaran.nama_lengkap}</p>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-gray-50 p-3 rounded-lg">
                                     <p className="text-gray-500 text-xs mb-1">No. Telepon</p>
                                     <div className="flex items-center gap-2">
                                         <Phone size={14} className="text-gray-400" />
-                                        <p className="font-medium text-gray-800">{selectedSaran.noTelepon}</p>
+                                        <p className="font-medium text-gray-800">{selectedSaran.no_hp || '-'}</p>
                                     </div>
                                 </div>
                                 <div className="bg-gray-50 p-3 rounded-lg">
                                     <p className="text-gray-500 text-xs mb-1">Tanggal Dikirim</p>
                                     <div className="flex items-center gap-2">
                                         <Clock size={14} className="text-gray-400" />
-                                        <p className="font-medium text-gray-800">{selectedSaran.tanggalKirim}</p>
+                                        <p className="font-medium text-gray-800">
+                                            {new Date(selectedSaran.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
                             <div>
                                 <p className="text-gray-500 mb-2">Pesan / Saran</p>
                                 <div className="p-4 bg-blue-50/50 border border-blue-100 rounded-lg text-gray-700 whitespace-pre-wrap leading-relaxed">
-                                    {selectedSaran.saran}
+                                    {selectedSaran.pesan}
                                 </div>
                             </div>
 
                             <div className="pt-4 flex justify-end gap-3 mt-4 border-t border-gray-100">
-                                {!selectedSaran.isResolved && (
+                                {!selectedSaran.status_baca && (
                                     <Button
                                         onClick={() => {
-                                            handleResolve(selectedSaran.id);
-                                            setSelectedSaran({ ...selectedSaran, isResolved: true });
+                                            handleResolve(selectedSaran.saran_id, selectedSaran.status_baca);
                                         }}
                                         className="bg-green-500 hover:bg-green-600 text-white font-medium flex items-center gap-2 shadow-sm"
                                     >
@@ -402,6 +397,15 @@ const SaranHotline: React.FC = () => {
                         </div>
                     )}
                 </Modal>
+
+                {/* Toast */}
+                {toast && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast(null)}
+                    />
+                )}
             </div>
         );
     }
@@ -428,6 +432,13 @@ const SaranHotline: React.FC = () => {
                         </div>
                     </Card>
                 </div>
+                {toast && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast(null)}
+                    />
+                )}
             </div>
         );
     }
@@ -445,6 +456,13 @@ const SaranHotline: React.FC = () => {
                     {feedbackForm}
                 </Card>
             </div>
+            {toast && (
+                <Toast
+                    message={toast.message}
+                    type={toast.type}
+                    onClose={() => setToast(null)}
+                />
+            )}
         </div>
     );
 };

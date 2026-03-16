@@ -3,7 +3,7 @@
  * Otomatis menyisipkan JWT token di header Authorization.
  */
 
-const API_BASE = '/api'; // Akan di-proxy oleh Vite ke http://localhost:3000
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 /**
  * Fungsi utama untuk memanggil API backend.

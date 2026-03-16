@@ -37,6 +37,7 @@ const Sidebar: React.FC = () => {
     const superAdminMenu: MenuItem[] = [
         { path: '/dashboard', icon: Home, label: 'Dashboard' },
         { path: '/manajemen-opd', icon: Building2, label: 'Manajemen OPD' },
+        { path: '/daftar-kader', icon: UserCircle, label: 'Daftar Kader' },
         { path: '/data-relawan', icon: Users, label: 'Data Relawan' },
         { path: '/surat-keputusan', icon: FileText, label: 'Surat Keputusan' },
         { path: '/log-aktifitas', icon: Clock, label: 'Log/Aktifitas' },
