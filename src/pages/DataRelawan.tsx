@@ -26,7 +26,7 @@ interface RelawanAPIData {
     penugasan: string | null;        // dari tabel penugasan_relawan
     status_penugasan: string | null; // dari penugasan_relawan
     nama_opd: string | null;         // dari join ke opd
-    nama_komunitas: string | null;   // dari join ke komunitas
+    nama_kader: string | null;   // dari join ke kader
 }
 
 
@@ -48,7 +48,7 @@ const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
     namaLengkap: r.nama_lengkap,
     alamat: r.alamat_ktp || '-',
     kelurahan: r.kelurahan || '-',
-    kader: r.nama_komunitas || '-',
+    kader: r.nama_kader || '-',
     jabatan: r.status_penugasan || '-',
     penugasan: r.nama_opd || r.penugasan || '-',  // nama OPD dari join, atau teks penugasan dari penugasan_relawan
     assignments: []
@@ -67,7 +67,7 @@ const DataRelawan: React.FC = () => {
 
     // Autocomplete options (diambil dari API)
     const [opdOptions, setOpdOptions] = useState<AutoOption[]>([]);
-    const [komunitasOptions, setKomunitasOptions] = useState<AutoOption[]>([]);
+    const [kaderOptions, setkaderOptions] = useState<AutoOption[]>([]);
 
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -169,7 +169,7 @@ const DataRelawan: React.FC = () => {
         }
     }, []);
 
-    // Fetch OPD & Komunitas untuk autocomplete
+    // Fetch OPD & kader untuk autocomplete
     useEffect(() => {
         fetchRelawan();
         fetchPengajuan();
@@ -181,10 +181,10 @@ const DataRelawan: React.FC = () => {
             }
         }).catch(() => { });
 
-        // Fetch Komunitas options
-        apiFetch('/komunitas').then(r => r.json()).then(result => {
+        // Fetch kader options
+        apiFetch('/kader').then(r => r.json()).then(result => {
             if (result.success) {
-                setKomunitasOptions(result.data.map((k: any) => ({ label: k.nama_komunitas, value: k.nama_komunitas })));
+                setkaderOptions(result.data.map((k: any) => ({ label: k.nama_kader, value: k.nama_kader })));
             }
         }).catch(() => { });
     }, [fetchRelawan, fetchPengajuan]);
@@ -419,14 +419,14 @@ const DataRelawan: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-3 gap-4 items-start">
-                <label className="text-lg font-medium text-gray-900 pt-2">Kader / Komunitas</label>
+                <label className="text-lg font-medium text-gray-900 pt-2">Kader / kader</label>
                 <div className="col-span-2">
                     <AutocompleteInput
                         name={`kader-${index}`}
                         value={assignment.kader}
-                        options={komunitasOptions}
+                        options={kaderOptions}
                         onChange={(val) => handleAssignmentChange(index, 'kader', val)}
-                        placeholder="Cari nama Kader / Komunitas..."
+                        placeholder="Cari nama Kader / kader..."
                         disabled={isReadOnly}
                     />
                 </div>

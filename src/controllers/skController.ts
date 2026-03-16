@@ -55,11 +55,11 @@ export const getSKById = async (req: AuthRequest, res: Response): Promise<void> 
             SELECT 
                 pr.penugasan_id, pr.status_keaktifan,
                 u.nik, u.nama_lengkap, u.no_hp,
-                k.nama_komunitas AS nama_kader
+                k.nama_kader AS nama_kader
             FROM penugasan_relawan pr
             JOIN relawan r ON pr.relawan_id = r.relawan_id
             JOIN users u ON r.user_id = u.user_id
-            LEFT JOIN komunitas k ON pr.komunitas_id = k.komunitas_id
+            LEFT JOIN kader k ON pr.kader_id = k.kader_id
             WHERE pr.sk_id = $1;
         `;
         const resultRelawan = await executeQueryWithContext(queryRelawan, [id], req.user);
@@ -84,7 +84,7 @@ export const getSKById = async (req: AuthRequest, res: Response): Promise<void> 
 export const createSKDetail = async (req: AuthRequest, res: Response): Promise<void> => {
     const { 
         nomor_sk, judul_sk, tanggal_terbit, batas_aktif, 
-        opd_id, komunitas_id, daftar_relawan 
+        opd_id, kader_id, daftar_relawan 
     } = req.body;
 
     // Validasi basic
@@ -146,11 +146,11 @@ export const createSKDetail = async (req: AuthRequest, res: Response): Promise<v
 
                 // 2. Insert Penugasan
                 const insertPenugasanQuery = `
-                    INSERT INTO penugasan_relawan (relawan_id, opd_id, komunitas_id, sk_id, jabatan)
+                    INSERT INTO penugasan_relawan (relawan_id, opd_id, kader_id, sk_id, jabatan)
                     VALUES ($1, $2, $3, $4, $5)
                 `;
-                // Asumsi: jabatan didapatkan dari nama kader/komunitas
-                await client.query(insertPenugasanQuery, [rlwn_id, opd_id, komunitas_id || null, new_sk_id, 'Kader/Relawan']);
+                // Asumsi: jabatan didapatkan dari nama kader/kader
+                await client.query(insertPenugasanQuery, [rlwn_id, opd_id, kader_id || null, new_sk_id, 'Kader/Relawan']);
                 relawanBerhasil.push(item.nik);
             }
         }

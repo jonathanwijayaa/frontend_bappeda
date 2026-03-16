@@ -2,8 +2,8 @@ import { Response } from 'express';
 import { executeQueryWithContext } from '../../config/db';
 import { AuthRequest } from '../middleware/authMiddleware';
 
-// 1. Dapatkan semua komunitas (bisa difilter berdasarkan opd_id)
-export const getAllKomunitas = async (req: AuthRequest, res: Response): Promise<void> => {
+// 1. Dapatkan semua kader (bisa difilter berdasarkan opd_id)
+export const getAllKader = async (req: AuthRequest, res: Response): Promise<void> => {
     const { opd_id } = req.query;
     try {
         let query: string;
@@ -43,7 +43,7 @@ export const getAllKomunitas = async (req: AuthRequest, res: Response): Promise<
 };
 
 // 2. Dapatkan detail kader berdasarkan ID
-export const getKomunitasById = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getKaderById = async (req: AuthRequest, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
         const query = `
@@ -72,7 +72,7 @@ export const getKomunitasById = async (req: AuthRequest, res: Response): Promise
 };
 
 // 3. Buat kader baru
-export const createKomunitas = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createKader = async (req: AuthRequest, res: Response): Promise<void> => {
     const { opd_id, nama_kader, deskripsi, pic } = req.body;
 
     if (!opd_id || !nama_kader) {
@@ -103,7 +103,7 @@ export const createKomunitas = async (req: AuthRequest, res: Response): Promise<
 };
 
 // 4. Update kader
-export const updateKomunitas = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateKader = async (req: AuthRequest, res: Response): Promise<void> => {
     const { id } = req.params;
     const { nama_kader, deskripsi, pic } = req.body;
 
@@ -138,7 +138,7 @@ export const updateKomunitas = async (req: AuthRequest, res: Response): Promise<
 };
 
 // 5. Hapus kader
-export const deleteKomunitas = async (req: AuthRequest, res: Response): Promise<void> => {
+export const deleteKader = async (req: AuthRequest, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
         const query = `DELETE FROM kader WHERE kader_id = $1 RETURNING kader_id;`;
@@ -162,7 +162,7 @@ export const deleteKomunitas = async (req: AuthRequest, res: Response): Promise<
 };
 
 // 6. Toggle Status kader
-export const toggleKomunitasStatus = async (req: AuthRequest, res: Response): Promise<void> => {
+export const toggleKaderStatus = async (req: AuthRequest, res: Response): Promise<void> => {
     const { id } = req.params;
     const { is_active } = req.body;
 
