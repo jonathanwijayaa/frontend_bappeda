@@ -3,14 +3,16 @@
  * Otomatis menyisipkan JWT token di header Authorization.
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+// Pastikan TIDAK ADA '/api' cadangan yang bersifat relatif.
+// Kita ingin dia selalu menembak ke domain lengkap Railway.
+const API_BASE = import.meta.env.VITE_API_URL; 
 
-/**
- * Fungsi utama untuk memanggil API backend.
- * @param endpoint - Path endpoint (contoh: '/auth/login')
- * @param options - Opsi fetch tambahan (method, body, dll.)
- */
 export const apiFetch = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
+    // Tambahkan pengecekan jika API_BASE kosong agar tidak error saat dev
+    if (!API_BASE) {
+        console.warn("Peringatan: VITE_API_URL tidak terdefinisi! Pastikan file .env sudah benar.");
+    }
+
     const token = localStorage.getItem('token');
 
     const headers: HeadersInit = {
@@ -18,17 +20,16 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}): Pro
         ...options.headers,
     };
 
-    // Sisipkan token jika ada
     if (token) {
         (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
 
+    // Gabungkan URL. Pastikan endpoint dimulai dengan '/' atau API_BASE tidak diakhiri '/'
     const response = await fetch(`${API_BASE}${endpoint}`, {
         ...options,
         headers,
     });
 
-    // Jika token expired / tidak valid, logout otomatis
     if (response.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('currentUser');
