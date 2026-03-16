@@ -6,6 +6,7 @@
 // Pastikan TIDAK ADA '/api' cadangan yang bersifat relatif.
 // Kita ingin dia selalu menembak ke domain lengkap Railway.
 const API_BASE = import.meta.env.VITE_API_URL; 
+console.log("Cek API_BASE:", API_BASE);
 
 export const apiFetch = async (endpoint: string, options: RequestInit = {}): Promise<Response> => {
     // Tambahkan pengecekan jika API_BASE kosong agar tidak error saat dev
