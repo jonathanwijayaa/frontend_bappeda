@@ -43,7 +43,7 @@ export const getAllKomunitas = async (req: AuthRequest, res: Response): Promise<
 };
 
 // 2. Dapatkan detail kader berdasarkan ID
-export const getkaderById = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getKomunitasById = async (req: AuthRequest, res: Response): Promise<void> => {
     const { id } = req.params;
     try {
         const query = `
