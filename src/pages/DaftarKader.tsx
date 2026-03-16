@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Plus, FileDown, Loader2, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
+import { Plus, FileDown, Loader2, ChevronLeft, ChevronRight, Upload } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
 import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
 import Toast, { ToastType } from '../components/ui/Toast';
+import UploadExcelModal from '../components/ui/UploadExcelModal';
 import { exportToPDF } from '../utils/exportToPDF';
 import { apiFetch } from '../utils/api';
 
@@ -15,8 +16,8 @@ interface KomunitasData {
     nama_komunitas: string;
     deskripsi: string | null;
     pic: string | null;
-    opd_id: number;
     nama_opd: string;
+    is_active: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -34,7 +35,8 @@ const DaftarKader: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
-    const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState<boolean>(false);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
     const [selectedKomunitas, setSelectedKomunitas] = useState<KomunitasData | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [isExporting, setIsExporting] = useState<boolean>(false);
@@ -109,9 +111,16 @@ const DaftarKader: React.FC = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-    // ── Columns ─────────────────────────────────
     const columns = [
         { header: 'NAMA KADER/KOMUNITAS', accessor: 'nama_komunitas' as keyof KomunitasData },
+        {
+            header: 'STATUS',
+            render: (row: KomunitasData) => (
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {row.is_active ? 'Aktif' : 'Tidak Aktif'}
+                </span>
+            )
+        },
         { header: 'OPD', accessor: 'nama_opd' as keyof KomunitasData },
         { header: 'PIC', render: (row: KomunitasData) => <span>{row.pic || '-'}</span> },
         { header: 'DESKRIPSI', render: (row: KomunitasData) => (
@@ -129,26 +138,29 @@ const DaftarKader: React.FC = () => {
         setIsDetailModalOpen(true);
     };
 
-    const handleDeleteClick = (kader: KomunitasData) => {
+    const handleToggleStatus = (kader: KomunitasData) => {
         setSelectedKomunitas(kader);
-        setIsConfirmDeleteOpen(true);
+        setIsConfirmModalOpen(true);
     };
 
-    const handleConfirmDelete = async () => {
+    const handleConfirmToggleStatus = async () => {
         if (!selectedKomunitas) return;
         try {
-            const res = await apiFetch(`/komunitas/${selectedKomunitas.komunitas_id}`, { method: 'DELETE' });
+            const res = await apiFetch(`/komunitas/${selectedKomunitas.komunitas_id}/status`, {
+                method: 'PATCH',
+                body: JSON.stringify({ is_active: !selectedKomunitas.is_active })
+            });
             const result = await res.json();
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });
                 fetchKomunitas();
             } else {
-                setToast({ message: result.message || 'Gagal menghapus data', type: 'error' });
+                setToast({ message: result.message || 'Gagal mengubah status', type: 'error' });
             }
         } catch {
             setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
         } finally {
-            setIsConfirmDeleteOpen(false);
+            setIsConfirmModalOpen(false);
             setSelectedKomunitas(null);
         }
     };
@@ -156,13 +168,13 @@ const DaftarKader: React.FC = () => {
     const actions = (row: KomunitasData) => (
         <>
             <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
-            <button
-                onClick={() => handleDeleteClick(row)}
-                className="p-1.5 text-red-500 hover:bg-red-100 rounded-lg transition-colors"
-                title="Hapus Komunitas"
+            <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => handleToggleStatus(row)}
             >
-                <Trash2 size={16} />
-            </button>
+                {row.is_active ? 'Nonaktif' : 'Aktifkan'}
+            </Button>
         </>
     );
 
@@ -251,15 +263,40 @@ const DaftarKader: React.FC = () => {
             setIsExporting(false);
         }
     };
+    const handleExcelUploadConfirm = async (data: any[]) => {
+            try {
+                const res = await apiFetch('/komunitas/bulk', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    setToast({ message: result.message, type: 'success' });
+                    fetchKomunitas();
+                } else {
+                    setToast({ message: result.message || 'Gagal import Excel', type: 'error' });
+                }
+            } catch {
+                setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+            } finally {
+                setIsUploadModalOpen(false);
+            }
+        };
 
     return (
         <div className="space-y-6">
             {/* Header Actions */}
             <div className="flex justify-between items-center">
-                <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-                    <Plus size={18} />
-                    Tambah Kader Baru
-                </Button>
+                <div className="flex gap-3">
+                    <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+                        <Plus size={18} />
+                        Tambah Kader Baru
+                    </Button>
+                    <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
+                        <Upload size={18} />
+                        Unggah dari Excel
+                    </Button>
+                </div>
                 <SearchInput
                     value={searchTerm}
                     onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
@@ -399,23 +436,39 @@ const DaftarKader: React.FC = () => {
                 )}
             </Modal>
 
-            {/* Confirm Delete Modal */}
-            <Modal isOpen={isConfirmDeleteOpen} onClose={() => setIsConfirmDeleteOpen(false)} title="Konfirmasi Hapus" maxWidth="md" showCloseButton={false}>
+            {/* Confirmation Modal */}
+            <Modal
+                isOpen={isConfirmModalOpen}
+                onClose={() => setIsConfirmModalOpen(false)}
+                title="Konfirmasi"
+                subtitle={selectedKomunitas?.is_active ? "Apakah Anda yakin ingin menonaktifkan kader/komunitas ini?" : "Apakah Anda yakin ingin mengaktifkan kader/komunitas ini?"}
+                maxWidth="md"
+                showCloseButton={false}
+            >
                 {selectedKomunitas && (
                     <div className="space-y-6">
                         <div className="text-center py-4">
                             <p className="text-lg text-gray-700">
-                                Apakah Anda yakin ingin menghapus kader <span className="font-semibold text-red-600">"{selectedKomunitas.nama_komunitas}"</span>?
+                                Anda akan {selectedKomunitas.is_active ? 'menonaktifkan' : 'mengaktifkan'}{' '}
+                                <span className="font-semibold">{selectedKomunitas.nama_komunitas}</span>
                             </p>
-                            <p className="text-sm text-gray-500 mt-2">Tindakan ini tidak dapat dibatalkan dan akan gagal jika masih ada relawan terhubung.</p>
                         </div>
-                        <div className="flex justify-center gap-4 pt-2">
-                            <Button onClick={() => setIsConfirmDeleteOpen(false)} className="bg-gray-500 hover:bg-gray-600 text-white px-8">Batal</Button>
-                            <Button onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700 text-white px-8">Ya, Hapus</Button>
+                        <div className="flex justify-center gap-4 pt-6">
+                            <Button type="button" onClick={() => setIsConfirmModalOpen(false)} className="bg-gray-500 hover:bg-gray-600 text-white px-8">Batal</Button>
+                            <Button type="button" onClick={handleConfirmToggleStatus} className="bg-red-600 hover:bg-red-700 text-white px-8">Lanjutkan</Button>
                         </div>
                     </div>
                 )}
             </Modal>
+                 {/* Upload Excel Modal */}
+            <UploadExcelModal
+                isOpen={isUploadModalOpen}
+                onClose={() => setIsUploadModalOpen(false)}
+                onConfirm={handleExcelUploadConfirm}
+                title="Unggah Data Kader"
+                templateName="Data Kader"
+                dataType="kader"
+            />
 
             {/* Toast */}
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}

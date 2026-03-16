@@ -358,6 +358,23 @@ const DataRelawan: React.FC = () => {
 
     return (
         <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <div className="flex gap-3">
+                    <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+                        <Plus size={18} />
+                        Tambah Relawan
+                    </Button>
+                    <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
+                        <Upload size={18} />
+                        Unggah dari Excel
+                    </Button>
+                </div>
+                <SearchInput
+                    value={searchTerm}
+                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                    className="w-64"
+                />
+            </div>
             {/* Pengajuan Perubahan Data */}
             <Card title="Pengajuan Perubahan Data">
                 {isLoadingPengajuan ? (
@@ -373,22 +390,7 @@ const DataRelawan: React.FC = () => {
             {/* Daftar Relawan */}
             <Card>
                 <div className="mb-4 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-gray-900">Daftar Relawan</h2>
-                    <div className="flex gap-3 items-center">
-                        <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-                            <Plus size={18} />
-                            Tambah Relawan
-                        </Button>
-                        <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
-                            <Upload size={18} />
-                            Unggah dari Excel
-                        </Button>
-                        <SearchInput
-                            value={searchTerm}
-                            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                            className="w-64"
-                        />
-                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900">Daftar Relawan</h2>                    
                 </div>
 
                 {isLoadingRelawan ? (

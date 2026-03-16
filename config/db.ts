@@ -5,11 +5,13 @@ dotenv.config();
 
 // Mengambil settingan dari file .env kamu tadi
 const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    // Fallback if DATABASE_URL is not provided:
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
-    port: Number(process.env.DB_PORT),
+    port: Number(process.env.DB_PORT) || 5432,
 });
 
 /**

@@ -27,7 +27,7 @@ const Input: React.FC<InputProps> = ({
             <input
                 type={inputType}
                 placeholder={placeholder}
-                className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${icon ? 'pl-10' : ''
+                className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  ${icon ? 'pl-10' : ''
                     } ${showPasswordToggle ? 'pr-10' : ''} ${className}`}
                 {...props}
             />
@@ -50,12 +50,14 @@ interface SearchInputProps extends Omit<InputProps, 'icon'> {
 
 export const SearchInput: React.FC<SearchInputProps> = ({
     placeholder = 'Cari',
+    className = '',
     ...props
 }) => {
     return (
         <Input
             placeholder={placeholder}
             icon={<Search size={18} />}
+            className={`bg-[#f7f7f7] ${className}`}
             {...props}
         />
     );
