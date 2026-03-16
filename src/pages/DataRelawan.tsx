@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Plus, Upload, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Plus, Upload, ChevronLeft, ChevronRight, Loader2, X } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
@@ -355,6 +355,139 @@ const DataRelawan: React.FC = () => {
     const relawanActions = (row: RelawanData) => (
         <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
     );
+    const handleAddAssignment = () => {
+        setFormData(prev => ({
+            ...prev,
+            assignments: [
+                ...prev.assignments,
+                {
+                    id: Date.now().toString(),
+                    opd: '',
+                    kader: '',
+                    peran: '',
+                    detail: '',
+                    statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
+                    nomorSK: '',
+                    skId: ''
+                }
+            ]
+        }));
+    };
+
+    const handleRemoveAssignment = (index: number) => {
+        setFormData(prev => ({
+            ...prev,
+            assignments: prev.assignments.filter((_, i) => i !== index)
+        }));
+    };
+
+    const handleAssignmentChange = (index: number, field: string, value: string) => {
+        setFormData(prev => {
+            const newAssignments = [...prev.assignments];
+            newAssignments[index] = { ...newAssignments[index], [field]: value };
+            return { ...prev, assignments: newAssignments };
+        });
+    };
+
+    const renderAssignmentFields = (assignment: any, index: number, isReadOnly: boolean) => (
+        <div key={assignment.id} className="relative bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4 space-y-4">
+            {!isReadOnly && formData.assignments.length > 1 && (
+                <div className="flex justify-end -mt-2 -mr-2 mb-2">
+                    <button
+                        type="button"
+                        onClick={() => handleRemoveAssignment(index)}
+                        className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
+                        title="Hapus Penugasan"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+            )}
+            
+            <div className="grid grid-cols-3 gap-4 items-start">
+                <label className="text-lg font-medium text-gray-900 pt-2">OPD</label>
+                <div className="col-span-2">
+                    <AutocompleteInput
+                        name={`opd-${index}`}
+                        value={assignment.opd}
+                        options={opdOptions}
+                        onChange={(val) => handleAssignmentChange(index, 'opd', val)}
+                        placeholder="Cari nama OPD..."
+                        disabled={isReadOnly}
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 items-start">
+                <label className="text-lg font-medium text-gray-900 pt-2">Kader / Komunitas</label>
+                <div className="col-span-2">
+                    <AutocompleteInput
+                        name={`kader-${index}`}
+                        value={assignment.kader}
+                        options={komunitasOptions}
+                        onChange={(val) => handleAssignmentChange(index, 'kader', val)}
+                        placeholder="Cari nama Kader / Komunitas..."
+                        disabled={isReadOnly}
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 items-center">
+                <label className="text-lg font-medium text-gray-900">Peran/Jabatan</label>
+                <input
+                    type="text"
+                    value={assignment.peran}
+                    onChange={(e) => handleAssignmentChange(index, 'peran', e.target.value)}
+                    placeholder="Contoh: Ketua, Anggota, dll"
+                    disabled={isReadOnly}
+                    className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 items-center">
+                <label className="text-lg font-medium text-gray-900">Penugasan</label>
+                <input
+                    type="text"
+                    value={assignment.detail}
+                    onChange={(e) => handleAssignmentChange(index, 'detail', e.target.value)}
+                    placeholder="Detail Penugasan (Opsional)"
+                    disabled={isReadOnly}
+                    className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 items-center mt-2">
+                <label className="text-lg font-medium text-gray-900">Status Keaktifan</label>
+                <div className="col-span-2 flex items-center gap-6">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="radio"
+                            name={`statusKeaktifan-${index}`}
+                            value="Aktif"
+                            checked={assignment.statusKeaktifan === 'Aktif'}
+                            onChange={(e) => handleAssignmentChange(index, 'statusKeaktifan', e.target.value)}
+                            disabled={isReadOnly}
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
+                        />
+                        <span className="text-gray-700">Aktif</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                            type="radio"
+                            name={`statusKeaktifan-${index}`}
+                            value="Nonaktif"
+                            checked={assignment.statusKeaktifan === 'Nonaktif'}
+                            onChange={(e) => handleAssignmentChange(index, 'statusKeaktifan', e.target.value)}
+                            disabled={isReadOnly}
+                            className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
+                        />
+                        <span className="text-gray-700">Nonaktif</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    );
+
 
     return (
         <div className="space-y-6">
@@ -453,49 +586,9 @@ const DataRelawan: React.FC = () => {
                         </div>
                     ))}
 
-                    {/* Field Penugasan (OPD) - Autocomplete */}
-                    <div className="grid grid-cols-3 gap-4 items-start">
-                        <label className="text-lg font-medium text-gray-900 pt-2">OPD</label>
-                        <div className="col-span-2">
-                            <AutocompleteInput
-                                name="penugasan"
-                                value={formData.penugasan}
-                                options={opdOptions}
-                                onChange={(val) => setFormData(prev => ({ ...prev, penugasan: val }))}
-                                placeholder="Cari nama OPD..."
-                                warnMessage="OPD ini belum terdaftar di database. Silakan tambahkan di Manajemen OPD terlebih dahulu."
-                            />
-                        </div>
-                    </div>
+                    {/* Fields input otomatis Multiple Assignments dirender disini */}
 
-                    {/* Field Kader/Komunitas - Autocomplete */}
-                    <div className="grid grid-cols-3 gap-4 items-start">
-                        <label className="text-lg font-medium text-gray-900 pt-2">Kader / Komunitas</label>
-                        <div className="col-span-2">
-                            <AutocompleteInput
-                                name="kader"
-                                value={formData.kader}
-                                options={komunitasOptions}
-                                onChange={(val) => setFormData(prev => ({ ...prev, kader: val }))}
-                                placeholder="Cari nama Kader / Komunitas..."
-                                warnMessage="Kader ini belum terdaftar di database. Silakan tambahkan di Daftar Kader terlebih dahulu."
-                            />
-                        </div>
-                    </div>
-
-                    {/* ✨ Field Text Penugasan✨ */}
-                    <div className="grid grid-cols-3 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">Penugasan</label>
-                        <input
-                            type="text"
-                            name="detail_penugasan"
-                            value={formData.detail_penugasan}
-                            onChange={(e) => setFormData(prev => ({ ...prev, detail_penugasan: e.target.value }))}
-                            placeholder="Detail Penugasan"
-                            className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                    </div>
-
+                    {/* Menghilangkan field penugasan redundan teks */}
                     {/* Field Jenis Kelamin (dropdown) */}
                     <div className="grid grid-cols-3 gap-4 items-center">
                         <label className="text-lg font-medium text-gray-900">
@@ -512,12 +605,30 @@ const DataRelawan: React.FC = () => {
                             <option value="P">Perempuan (P)</option>
                         </select>
                     </div>
+                    {/* Daftar Penugasan Section */}
+                    <div className="pt-4 border-t border-gray-200">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Daftar Penugasan:</h3>
 
-                    <div className="flex justify-between pt-6">
-                        <Button type="button" onClick={() => setIsModalOpen(false)} className="bg-red-600 hover:bg-red-700 text-white px-8">Batal</Button>
-                        <Button type="submit" disabled={isSaving} className="bg-green-600 hover:bg-green-700 text-white px-8 disabled:opacity-70">
-                            {isSaving ? <><Loader2 size={16} className="animate-spin mr-1" />Menyimpan...</> : 'Simpan'
-                            }
+                        {formData.assignments.map((assignment, index) =>
+                            renderAssignmentFields(assignment, index, false)
+                        )}
+
+                        {/* Tambah Data Penugasan Button */}
+                        <div className="flex justify-center mt-4">
+                            <Button type="button" variant="primary" size="sm" onClick={handleAddAssignment}>
+                                <Plus size={16} />
+                                Tambah Data Penugasan
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* Action Button */}
+                    <div className="flex justify-end pt-6">
+                        <Button
+                            type="submit"
+                            className="bg-green-600 hover:bg-green-700 text-white px-12"
+                        >
+                            Simpan
                         </Button>
                     </div>
                 </form>

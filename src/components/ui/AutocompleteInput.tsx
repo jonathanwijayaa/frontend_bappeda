@@ -16,6 +16,7 @@ interface AutocompleteInputProps {
     /** Jika true, teks yang tidak cocok data akan menampilkan warning (bukan error) */
     warnIfNotFound?: boolean;
     warnMessage?: string;
+    disabled?: boolean;
 }
 
 const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
@@ -28,6 +29,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
     required = false,
     warnIfNotFound = true,
     warnMessage = 'Nilai ini tidak ditemukan di database. Pastikan ejaan sudah benar.',
+    disabled = false,
 }) => {
     const [inputValue, setInputValue] = useState(value);
     const [isOpen, setIsOpen] = useState(false);
@@ -98,7 +100,9 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
                 placeholder={placeholder}
                 required={required}
                 autoComplete="off"
+                disabled={disabled}
                 className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 text-sm transition-colors ${
+                    disabled ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200' :
                     showWarning
                         ? 'border-yellow-400 focus:ring-yellow-300'
                         : 'border-gray-300 focus:ring-blue-500'
