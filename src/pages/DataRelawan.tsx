@@ -51,6 +51,7 @@ const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
     kader: r.nama_kader || '-',
     jabatan: r.status_penugasan || '-',
     penugasan: r.nama_opd || r.penugasan || '-',  // nama OPD dari join, atau teks penugasan dari penugasan_relawan
+    jenisKelamin: r.jenis_kelamin || 'L',
     assignments: []
 });
 
@@ -91,6 +92,7 @@ const DataRelawan: React.FC = () => {
         kader: '',
         jabatan: '',
         penugasan: '',
+        jenisKelamin: 'L' as 'L' | 'P',
         assignments: [] as Assignment[]
     });
 
@@ -105,6 +107,7 @@ const DataRelawan: React.FC = () => {
             detailFormData.kader !== selectedRelawan.kader ||
             detailFormData.jabatan !== selectedRelawan.jabatan ||
             detailFormData.penugasan !== selectedRelawan.penugasan ||
+            detailFormData.jenisKelamin !== (selectedRelawan.jenisKelamin || 'L') ||
             JSON.stringify(detailFormData.assignments) !== JSON.stringify(selectedRelawan.assignments || [])
         );
     }, [selectedRelawan, detailFormData]);
@@ -249,6 +252,7 @@ const DataRelawan: React.FC = () => {
             kader: relawan.kader,
             jabatan: relawan.jabatan,
             penugasan: relawan.penugasan,
+            jenisKelamin: (relawan.jenisKelamin as 'L' | 'P') || 'L',
             assignments: relawan.assignments || []
         });
         setIsDetailModalOpen(true);
@@ -389,7 +393,19 @@ const DataRelawan: React.FC = () => {
         });
     };
 
-    const renderAssignmentFields = (assignment: any, index: number, isReadOnly: boolean) => (
+    const handleDetailAssignmentChange = (_index: number, _field: string, _value: string) => {
+        // Readonly helper untuk detail - tidak akan terpanggil karena disabled=true
+    };
+
+    const renderAssignmentFields = (
+        assignment: any, 
+        index: number, 
+        isReadOnly: boolean,
+        context: 'form' | 'detail' = 'form'
+    ) => {
+        const handleAssignChange = context === 'form' ? handleAssignmentChange : handleDetailAssignmentChange;
+        
+        return (
         <div key={assignment.id} className="relative bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4 space-y-4">
             {!isReadOnly && formData.assignments.length > 1 && (
                 <div className="flex justify-end -mt-2 -mr-2 mb-2">
@@ -411,7 +427,7 @@ const DataRelawan: React.FC = () => {
                         name={`opd-${index}`}
                         value={assignment.opd}
                         options={opdOptions}
-                        onChange={(val) => handleAssignmentChange(index, 'opd', val)}
+                        onChange={(val) => handleAssignChange(index, 'opd', val)}
                         placeholder="Cari nama OPD..."
                         disabled={isReadOnly}
                     />
@@ -425,7 +441,7 @@ const DataRelawan: React.FC = () => {
                         name={`kader-${index}`}
                         value={assignment.kader}
                         options={kaderOptions}
-                        onChange={(val) => handleAssignmentChange(index, 'kader', val)}
+                        onChange={(val) => handleAssignChange(index, 'kader', val)}
                         placeholder="Cari nama Kader / kader..."
                         disabled={isReadOnly}
                     />
@@ -437,7 +453,7 @@ const DataRelawan: React.FC = () => {
                 <input
                     type="text"
                     value={assignment.peran}
-                    onChange={(e) => handleAssignmentChange(index, 'peran', e.target.value)}
+                    onChange={(e) => handleAssignChange(index, 'peran', e.target.value)}
                     placeholder="Contoh: Ketua, Anggota, dll"
                     disabled={isReadOnly}
                     className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
@@ -449,7 +465,7 @@ const DataRelawan: React.FC = () => {
                 <input
                     type="text"
                     value={assignment.detail}
-                    onChange={(e) => handleAssignmentChange(index, 'detail', e.target.value)}
+                    onChange={(e) => handleAssignChange(index, 'detail', e.target.value)}
                     placeholder="Detail Penugasan (Opsional)"
                     disabled={isReadOnly}
                     className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
@@ -465,7 +481,7 @@ const DataRelawan: React.FC = () => {
                             name={`statusKeaktifan-${index}`}
                             value="Aktif"
                             checked={assignment.statusKeaktifan === 'Aktif'}
-                            onChange={(e) => handleAssignmentChange(index, 'statusKeaktifan', e.target.value)}
+                            onChange={(e) => handleAssignChange(index, 'statusKeaktifan', e.target.value)}
                             disabled={isReadOnly}
                             className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
                         />
@@ -477,7 +493,7 @@ const DataRelawan: React.FC = () => {
                             name={`statusKeaktifan-${index}`}
                             value="Nonaktif"
                             checked={assignment.statusKeaktifan === 'Nonaktif'}
-                            onChange={(e) => handleAssignmentChange(index, 'statusKeaktifan', e.target.value)}
+                            onChange={(e) => handleAssignChange(index, 'statusKeaktifan', e.target.value)}
                             disabled={isReadOnly}
                             className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
                         />
@@ -486,7 +502,8 @@ const DataRelawan: React.FC = () => {
                 </div>
             </div>
         </div>
-    );
+        );
+    };
 
 
     return (
@@ -638,14 +655,13 @@ const DataRelawan: React.FC = () => {
             <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Detail Relawan" subtitle="Informasi lengkap relawan" maxWidth="2xl">
                 {selectedRelawan && (
                     <div className="space-y-6">
+                        {/* Fields input teks biasa (readOnly) */}
                         {[
                             { label: 'Nama Relawan', name: 'namaRelawan', value: detailFormData.namaRelawan },
                             { label: 'NIK', name: 'nik', value: detailFormData.nik },
-                            { label: 'Alamat', name: 'alamat', value: detailFormData.alamat },
+                            { label: 'Alamat KTP', name: 'alamat', value: detailFormData.alamat },
                             { label: 'Kelurahan', name: 'kelurahan', value: detailFormData.kelurahan },
-                            { label: 'Kader', name: 'kader', value: detailFormData.kader },
                             { label: 'Jabatan', name: 'jabatan', value: detailFormData.jabatan },
-                            { label: 'Penugasan', name: 'penugasan', value: detailFormData.penugasan },
                         ].map(field => (
                             <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                                 <label className="text-lg font-medium text-gray-900">{field.label}</label>
@@ -653,30 +669,40 @@ const DataRelawan: React.FC = () => {
                                     type="text"
                                     value={field.value}
                                     onChange={(e) => setDetailFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
-                                    className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    readOnly
+                                    className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none"
                                 />
                             </div>
                         ))}
 
-                        {/* Riwayat Penugasan */}
-                        {detailFormData.assignments && detailFormData.assignments.length > 0 && (
-                            <div className="pt-4 border-t border-gray-200">
-                                <h3 className="text-lg font-semibold text-gray-800 mb-3">Riwayat Penugasan</h3>
-                                <div className="space-y-2">
-                                    {detailFormData.assignments.map((assignment) => (
-                                        <div key={assignment.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
-                                            <div>
-                                                <p className="font-medium text-gray-800">{assignment.opd}</p>
-                                                <p className="text-sm text-gray-500">Kader: {assignment.kader} · Peran: {assignment.peran} · SK: {assignment.nomorSK}</p>
-                                            </div>
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${assignment.statusKeaktifan === 'Aktif' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
-                                                {assignment.statusKeaktifan}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
+                        {/* Field Jenis Kelamin (dropdown - disabled) */}
+                        <div className="grid grid-cols-3 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">
+                                Jenis Kelamin
+                            </label>
+                            <select
+                                name="jenisKelamin"
+                                value={detailFormData.jenisKelamin}
+                                onChange={(e) => setDetailFormData(prev => ({ ...prev, jenisKelamin: e.target.value as 'L' | 'P' }))}
+                                disabled
+                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none bg-gray-50 text-gray-500 cursor-not-allowed"
+                            >
+                                <option value="L">Laki-laki (L)</option>
+                                <option value="P">Perempuan (P)</option>
+                            </select>
+                        </div>
+
+                        {/* Riwayat Penugasan Render Mirip Dengan Tambah form */}
+                        <div className="pt-4 border-t border-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Daftar Penugasan:</h3>
+                            {detailFormData.assignments && detailFormData.assignments.length > 0 ? (
+                                detailFormData.assignments.map((assignment, index) =>
+                                    renderAssignmentFields(assignment, index, true, 'detail')
+                                )
+                            ) : (
+                                <div className="text-center text-gray-500 italic py-4">Belum ada penugasan terdaftar.</div>
+                            )}
+                        </div>
                     </div>
                 )}
             </Modal>
