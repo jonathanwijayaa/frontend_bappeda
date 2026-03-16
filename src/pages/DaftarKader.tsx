@@ -246,7 +246,7 @@ const DaftarKader: React.FC = () => {
         try {
             setIsExporting(true);
             exportToPDF({
-                title: 'Daftar Kader / kader',
+                title: 'Daftar Kader',
                 columns: [
                     { header: 'NAMA KADER', dataKey: 'nama_kader' },
                     { header: 'OPD', dataKey: 'nama_opd' },
@@ -307,7 +307,7 @@ const DaftarKader: React.FC = () => {
             {/* Table */}
             <Card>
                 <div className="mb-4 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-gray-900">Daftar Kader / kader</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Daftar Kader</h2>
                     <Button variant="secondary" size="sm" onClick={handleExportPDF} disabled={isExporting}>
                         {isExporting ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />}
                         {isExporting ? 'Mengekspor...' : 'Ekspor'}
@@ -347,7 +347,7 @@ const DaftarKader: React.FC = () => {
             </Card>
 
             {/* Modal Tambah Kader */}
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Tambah Kader / kader Baru" subtitle="Pilih OPD terlebih dahulu, lalu isi detail kader" maxWidth="2xl">
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Tambah Kader Baru" subtitle="Pilih OPD terlebih dahulu, lalu isi detail kader" maxWidth="2xl">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Dropdown OPD */}
                     <div className="grid grid-cols-3 gap-4 items-center">
@@ -399,7 +399,7 @@ const DaftarKader: React.FC = () => {
             </Modal>
 
             {/* Detail Modal */}
-            <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Detail Kader / kader" subtitle="Edit informasi kader" maxWidth="2xl">
+            <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Detail Kader" subtitle="Edit informasi kader" maxWidth="2xl">
                 {selectedkader && (
                     <div className="space-y-6">
                         {/* OPD (read-only) */}
