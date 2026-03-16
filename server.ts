@@ -18,7 +18,7 @@ import komunitasRoutes from './src/routes/komunitasRoutes';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 // === MIDDLEWARE DASAR ===
 app.use(cors({
@@ -64,6 +64,13 @@ app.get('/', (req, res) => {
 });
 
 // === JALANKAN SERVER ===
-app.listen(PORT, () => {
-    console.log(`✅ Server berjalan di http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`
+    =============================================
+    ✅ Server berhasil dijalankan!
+    📍 Port: ${PORT}
+    🏠 Host: 0.0.0.0
+    🔗 Health Check: http://localhost:${PORT}/
+    =============================================
+    `);
 });
