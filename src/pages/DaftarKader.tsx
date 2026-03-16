@@ -1,100 +1,171 @@
-import React, { useState, useMemo } from 'react';
-import { Plus, FileDown, Upload, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import { Plus, FileDown, Loader2, ChevronLeft, ChevronRight, Upload } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
 import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
-import UploadExcelModal from '../components/ui/UploadExcelModal';
 import Toast, { ToastType } from '../components/ui/Toast';
-import { KaderData } from '../types/kader.types';
-import { mockKaderData } from '../data/kader.data';
-import { mockSKData } from '../data/sk.data';
+import UploadExcelModal from '../components/ui/UploadExcelModal';
 import { exportToPDF } from '../utils/exportToPDF';
+import { apiFetch } from '../utils/api';
+
+// Interface sesuai response backend
+interface KomunitasData {
+    komunitas_id: number;
+    nama_komunitas: string;
+    deskripsi: string | null;
+    pic: string | null;
+    nama_opd: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+interface OPDOption {
+    opd_id: number;
+    nama_opd: string;
+}
 
 const DaftarKader: React.FC = () => {
+    const [komunitasList, setKomunitasList] = useState<KomunitasData[]>([]);
+    const [opdList, setOpdList] = useState<OPDOption[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
-    const [selectedKader, setSelectedKader] = useState<KaderData | null>(null);
+    const [selectedKomunitas, setSelectedKomunitas] = useState<KomunitasData | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [isExporting, setIsExporting] = useState<boolean>(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const itemsPerPage = 5;
 
     const [formData, setFormData] = useState({
-        namaKader: '',
-        status: '',
-        pic: '',
-        kontak: ''
+        opd_id: '',
+        nama_komunitas: '',
+        deskripsi: '',
+        pic: ''
     });
 
     const [detailFormData, setDetailFormData] = useState({
-        namaKader: '',
-        status: '',
-        pic: '',
-        kontak: ''
+        nama_komunitas: '',
+        deskripsi: '',
+        pic: ''
     });
 
     const hasChanges = useMemo(() => {
-        if (!selectedKader) return false;
+        if (!selectedKomunitas) return false;
         return (
-            detailFormData.namaKader !== selectedKader.namaKader ||
-            detailFormData.status !== selectedKader.status ||
-            detailFormData.pic !== selectedKader.pic ||
-            detailFormData.kontak !== selectedKader.kontak
+            detailFormData.nama_komunitas !== (selectedKomunitas.nama_komunitas || '') ||
+            detailFormData.deskripsi !== (selectedKomunitas.deskripsi || '') ||
+            detailFormData.pic !== (selectedKomunitas.pic || '')
         );
-    }, [selectedKader, detailFormData]);
+    }, [selectedKomunitas, detailFormData]);
 
-    // Pagination logic
-    const filteredData = useMemo(() => {
-        return mockKaderData.filter(kader =>
-            kader.namaKader.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [searchTerm]);
+    // ── Fetch Data ─────────────────────────────
+    const fetchKomunitas = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const res = await apiFetch('/komunitas');
+            const result = await res.json();
+            if (result.success) {
+                setKomunitasList(result.data);
+            } else {
+                setToast({ message: result.message || 'Gagal memuat data kader', type: 'error' });
+            }
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    const fetchOPD = useCallback(async () => {
+        try {
+            const res = await apiFetch('/opd');
+            const result = await res.json();
+            if (result.success) {
+                setOpdList(result.data.map((o: any) => ({ opd_id: o.opd_id, nama_opd: o.nama_opd })));
+            }
+        } catch {
+            console.error('Gagal mengambil daftar OPD untuk dropdown');
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchKomunitas();
+        fetchOPD();
+    }, [fetchKomunitas, fetchOPD]);
+
+    // ── Pagination & Filter ─────────────────────
+    const filteredData = useMemo(() =>
+        komunitasList.filter(k =>
+            k.nama_komunitas.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            k.nama_opd.toLowerCase().includes(searchTerm.toLowerCase())
+        ), [komunitasList, searchTerm]);
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentData = filteredData.slice(startIndex, endIndex);
-
-    const handlePageChange = (page: number) => {
-        setCurrentPage(page);
-    };
+    const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
     const columns = [
-        { header: 'NAMA KADER', accessor: 'namaKader' as keyof KaderData },
-        { header: 'STATUS', accessor: 'status' as keyof KaderData },
-        { header: 'PIC', accessor: 'pic' as keyof KaderData },
-        { header: 'Kontak', accessor: 'kontak' as keyof KaderData },
+        { header: 'NAMA KADER/KOMUNITAS', accessor: 'nama_komunitas' as keyof KomunitasData },
+        {
+            header: 'STATUS',
+            render: (row: KomunitasData) => (
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {row.is_active ? 'Aktif' : 'Tidak Aktif'}
+                </span>
+            )
+        },
+        { header: 'OPD', accessor: 'nama_opd' as keyof KomunitasData },
+        { header: 'PIC', render: (row: KomunitasData) => <span>{row.pic || '-'}</span> },
+        { header: 'DESKRIPSI', render: (row: KomunitasData) => (
+            <span className="truncate max-w-[200px] block" title={row.deskripsi || ''}>{row.deskripsi || '-'}</span>
+        )},
     ];
 
-    const handleDetailClick = (kader: KaderData) => {
-        setSelectedKader(kader);
+    const handleDetailClick = (kader: KomunitasData) => {
+        setSelectedKomunitas(kader);
         setDetailFormData({
-            namaKader: kader.namaKader,
-            status: kader.status,
-            pic: kader.pic,
-            kontak: kader.kontak
+            nama_komunitas: kader.nama_komunitas,
+            deskripsi: kader.deskripsi || '',
+            pic: kader.pic || ''
         });
         setIsDetailModalOpen(true);
     };
 
-    const handleToggleStatus = (kader: KaderData) => {
-        setSelectedKader(kader);
+    const handleToggleStatus = (kader: KomunitasData) => {
+        setSelectedKomunitas(kader);
         setIsConfirmModalOpen(true);
     };
 
-    const handleConfirmToggleStatus = () => {
-        console.log('Toggling status for Kader:', selectedKader);
-        setIsConfirmModalOpen(false);
-        setSelectedKader(null);
+    const handleConfirmToggleStatus = async () => {
+        if (!selectedKomunitas) return;
+        try {
+            const res = await apiFetch(`/komunitas/${selectedKomunitas.komunitas_id}/status`, {
+                method: 'PATCH',
+                body: JSON.stringify({ is_active: !selectedKomunitas.is_active })
+            });
+            const result = await res.json();
+            if (result.success) {
+                setToast({ message: result.message, type: 'success' });
+                fetchKomunitas();
+            } else {
+                setToast({ message: result.message || 'Gagal mengubah status', type: 'error' });
+            }
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } finally {
+            setIsConfirmModalOpen(false);
+            setSelectedKomunitas(null);
+        }
     };
 
-    const actions = (row: KaderData) => (
+    const actions = (row: KomunitasData) => (
         <>
             <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
             <Button
@@ -102,95 +173,115 @@ const DaftarKader: React.FC = () => {
                 size="sm"
                 onClick={() => handleToggleStatus(row)}
             >
-                {row.status === 'Aktif' ? 'Nonaktif' : 'Aktifkan'}
+                {row.is_active ? 'Nonaktif' : 'Aktifkan'}
             </Button>
         </>
     );
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleDetailInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = e.target;
-        setDetailFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    const handleDetailSave = () => {
-        console.log('Saving detail changes:', detailFormData);
-        setIsDetailModalOpen(false);
-    };
-
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log('Form data:', formData);
-        setIsModalOpen(false);
-        setFormData({
-            namaKader: '',
-            status: '',
-            pic: '',
-            kontak: ''
-        });
+        if (!formData.opd_id || !formData.nama_komunitas) return;
+        setIsSaving(true);
+        try {
+            const res = await apiFetch('/komunitas', {
+                method: 'POST',
+                body: JSON.stringify({
+                    opd_id: Number(formData.opd_id),
+                    nama_komunitas: formData.nama_komunitas,
+                    deskripsi: formData.deskripsi || null,
+                    pic: formData.pic || null
+                })
+            });
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                setToast({ message: errData.message || `Server error: ${res.status}`, type: 'error' });
+                return;
+            }
+
+            const result = await res.json();
+            if (result.success) {
+                setToast({ message: result.message, type: 'success' });
+                setIsModalOpen(false);
+                setFormData({ opd_id: '', nama_komunitas: '', deskripsi: '', pic: '' });
+                fetchKomunitas();
+            } else {
+                setToast({ message: result.message || 'Gagal menambahkan kader', type: 'error' });
+            }
+        } catch (err: any) {
+            setToast({ message: `Koneksi gagal: ${err?.message || 'unknown error'}`, type: 'error' });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
-    const handleCancel = () => {
-        setIsModalOpen(false);
-        setFormData({
-            namaKader: '',
-            status: '',
-            pic: '',
-            kontak: ''
-        });
+    const handleDetailSave = async () => {
+        if (!selectedKomunitas) return;
+        setIsSaving(true);
+        try {
+            const res = await apiFetch(`/komunitas/${selectedKomunitas.komunitas_id}`, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    nama_komunitas: detailFormData.nama_komunitas,
+                    deskripsi: detailFormData.deskripsi || null,
+                    pic: detailFormData.pic || null
+                })
+            });
+            const result = await res.json();
+            if (result.success) {
+                setToast({ message: result.message, type: 'success' });
+                setIsDetailModalOpen(false);
+                fetchKomunitas();
+            } else {
+                setToast({ message: result.message || 'Gagal memperbarui data', type: 'error' });
+            }
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleExportPDF = async () => {
         try {
             setIsExporting(true);
-
-            // Prepare data for export
-            const exportData = filteredData.map(kader => ({
-                namaKader: kader.namaKader,
-                status: kader.status,
-                pic: kader.pic,
-                kontak: kader.kontak
-            }));
-
-            // Export to PDF
             exportToPDF({
-                title: 'Daftar Kader',
+                title: 'Daftar Kader / Komunitas',
                 columns: [
-                    { header: 'NAMA KADER', dataKey: 'namaKader' },
-                    { header: 'STATUS', dataKey: 'status' },
+                    { header: 'NAMA KADER', dataKey: 'nama_komunitas' },
+                    { header: 'OPD', dataKey: 'nama_opd' },
                     { header: 'PIC', dataKey: 'pic' },
-                    { header: 'KONTAK', dataKey: 'kontak' }
+                    { header: 'DESKRIPSI', dataKey: 'deskripsi' }
                 ],
-                data: exportData,
+                data: filteredData.map(k => ({ ...k, pic: k.pic || '-', deskripsi: k.deskripsi || '-' })),
                 filename: `daftar-kader-${new Date().toISOString().split('T')[0]}.pdf`
             });
-
             setToast({ message: 'Data berhasil diekspor ke PDF', type: 'success' });
-        } catch (error) {
-            console.error('Export error:', error);
-            setToast({ message: 'Gagal mengekspor data ke PDF', type: 'error' });
+        } catch {
+            setToast({ message: 'Gagal mengekspor data', type: 'error' });
         } finally {
             setIsExporting(false);
         }
     };
-
-    const handleExcelUploadConfirm = (data: any[]) => {
-        console.log('Excel data confirmed:', data);
-        // Here you would typically add the data to your state/database
-        // For now, just show a success message
-        setToast({ message: `Berhasil menambahkan ${data.length} data kader`, type: 'success' });
-        setIsUploadModalOpen(false);
-    };
+    const handleExcelUploadConfirm = async (data: any[]) => {
+            try {
+                const res = await apiFetch('/komunitas/bulk', {
+                    method: 'POST',
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    setToast({ message: result.message, type: 'success' });
+                    fetchKomunitas();
+                } else {
+                    setToast({ message: result.message || 'Gagal import Excel', type: 'error' });
+                }
+            } catch {
+                setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+            } finally {
+                setIsUploadModalOpen(false);
+            }
+        };
 
     return (
         <div className="space-y-6">
@@ -199,7 +290,7 @@ const DaftarKader: React.FC = () => {
                 <div className="flex gap-3">
                     <Button variant="primary" onClick={() => setIsModalOpen(true)}>
                         <Plus size={18} />
-                        Ajukan Kader Baru
+                        Tambah Kader Baru
                     </Button>
                     <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
                         <Upload size={18} />
@@ -208,7 +299,7 @@ const DaftarKader: React.FC = () => {
                 </div>
                 <SearchInput
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                     className="w-80"
                 />
             </div>
@@ -216,272 +307,130 @@ const DaftarKader: React.FC = () => {
             {/* Table */}
             <Card>
                 <div className="mb-4 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-gray-900">Daftar Kader</h2>
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleExportPDF}
-                        disabled={isExporting}
-                    >
-                        {isExporting ? (
-                            <Loader2 size={16} className="animate-spin" />
-                        ) : (
-                            <FileDown size={16} />
-                        )}
+                    <h2 className="text-xl font-semibold text-gray-900">Daftar Kader / Komunitas</h2>
+                    <Button variant="secondary" size="sm" onClick={handleExportPDF} disabled={isExporting}>
+                        {isExporting ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />}
                         {isExporting ? 'Mengekspor...' : 'Ekspor'}
                     </Button>
                 </div>
 
-                <Table columns={columns} data={currentData} actions={actions} minRows={5} />
+                {isLoading ? (
+                    <div className="flex items-center justify-center h-40">
+                        <Loader2 size={28} className="animate-spin text-gray-400" />
+                        <span className="ml-3 text-gray-500">Memuat data kader...</span>
+                    </div>
+                ) : (
+                    <Table columns={columns} data={currentData} actions={actions} minRows={5} />
+                )}
 
                 {/* Pagination */}
-                <div className="mt-4 flex justify-between items-center">
-                    <div className="text-sm text-gray-500">
-                        Menampilkan {startIndex + 1}-{Math.min(endIndex, filteredData.length)} dari {filteredData.length} Kader
-                    </div>
-                    <div className="flex gap-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handlePageChange(currentPage - 1)}
-                            disabled={currentPage === 1}
-                            className="disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <ChevronLeft size={16} />
-                            Sebelumnya
-                        </Button>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                            <Button
-                                key={page}
-                                variant={currentPage === page ? "primary" : "outline"}
-                                size="sm"
-                                onClick={() => handlePageChange(page)}
-                                className="min-w-[40px]"
-                            >
-                                {page}
+                {!isLoading && filteredData.length > 0 && (
+                    <div className="mt-4 flex justify-between items-center">
+                        <div className="text-sm text-gray-500">
+                            Menampilkan {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredData.length)} dari {filteredData.length} Kader
+                        </div>
+                        <div className="flex gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} className="disabled:opacity-50 disabled:cursor-not-allowed">
+                                <ChevronLeft size={16} /> Sebelumnya
                             </Button>
-                        ))}
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handlePageChange(currentPage + 1)}
-                            disabled={currentPage === totalPages}
-                            className="disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Selanjutnya
-                            <ChevronRight size={16} />
-                        </Button>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                                <Button key={page} variant={currentPage === page ? "primary" : "outline"} size="sm" onClick={() => setCurrentPage(page)} className="min-w-[40px]">
+                                    {page}
+                                </Button>
+                            ))}
+                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages} className="disabled:opacity-50 disabled:cursor-not-allowed">
+                                Selanjutnya <ChevronRight size={16} />
+                            </Button>
+                        </div>
                     </div>
-                </div>
+                )}
             </Card>
 
-            {/* Add Kader Modal */}
-            <Modal
-                isOpen={isModalOpen}
-                onClose={handleCancel}
-                title="Tambah Data"
-                subtitle="Halaman untuk menambah Kader"
-                maxWidth="2xl"
-            >
+            {/* Modal Tambah Kader */}
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Tambah Kader / Komunitas Baru" subtitle="Pilih OPD terlebih dahulu, lalu isi detail kader" maxWidth="2xl">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Nama Kader */}
+                    {/* Dropdown OPD */}
                     <div className="grid grid-cols-3 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">Nama Kader</label>
-                        <input
-                            type="text"
-                            name="namaKader"
-                            value={formData.namaKader}
-                            onChange={handleInputChange}
-                            placeholder="Nama Kader"
-                            className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        <label className="text-lg font-medium text-gray-900">
+                            Pilih OPD <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                            name="opd_id"
+                            value={formData.opd_id}
+                            onChange={(e) => setFormData(prev => ({ ...prev, opd_id: e.target.value }))}
                             required
-                        />
+                            className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                        >
+                            <option value="">-- Pilih OPD --</option>
+                            {opdList.map(opd => (
+                                <option key={opd.opd_id} value={opd.opd_id}>{opd.nama_opd}</option>
+                            ))}
+                        </select>
                     </div>
 
-                    {/* Status */}
-                    <div className="grid grid-cols-3 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">Status</label>
-                        <input
-                            type="text"
-                            name="status"
-                            value={formData.status}
-                            onChange={handleInputChange}
-                            placeholder="Status"
-                            className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
+                    {[
+                        { label: 'Nama Kader/Komunitas', name: 'nama_komunitas', required: true, placeholder: 'Nama Kader atau Komunitas' },
+                        { label: 'PIC', name: 'pic', required: false, placeholder: 'Person in Charge (opsional)' },
+                        { label: 'Deskripsi', name: 'deskripsi', required: false, placeholder: 'Deskripsi singkat (opsional)' },
+                    ].map(field => (
+                        <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">
+                                {field.label}{field.required && <span className="text-red-500 ml-1">*</span>}
+                            </label>
+                            <input
+                                type="text"
+                                name={field.name}
+                                value={(formData as any)[field.name]}
+                                onChange={(e) => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                placeholder={field.placeholder}
+                                required={field.required}
+                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    ))}
 
-                    {/* PIC */}
-                    <div className="grid grid-cols-3 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">PIC</label>
-                        <input
-                            type="text"
-                            name="pic"
-                            value={formData.pic}
-                            onChange={handleInputChange}
-                            placeholder="PIC"
-                            className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-
-                    {/* Kontak */}
-                    <div className="grid grid-cols-3 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">Kontak</label>
-                        <input
-                            type="text"
-                            name="kontak"
-                            value={formData.kontak}
-                            onChange={handleInputChange}
-                            placeholder="Kontak"
-                            className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-
-                    {/* Action Buttons */}
                     <div className="flex justify-between pt-6">
-                        <Button
-                            type="button"
-                            onClick={handleCancel}
-                            className="bg-red-600 hover:bg-red-700 text-white px-8"
-                        >
-                            Batal
+                        <Button type="button" onClick={() => setIsModalOpen(false)} className="bg-red-600 hover:bg-red-700 text-white px-8">Batal</Button>
+                        <Button type="submit" disabled={isSaving} className="bg-green-600 hover:bg-green-700 text-white px-8 disabled:opacity-70">
+                            {isSaving ? <><Loader2 size={16} className="animate-spin mr-1" />Menyimpan...</> : 'Simpan'}
                         </Button>
-                        <Button
-                            type="submit"
-                            className="bg-green-600 hover:bg-green-700 text-white px-8"
-                        >
-                            Simpan
-                        </Button>
-                    </div>
-
-                    {/* Footer Info */}
-                    <div className="pt-4 border-t border-gray-200 space-y-1">
-                        <div className="flex gap-2 text-sm">
-                            <span className="font-medium">Tanggal Dibuat</span>
-                            <span>-</span>
-                        </div>
-                        <div className="flex gap-2 text-sm italic text-gray-500">
-                            <span>Terakhir di-update</span>
-                            <span>-</span>
-                        </div>
                     </div>
                 </form>
             </Modal>
 
             {/* Detail Modal */}
-            <Modal
-                isOpen={isDetailModalOpen}
-                onClose={() => setIsDetailModalOpen(false)}
-                title="Detail"
-                subtitle="Halaman untuk melihat detail Kader"
-                maxWidth="2xl"
-            >
-                {selectedKader && (
+            <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Detail Kader / Komunitas" subtitle="Edit informasi kader" maxWidth="2xl">
+                {selectedKomunitas && (
                     <div className="space-y-6">
-                        {/* Nama Kader */}
+                        {/* OPD (read-only) */}
                         <div className="grid grid-cols-3 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">Nama Kader</label>
-                            <input
-                                type="text"
-                                name="namaKader"
-                                value={detailFormData.namaKader}
-                                onChange={handleDetailInputChange}
-                                placeholder="Nama Kader"
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
+                            <label className="text-lg font-medium text-gray-900">OPD</label>
+                            <input type="text" value={selectedKomunitas.nama_opd} disabled className="col-span-2 px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 italic" />
                         </div>
 
-                        {/* Status */}
-                        <div className="grid grid-cols-3 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">Status</label>
-                            <input
-                                type="text"
-                                name="status"
-                                value={detailFormData.status}
-                                onChange={handleDetailInputChange}
-                                placeholder="Status"
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        {/* PIC */}
-                        <div className="grid grid-cols-3 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">PIC</label>
-                            <input
-                                type="text"
-                                name="pic"
-                                value={detailFormData.pic}
-                                onChange={handleDetailInputChange}
-                                placeholder="PIC"
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        {/* Kontak */}
-                        <div className="grid grid-cols-3 gap-4 items-center">
-                            <label className="text-lg font-medium text-gray-900">Kontak</label>
-                            <input
-                                type="text"
-                                name="kontak"
-                                value={detailFormData.kontak}
-                                onChange={handleDetailInputChange}
-                                placeholder="Kontak"
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        {/* Daftar SK Terkait */}
-                        <div className="grid grid-cols-3 gap-4 items-start">
-                            <label className="text-lg font-medium text-gray-900">Daftar SK Terkait</label>
-                            <div className="col-span-2">
-                                {(() => {
-                                    const relatedSKs = mockSKData.filter(sk => sk.namaKader === selectedKader.namaKader);
-                                    if (relatedSKs.length === 0) {
-                                        return <p className="text-sm text-gray-500 italic">Tidak ada SK terkait</p>;
-                                    }
-                                    return (
-                                        <ul className="space-y-2">
-                                            {relatedSKs.map(sk => (
-                                                <li key={sk.id}>
-                                                    <Link
-                                                        to={`/surat-keputusan?highlight=${sk.id}`}
-                                                        className="text-blue-600 hover:text-blue-800 hover:underline text-sm"
-                                                    >
-                                                        {sk.nomorSK}
-                                                    </Link>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    );
-                                })()}
+                        {[
+                            { label: 'Nama Kader/Komunitas', name: 'nama_komunitas' },
+                            { label: 'PIC', name: 'pic' },
+                            { label: 'Deskripsi', name: 'deskripsi' },
+                        ].map(field => (
+                            <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
+                                <label className="text-lg font-medium text-gray-900">{field.label}</label>
+                                <input
+                                    type="text"
+                                    value={(detailFormData as any)[field.name]}
+                                    onChange={(e) => setDetailFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                    className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
                             </div>
-                        </div>
+                        ))}
 
-                        {/* Action Button */}
-                        <div className="flex justify-end pt-6">
-                            <Button
-                                type="button"
-                                onClick={handleDetailSave}
-                                disabled={!hasChanges}
-                                className="bg-green-600 hover:bg-green-700 text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Simpan
+                        <div className="flex justify-between pt-6 border-t border-gray-100">
+                            <div className="text-sm text-gray-400 italic">
+                                Dibuat: {new Date(selectedKomunitas.created_at).toLocaleString('id-ID')}
+                            </div>
+                            <Button onClick={handleDetailSave} disabled={!hasChanges || isSaving} className="bg-green-600 hover:bg-green-700 text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed">
+                                {isSaving ? <><Loader2 size={16} className="animate-spin mr-1" />Menyimpan...</> : 'Simpan Perubahan'}
                             </Button>
-                        </div>
-
-                        {/* Footer Info */}
-                        <div className="pt-4 border-t border-gray-200 space-y-1">
-                            <div className="flex gap-2 text-sm">
-                                <span className="font-medium">Tanggal Dibuat</span>
-                                <span>Senin, 01-01-2021 07:07:07</span>
-                            </div>
-                            <div className="flex gap-2 text-sm italic text-gray-500">
-                                <span>Terakhir di-update</span>
-                                <span>Senin, 23-11-2025 13:13:13</span>
-                            </div>
                         </div>
                     </div>
                 )}
@@ -492,42 +441,26 @@ const DaftarKader: React.FC = () => {
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 title="Konfirmasi"
-                subtitle={selectedKader?.status === 'Aktif'
-                    ? "Apakah Anda yakin ingin menonaktifkan Kader ini?"
-                    : "Apakah Anda yakin ingin mengaktifkan Kader ini?"}
+                subtitle={selectedKomunitas?.is_active ? "Apakah Anda yakin ingin menonaktifkan kader/komunitas ini?" : "Apakah Anda yakin ingin mengaktifkan kader/komunitas ini?"}
                 maxWidth="md"
                 showCloseButton={false}
             >
-                {selectedKader && (
+                {selectedKomunitas && (
                     <div className="space-y-6">
                         <div className="text-center py-4">
                             <p className="text-lg text-gray-700">
-                                Anda akan {selectedKader.status === 'Aktif' ? 'menonaktifkan' : 'mengaktifkan'} <span className="font-semibold">{selectedKader.namaKader}</span>
+                                Anda akan {selectedKomunitas.is_active ? 'menonaktifkan' : 'mengaktifkan'}{' '}
+                                <span className="font-semibold">{selectedKomunitas.nama_komunitas}</span>
                             </p>
                         </div>
-
-                        {/* Action Buttons */}
                         <div className="flex justify-center gap-4 pt-6">
-                            <Button
-                                type="button"
-                                onClick={() => setIsConfirmModalOpen(false)}
-                                className="bg-gray-500 hover:bg-gray-600 text-white px-8"
-                            >
-                                Batal
-                            </Button>
-                            <Button
-                                type="button"
-                                onClick={handleConfirmToggleStatus}
-                                className="bg-red-600 hover:bg-red-700 text-white px-8"
-                            >
-                                Lanjutkan
-                            </Button>
+                            <Button type="button" onClick={() => setIsConfirmModalOpen(false)} className="bg-gray-500 hover:bg-gray-600 text-white px-8">Batal</Button>
+                            <Button type="button" onClick={handleConfirmToggleStatus} className="bg-red-600 hover:bg-red-700 text-white px-8">Lanjutkan</Button>
                         </div>
                     </div>
                 )}
             </Modal>
-
-            {/* Upload Excel Modal */}
+                 {/* Upload Excel Modal */}
             <UploadExcelModal
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
@@ -537,14 +470,8 @@ const DaftarKader: React.FC = () => {
                 dataType="kader"
             />
 
-            {/* Toast Notification */}
-            {toast && (
-                <Toast
-                    message={toast.message}
-                    type={toast.type}
-                    onClose={() => setToast(null)}
-                />
-            )}
+            {/* Toast */}
+            {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
 };

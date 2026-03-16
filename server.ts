@@ -12,14 +12,23 @@ import relawanRoutes from './src/routes/relawanRoutes';
 import skRoutes from './src/routes/skRoutes';
 import bpjsRoutes from './src/routes/bpjsRoutes';
 import logRoutes from './src/routes/logRoutes';
+import saranRoutes from './src/routes/saranRoutes';
+import komunitasRoutes from './src/routes/komunitasRoutes';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 // === MIDDLEWARE DASAR ===
-app.use(cors());                   // Izinkan frontend akses API
+app.use(cors({
+    origin: [
+        /^http:\/\/localhost:\d+$/,     // Izinkan semua port di localhost (contoh: localhost:3000, localhost:5173)
+        /^http:\/\/127\.0\.0\.1:\d+$/,  // Izinkan juga kalau pakai IP lokal 127.0.0.1
+        'https://frontend-bappeda.vercel.app' // link vercel
+    ],
+    credentials: true // Wajib ditambah kalau API kamu pakai token/cookies untuk login
+}));                   // Izinkan frontend akses API
 app.use(express.json());           // Parse body JSON dari request
 
 // === DAFTARKAN SEMUA ROUTE ===
@@ -43,12 +52,25 @@ app.use('/api/relawan', relawanRoutes);
 // 5. BPJS Routes
 app.use('/api/bpjs', bpjsRoutes);
 
+// 6. Saran Routes
+app.use('/api/saran', saranRoutes);
+
+// 7. Komunitas Routes
+app.use('/api/komunitas', komunitasRoutes);
+
 // === TEST ENDPOINT ===
 app.get('/', (req, res) => {
     res.json({ message: '🚀 Backend Bappeda API berjalan!' });
 });
 
 // === JALANKAN SERVER ===
-app.listen(PORT, () => {
-    console.log(`✅ Server berjalan di http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`
+    =============================================
+    ✅ Server berhasil dijalankan!
+    📍 Port: ${PORT}
+    🏠 Host: 0.0.0.0
+    🔗 Health Check: http://localhost:${PORT}/
+    =============================================
+    `);
 });
