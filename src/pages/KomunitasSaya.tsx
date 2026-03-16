@@ -2,13 +2,13 @@ import { mockRelawanData } from '../data/relawan.data';
 import Card from '../components/ui/Card';
 import RelawanMenu from '../components/RelawanMenu';
 
-const KomunitasSaya = () => {
+const kaderSaya = () => {
     // Get relawan data based on logged in user
     const relawanData = mockRelawanData.find(r => r.nik === '3201012345670001') || mockRelawanData[0];
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <RelawanMenu title="Komunitas Saya" />
+            <RelawanMenu title="kader Saya" />
 
             {/* Content */}
             <div className="px-4 py-5 space-y-4">
@@ -106,4 +106,4 @@ const KomunitasSaya = () => {
     );
 };
 
-export default KomunitasSaya;
+export default kaderSaya;

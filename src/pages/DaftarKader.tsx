@@ -11,9 +11,9 @@ import { exportToPDF } from '../utils/exportToPDF';
 import { apiFetch } from '../utils/api';
 
 // Interface sesuai response backend
-interface KomunitasData {
-    komunitas_id: number;
-    nama_komunitas: string;
+interface kaderData {
+    kader_id: number;
+    nama_kader: string;
     deskripsi: string | null;
     pic: string | null;
     nama_opd: string;
@@ -28,7 +28,7 @@ interface OPDOption {
 }
 
 const DaftarKader: React.FC = () => {
-    const [komunitasList, setKomunitasList] = useState<KomunitasData[]>([]);
+    const [kaderList, setkaderList] = useState<kaderData[]>([]);
     const [opdList, setOpdList] = useState<OPDOption[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -37,7 +37,7 @@ const DaftarKader: React.FC = () => {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
-    const [selectedKomunitas, setSelectedKomunitas] = useState<KomunitasData | null>(null);
+    const [selectedkader, setSelectedkader] = useState<kaderData | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [isExporting, setIsExporting] = useState<boolean>(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
@@ -45,34 +45,34 @@ const DaftarKader: React.FC = () => {
 
     const [formData, setFormData] = useState({
         opd_id: '',
-        nama_komunitas: '',
+        nama_kader: '',
         deskripsi: '',
         pic: ''
     });
 
     const [detailFormData, setDetailFormData] = useState({
-        nama_komunitas: '',
+        nama_kader: '',
         deskripsi: '',
         pic: ''
     });
 
     const hasChanges = useMemo(() => {
-        if (!selectedKomunitas) return false;
+        if (!selectedkader) return false;
         return (
-            detailFormData.nama_komunitas !== (selectedKomunitas.nama_komunitas || '') ||
-            detailFormData.deskripsi !== (selectedKomunitas.deskripsi || '') ||
-            detailFormData.pic !== (selectedKomunitas.pic || '')
+            detailFormData.nama_kader !== (selectedkader.nama_kader || '') ||
+            detailFormData.deskripsi !== (selectedkader.deskripsi || '') ||
+            detailFormData.pic !== (selectedkader.pic || '')
         );
-    }, [selectedKomunitas, detailFormData]);
+    }, [selectedkader, detailFormData]);
 
     // ── Fetch Data ─────────────────────────────
-    const fetchKomunitas = useCallback(async () => {
+    const fetchkader = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await apiFetch('/komunitas');
+            const res = await apiFetch('/kader');
             const result = await res.json();
             if (result.success) {
-                setKomunitasList(result.data);
+                setkaderList(result.data);
             } else {
                 setToast({ message: result.message || 'Gagal memuat data kader', type: 'error' });
             }
@@ -96,64 +96,64 @@ const DaftarKader: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        fetchKomunitas();
+        fetchkader();
         fetchOPD();
-    }, [fetchKomunitas, fetchOPD]);
+    }, [fetchkader, fetchOPD]);
 
     // ── Pagination & Filter ─────────────────────
     const filteredData = useMemo(() =>
-        komunitasList.filter(k =>
-            k.nama_komunitas.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        kaderList.filter(k =>
+            k.nama_kader.toLowerCase().includes(searchTerm.toLowerCase()) ||
             k.nama_opd.toLowerCase().includes(searchTerm.toLowerCase())
-        ), [komunitasList, searchTerm]);
+        ), [kaderList, searchTerm]);
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
     const columns = [
-        { header: 'NAMA KADER/KOMUNITAS', accessor: 'nama_komunitas' as keyof KomunitasData },
+        { header: 'NAMA KADER/kader', accessor: 'nama_kader' as keyof kaderData },
         {
             header: 'STATUS',
-            render: (row: KomunitasData) => (
+            render: (row: kaderData) => (
                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                     {row.is_active ? 'Aktif' : 'Tidak Aktif'}
                 </span>
             )
         },
-        { header: 'OPD', accessor: 'nama_opd' as keyof KomunitasData },
-        { header: 'PIC', render: (row: KomunitasData) => <span>{row.pic || '-'}</span> },
-        { header: 'DESKRIPSI', render: (row: KomunitasData) => (
+        { header: 'OPD', accessor: 'nama_opd' as keyof kaderData },
+        { header: 'PIC', render: (row: kaderData) => <span>{row.pic || '-'}</span> },
+        { header: 'DESKRIPSI', render: (row: kaderData) => (
             <span className="truncate max-w-[200px] block" title={row.deskripsi || ''}>{row.deskripsi || '-'}</span>
         )},
     ];
 
-    const handleDetailClick = (kader: KomunitasData) => {
-        setSelectedKomunitas(kader);
+    const handleDetailClick = (kader: kaderData) => {
+        setSelectedkader(kader);
         setDetailFormData({
-            nama_komunitas: kader.nama_komunitas,
+            nama_kader: kader.nama_kader,
             deskripsi: kader.deskripsi || '',
             pic: kader.pic || ''
         });
         setIsDetailModalOpen(true);
     };
 
-    const handleToggleStatus = (kader: KomunitasData) => {
-        setSelectedKomunitas(kader);
+    const handleToggleStatus = (kader: kaderData) => {
+        setSelectedkader(kader);
         setIsConfirmModalOpen(true);
     };
 
     const handleConfirmToggleStatus = async () => {
-        if (!selectedKomunitas) return;
+        if (!selectedkader) return;
         try {
-            const res = await apiFetch(`/komunitas/${selectedKomunitas.komunitas_id}/status`, {
+            const res = await apiFetch(`/kader/${selectedkader.kader_id}/status`, {
                 method: 'PATCH',
-                body: JSON.stringify({ is_active: !selectedKomunitas.is_active })
+                body: JSON.stringify({ is_active: !selectedkader.is_active })
             });
             const result = await res.json();
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });
-                fetchKomunitas();
+                fetchkader();
             } else {
                 setToast({ message: result.message || 'Gagal mengubah status', type: 'error' });
             }
@@ -161,11 +161,11 @@ const DaftarKader: React.FC = () => {
             setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
         } finally {
             setIsConfirmModalOpen(false);
-            setSelectedKomunitas(null);
+            setSelectedkader(null);
         }
     };
 
-    const actions = (row: KomunitasData) => (
+    const actions = (row: kaderData) => (
         <>
             <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
             <Button
@@ -180,14 +180,14 @@ const DaftarKader: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.opd_id || !formData.nama_komunitas) return;
+        if (!formData.opd_id || !formData.nama_kader) return;
         setIsSaving(true);
         try {
-            const res = await apiFetch('/komunitas', {
+            const res = await apiFetch('/kader', {
                 method: 'POST',
                 body: JSON.stringify({
                     opd_id: Number(formData.opd_id),
-                    nama_komunitas: formData.nama_komunitas,
+                    nama_kader: formData.nama_kader,
                     deskripsi: formData.deskripsi || null,
                     pic: formData.pic || null
                 })
@@ -203,8 +203,8 @@ const DaftarKader: React.FC = () => {
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });
                 setIsModalOpen(false);
-                setFormData({ opd_id: '', nama_komunitas: '', deskripsi: '', pic: '' });
-                fetchKomunitas();
+                setFormData({ opd_id: '', nama_kader: '', deskripsi: '', pic: '' });
+                fetchkader();
             } else {
                 setToast({ message: result.message || 'Gagal menambahkan kader', type: 'error' });
             }
@@ -216,13 +216,13 @@ const DaftarKader: React.FC = () => {
     };
 
     const handleDetailSave = async () => {
-        if (!selectedKomunitas) return;
+        if (!selectedkader) return;
         setIsSaving(true);
         try {
-            const res = await apiFetch(`/komunitas/${selectedKomunitas.komunitas_id}`, {
+            const res = await apiFetch(`/kader/${selectedkader.kader_id}`, {
                 method: 'PUT',
                 body: JSON.stringify({
-                    nama_komunitas: detailFormData.nama_komunitas,
+                    nama_kader: detailFormData.nama_kader,
                     deskripsi: detailFormData.deskripsi || null,
                     pic: detailFormData.pic || null
                 })
@@ -231,7 +231,7 @@ const DaftarKader: React.FC = () => {
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });
                 setIsDetailModalOpen(false);
-                fetchKomunitas();
+                fetchkader();
             } else {
                 setToast({ message: result.message || 'Gagal memperbarui data', type: 'error' });
             }
@@ -246,9 +246,9 @@ const DaftarKader: React.FC = () => {
         try {
             setIsExporting(true);
             exportToPDF({
-                title: 'Daftar Kader / Komunitas',
+                title: 'Daftar Kader / kader',
                 columns: [
-                    { header: 'NAMA KADER', dataKey: 'nama_komunitas' },
+                    { header: 'NAMA KADER', dataKey: 'nama_kader' },
                     { header: 'OPD', dataKey: 'nama_opd' },
                     { header: 'PIC', dataKey: 'pic' },
                     { header: 'DESKRIPSI', dataKey: 'deskripsi' }
@@ -265,14 +265,14 @@ const DaftarKader: React.FC = () => {
     };
     const handleExcelUploadConfirm = async (data: any[]) => {
             try {
-                const res = await apiFetch('/komunitas/bulk', {
+                const res = await apiFetch('/kader/bulk', {
                     method: 'POST',
                     body: JSON.stringify(data)
                 });
                 const result = await res.json();
                 if (result.success) {
                     setToast({ message: result.message, type: 'success' });
-                    fetchKomunitas();
+                    fetchkader();
                 } else {
                     setToast({ message: result.message || 'Gagal import Excel', type: 'error' });
                 }
@@ -307,7 +307,7 @@ const DaftarKader: React.FC = () => {
             {/* Table */}
             <Card>
                 <div className="mb-4 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-gray-900">Daftar Kader / Komunitas</h2>
+                    <h2 className="text-xl font-semibold text-gray-900">Daftar Kader / kader</h2>
                     <Button variant="secondary" size="sm" onClick={handleExportPDF} disabled={isExporting}>
                         {isExporting ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />}
                         {isExporting ? 'Mengekspor...' : 'Ekspor'}
@@ -347,7 +347,7 @@ const DaftarKader: React.FC = () => {
             </Card>
 
             {/* Modal Tambah Kader */}
-            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Tambah Kader / Komunitas Baru" subtitle="Pilih OPD terlebih dahulu, lalu isi detail kader" maxWidth="2xl">
+            <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Tambah Kader / kader Baru" subtitle="Pilih OPD terlebih dahulu, lalu isi detail kader" maxWidth="2xl">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Dropdown OPD */}
                     <div className="grid grid-cols-3 gap-4 items-center">
@@ -369,7 +369,7 @@ const DaftarKader: React.FC = () => {
                     </div>
 
                     {[
-                        { label: 'Nama Kader/Komunitas', name: 'nama_komunitas', required: true, placeholder: 'Nama Kader atau Komunitas' },
+                        { label: 'Nama Kader/kader', name: 'nama_kader', required: true, placeholder: 'Nama Kader atau kader' },
                         { label: 'PIC', name: 'pic', required: false, placeholder: 'Person in Charge (opsional)' },
                         { label: 'Deskripsi', name: 'deskripsi', required: false, placeholder: 'Deskripsi singkat (opsional)' },
                     ].map(field => (
@@ -399,17 +399,17 @@ const DaftarKader: React.FC = () => {
             </Modal>
 
             {/* Detail Modal */}
-            <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Detail Kader / Komunitas" subtitle="Edit informasi kader" maxWidth="2xl">
-                {selectedKomunitas && (
+            <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Detail Kader / kader" subtitle="Edit informasi kader" maxWidth="2xl">
+                {selectedkader && (
                     <div className="space-y-6">
                         {/* OPD (read-only) */}
                         <div className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">OPD</label>
-                            <input type="text" value={selectedKomunitas.nama_opd} disabled className="col-span-2 px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 italic" />
+                            <input type="text" value={selectedkader.nama_opd} disabled className="col-span-2 px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 italic" />
                         </div>
 
                         {[
-                            { label: 'Nama Kader/Komunitas', name: 'nama_komunitas' },
+                            { label: 'Nama Kader/kader', name: 'nama_kader' },
                             { label: 'PIC', name: 'pic' },
                             { label: 'Deskripsi', name: 'deskripsi' },
                         ].map(field => (
@@ -426,7 +426,7 @@ const DaftarKader: React.FC = () => {
 
                         <div className="flex justify-between pt-6 border-t border-gray-100">
                             <div className="text-sm text-gray-400 italic">
-                                Dibuat: {new Date(selectedKomunitas.created_at).toLocaleString('id-ID')}
+                                Dibuat: {new Date(selectedkader.created_at).toLocaleString('id-ID')}
                             </div>
                             <Button onClick={handleDetailSave} disabled={!hasChanges || isSaving} className="bg-green-600 hover:bg-green-700 text-white px-8 disabled:opacity-50 disabled:cursor-not-allowed">
                                 {isSaving ? <><Loader2 size={16} className="animate-spin mr-1" />Menyimpan...</> : 'Simpan Perubahan'}
@@ -441,16 +441,16 @@ const DaftarKader: React.FC = () => {
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 title="Konfirmasi"
-                subtitle={selectedKomunitas?.is_active ? "Apakah Anda yakin ingin menonaktifkan kader/komunitas ini?" : "Apakah Anda yakin ingin mengaktifkan kader/komunitas ini?"}
+                subtitle={selectedkader?.is_active ? "Apakah Anda yakin ingin menonaktifkan kader/kader ini?" : "Apakah Anda yakin ingin mengaktifkan kader/kader ini?"}
                 maxWidth="md"
                 showCloseButton={false}
             >
-                {selectedKomunitas && (
+                {selectedkader && (
                     <div className="space-y-6">
                         <div className="text-center py-4">
                             <p className="text-lg text-gray-700">
-                                Anda akan {selectedKomunitas.is_active ? 'menonaktifkan' : 'mengaktifkan'}{' '}
-                                <span className="font-semibold">{selectedKomunitas.nama_komunitas}</span>
+                                Anda akan {selectedkader.is_active ? 'menonaktifkan' : 'mengaktifkan'}{' '}
+                                <span className="font-semibold">{selectedkader.nama_kader}</span>
                             </p>
                         </div>
                         <div className="flex justify-center gap-4 pt-6">
