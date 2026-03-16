@@ -34,6 +34,7 @@ export interface RelawanData {
     kader: string;
     jabatan: string;
     penugasan: string;
+    jenisKelamin?: string;
     assignments?: Assignment[]; // Multiple assignments
 }
 
@@ -45,5 +46,6 @@ export interface RelawanFormData {
     kader: string;
     jabatan: string;
     penugasan: string;
+    jenisKelamin: string;
     assignments: Assignment[];
 }
