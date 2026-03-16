@@ -56,7 +56,7 @@ app.use('/api/bpjs', bpjsRoutes);
 app.use('/api/saran', saranRoutes);
 
 // 7. Komunitas Routes
-app.use('/api/komunitas', komunitasRoutes);
+app.use('/api/kader', komunitasRoutes);
 
 // === TEST ENDPOINT ===
 app.get('/', (req, res) => {
