@@ -21,7 +21,14 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // === MIDDLEWARE DASAR ===
-app.use(cors());                   // Izinkan frontend akses API
+app.use(cors({
+    origin: [
+        /^http:\/\/localhost:\d+$/,     // Izinkan semua port di localhost (contoh: localhost:3000, localhost:5173)
+        /^http:\/\/127\.0\.0\.1:\d+$/,  // Izinkan juga kalau pakai IP lokal 127.0.0.1
+        'https://frontend-bappeda.vercel.app' // link vercel
+    ],
+    credentials: true // Wajib ditambah kalau API kamu pakai token/cookies untuk login
+}));                   // Izinkan frontend akses API
 app.use(express.json());           // Parse body JSON dari request
 
 // === DAFTARKAN SEMUA ROUTE ===
