@@ -238,8 +238,6 @@ const DataRelawan: React.FC = () => {
         { header: 'NIK', accessor: 'nik' as keyof RelawanData },
         { header: 'ALAMAT', accessor: 'alamat' as keyof RelawanData },
         { header: 'KELURAHAN', accessor: 'kelurahan' as keyof RelawanData },
-        { header: 'KADER', accessor: 'kader' as keyof RelawanData },
-        { header: 'JABATAN', accessor: 'jabatan' as keyof RelawanData },
     ];
 
     const handleDetailClick = (relawan: RelawanData) => {
@@ -435,14 +433,14 @@ const DataRelawan: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-3 gap-4 items-start">
-                <label className="text-lg font-medium text-gray-900 pt-2">Kader / kader</label>
+                <label className="text-lg font-medium text-gray-900 pt-2">Kader</label>
                 <div className="col-span-2">
                     <AutocompleteInput
                         name={`kader-${index}`}
                         value={assignment.kader}
                         options={kaderOptions}
                         onChange={(val) => handleAssignChange(index, 'kader', val)}
-                        placeholder="Cari nama Kader / kader..."
+                        placeholder="Cari nama Kader"
                         disabled={isReadOnly}
                     />
                 </div>
@@ -584,7 +582,7 @@ const DataRelawan: React.FC = () => {
                         { label: 'NIK', name: 'nik', required: true, placeholder: '16 digit NIK', maxLength: 16 }, // Sudah ditambahkan batasan digit di sini
                         { label: 'Alamat KTP', name: 'alamat', placeholder: 'Alamat sesuai KTP' },
                         { label: 'Kelurahan', name: 'kelurahan', placeholder: 'Kelurahan/Desa' },
-                        { label: 'Jabatan', name: 'jabatan', placeholder: 'Jabatan Relawan' },
+                        // { label: 'Jabatan', name: 'jabatan', placeholder: 'Jabatan Relawan' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">
