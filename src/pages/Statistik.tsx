@@ -46,7 +46,6 @@ const Statistik: React.FC = () => {
                         data={genderData}
                         dataKey="value"
                         nameKey="name"
-                        colors={['#0EA5E9', '#06B6D4']}
                     />
                 </Card>
 
@@ -55,7 +54,6 @@ const Statistik: React.FC = () => {
                         data={ageData}
                         dataKey="value"
                         nameKey="name"
-                        colors={['#0C4A6E', '#0EA5E9', '#7DD3FC']}
                     />
                 </Card>
             </div>
@@ -67,7 +65,6 @@ const Statistik: React.FC = () => {
                         data={relawanPerKaderData}
                         dataKey="value"
                         yAxisKey="name"
-                        color="#3B82F6"
                     />
                 </Card>
 
@@ -76,7 +73,6 @@ const Statistik: React.FC = () => {
                         data={kaderPerOPDData}
                         dataKey="value"
                         yAxisKey="name"
-                        color="#3B82F6"
                     />
                 </Card>
             </div>

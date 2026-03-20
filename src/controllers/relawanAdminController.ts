@@ -373,7 +373,7 @@ export const createBulkRelawan = async (req: AuthRequest, res: Response): Promis
 };
 
 // Endpoint helper: dapatkan daftar kader berdasarkan opd_id (untuk dropdown di form)
-export const getkaderByOpd = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getKaderByOpd = async (req: AuthRequest, res: Response): Promise<void> => {
     const { opd_id } = req.query;
     try {
         let query: string;

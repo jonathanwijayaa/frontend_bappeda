@@ -16,6 +16,7 @@ interface OPDData {
     nama_opd: string;
     alamat: string | null;
     pic: string | null;
+    nik_pic: string | null;
     kontak: string | null;
     is_active: boolean;
     created_at: string;
@@ -41,6 +42,7 @@ const ManajemenOPD: React.FC = () => {
         nama_opd: '',
         alamat: '',
         pic: '',
+        nik_pic: '',
         kontak: ''
     });
 
@@ -48,6 +50,7 @@ const ManajemenOPD: React.FC = () => {
         nama_opd: '',
         alamat: '',
         pic: '',
+        nik_pic: '',
         kontak: ''
     });
 
@@ -57,6 +60,7 @@ const ManajemenOPD: React.FC = () => {
             detailFormData.nama_opd !== (selectedOPD.nama_opd || '') ||
             detailFormData.alamat !== (selectedOPD.alamat || '') ||
             detailFormData.pic !== (selectedOPD.pic || '') ||
+            detailFormData.nik_pic !== (selectedOPD.nik_pic || '') ||
             detailFormData.kontak !== (selectedOPD.kontak || '')
         );
     }, [selectedOPD, detailFormData]);
@@ -114,6 +118,7 @@ const ManajemenOPD: React.FC = () => {
             nama_opd: opd.nama_opd || '',
             alamat: opd.alamat || '',
             pic: opd.pic || '',
+            nik_pic: opd.nik_pic || '',
             kontak: opd.kontak || ''
         });
         setIsDetailModalOpen(true);
@@ -182,7 +187,7 @@ const ManajemenOPD: React.FC = () => {
             if (result.success) {
                 setToast({ message: 'OPD baru berhasil ditambahkan', type: 'success' });
                 setIsModalOpen(false);
-                setFormData({ nama_opd: '', alamat: '', pic: '', kontak: '' });
+                setFormData({ nama_opd: '', alamat: '', pic: '', nik_pic: '', kontak: '' });
                 fetchOPD();
             } else {
                 setToast({ message: result.message || 'Gagal menambahkan OPD', type: 'error' });
@@ -330,6 +335,7 @@ const ManajemenOPD: React.FC = () => {
                         { label: 'Nama OPD', name: 'nama_opd', required: true, placeholder: 'Nama Dinas / OPD' },
                         { label: 'Alamat', name: 'alamat', placeholder: 'Alamat OPD' },
                         { label: 'PIC', name: 'pic', placeholder: 'Penanggung jawab' },
+                        { label: 'NIK PIC', name: 'nik_pic', required: true, placeholder: '16 digit NIK PIC', maxLength: 16 },
                         { label: 'Kontak', name: 'kontak', placeholder: 'Nomor telepon / email' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
@@ -343,6 +349,7 @@ const ManajemenOPD: React.FC = () => {
                                 onChange={handleInputChange}
                                 placeholder={field.placeholder}
                                 required={field.required}
+                                maxLength={(field as any).maxLength}
                                 className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
@@ -364,15 +371,19 @@ const ManajemenOPD: React.FC = () => {
                             { label: 'Nama OPD', name: 'nama_opd', required: true },
                             { label: 'Alamat', name: 'alamat' },
                             { label: 'PIC', name: 'pic' },
+                            { label: 'NIK PIC', name: 'nik_pic', required: true, maxLength: 16 },
                             { label: 'Kontak', name: 'kontak' },
                         ].map(field => (
                             <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
-                                <label className="text-lg font-medium text-gray-900">{field.label}</label>
+                                <label className="text-lg font-medium text-gray-900">
+                                    {field.label}{field.required && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="text"
                                     name={field.name}
                                     value={(detailFormData as any)[field.name]}
                                     onChange={handleDetailInputChange}
+                                    maxLength={(field as any).maxLength}
                                     className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>

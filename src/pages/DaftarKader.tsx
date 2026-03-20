@@ -47,13 +47,15 @@ const DaftarKader: React.FC = () => {
         opd_id: '',
         nama_kader: '',
         deskripsi: '',
-        pic: ''
+        pic: '',
+        nik_pic: ''
     });
 
     const [detailFormData, setDetailFormData] = useState({
         nama_kader: '',
         deskripsi: '',
-        pic: ''
+        pic: '',
+        nik_pic: ''
     });
 
     const hasChanges = useMemo(() => {
@@ -61,7 +63,8 @@ const DaftarKader: React.FC = () => {
         return (
             detailFormData.nama_kader !== (selectedkader.nama_kader || '') ||
             detailFormData.deskripsi !== (selectedkader.deskripsi || '') ||
-            detailFormData.pic !== (selectedkader.pic || '')
+            detailFormData.pic !== (selectedkader.pic || '') ||
+            detailFormData.nik_pic !== ((selectedkader as any).nik_pic || '')
         );
     }, [selectedkader, detailFormData]);
 
@@ -133,7 +136,8 @@ const DaftarKader: React.FC = () => {
         setDetailFormData({
             nama_kader: kader.nama_kader,
             deskripsi: kader.deskripsi || '',
-            pic: kader.pic || ''
+            pic: kader.pic || '',
+            nik_pic: (kader as any).nik_pic || ''
         });
         setIsDetailModalOpen(true);
     };
@@ -189,7 +193,8 @@ const DaftarKader: React.FC = () => {
                     opd_id: Number(formData.opd_id),
                     nama_kader: formData.nama_kader,
                     deskripsi: formData.deskripsi || null,
-                    pic: formData.pic || null
+                    pic: formData.pic || null,
+                    nik_pic: formData.nik_pic || null
                 })
             });
 
@@ -203,7 +208,7 @@ const DaftarKader: React.FC = () => {
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });
                 setIsModalOpen(false);
-                setFormData({ opd_id: '', nama_kader: '', deskripsi: '', pic: '' });
+                setFormData({ opd_id: '', nama_kader: '', deskripsi: '', pic: '', nik_pic: '' });
                 fetchkader();
             } else {
                 setToast({ message: result.message || 'Gagal menambahkan kader', type: 'error' });
@@ -224,7 +229,8 @@ const DaftarKader: React.FC = () => {
                 body: JSON.stringify({
                     nama_kader: detailFormData.nama_kader,
                     deskripsi: detailFormData.deskripsi || null,
-                    pic: detailFormData.pic || null
+                    pic: detailFormData.pic || null,
+                    nik_pic: detailFormData.nik_pic || null
                 })
             });
             const result = await res.json();
@@ -371,6 +377,7 @@ const DaftarKader: React.FC = () => {
                     {[
                         { label: 'Nama Kader/kader', name: 'nama_kader', required: true, placeholder: 'Nama Kader atau kader' },
                         { label: 'PIC', name: 'pic', required: false, placeholder: 'Person in Charge (opsional)' },
+                        { label: 'NIK PIC', name: 'nik_pic', required: true, placeholder: '16 digit NIK PIC', maxLength: 16 },
                         { label: 'Deskripsi', name: 'deskripsi', required: false, placeholder: 'Deskripsi singkat (opsional)' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
@@ -384,6 +391,7 @@ const DaftarKader: React.FC = () => {
                                 onChange={(e) => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
                                 placeholder={field.placeholder}
                                 required={field.required}
+                                maxLength={(field as any).maxLength}
                                 className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
@@ -411,14 +419,18 @@ const DaftarKader: React.FC = () => {
                         {[
                             { label: 'Nama Kader/kader', name: 'nama_kader' },
                             { label: 'PIC', name: 'pic' },
+                            { label: 'NIK PIC', name: 'nik_pic', required: true, maxLength: 16 },
                             { label: 'Deskripsi', name: 'deskripsi' },
                         ].map(field => (
                             <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
-                                <label className="text-lg font-medium text-gray-900">{field.label}</label>
+                                <label className="text-lg font-medium text-gray-900">
+                                    {field.label}{(field as any).required && <span className="text-red-500 ml-1">*</span>}
+                                </label>
                                 <input
                                     type="text"
                                     value={(detailFormData as any)[field.name]}
                                     onChange={(e) => setDetailFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                    maxLength={(field as any).maxLength}
                                     className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>

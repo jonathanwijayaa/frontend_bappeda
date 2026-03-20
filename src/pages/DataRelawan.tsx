@@ -448,23 +448,30 @@ const DataRelawan: React.FC = () => {
 
             <div className="grid grid-cols-3 gap-4 items-center">
                 <label className="text-lg font-medium text-gray-900">Peran/Jabatan</label>
-                <input
-                    type="text"
+                <select
                     value={assignment.peran}
                     onChange={(e) => handleAssignChange(index, 'peran', e.target.value)}
-                    placeholder="Contoh: Ketua, Anggota, dll"
                     disabled={isReadOnly}
                     className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
-                />
+                >
+                    <option value="">-- Pilih Jabatan --</option>
+                    <option value="Ketua">Ketua</option>
+                    <option value="Wakil">Wakil</option>
+                    <option value="Sekretaris">Sekretaris</option>
+                    <option value="Bendahara">Bendahara</option>
+                    <option value="Seksi">Seksi</option>
+                    <option value="Anggota">Anggota</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
             </div>
 
             <div className="grid grid-cols-3 gap-4 items-center">
-                <label className="text-lg font-medium text-gray-900">Penugasan</label>
+                <label className="text-lg font-medium text-gray-900">Detail Jabatan</label>
                 <input
                     type="text"
                     value={assignment.detail}
                     onChange={(e) => handleAssignChange(index, 'detail', e.target.value)}
-                    placeholder="Detail Penugasan (Opsional)"
+                    placeholder="Detail jabatan (contoh: Anggota Umum Bidang X)"
                     disabled={isReadOnly}
                     className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
                 />
