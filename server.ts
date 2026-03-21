@@ -13,7 +13,7 @@ import skRoutes from './src/routes/skRoutes';
 import bpjsRoutes from './src/routes/bpjsRoutes';
 import logRoutes from './src/routes/logRoutes';
 import saranRoutes from './src/routes/saranRoutes';
-import komunitasRoutes from './src/routes/komunitasRoutes';
+import kaderRoutes from './src/routes/kaderRoutes';
 
 dotenv.config();
 
@@ -56,7 +56,7 @@ app.use('/api/bpjs', bpjsRoutes);
 app.use('/api/saran', saranRoutes);
 
 // 7. Komunitas Routes
-app.use('/api/kader', komunitasRoutes);
+app.use('/api/kader', kaderRoutes);
 
 // === TEST ENDPOINT ===
 app.get('/', (req, res) => {
