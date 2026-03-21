@@ -1,3 +1,4 @@
+//ManejemenOPD.tsx
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Plus, FileDown, Upload, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';

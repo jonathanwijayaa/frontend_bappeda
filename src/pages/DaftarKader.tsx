@@ -5,12 +5,12 @@ import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
 import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
+import AutocompleteInput from '../components/ui/AutocompleteInput';
 import Toast, { ToastType } from '../components/ui/Toast';
 import UploadExcelModal from '../components/ui/UploadExcelModal';
 import { exportToPDF } from '../utils/exportToPDF';
 import { apiFetch } from '../utils/api';
 
-// Interface sesuai response backend
 interface kaderData {
     kader_id: number;
     nama_kader: string;
@@ -25,6 +25,12 @@ interface kaderData {
 interface OPDOption {
     opd_id: number;
     nama_opd: string;
+}
+
+// Tipe untuk AutocompleteInput
+interface AutoOption {
+    label: string;
+    value: string;
 }
 
 const DaftarKader: React.FC = () => {
@@ -43,8 +49,10 @@ const DaftarKader: React.FC = () => {
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const itemsPerPage = 5;
 
+    // Form state: simpan nama OPD (untuk autocomplete) dan opd_id (untuk submit)
     const [formData, setFormData] = useState({
-        opd_id: '',
+        opd_name: '',   // teks yang tampil di autocomplete
+        opd_id: 0,      // id yang akan dikirim ke backend
         nama_kader: '',
         deskripsi: '',
         pic: '',
@@ -57,6 +65,12 @@ const DaftarKader: React.FC = () => {
         pic: '',
         nik_pic: ''
     });
+
+    // Konversi opdList ke format AutocompleteInput options
+    const opdOptions: AutoOption[] = useMemo(() =>
+        opdList.map(o => ({ label: o.nama_opd, value: String(o.opd_id) })),
+        [opdList]
+    );
 
     const hasChanges = useMemo(() => {
         if (!selectedkader) return false;
@@ -103,6 +117,17 @@ const DaftarKader: React.FC = () => {
         fetchOPD();
     }, [fetchkader, fetchOPD]);
 
+    // ── Handler AutocompleteInput OPD ───────────
+    const handleOpdChange = (namaOpd: string) => {
+        // Cari opd_id yang cocok dengan nama yang diketik
+        const matched = opdList.find(o => o.nama_opd.toLowerCase() === namaOpd.toLowerCase());
+        setFormData(prev => ({
+            ...prev,
+            opd_name: namaOpd,
+            opd_id: matched ? matched.opd_id : 0
+        }));
+    };
+
     // ── Pagination & Filter ─────────────────────
     const filteredData = useMemo(() =>
         kaderList.filter(k =>
@@ -126,9 +151,11 @@ const DaftarKader: React.FC = () => {
         },
         { header: 'OPD', accessor: 'nama_opd' as keyof kaderData },
         { header: 'PIC', render: (row: kaderData) => <span>{row.pic || '-'}</span> },
-        { header: 'DESKRIPSI', render: (row: kaderData) => (
-            <span className="truncate max-w-[200px] block" title={row.deskripsi || ''}>{row.deskripsi || '-'}</span>
-        )},
+        {
+            header: 'DESKRIPSI', render: (row: kaderData) => (
+                <span className="truncate max-w-[200px] block" title={row.deskripsi || ''}>{row.deskripsi || '-'}</span>
+            )
+        },
     ];
 
     const handleDetailClick = (kader: kaderData) => {
@@ -172,11 +199,7 @@ const DaftarKader: React.FC = () => {
     const actions = (row: kaderData) => (
         <>
             <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
-            <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handleToggleStatus(row)}
-            >
+            <Button variant="secondary" size="sm" onClick={() => handleToggleStatus(row)}>
                 {row.is_active ? 'Nonaktif' : 'Aktifkan'}
             </Button>
         </>
@@ -184,13 +207,20 @@ const DaftarKader: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.opd_id || !formData.nama_kader) return;
+
+        // Validasi OPD harus dipilih dari daftar yang valid
+        if (!formData.opd_id) {
+            setToast({ message: 'Pilih OPD yang valid dari daftar', type: 'error' });
+            return;
+        }
+        if (!formData.nama_kader) return;
+
         setIsSaving(true);
         try {
             const res = await apiFetch('/kader', {
                 method: 'POST',
                 body: JSON.stringify({
-                    opd_id: Number(formData.opd_id),
+                    opd_id: formData.opd_id,
                     nama_kader: formData.nama_kader,
                     deskripsi: formData.deskripsi || null,
                     pic: formData.pic || null,
@@ -208,7 +238,8 @@ const DaftarKader: React.FC = () => {
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });
                 setIsModalOpen(false);
-                setFormData({ opd_id: '', nama_kader: '', deskripsi: '', pic: '', nik_pic: '' });
+                // Reset form termasuk opd autocomplete
+                setFormData({ opd_name: '', opd_id: 0, nama_kader: '', deskripsi: '', pic: '', nik_pic: '' });
                 fetchkader();
             } else {
                 setToast({ message: result.message || 'Gagal menambahkan kader', type: 'error' });
@@ -249,8 +280,8 @@ const DaftarKader: React.FC = () => {
     };
 
     const handleExportPDF = async () => {
+        setIsExporting(true);
         try {
-            setIsExporting(true);
             exportToPDF({
                 title: 'Daftar Kader',
                 columns: [
@@ -269,25 +300,26 @@ const DaftarKader: React.FC = () => {
             setIsExporting(false);
         }
     };
+
     const handleExcelUploadConfirm = async (data: any[]) => {
-            try {
-                const res = await apiFetch('/kader/bulk', {
-                    method: 'POST',
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
-                if (result.success) {
-                    setToast({ message: result.message, type: 'success' });
-                    fetchkader();
-                } else {
-                    setToast({ message: result.message || 'Gagal import Excel', type: 'error' });
-                }
-            } catch {
-                setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-            } finally {
-                setIsUploadModalOpen(false);
+        try {
+            const res = await apiFetch('/kader/bulk', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+            if (result.success) {
+                setToast({ message: result.message, type: 'success' });
+                fetchkader();
+            } else {
+                setToast({ message: result.message || 'Gagal import Excel', type: 'error' });
             }
-        };
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } finally {
+            setIsUploadModalOpen(false);
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -355,25 +387,32 @@ const DaftarKader: React.FC = () => {
             {/* Modal Tambah Kader */}
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Tambah Kader Baru" subtitle="Pilih OPD terlebih dahulu, lalu isi detail kader" maxWidth="2xl">
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Dropdown OPD */}
-                    <div className="grid grid-cols-3 gap-4 items-center">
-                        <label className="text-lg font-medium text-gray-900">
+
+                    {/* ── Pilih OPD — AutocompleteInput ── */}
+                    <div className="grid grid-cols-3 gap-4 items-start">
+                        <label className="text-lg font-medium text-gray-900 pt-2">
                             Pilih OPD <span className="text-red-500">*</span>
                         </label>
-                        <select
-                            name="opd_id"
-                            value={formData.opd_id}
-                            onChange={(e) => setFormData(prev => ({ ...prev, opd_id: e.target.value }))}
-                            required
-                            className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-                        >
-                            <option value="">-- Pilih OPD --</option>
-                            {opdList.map(opd => (
-                                <option key={opd.opd_id} value={opd.opd_id}>{opd.nama_opd}</option>
-                            ))}
-                        </select>
+                        <div className="col-span-2">
+                            <AutocompleteInput
+                                name="opd_name"
+                                value={formData.opd_name}
+                                options={opdOptions}
+                                onChange={handleOpdChange}
+                                placeholder="Ketik nama OPD..."
+                                warnIfNotFound={true}
+                                warnMessage="OPD tidak ditemukan. Pastikan nama OPD sudah benar."
+                            />
+                            {/* Indikator OPD berhasil dipilih */}
+                            {formData.opd_id > 0 && (
+                                <p className="mt-1 text-xs text-green-600 font-medium">
+                                    ✓ OPD ditemukan dan siap disimpan
+                                </p>
+                            )}
+                        </div>
                     </div>
 
+                    {/* ── Field Lainnya ── */}
                     {[
                         { label: 'Nama Kader/kader', name: 'nama_kader', required: true, placeholder: 'Nama Kader atau kader' },
                         { label: 'PIC', name: 'pic', required: false, placeholder: 'Person in Charge (opsional)' },
@@ -453,7 +492,7 @@ const DaftarKader: React.FC = () => {
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 title="Konfirmasi"
-                subtitle={selectedkader?.is_active ? "Apakah Anda yakin ingin menonaktifkan kader/kader ini?" : "Apakah Anda yakin ingin mengaktifkan kader/kader ini?"}
+                subtitle={selectedkader?.is_active ? "Apakah Anda yakin ingin menonaktifkan kader ini?" : "Apakah Anda yakin ingin mengaktifkan kader ini?"}
                 maxWidth="md"
                 showCloseButton={false}
             >
@@ -472,7 +511,8 @@ const DaftarKader: React.FC = () => {
                     </div>
                 )}
             </Modal>
-                 {/* Upload Excel Modal */}
+
+            {/* Upload Excel Modal */}
             <UploadExcelModal
                 isOpen={isUploadModalOpen}
                 onClose={() => setIsUploadModalOpen(false)}
