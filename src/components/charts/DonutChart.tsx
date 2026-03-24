@@ -1,6 +1,27 @@
 import React from 'react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
+/**
+ * Palet warna siap pakai untuk Demografi Kelurahan (14 kemantren)
+ * Gradasi Oranye (#E76F51) → Kuning (#E9C46A)
+ */
+export const KELURAHAN_COLORS = [
+    '#E76F51', // 1
+    '#E87A52', // 2
+    '#E88554', // 3
+    '#E99056', // 4
+    '#E99B57', // 5
+    '#EAA659', // 6
+    '#EAB15A', // 7
+    '#EABC5C', // 8
+    '#EAC15D', // 9
+    '#E9C45E', // 10
+    '#E9C460', // 11
+    '#E9C462', // 12
+    '#E9C465', // 13
+    '#E9C46A', // 14
+];
+
 interface ChartDataItem {
     name: string;
     value: number;
@@ -20,39 +41,14 @@ const DonutChart: React.FC<DonutChartProps> = ({
     colors,
     height = 300
 }) => {
-    /** * OPSI 1: GRADASI ORANYE TERAKOTA (AKTIF)
-     * Sangat kontras dengan Hijau #008F3B, memberikan kesan enerjik & tajam.
+    /**
+     * Default: Demografi Gender
+     * Laki-laki → Slate Blue/Indigo #4A4E69
+     * Perempuan → Coral/Rose       #F28482
      */
-    const ORANGE_SHADES = [
-        // '#FFF5ED', // 1 - Terendah
-        // '#FDE3D0', // 2
-        // '#FAD1B3', // 3
-        // '#F7BE96', // 4
-        // '#F3AB78', // 5
-        '#EF985B', // 6
-        '#EB853D', // 7
-        '#E77220', // 8
-        '#D35F12', // 9
-        '#BF4C05'  // 10 - Tertinggi
-    ];
+    const GENDER_COLORS = ['#4A4E69', '#F28482'];
 
-    /** * OPSI 2: GRADASI KUNING AMBER 
-    /*
-    const AMBER_SHADES = [
-        '#FEFBEB', // 1 - Terendah
-        '#FEF5C8', // 2
-        '#FDEF9F', // 3
-        '#FCE976', // 4
-        '#FBE34D', // 5
-        '#F9D62D', // 6
-        '#E8C024', // 7
-        '#D6A91B', // 8
-        '#C59312', // 9
-        '#B47D09'  // 10 - Tertinggi
-    ];
-    */
-
-    const COLORS = colors || ORANGE_SHADES;
+    const COLORS = colors || GENDER_COLORS;
 
     return (
         <ResponsiveContainer width="100%" height={height}>
@@ -71,17 +67,17 @@ const DonutChart: React.FC<DonutChartProps> = ({
                     strokeWidth={1.5}
                 >
                     {data.map((entry, index) => (
-                        <Cell 
-                            key={`cell-${index}`} 
-                            fill={COLORS[index % COLORS.length]} 
+                        <Cell
+                            key={`cell-${index}`}
+                            fill={COLORS[index % COLORS.length]}
                         />
                     ))}
                 </Pie>
-                <Tooltip 
-                    contentStyle={{ 
-                        borderRadius: '8px', 
-                        border: 'none', 
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)' 
+                <Tooltip
+                    contentStyle={{
+                        borderRadius: '8px',
+                        border: 'none',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                     }}
                 />
                 <Legend iconType="circle" />

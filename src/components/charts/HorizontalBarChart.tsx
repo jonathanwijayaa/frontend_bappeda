@@ -18,7 +18,7 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
     data,
     dataKey,
     yAxisKey,
-    color = '#3B82F6',
+    color = '#F4A261', // Oranye Amber – Kader & OPD
     height = 300
 }) => {
     return (
