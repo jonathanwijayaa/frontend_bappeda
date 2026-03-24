@@ -1,26 +1,6 @@
 import React from 'react';
 import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
-/**
- * Palet warna siap pakai untuk Demografi Kelurahan (14 kemantren)
- * Gradasi Oranye (#E76F51) → Kuning (#E9C46A)
- */
-export const KELURAHAN_COLORS = [
-    '#E76F51', // 1
-    '#E87A52', // 2
-    '#E88554', // 3
-    '#E99056', // 4
-    '#E99B57', // 5
-    '#EAA659', // 6
-    '#EAB15A', // 7
-    '#EABC5C', // 8
-    '#EAC15D', // 9
-    '#E9C45E', // 10
-    '#E9C460', // 11
-    '#E9C462', // 12
-    '#E9C465', // 13
-    '#E9C46A', // 14
-];
 
 interface ChartDataItem {
     name: string;
