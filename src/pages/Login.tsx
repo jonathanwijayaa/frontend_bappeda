@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import Card from '../components/ui/Card';
 import Input from '../components/ui/Input';
 import Button from '../components/ui/Button';
-import logoBappeda from '../assets/logo-bappeda.png';
-import logoJogja from '../assets/logo-kota-yogyakarta.png';
+import logoBappeda from '../assets/image/logo-bappeda.png';
+import logoJogja from '../assets/image/logo-kota-yogyakarta.png';
 
 
 const Login = () => {
@@ -119,10 +119,6 @@ const Login = () => {
                                 {isLoading ? 'Memproses...' : 'Masuk'}
                             </Button>
                         </form>
-                        <div className="mt-5 sm:mt-6 p-3 sm:p-4 rounded-lg">
-                            <img src={logoBappeda} alt="Logo Bappeda" className="w-24 h-24 mx-auto mb-4" />
-                            <img src={logoJogja} alt="Logo Jogja" className="w-24 h-24 mx-auto mb-4" />
-                        </div>
                     </div>
                 </Card>
             </div>
