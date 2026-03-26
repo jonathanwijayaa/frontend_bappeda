@@ -41,7 +41,7 @@ const PieChart: React.FC<PieChartProps> = ({
     colors,
     height = 300
 }) => {
-    const COLORS = colors || ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+    const COLORS = colors || KELURAHAN_COLORS;
 
     return (
         <ResponsiveContainer width="100%" height={height}>
@@ -53,7 +53,6 @@ const PieChart: React.FC<PieChartProps> = ({
                     labelLine={false}
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                     outerRadius={80}
-                    fill="#8884d8"
                     dataKey={dataKey}
                 >
                     {data.map((entry, index) => (
