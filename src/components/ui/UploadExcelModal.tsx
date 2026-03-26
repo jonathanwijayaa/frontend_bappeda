@@ -24,7 +24,7 @@ interface UploadExcelModalProps {
 // Relawan→ Template_Data_Relawan.xlsx: NAMA LENGKAP, NIK, JENIS KELAMIN, OPD
 const REQUIRED_FIELDS: Record<string, string[]> = {
     opd:     ['namaOpd', 'NIK PIC'],
-    kader:   ['namaKader', 'OPD', 'nik pic'],
+    kader:   ['namaKader', 'OPD', 'NIK PIC'],
     relawan: ['NAMA LENGKAP', 'NIK', 'JENIS KELAMIN', 'OPD'],
 };
 
@@ -64,9 +64,14 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
         if (!data || data.length === 0)
             return { isValid: false, error: 'File tidak mengandung data. Pastikan ada baris isi di bawah header.' };
 
-        const requiredFields = REQUIRED_FIELDS[dataType];
+        // Normalisasi semua key dari Excel ke UPPERCASE untuk perbandingan
         const firstRow = data[0];
-        const missingFields = requiredFields.filter(f => !(f in firstRow));
+        const normalizedKeys = Object.keys(firstRow).map(k => k.trim().toUpperCase());
+
+        const requiredFields = REQUIRED_FIELDS[dataType];
+        const missingFields = requiredFields.filter(
+            f => !normalizedKeys.includes(f.trim().toUpperCase())
+        );
 
         if (missingFields.length > 0) {
             return {
