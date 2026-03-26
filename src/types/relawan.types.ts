@@ -4,6 +4,7 @@
 export interface Assignment {
     id: string;
     opd: string;
+    opd_id?: number;
     kader: string;
     peran: string;
     detail: string;
@@ -27,6 +28,7 @@ export interface PengajuanData {
 }
 
 export interface RelawanData {
+    user_id?: number;
     nik: string;
     namaLengkap: string;
     alamat: string;

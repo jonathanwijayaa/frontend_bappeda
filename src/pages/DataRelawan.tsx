@@ -44,13 +44,14 @@ interface PengajuanAPIData {
 interface AutoOption { label: string; value: string; }
 
 const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
+    user_id: r.user_id,  // ← tambahkan ini (pastikan juga ada di interface RelawanData)
     nik: r.nik,
     namaLengkap: r.nama_lengkap,
     alamat: r.alamat_ktp || '-',
     kelurahan: r.kelurahan || '-',
     kader: r.nama_kader || '-',
-    jabatan: r.status_penugasan || '-',
-    penugasan: r.nama_opd || r.penugasan || '-',
+    jabatan: r.penugasan || '-',   // ← fix: bukan status_penugasan
+    penugasan: r.nama_opd || '-',
     jenisKelamin: r.jenis_kelamin || 'L',
     assignments: []
 });
@@ -259,20 +260,40 @@ const DataRelawan: React.FC = () => {
         { header: 'KELURAHAN', accessor: 'kelurahan' as keyof RelawanData },
     ];
 
-    const handleDetailClick = (relawan: RelawanData) => {
+    const handleDetailClick = async (relawan: RelawanData) => {
         setSelectedRelawan(relawan);
-        setDetailFormData({
-            namaRelawan: relawan.namaLengkap,
-            nik: relawan.nik,
-            alamat: relawan.alamat,
-            kelurahan: relawan.kelurahan,
-            kader: relawan.kader,
-            jabatan: relawan.jabatan,
-            penugasan: relawan.penugasan,
-            jenisKelamin: (relawan.jenisKelamin as 'L' | 'P') || 'L',
-            assignments: relawan.assignments || []
-        });
         setIsDetailModalOpen(true);
+
+        try {
+            const res = await apiFetch(`/admin/relawan/${(relawan as any).user_id}`);
+            const result = await res.json();
+            if (result.success) {
+                const d = result.data;
+                setDetailFormData({
+                    namaRelawan: d.nama_lengkap,
+                    nik: d.nik,
+                    alamat: d.alamat_ktp || '-',
+                    kelurahan: d.kelurahan || '-',
+                    kader: d.nama_kader || '-',
+                    jabatan: d.jabatan || '-',
+                    penugasan: d.nama_opd || '-',
+                    jenisKelamin: (d.jenis_kelamin as 'L' | 'P') || 'L',
+                    assignments: d.penugasan_id ? [{
+                        id: String(d.penugasan_id),
+                        opd: d.nama_opd || '',
+                        opd_id: d.opd_id || 0,
+                        kader: d.nama_kader || '',
+                        peran: d.jabatan || '',
+                        detail: d.detail_jabatan || '',
+                        statusKeaktifan: d.status_penugasan || 'Aktif',
+                        nomorSK: d.nomor_sk_manual || '',
+                        skId: ''
+                    }] : []
+                });
+            }
+        } catch {
+            setToast({ message: 'Gagal memuat detail relawan', type: 'error' });
+        }
     };
 
     const handleReviewClick = (rawPengajuan: PengajuanAPIData) => {
