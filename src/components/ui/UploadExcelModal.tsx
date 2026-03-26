@@ -19,12 +19,9 @@ interface UploadExcelModalProps {
 }
 
 // ── Mapping: field wajib sesuai nama kolom AKTUAL di template Excel ──
-// OPD    → Template_Data_OPD.xlsx    : namaOpd, NIK PIC
-// Kader  → Template_Data_Kader.xlsx  : namaKader, OPD, nik pic
-// Relawan→ Template_Data_Relawan.xlsx: NAMA LENGKAP, NIK, JENIS KELAMIN, OPD
 const REQUIRED_FIELDS: Record<string, string[]> = {
-    opd:     ['namaOpd', 'NIK PIC'],
-    kader:   ['namaKader', 'OPD', 'NIK PIC'],
+    opd:     ['NAMA OPD', 'NIK PIC'],
+    kader:   ['NAMA KADER', 'OPD', 'NIK PIC'],
     relawan: ['NAMA LENGKAP', 'NIK', 'JENIS KELAMIN', 'OPD'],
 };
 
@@ -64,13 +61,14 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
         if (!data || data.length === 0)
             return { isValid: false, error: 'File tidak mengandung data. Pastikan ada baris isi di bawah header.' };
 
-        // Normalisasi semua key dari Excel ke UPPERCASE untuk perbandingan
-        const firstRow = data[0];
-        const normalizedKeys = Object.keys(firstRow).map(k => k.trim().toUpperCase());
+        // Normalisasi semua key Excel: hapus spasi tepi + uppercase
+        const normalizedKeys = Object.keys(data[0]).map(k =>
+            k.trim().toUpperCase().replace(/\s+/g, ' ')
+        );
 
         const requiredFields = REQUIRED_FIELDS[dataType];
         const missingFields = requiredFields.filter(
-            f => !normalizedKeys.includes(f.trim().toUpperCase())
+            f => !normalizedKeys.includes(f.trim().toUpperCase().replace(/\s+/g, ' '))
         );
 
         if (missingFields.length > 0) {
