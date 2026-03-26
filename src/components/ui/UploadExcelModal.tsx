@@ -19,9 +19,9 @@ interface UploadExcelModalProps {
 
 // ── Mapping: field wajib sesuai nama kolom AKTUAL di template Excel ──
 const REQUIRED_FIELDS: Record<string, string[]> = {
-    opd:     ['NAMA OPD', 'NIK PIC'],
-    kader:   ['NAMA KADER', 'OPD', 'NIK PIC'],
-    relawan: ['NAMA LENGKAP', 'NIK', 'JENIS KELAMIN', 'OPD'],
+    opd:     ['namaopd', 'nikpic'],
+    kader:   ['namakader', 'opd', 'nikpic'],
+    relawan: ['namalengkap', 'nik', 'jeniskelamin', 'opd'],
 };
 
 const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
@@ -60,22 +60,18 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
         if (!data || data.length === 0)
             return { isValid: false, error: 'File tidak mengandung data. Pastikan ada baris isi di bawah header.' };
 
-        // Normalisasi key Excel: ubah ke lowercase, buang semua spasi/simbol
+        // Normalisasi key Excel: lowercase + hapus semua non-alfanumerik
         const normalizedKeys = Object.keys(data[0]).map(k =>
             k.toLowerCase().replace(/[^a-z0-9]/g, '')
         );
 
-        const requiredFields = REQUIRED_FIELDS[dataType];
-        
-        // Cari field yang tidak ada di normalizedKeys
-        const missingFields = requiredFields.filter(
-            f => !normalizedKeys.includes(f)
-        );
+        const requiredFields = REQUIRED_FIELDS[dataType]; // sudah ternormalisasi
+        const missingFields = requiredFields.filter(f => !normalizedKeys.includes(f));
 
         if (missingFields.length > 0) {
             return {
                 isValid: false,
-                error: `Format file tidak sesuai template. Kolom inti tidak terdeteksi. Pastikan file memiliki kolom untuk: ${missingFields.join(', ')}.`
+                error: `Format file tidak sesuai template. Kolom inti tidak terdeteksi: ${missingFields.join(', ')}. Pastikan menggunakan template yang tersedia.`
             };
         }
         return { isValid: true };
