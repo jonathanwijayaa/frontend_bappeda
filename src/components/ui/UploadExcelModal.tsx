@@ -1,9 +1,8 @@
 //UploadExcelModal.tsx
-//UploadExcelModal.tsx — GANTI FILE YANG LAMA SEPENUHNYA
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Link } from 'react-router-dom';
-import { Upload, FileSpreadsheet, X } from 'lucide-react';
+import { Upload, FileSpreadsheet, X } from 'lucide-react';  
 import * as XLSX from 'xlsx';
 import Modal from './Modal';
 import Button from './Button';
@@ -61,20 +60,22 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
         if (!data || data.length === 0)
             return { isValid: false, error: 'File tidak mengandung data. Pastikan ada baris isi di bawah header.' };
 
-        // Normalisasi semua key Excel: hapus spasi tepi + uppercase
+        // Normalisasi key Excel: ubah ke lowercase, buang semua spasi/simbol
         const normalizedKeys = Object.keys(data[0]).map(k =>
-            k.trim().toUpperCase().replace(/\s+/g, ' ')
+            k.toLowerCase().replace(/[^a-z0-9]/g, '')
         );
 
         const requiredFields = REQUIRED_FIELDS[dataType];
+        
+        // Cari field yang tidak ada di normalizedKeys
         const missingFields = requiredFields.filter(
-            f => !normalizedKeys.includes(f.trim().toUpperCase().replace(/\s+/g, ' '))
+            f => !normalizedKeys.includes(f)
         );
 
         if (missingFields.length > 0) {
             return {
                 isValid: false,
-                error: `Format file tidak sesuai template. Kolom berikut tidak ditemukan: ${missingFields.map(f => `"${f}"`).join(', ')}. Pastikan menggunakan template yang tersedia.`
+                error: `Format file tidak sesuai template. Kolom inti tidak terdeteksi. Pastikan file memiliki kolom untuk: ${missingFields.join(', ')}.`
             };
         }
         return { isValid: true };
