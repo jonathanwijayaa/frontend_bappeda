@@ -553,7 +553,7 @@ const DataRelawan: React.FC = () => {
                             <AutocompleteInput
                                 name={`kader-${index}`}
                                 value={assignment.kader}
-                                options={[]}
+                                options={assignment.kader ? [{ label: assignment.kader, value: assignment.kader }] : []}
                                 onChange={() => {}}
                                 placeholder="Kader"
                                 disabled={true}
