@@ -60,39 +60,50 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
 
     const renderTableRows = () => {
         return data.map((item, index) => {
+            // Normalisasi semua key: lowercase + hapus non-alfanumerik
+            const r: Record<string, any> = {};
+            for (const key of Object.keys(item)) {
+                r[key.toLowerCase().replace(/[^a-z0-9]/g, '')] = item[key];
+            }
+
+            const get = (keys: string[]) => {
+                for (const k of keys) if (r[k] !== undefined && r[k] !== '') return String(r[k]);
+                return '-';
+            };
+
             switch (dataType) {
                 case 'opd':
                     return (
                         <tr key={index} className="hover:bg-gray-50">
                             <td className="px-4 py-3 text-sm text-gray-900">{index + 1}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.namaOpd || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.status || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.alamat || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.pic || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.kontak || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['namaopd', 'nama'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['status'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['alamat'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['pic'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['kontak'])}</td>
                         </tr>
                     );
                 case 'kader':
                     return (
                         <tr key={index} className="hover:bg-gray-50">
                             <td className="px-4 py-3 text-sm text-gray-900">{index + 1}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.namaKader || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.status || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.pic || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.kontak || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['namakader', 'kader', 'nama'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['opd'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['pic'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['nikpic', 'nik'])}</td>
                         </tr>
                     );
                 case 'relawan':
                     return (
                         <tr key={index} className="hover:bg-gray-50">
                             <td className="px-4 py-3 text-sm text-gray-900">{index + 1}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.namaLengkap || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.nik || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.alamat || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.kelurahan || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.kader || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.jabatan || '-'}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{item.penugasan || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['namalengkap', 'nama'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['nik'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['alamat', 'alamatktp'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['kelurahan'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['kader', 'komunitaskader'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['jabatan'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['penugasan', 'opd'])}</td>
                         </tr>
                     );
             }
