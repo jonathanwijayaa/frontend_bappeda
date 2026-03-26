@@ -8,6 +8,7 @@ export interface Assignment {
     kader: string;
     peran: string;
     detail: string;
+    penugasan?: string;
     statusKeaktifan: 'Aktif' | 'Nonaktif';
     nomorSK: string;
     skId: string; // Reference to SK document
