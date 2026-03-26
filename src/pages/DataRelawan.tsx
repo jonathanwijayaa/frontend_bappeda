@@ -169,8 +169,47 @@ const DataRelawan: React.FC = () => {
         try {
             const res = await apiFetch('/admin/relawan');
             const result = await res.json();
+            
             if (result.success) {
-                setRelawanList(result.data.map(mapToRelawanData));
+                // ── LOGIKA GROUPING MULTI-PENUGASAN ──
+                const groupedMap = new Map<string, RelawanData>();
+                
+                result.data.forEach((row: any) => {
+                    // Jika NIK belum ada di Map, buat kerangka profil utamanya
+                    if (!groupedMap.has(row.nik)) {
+                        groupedMap.set(row.nik, {
+                            nik: row.nik,
+                            namaLengkap: row.nama_lengkap,
+                            alamat: row.alamat_ktp || '-',
+                            kelurahan: row.kelurahan || '-',
+                            jenisKelamin: row.jenis_kelamin || 'L',
+                            // Jadikan penugasan pertama sebagai perwakilan di kolom tabel utama
+                            kader: row.nama_kader || '-',
+                            jabatan: row.jabatan || '-',
+                            penugasan: row.nama_opd || row.penugasan || '-',
+                            assignments: [] // Siapkan array kosong
+                        });
+                    }
+                    
+                    // Masukkan data penugasan ke dalam array 'assignments' milik relawan tersebut
+                    if (row.nama_opd || row.penugasan || row.nama_kader) {
+                        groupedMap.get(row.nik)!.assignments!.push({
+                            id: row.penugasan_id?.toString() || Math.random().toString(),
+                            opd: row.nama_opd || '',
+                            opd_id: row.opd_id || 0, // Termasuk opd_id agar komplit
+                            kader: row.nama_kader || '',
+                            peran: row.jabatan || '',
+                            detail: row.detail_jabatan || '',
+                            penugasan: row.penugasan || '',
+                            statusKeaktifan: row.status_penugasan || 'Aktif',
+                            nomorSK: row.nomor_sk_manual || '', // ✨ Wajib ada karena interface
+                            skId: ''                            // ✨ Wajib ada karena interface
+                        });
+                    }
+                });
+                
+                // Ubah Map kembali menjadi Array untuk dirender oleh tabel
+                setRelawanList(Array.from(groupedMap.values()));
             } else {
                 setToast({ message: result.message || 'Gagal memuat data relawan', type: 'error' });
             }
