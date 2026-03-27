@@ -1,32 +1,80 @@
-// components/ui/UploadPDFModal.tsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Modal from './Modal';
 import Button from './Button';
 import { Upload, X, FileText } from 'lucide-react';
+import AutocompleteInput from './AutocompleteInput';
+import { apiFetch } from '../../utils/api';
 
 interface UploadPDFModalProps {
     isOpen: boolean;
     onClose: () => void;
     onConfirm: (file: File, metadata: any) => Promise<void>;
     title: string;
+    // ✨ Tambahan Props untuk Role-Aware
+    isOPD?: boolean;
+    userOpdData?: { id?: number; name?: string };
+}
+
+interface AutoOption {
+    label: string;
+    value: string;
 }
 
 const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
     isOpen,
     onClose,
     onConfirm,
-    title
+    title,
+    isOPD = false,
+    userOpdData
 }) => {
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    
+    // State untuk opsi OPD dari database (Hanya diambil jika user adalah Super Admin)
+    const [opdOptions, setOpdOptions] = useState<AutoOption[]>([]);
+
     const [metadata, setMetadata] = useState({
         nomorSK: '',
         judulSK: '',
         tanggalTerbit: '',
         batasAktif: '',
-        opd_id: ''
+        opd_id: '',
+        opd_name: '' // Tambahan state untuk menyimpan text nama OPD
     });
+    
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Reset dan atur nilai awal saat modal terbuka
+    useEffect(() => {
+        if (isOpen) {
+            setMetadata({
+                nomorSK: '',
+                judulSK: '',
+                tanggalTerbit: '',
+                batasAktif: '',
+                // Jika isOPD, langsung kunci id dan namanya dari props userOpdData
+                opd_id: isOPD && userOpdData?.id ? String(userOpdData.id) : '',
+                opd_name: isOPD && userOpdData?.name ? userOpdData.name : ''
+            });
+            setFile(null);
+            
+            // Ambil daftar OPD dari API HANYA jika yang login adalah Super Admin
+            if (!isOPD) {
+                apiFetch('/opd')
+                    .then(r => r.json())
+                    .then(result => {
+                        if (result.success) {
+                            setOpdOptions(result.data.map((o: any) => ({
+                                label: o.nama_opd,
+                                value: String(o.opd_id)
+                            })));
+                        }
+                    })
+                    .catch(() => console.error("Gagal mengambil daftar OPD"));
+            }
+        }
+    }, [isOpen, isOPD, userOpdData]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
@@ -43,10 +91,25 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
         }
     };
 
+    // Fungsi handle perubahan pada komponen Autocomplete
+    const handleOpdChange = (val: string) => {
+        const matched = opdOptions.find(o => o.label.toLowerCase() === val.toLowerCase());
+        setMetadata(prev => ({
+            ...prev,
+            opd_name: val,
+            opd_id: matched ? matched.value : ''
+        }));
+    };
+
     const handleSubmit = async () => {
         if (!file || !metadata.nomorSK) {
             alert('File PDF dan Nomor SK wajib diisi');
             return;
+        }
+        // Validasi ekstra: Super Admin tidak boleh upload kalau tidak pilih OPD yang valid
+        if (!isOPD && !metadata.opd_id) {
+             alert('Harap pilih OPD yang valid dari daftar.');
+             return;
         }
 
         setIsUploading(true);
@@ -59,13 +122,6 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
 
     const handleClose = () => {
         setFile(null);
-        setMetadata({
-            nomorSK: '',
-            judulSK: '',
-            tanggalTerbit: '',
-            batasAktif: '',
-            opd_id: ''
-        });
         onClose();
     };
 
@@ -129,7 +185,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                             value={metadata.judulSK}
                             onChange={(e) => setMetadata({ ...metadata, judulSK: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Pengangkatan Kader dan Relawan"
+                            placeholder="Pengangkatan Kader"
                         />
                     </div>
 
@@ -157,19 +213,35 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                         />
                     </div>
 
+                    {/* ✨ KOLOM OPD ROLE-AWARE ✨ */}
                     <div className="col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            OPD
+                            OPD <span className="text-red-500">*</span>
                         </label>
-                        <select
-                            value={metadata.opd_id}
-                            onChange={(e) => setMetadata({ ...metadata, opd_id: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                            <option value="">Pilih OPD</option>
-                            <option value="1">BPBD Yogyakarta</option>
-                            {/* Tambahkan OPD lain dari API jika perlu */}
-                        </select>
+                        {isOPD ? (
+                            <input 
+                                type="text" 
+                                disabled 
+                                value={metadata.opd_name || 'Instansi Anda'} 
+                                className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 italic cursor-not-allowed"
+                            />
+                        ) : (
+                            <div className="relative">
+                                <AutocompleteInput
+                                    name="opd_name"
+                                    value={metadata.opd_name}
+                                    options={opdOptions}
+                                    onChange={handleOpdChange}
+                                    placeholder="Ketik nama OPD..."
+                                    warnIfNotFound={true}
+                                    warnMessage="OPD tidak ditemukan di database"
+                                />
+                                {/* Indikator centang hijau jika OPD valid ditemukan */}
+                                {metadata.opd_id && (
+                                    <p className="mt-1 text-xs text-green-600 font-medium">✓ OPD valid dipilih</p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
