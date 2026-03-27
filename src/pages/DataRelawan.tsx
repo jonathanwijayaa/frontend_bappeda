@@ -11,6 +11,7 @@ import UploadExcelModal from '../components/ui/UploadExcelModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import { RelawanData, Assignment } from '../types/relawan.types';
 import { apiFetch } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
 // Tipe data dari backend API (mapping ke RelawanData untuk keperluan UI)
 interface RelawanAPIData {
@@ -57,6 +58,9 @@ const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
 });
 
 const DataRelawan: React.FC = () => {
+    const { isSuperAdmin, isOPD } = useAuth();
+    const API_BASE = isSuperAdmin ? '/admin/relawan' : '/opd-admin/relawan';
+
     const [relawanList, setRelawanList] = useState<RelawanData[]>([]);
     const [pengajuanList, setPengajuanList] = useState<PengajuanAPIData[]>([]);
     const [isLoadingRelawan, setIsLoadingRelawan] = useState(true);
@@ -167,7 +171,7 @@ const DataRelawan: React.FC = () => {
     const fetchRelawan = useCallback(async () => {
         setIsLoadingRelawan(true);
         try {
-            const res = await apiFetch('/admin/relawan');
+            const res = await apiFetch(API_BASE)
             const result = await res.json();
             
             if (result.success) {
@@ -223,7 +227,7 @@ const DataRelawan: React.FC = () => {
     const fetchPengajuan = useCallback(async () => {
         setIsLoadingPengajuan(true);
         try {
-            const res = await apiFetch('/admin/relawan/pengajuan');
+            const res = await apiFetch(`${API_BASE}/pengajuan`);
             const result = await res.json();
             if (result.success) {
                 setPengajuanList(result.data);
@@ -354,7 +358,7 @@ const DataRelawan: React.FC = () => {
         if (!formData.namaRelawan || !formData.nik) return;
         setIsSaving(true);
         try {
-            const res = await apiFetch('/admin/relawan/bulk', {
+            const res = await apiFetch(API_BASE, {
                 method: 'POST',
                 body: JSON.stringify([{
                     namaLengkap: formData.namaRelawan,
@@ -406,7 +410,7 @@ const DataRelawan: React.FC = () => {
 
     const handleExcelUploadConfirm = async (data: any[]) => {
         try {
-            const res = await apiFetch('/admin/relawan/bulk', {
+            const res = await apiFetch(`${API_BASE}/bulk`, {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
