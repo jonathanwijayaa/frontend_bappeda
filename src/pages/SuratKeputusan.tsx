@@ -1,6 +1,6 @@
 //SuratKeputusan.tsx
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { FileDown, Upload, ChevronLeft, ChevronRight, Loader2, Eye, Trash2, AlertCircle, CheckCircle, ExternalLink } from 'lucide-react';
+import { FileDown, Upload, ChevronLeft, ChevronRight, Loader2, Eye, Trash2, AlertCircle, ExternalLink } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
@@ -9,7 +9,7 @@ import Modal from '../components/ui/Modal';
 import UploadPDFModal from '../components/ui/UploadPDFModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import { exportToPDF } from '../utils/exportToPDF';
-import { apiFetch } from '../utils/api';
+import { apiFetch } from '../utils/api'
 import { useAuth } from '../context/AuthContext';
 
 interface SKData {
@@ -47,7 +47,7 @@ interface ErrorHint {
 }
 
 const SuratKeputusan: React.FC = () => {
-    const { isSuperAdmin, isOPD } = useAuth();
+    const { isSuperAdmin, isOPD, user } = useAuth();
     const [skList, setSkList] = useState<SKData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingDetail, setIsLoadingDetail] = useState(false);
@@ -519,6 +519,12 @@ const SuratKeputusan: React.FC = () => {
                 onClose={() => setIsUploadModalOpen(false)}
                 onConfirm={handlePDFUploadConfirm}
                 title="Upload Surat Keputusan (PDF)"
+                isOPD={isOPD} 
+                // ✅ FIXED: Tambahkan "as any" agar TypeScript tidak komplain
+                userOpdData={{ 
+                    id: (user as any)?.opd_id, 
+                    name: (user as any)?.nama_opd 
+                }} 
             />
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}

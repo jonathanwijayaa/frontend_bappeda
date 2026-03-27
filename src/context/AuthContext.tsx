@@ -6,6 +6,8 @@ interface User {
     role: 'super_admin' | 'opd' | 'relawan';
     roleDisplay: string;
     avatar: string;
+    opd_id?: number; 
+    nama_opd?: string;
 }
 
 interface AuthContextType {
@@ -95,6 +97,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                     role: data.user.role,
                     roleDisplay: getRoleDisplay(data.user.role),
                     avatar: getAvatarUrl(data.user.nama, data.user.role),
+                    opd_id: data.user.opd_id,
+                    nama_opd: data.user.nama_opd
                 };
 
                 setUser(loggedInUser);
