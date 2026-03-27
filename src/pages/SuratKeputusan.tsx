@@ -1,5 +1,6 @@
+//SuratKeputusan.tsx
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { FileDown, Upload, ChevronLeft, ChevronRight, Loader2, ExternalLink } from 'lucide-react';
+import { FileDown, Upload, ChevronLeft, ChevronRight, Loader2, Eye, Trash2, AlertCircle, CheckCircle, ExternalLink } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
@@ -9,8 +10,8 @@ import UploadPDFModal from '../components/ui/UploadPDFModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import { exportToPDF } from '../utils/exportToPDF';
 import { apiFetch } from '../utils/api';
+import { useAuth } from '../context/AuthContext';
 
-// Interface sesuai response backend getAllSK
 interface SKData {
     sk_id: number;
     nomor_sk: string;
@@ -18,24 +19,35 @@ interface SKData {
     tanggal_terbit: string | null;
     batas_aktif: string | null;
     status: string;
-    file_path: string;
     nama_opd: string;
+    opd_id?: number;
     jumlah_relawan: number;
+    has_file: boolean;
 }
 
-// Interface sesuai response backend getSKById
 interface SKDetail extends SKData {
+    file_path?: string;
     daftar_relawan: {
         penugasan_id: number;
         nik: string;
         nama_lengkap: string;
         no_hp: string | null;
         nama_kader: string | null;
+        kader_id: number | null;
         status_keaktifan: string;
+        jabatan: string | null;
     }[];
 }
 
+interface ErrorHint {
+    title: string;
+    steps: string[];
+    link?: string;
+    link_text?: string;
+}
+
 const SuratKeputusan: React.FC = () => {
+    const { isSuperAdmin, isOPD } = useAuth();
     const [skList, setSkList] = useState<SKData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingDetail, setIsLoadingDetail] = useState(false);
@@ -44,12 +56,14 @@ const SuratKeputusan: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
+    const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
     const [selectedSK, setSelectedSK] = useState<SKDetail | null>(null);
+    const [pdfBase64, setPdfBase64] = useState<string | null>(null);
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+    const [errorHint, setErrorHint] = useState<ErrorHint | null>(null);
     const itemsPerPage = 5;
 
-    // ── Fetch ────────────────────────────────────
     const fetchSK = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -69,7 +83,6 @@ const SuratKeputusan: React.FC = () => {
 
     useEffect(() => { fetchSK(); }, [fetchSK]);
 
-    // ── Pagination ───────────────────────────────
     const filteredData = useMemo(() =>
         skList.filter(sk =>
             sk.nomor_sk.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -81,40 +94,6 @@ const SuratKeputusan: React.FC = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-    // ── Columns ──────────────────────────────────
-    const columns = [
-        { header: 'NOMOR SK', accessor: 'nomor_sk' as keyof SKData },
-        { header: 'JUDUL SK', accessor: 'judul_sk' as keyof SKData },
-        { header: 'OPD', accessor: 'nama_opd' as keyof SKData },
-        {
-            header: 'TANGGAL TERBIT',
-            render: (row: SKData) => (
-                <span>{row.tanggal_terbit ? new Date(row.tanggal_terbit).toLocaleDateString('id-ID') : '-'}</span>
-            )
-        },
-        {
-            header: 'BATAS AKTIF',
-            render: (row: SKData) => (
-                <span>{row.batas_aktif ? new Date(row.batas_aktif).toLocaleDateString('id-ID') : '-'}</span>
-            )
-        },
-        {
-            header: 'STATUS',
-            render: (row: SKData) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                    {row.status}
-                </span>
-            )
-        },
-        {
-            header: 'JUMLAH RELAWAN',
-            render: (row: SKData) => (
-                <span className="font-medium">{row.jumlah_relawan}</span>
-            )
-        },
-    ];
-
-    // ── Handlers ─────────────────────────────────
     const handleDetailClick = async (sk: SKData) => {
         setIsLoadingDetail(true);
         setIsDetailModalOpen(true);
@@ -135,37 +114,105 @@ const SuratKeputusan: React.FC = () => {
         }
     };
 
-    const handlePDFUploadConfirm = async (file: File, metadata: any) => {
+    const handlePreviewPDF = async (sk: SKData) => {
         try {
-            // Bangun FormData sesuai backend (POST /api/admin/sk menggunakan multer)
+            const res = await apiFetch(`/admin/sk/${sk.sk_id}/pdf`);
+            const result = await res.json();
+            if (result.success) {
+                setPdfBase64(result.data.file_path);
+                setIsPreviewModalOpen(true);
+            } else {
+                setToast({ message: 'Gagal memuat PDF', type: 'error' });
+            }
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        }
+    };
+
+    const handlePDFUploadConfirm = async (file: File, metadata: any) => {
+        setErrorHint(null);
+
+        // Validasi ukuran file (2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            setToast({ message: 'Ukuran file terlalu besar. Maksimal 2MB.', type: 'error' });
+            return;
+        }
+
+        // Validasi tipe file
+        if (file.type !== 'application/pdf') {
+            setToast({ message: 'Hanya file PDF yang diperbolehkan.', type: 'error' });
+            return;
+        }
+
+        try {
             const formData = new FormData();
             formData.append('file', file);
             formData.append('nomor_sk', metadata.nomorSK);
             formData.append('judul_sk', metadata.judulSK);
             formData.append('tanggal_terbit', metadata.tanggalTerbit);
             formData.append('batas_aktif', metadata.batasAktif || '');
-            // namaOPD dari modal dipakai sebagai opd_id lookup - untuk sementara kirim nama OPD
-            // dan gunakan opd_id dari list yang sudah ada jika ada, fallback ke 1
-            const matchedOpd = skList.find(sk => sk.nama_opd === metadata.namaOPD);
-            formData.append('opd_id', matchedOpd ? String((matchedOpd as any).opd_id) : '1');
+            formData.append('opd_id', metadata.opd_id || '1');
+
+            // Jika ada daftar relawan dari Excel/JSON
+            if (metadata.daftar_relawan) {
+                formData.append('daftar_relawan', JSON.stringify(metadata.daftar_relawan));
+            }
 
             const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/sk`, {
                 method: 'POST',
-                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+                headers: { 
+                    Authorization: `Bearer ${localStorage.getItem('token')}`
+                },
                 body: formData
             });
             const result = await res.json();
+            
             if (result.success) {
-                setToast({ message: 'SK berhasil diunggah!', type: 'success' });
+                setToast({ 
+                    message: `SK berhasil diunggah! ${result.data.total_relawan_ditugaskan || 0} relawan ditugaskan.`, 
+                    type: 'success' 
+                });
                 setIsUploadModalOpen(false);
                 fetchSK();
             } else {
                 setToast({ message: result.message || 'Gagal mengunggah SK', type: 'error' });
+                
+                // Tampilkan hint jika ada
+                if (result.hint) {
+                    setErrorHint(result.hint);
+                }
+                
+                // Jika ada detail relawan yang gagal
+                if (result.data?.relawan_gagal) {
+                    console.error('Relawan yang gagal:', result.data.relawan_gagal);
+                }
             }
         } catch {
             setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
         }
+    };
 
+    const handleDeleteSK = async (sk_id: number) => {
+        if (!confirm('Apakah Anda yakin ingin menghapus SK ini?')) return;
+
+        try {
+            const res = await apiFetch(`/admin/sk/${sk_id}`, {
+                method: 'DELETE'
+            });
+            const result = await res.json();
+            if (result.success) {
+                setToast({ message: 'SK berhasil dihapus', type: 'success' });
+                fetchSK();
+                setIsDetailModalOpen(false);
+            } else {
+                setToast({ message: result.message || 'Gagal menghapus SK', type: 'error' });
+                if (result.hint) {
+                    setErrorHint(result.hint);
+                }
+            }
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        }
     };
 
     const handleExportPDF = async () => {
@@ -191,19 +238,111 @@ const SuratKeputusan: React.FC = () => {
         }
     };
 
+    const columns = [
+        { header: 'NOMOR SK', accessor: 'nomor_sk' as keyof SKData },
+        { header: 'JUDUL SK', accessor: 'judul_sk' as keyof SKData },
+        { header: 'OPD', accessor: 'nama_opd' as keyof SKData },
+        {
+            header: 'TANGGAL TERBIT',
+            render: (row: SKData) => (
+                <span>{row.tanggal_terbit ? new Date(row.tanggal_terbit).toLocaleDateString('id-ID') : '-'}</span>
+            )
+        },
+        {
+            header: 'STATUS',
+            render: (row: SKData) => (
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {row.status}
+                </span>
+            )
+        },
+        {
+            header: 'JUMLAH RELAWAN',
+            render: (row: SKData) => (
+                <span className="font-medium">{row.jumlah_relawan}</span>
+            )
+        },
+    ];
+
     const actions = (row: SKData) => (
-        <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
+        <div className="flex gap-2">
+            <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
+            {row.has_file && (
+                <Button variant="outline" size="sm" onClick={() => handlePreviewPDF(row)}>
+                    <Eye size={14} />
+                </Button>
+            )}
+            {isSuperAdmin && (
+                <Button variant="secondary" size="sm" onClick={() => handleDeleteSK(row.sk_id)}>
+                    <Trash2 size={14} />
+                </Button>
+            )}
+        </div>
     );
 
     return (
         <div className="space-y-6">
+            {/* INFO BOX - Panduan Upload SK */}
+            <Card className="bg-blue-50 border-blue-200">
+                <div className="flex items-start gap-3">
+                    <div className="text-blue-600 mt-0.5">
+                        <AlertCircle size={20} />
+                    </div>
+                    <div className="text-sm text-blue-800 flex-1">
+                        <p className="font-semibold mb-2">📋 Panduan Upload Surat Keputusan:</p>
+                        <ol className="list-decimal list-inside space-y-1 text-blue-700">
+                            <li>Pastikan <strong>OPD</strong> sudah terdaftar → <a href="/manajemen-opd" className="underline font-medium hover:text-blue-900">Manajemen OPD</a></li>
+                            <li>Pastikan <strong>Kader</strong> sudah terdaftar → <a href="/daftar-kader" className="underline font-medium hover:text-blue-900">Daftar Kader</a></li>
+                            <li>Pastikan <strong>Relawan</strong> sudah terdaftar → <a href="/data-relawan" className="underline font-medium hover:text-blue-900">Data Relawan</a></li>
+                            <li>Upload file PDF SK (maksimal 2MB)</li>
+                            <li>Relawan dapat ditugaskan di <strong>berbagai SK</strong> dengan <strong>kader berbeda</strong> dalam OPD yang sama</li>
+                        </ol>
+                    </div>
+                </div>
+            </Card>
+
+            {/* ERROR HINT BOX - Muncul jika ada error */}
+            {errorHint && (
+                <Card className="bg-red-50 border-red-200">
+                    <div className="flex items-start gap-3">
+                        <div className="text-red-600 mt-0.5">
+                            <AlertCircle size={20} />
+                        </div>
+                        <div className="text-sm text-red-800 flex-1">
+                            <p className="font-semibold mb-2">⚠️ {errorHint.title}</p>
+                            <ol className="list-decimal list-inside space-y-1 text-red-700">
+                                {errorHint.steps.map((step, idx) => (
+                                    <li key={idx}>{step}</li>
+                                ))}
+                            </ol>
+                            {errorHint.link && (
+                                <a 
+                                    href={errorHint.link} 
+                                    className="inline-flex items-center gap-1 mt-2 text-red-600 font-medium hover:text-red-800 underline"
+                                >
+                                    {errorHint.link_text} <ExternalLink size={12} />
+                                </a>
+                            )}
+                            <button 
+                                onClick={() => setErrorHint(null)}
+                                className="ml-4 text-red-500 hover:text-red-700"
+                            >
+                                ✕ Tutup
+                            </button>
+                        </div>
+                    </div>
+                </Card>
+            )}
+
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div className="flex gap-3">
-                    <Button variant="primary" onClick={() => setIsUploadModalOpen(true)}>
-                        <Upload size={18} />
-                        Upload SK (PDF)
-                    </Button>
+                    {(isSuperAdmin || isOPD) && (
+                        <Button variant="primary" onClick={() => setIsUploadModalOpen(true)}>
+                            <Upload size={18} />
+                            Upload SK (PDF)
+                        </Button>
+                    )}
                 </div>
                 <SearchInput
                     value={searchTerm}
@@ -263,7 +402,6 @@ const SuratKeputusan: React.FC = () => {
                     </div>
                 ) : selectedSK && (
                     <div className="space-y-6">
-                        {/* Info SK */}
                         <div className="space-y-3">
                             {[
                                 { label: 'Nomor SK', value: selectedSK.nomor_sk },
@@ -279,22 +417,22 @@ const SuratKeputusan: React.FC = () => {
                                 </div>
                             ))}
 
-                            {/* Link file PDF */}
-                            <div className="grid grid-cols-3 gap-4 items-center border-b border-gray-100 pb-2">
-                                <span className="text-sm font-medium text-gray-600">File SK</span>
-                                <a
-                                    href={selectedSK.file_path}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="col-span-2 flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                                >
-                                    <ExternalLink size={14} />
-                                    Lihat Dokumen PDF
-                                </a>
-                            </div>
+                            {selectedSK.has_file && (
+                                <div className="grid grid-cols-3 gap-4 items-center border-b border-gray-100 pb-2">
+                                    <span className="text-sm font-medium text-gray-600">File SK</span>
+                                    <Button 
+                                        variant="outline" 
+                                        size="sm" 
+                                        onClick={() => handlePreviewPDF(selectedSK)}
+                                        className="col-span-2 flex items-center gap-2 justify-start"
+                                    >
+                                        <Eye size={14} />
+                                        Lihat Dokumen PDF
+                                    </Button>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Daftar Relawan */}
                         <div>
                             <h3 className="text-base font-semibold text-gray-800 mb-3">
                                 Daftar Relawan ({selectedSK.daftar_relawan?.length || 0})
@@ -307,6 +445,7 @@ const SuratKeputusan: React.FC = () => {
                                                 <th className="px-4 py-2 text-left font-medium text-gray-600">NIK</th>
                                                 <th className="px-4 py-2 text-left font-medium text-gray-600">Nama</th>
                                                 <th className="px-4 py-2 text-left font-medium text-gray-600">Kader</th>
+                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Jabatan</th>
                                                 <th className="px-4 py-2 text-left font-medium text-gray-600">Status</th>
                                             </tr>
                                         </thead>
@@ -316,6 +455,7 @@ const SuratKeputusan: React.FC = () => {
                                                     <td className="px-4 py-2 text-gray-700">{r.nik}</td>
                                                     <td className="px-4 py-2 text-gray-700">{r.nama_lengkap}</td>
                                                     <td className="px-4 py-2 text-gray-500">{r.nama_kader || '-'}</td>
+                                                    <td className="px-4 py-2 text-gray-500">{r.jabatan || '-'}</td>
                                                     <td className="px-4 py-2">
                                                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${r.status_keaktifan === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
                                                             {r.status_keaktifan}
@@ -330,6 +470,45 @@ const SuratKeputusan: React.FC = () => {
                                 <p className="text-sm text-gray-500 italic">Belum ada relawan yang ditugaskan pada SK ini</p>
                             )}
                         </div>
+
+                        {isSuperAdmin && (
+                            <div className="flex justify-end gap-2 pt-4 border-t">
+                                <Button variant="outline" onClick={() => setIsDetailModalOpen(false)}>Tutup</Button>
+                                <Button variant="secondary" onClick={() => handleDeleteSK(selectedSK.sk_id)}>
+                                    <Trash2 size={14} className="mr-2" />
+                                    Hapus SK
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </Modal>
+
+            {/* PDF Preview Modal */}
+            <Modal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} title="Preview Surat Keputusan" maxWidth="4xl">
+                {pdfBase64 ? (
+                    <div className="space-y-4">
+                        <iframe
+                            src={pdfBase64}
+                            className="w-full h-[600px] border rounded-lg"
+                            title="PDF Preview"
+                        />
+                        <div className="flex justify-end gap-2">
+                            <Button variant="outline" onClick={() => setIsPreviewModalOpen(false)}>Tutup</Button>
+                            <a
+                                href={pdfBase64}
+                                download={`SK-${selectedSK?.nomor_sk || 'document'}.pdf`}
+                                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                            >
+                                <FileDown size={16} className="mr-2" />
+                                Download PDF
+                            </a>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-center h-60">
+                        <Loader2 size={24} className="animate-spin text-gray-400" />
+                        <span className="ml-3 text-gray-500">Memuat PDF...</span>
                     </div>
                 )}
             </Modal>
@@ -342,7 +521,6 @@ const SuratKeputusan: React.FC = () => {
                 title="Upload Surat Keputusan (PDF)"
             />
 
-            {/* Toast */}
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
