@@ -279,7 +279,26 @@ const DataRelawan: React.FC = () => {
                 });
             }
         }
-    }, [isModalOpen, isOPD, user]);  // ✅ Tambahkan useEffect ini;
+    }, [isModalOpen, isOPD, user, fetchKaderByOpdId]);  // ✅ Tambahkan fetchKaderByOpdId
+
+    // ── Auto-fill OPD untuk OPD user saat modal dibuka ──
+    useEffect(() => {
+        if (isModalOpen && isOPD && user && formData.assignments.length > 0) {
+            const opdId = (user as any)?.opd_id;
+            const opdName = (user as any)?.nama_opd;
+            
+            if (opdId && opdName && formData.assignments[0].opd_id === 0) {
+                setFormData(prev => ({
+                    ...prev,
+                    assignments: prev.assignments.map((a, index) => ({
+                        ...a,
+                        opd: opdName,
+                        opd_id: opdId
+                    }))
+                }));
+            }
+        }
+    }, [isModalOpen, isOPD, user]);  // ✅ Tambahkan useEffect ini
 
     const filteredRelawanData = useMemo(() => {
         return relawanList.filter(relawan =>
@@ -589,7 +608,8 @@ const handleAddAssignment = () => {
             : [];
 
         const isKaderLoading = isLoadingKaderByIndex[index] || false;
-        const hasOpdSelected = assignment.opd_id > 0 || assignment.opd !== '';
+        // ✅ FIXED: Untuk OPD user, OPD selalu dianggap selected (karena auto-filled)
+        const hasOpdSelected = isOPD || assignment.opd_id > 0 || assignment.opd !== '';
 
         return (
             <div key={assignment.id} className="relative bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4 space-y-4">
