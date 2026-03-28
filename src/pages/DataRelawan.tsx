@@ -267,12 +267,19 @@ const DataRelawan: React.FC = () => {
     }, [fetchRelawan, fetchPengajuan]);
 
     // ── Inisialisasi kader options untuk assignment pertama saat modal dibuka ──
+    // // DataRelawan.tsx - Tambahkan setelah useEffect existing (Line ~280)
+    // ── Auto-fetch kader untuk OPD user saat modal dibuka ──
     useEffect(() => {
-        if (isModalOpen) {
-            // Reset kader options saat modal dibuka
-            setKaderOptionsByIndex({});
+        if (isModalOpen && isOPD && user) {
+            const opdId = (user as any)?.opd_id;
+            if (opdId && formData.assignments.length > 0) {
+                // Fetch kader untuk semua assignment yang ada
+                formData.assignments.forEach((_, index) => {
+                    fetchKaderByOpdId(opdId, index);
+                });
+            }
         }
-    }, [isModalOpen]);
+    }, [isModalOpen, isOPD, user]);  // ✅ Tambahkan useEffect ini;
 
     const filteredRelawanData = useMemo(() => {
         return relawanList.filter(relawan =>
@@ -472,28 +479,35 @@ const DataRelawan: React.FC = () => {
     };
 
     // Line ~360 - Pastikan include kader_id: null
+    // DataRelawan.tsx - Update handleAddAssignment (Line ~370)
 
-    const handleAddAssignment = () => {
-        setFormData(prev => ({
-            ...prev,
-            assignments: [
-                ...prev.assignments,
-                {
-                    id: Date.now().toString(),
-                    // ✨ FIXED: Gunakan (user as any) agar TypeScript diam
-                    opd: isOPD ? ((user as any)?.nama_opd || '') : '',
-                    opd_id: isOPD ? ((user as any)?.opd_id || 0) : 0,
-                    kader: '',
-                    kader_id: null, 
-                    peran: '',
-                    detail: '',
-                    statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
-                    nomorSK: '',
-                    skId: ''
-                }
-            ]
-        }));
-    };
+const handleAddAssignment = () => {
+    const newIndex = formData.assignments.length;
+    
+    setFormData(prev => ({
+        ...prev,
+        assignments: [
+            ...prev.assignments,
+            {
+                id: Date.now().toString(),
+                opd: isOPD ? ((user as any)?.nama_opd || '') : '',
+                opd_id: isOPD ? ((user as any)?.opd_id || 0) : 0,
+                kader: '',
+                kader_id: null,
+                peran: '',
+                detail: '',
+                statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
+                nomorSK: '',
+                skId: ''
+            }
+        ]
+    }));
+    
+    // ✅ FIXED: Auto-fetch kader untuk assignment baru jika OPD user
+    if (isOPD && (user as any)?.opd_id) {
+        fetchKaderByOpdId((user as any).opd_id, newIndex);
+    }
+};
 
     const handleRemoveAssignment = (index: number) => {
         setFormData(prev => ({
