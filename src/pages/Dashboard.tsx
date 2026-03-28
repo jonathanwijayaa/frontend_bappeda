@@ -9,6 +9,7 @@ import { apiFetch } from '../utils/api';
 // import { mockKaderChartData } from '../data/dashboard.data';
 
 interface DashboardData {
+    nama_opd?: string; // ✨ TAMBAHKAN BARIS INI
     ringkasan: {
         total_relawan_aktif: number;
         total_opd: number;
@@ -19,38 +20,30 @@ interface DashboardData {
 }
 
 const Dashboard: React.FC = () => {
-    const { isSuperAdmin } = useAuth();
+    const { isSuperAdmin, isOPD } = useAuth();
     const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
 
     useEffect(() => {
-        const fetchDashboard = async () => {
+        const fetchDashboard = async (url: string) => {
             try {
                 setIsLoading(true);
-                const response = await apiFetch('/admin/dashboard');
+                const response = await apiFetch(url);
                 const result = await response.json();
-
-                if (result.success) {
-                    setDashboardData(result.data);
-                } else {
-                    setError(result.message || 'Gagal memuat data dashboard');
-                }
+                if (result.success) setDashboardData(result.data);
+                else setError(result.message);
             } catch (err) {
-                console.error('Dashboard fetch error:', err);
                 setError('Tidak dapat terhubung ke server.');
             } finally {
                 setIsLoading(false);
             }
         };
 
-        if (isSuperAdmin) {
-            fetchDashboard();
-        } else {
-            // TODO: Fetch OPD dashboard dari /api/opd-admin/dashboard
-            setIsLoading(false);
-        }
-    }, [isSuperAdmin]);
+        // ✨ FIXED: Arahkan ke endpoint yang benar sesuai role
+        if (isSuperAdmin) fetchDashboard('/admin/dashboard');
+        else if (isOPD) fetchDashboard('/opd-admin/dashboard');
+    }, [isSuperAdmin, isOPD]);
 
     // Map data backend ke format chart
     const chartData: ChartDataItem[] = dashboardData
@@ -107,16 +100,18 @@ const Dashboard: React.FC = () => {
 
                 {/* Info Section */}
                 <div>
-                    <Card title="Info Tambahan:">
+                    <Card title={isSuperAdmin ? "Info Tambahan:" : `Info Tambahan ${dashboardData?.nama_opd || ''}:`}>
                         <div className="space-y-4">
-                            {isSuperAdmin && dashboardData ? (
+                            {dashboardData ? (
                                 <table className="w-full">
                                     <tbody>
-                                        <tr>
-                                            <td className="text-gray-600 py-1.5">Total OPD</td>
-                                            <td className="font-semibold py-1.5 w-4 text-center">:</td>
-                                            <td className="font-semibold py-1.5 text-right">{dashboardData.ringkasan.total_opd}</td>
-                                        </tr>
+                                        {isSuperAdmin && (
+                                            <tr>
+                                                <td className="text-gray-600 py-1.5">Total OPD</td>
+                                                <td className="font-semibold py-1.5 w-4 text-center">:</td>
+                                                <td className="font-semibold py-1.5 text-right">{dashboardData.ringkasan.total_opd}</td>
+                                            </tr>
+                                        )}
                                         <tr>
                                             <td className="text-gray-600 py-1.5">Total Kader</td>
                                             <td className="font-semibold py-1.5 w-4 text-center">:</td>
@@ -127,29 +122,17 @@ const Dashboard: React.FC = () => {
                                             <td className="font-semibold py-1.5 w-4 text-center">:</td>
                                             <td className="font-semibold py-1.5 text-right">{dashboardData.ringkasan.total_relawan_aktif.toLocaleString('id-ID')}</td>
                                         </tr>
-                                        <tr>
-                                            <td className="text-gray-600 py-1.5">Pengajuan Pending</td>
-                                            <td className="font-semibold py-1.5 w-4 text-center">:</td>
-                                            <td className="font-semibold py-1.5 text-right">{dashboardData.ringkasan.pengajuan_pending}</td>
-                                        </tr>
+                                        {isSuperAdmin && (
+                                            <tr>
+                                                <td className="text-gray-600 py-1.5">Pengajuan Pending</td>
+                                                <td className="font-semibold py-1.5 w-4 text-center">:</td>
+                                                <td className="font-semibold py-1.5 text-right">{dashboardData.ringkasan.pengajuan_pending}</td>
+                                            </tr>
+                                        )}
                                     </tbody>
                                 </table>
                             ) : (
-                                <table className="w-full">
-                                    <tbody>
-                                        {/* TODO: Fetch data OPD dashboard */}
-                                        <tr>
-                                            <td className="text-gray-600 py-1.5">Total Kader</td>
-                                            <td className="font-semibold py-1.5 w-4 text-center">:</td>
-                                            <td className="font-semibold py-1.5 text-right">-</td>
-                                        </tr>
-                                        <tr>
-                                            <td className="text-gray-600 py-1.5">Total Relawan Aktif per Kader</td>
-                                            <td className="font-semibold py-1.5 w-4 text-center">:</td>
-                                            <td className="font-semibold py-1.5 text-right">-</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div className="text-gray-400 text-center py-4">Belum ada data</div>
                             )}
                         </div>
                     </Card>
