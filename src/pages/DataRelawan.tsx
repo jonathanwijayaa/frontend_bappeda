@@ -143,28 +143,36 @@ const DataRelawan: React.FC = () => {
     });
 
     // ── Fetch kader berdasarkan opd_id untuk assignment tertentu ──
-    // Line ~120-145 - Ganti dengan ini
-
     const fetchKaderByOpdId = useCallback(async (opdId: number, assignmentIndex: number) => {
+        console.log(`🔍 fetchKaderByOpdId called:`, { opdId, assignmentIndex });
+        
         if (!opdId) {
+            console.warn(`⚠️ fetchKaderByOpdId: opdId is ${opdId}, skipping fetch`);
             setKaderOptionsByIndex(prev => ({ ...prev, [assignmentIndex]: [] }));
             return;
         }
 
         setIsLoadingKaderByIndex(prev => ({ ...prev, [assignmentIndex]: true }));
         try {
+            console.log(`🌐 API Call: /kader?opd_id=${opdId}`);
             const res = await apiFetch(`/kader?opd_id=${opdId}`);
             const result = await res.json();
+            
+            console.log(`📦 API Response:`, result);
+            
             if (result.success) {
-                // ✅ FIXED: value = kader_id (number), label = nama_kader (string)
                 const options: AutoOption[] = result.data.map((k: any) => ({
                     label: k.nama_kader,
-                    value: String(k.kader_id)  // ← String karena AutoOption value type string
+                    value: String(k.kader_id)
                 }));
+                console.log(`✅ Kader options loaded:`, options.length, 'cadres');
                 setKaderOptionsByIndex(prev => ({ ...prev, [assignmentIndex]: options }));
+            } else {
+                console.warn(`⚠️ API returned success=false:`, result.message);
+                setKaderOptionsByIndex(prev => ({ ...prev, [assignmentIndex]: [] }));
             }
-        } catch {
-            console.error('Gagal mengambil kader untuk OPD:', opdId);
+        } catch (err) {
+            console.error('❌ Gagal mengambil kader untuk OPD:', opdId, err);
             setKaderOptionsByIndex(prev => ({ ...prev, [assignmentIndex]: [] }));
         } finally {
             setIsLoadingKaderByIndex(prev => ({ ...prev, [assignmentIndex]: false }));
@@ -266,21 +274,6 @@ const DataRelawan: React.FC = () => {
         }).catch(() => { });
     }, [fetchRelawan, fetchPengajuan]);
 
-    // ── Inisialisasi kader options untuk assignment pertama saat modal dibuka ──
-    // // DataRelawan.tsx - Tambahkan setelah useEffect existing (Line ~280)
-    // ── Auto-fetch kader untuk OPD user saat modal dibuka ──
-    useEffect(() => {
-        if (isModalOpen && isOPD && user) {
-            const opdId = (user as any)?.opd_id;
-            if (opdId && formData.assignments.length > 0) {
-                // Fetch kader untuk semua assignment yang ada
-                formData.assignments.forEach((_, index) => {
-                    fetchKaderByOpdId(opdId, index);
-                });
-            }
-        }
-    }, [isModalOpen, isOPD, user, fetchKaderByOpdId]);  // ✅ Tambahkan fetchKaderByOpdId
-
     // ── Auto-fill OPD untuk OPD user saat modal dibuka ──
     useEffect(() => {
         if (isModalOpen && isOPD && user && formData.assignments.length > 0) {
@@ -288,6 +281,7 @@ const DataRelawan: React.FC = () => {
             const opdName = (user as any)?.nama_opd;
             
             if (opdId && opdName && formData.assignments[0].opd_id === 0) {
+                // ✅ FIXED: Auto-fill OPD
                 setFormData(prev => ({
                     ...prev,
                     assignments: prev.assignments.map((a, index) => ({
@@ -296,9 +290,18 @@ const DataRelawan: React.FC = () => {
                         opd_id: opdId
                     }))
                 }));
+                
+                // ✅ FIXED: Langsung fetch kader SETELAH setFormData (tidak tunggu useEffect lain)
+                formData.assignments.forEach((_, index) => {
+                    console.log(`🔍 Debug: Fetching kader for OPD ${opdId}, assignment index ${index}`);
+                    fetchKaderByOpdId(opdId, index);
+                });
             }
         }
-    }, [isModalOpen, isOPD, user]);  // ✅ Tambahkan useEffect ini
+    }, [isModalOpen, isOPD, user]);  // ✅ Hapus formData.assignments dari dependency
+
+// ❌ HAPUS useEffect auto-fetch kader yang lama (line ~295-305)
+// Karena sudah digabung dengan auto-fill OPD di atas
 
     const filteredRelawanData = useMemo(() => {
         return relawanList.filter(relawan =>
