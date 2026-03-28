@@ -300,10 +300,12 @@ const DaftarKader: React.FC = () => {
 
     const handleExcelUploadConfirm = async (data: any[]) => {
         try {
-            const res = await apiFetch('/kader/bulk', { // bulk hanya untuk super_admin
+            const url = isSuperAdmin ? '/kader/bulk' : '/opd-admin/kader/bulk';
+            const res = await apiFetch(url, {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
+            
             const result = await res.json();
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });
@@ -340,10 +342,9 @@ const DaftarKader: React.FC = () => {
                         Tambah Kader Baru
                     </Button>
                     {/* Upload Excel hanya untuk super_admin */}
-                    {isSuperAdmin && (
+                    {(isSuperAdmin || isOPD) && (
                         <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
-                            <Upload size={18} />
-                            Unggah dari Excel
+                            <Upload size={18} /> Unggah dari Excel
                         </Button>
                     )}
                 </div>

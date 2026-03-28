@@ -58,7 +58,7 @@ const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
 });
 
 const DataRelawan: React.FC = () => {
-    const { isSuperAdmin, isOPD } = useAuth();
+    const { isSuperAdmin, isOPD, user } = useAuth();
     const API_BASE = isSuperAdmin ? '/admin/relawan' : '/opd-admin/relawan';
 
     const [relawanList, setRelawanList] = useState<RelawanData[]>([]);
@@ -231,6 +231,13 @@ const DataRelawan: React.FC = () => {
     }, []);
 
     const fetchPengajuan = useCallback(async () => {
+        
+        // ✨ FIXED: Hentikan fungsi jika yang login bukan Super Admin
+        if (!isSuperAdmin) {
+            setIsLoadingPengajuan(false);
+            return;
+        }
+
         setIsLoadingPengajuan(true);
         try {
             const res = await apiFetch(`${API_BASE}/pengajuan`);
@@ -311,21 +318,18 @@ const DataRelawan: React.FC = () => {
 
     const handleDetailClick = (relawan: RelawanData) => {
         setSelectedRelawan(relawan);
-        
-        // Langsung gunakan data yang sudah di-grouping dari tabel. 
-        // Tidak perlu memanggil API /admin/relawan/:id lagi!
         setDetailFormData({
-            namaRelawan: relawan.namaLengkap,
-            nik: relawan.nik,
-            alamat: relawan.alamat,
-            kelurahan: relawan.kelurahan,
-            kader: relawan.kader,
-            jabatan: relawan.jabatan,
-            penugasan: relawan.penugasan,
+            namaRelawan: relawan.namaLengkap || '',
+            nik: relawan.nik || '',
+            alamat: relawan.alamat || '-',
+            kelurahan: relawan.kelurahan || '-',
+            kader: relawan.kader || '-',
+            jabatan: relawan.jabatan || '-',
+            penugasan: relawan.penugasan || '-',
             jenisKelamin: (relawan.jenisKelamin as 'L' | 'P') || 'L',
-            assignments: relawan.assignments || [] // Data penugasan lengkap sudah ada di sini
+            // ✨ FIXED: Jaga-jaga jika relawan.assignments null/undefined
+            assignments: Array.isArray(relawan.assignments) ? relawan.assignments : [] 
         });
-        
         setIsDetailModalOpen(true);
     };
 
@@ -476,10 +480,11 @@ const DataRelawan: React.FC = () => {
                 ...prev.assignments,
                 {
                     id: Date.now().toString(),
-                    opd: '',
-                    opd_id: 0,
+                    // ✨ FIXED: Gunakan (user as any) agar TypeScript diam
+                    opd: isOPD ? ((user as any)?.nama_opd || '') : '',
+                    opd_id: isOPD ? ((user as any)?.opd_id || 0) : 0,
                     kader: '',
-                    kader_id: null,  // ✅ Pastikan ada
+                    kader_id: null, 
                     peran: '',
                     detail: '',
                     statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
@@ -586,24 +591,34 @@ const DataRelawan: React.FC = () => {
                         </button>
                     </div>
                 )}
-
+                
                 {/* OPD Field */}
                 <div className="grid grid-cols-3 gap-4 items-start">
                     <label className="text-lg font-medium text-gray-900 pt-2">OPD</label>
                     <div className="col-span-2">
-                        <AutocompleteInput
-                            name={`opd-${index}`}
-                            value={assignment.opd}
-                            options={opdOptions}
-                            onChange={(val) => context === 'form'
-                                ? handleAssignmentOpdChange(index, val)
-                                : handleAssignmentChange(index, 'opd', val)
-                            }
-                            placeholder="Cari nama OPD..."
-                            disabled={isReadOnly}
-                        />
-                        {/* Indikator OPD valid */}
-                        {!isReadOnly && assignment.opd_id > 0 && (
+                        {/* ✨ FIXED: Tambahkan (user as any) di value */}
+                        {isOPD ? (
+                           <input 
+                               type="text" 
+                               disabled 
+                               value={assignment.opd || (user as any)?.nama_opd || 'Instansi Anda'} 
+                               className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 italic cursor-not-allowed"
+                           />
+                        ) : (
+                            <AutocompleteInput
+                                name={`opd-${index}`}
+                                value={assignment.opd}
+                                options={opdOptions}
+                                onChange={(val) => context === 'form'
+                                    ? handleAssignmentOpdChange(index, val)
+                                    : handleAssignmentChange(index, 'opd', val)
+                                }
+                                placeholder="Cari nama OPD..."
+                                disabled={isReadOnly}
+                            />
+                        )}
+                        {/* Indikator OPD valid (Hanya untuk Super Admin) */}
+                        {!isReadOnly && !isOPD && assignment.opd_id > 0 && (
                             <p className="mt-1 text-xs text-green-600 font-medium">✓ OPD ditemukan</p>
                         )}
                     </div>
@@ -894,7 +909,8 @@ const DataRelawan: React.FC = () => {
 
                         <div className="pt-4 border-t border-gray-200">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Daftar Penugasan:</h3>
-                            {detailFormData.assignments && detailFormData.assignments.length > 0 ? (
+                            {/* ✨ FIXED: Pastikan detailFormData.assignments benar-benar array sebelum dicek length-nya */}
+                            {Array.isArray(detailFormData.assignments) && detailFormData.assignments.length > 0 ? (
                                 detailFormData.assignments.map((assignment, index) =>
                                     renderAssignmentFields(assignment, index, true, 'detail')
                                 )
