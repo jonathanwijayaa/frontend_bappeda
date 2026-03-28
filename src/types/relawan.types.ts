@@ -6,6 +6,7 @@ export interface Assignment {
     opd: string;
     opd_id?: number;
     kader: string;
+    kader_id: number | null;
     peran: string;
     detail: string;
     penugasan?: string;
