@@ -15,8 +15,8 @@ interface SaranData {
     no_hp: string;
     subjek: string | null;
     pesan: string;
-    status: 'Menunggu' | 'Selesai';   // ✅ ENUM bukan boolean
-    catatan_admin: string | null;      // ✅ Respon dari admin
+    status: 'Menunggu' | 'Selesai';
+    catatan_admin: string | null;
     created_at: string;
     updated_at: string;
     role: string;
@@ -298,7 +298,16 @@ const SaranHotline: React.FC = () => {
                     </div>
                 ) : (
                     <Card title="Kotak Masuk Saran & Kendala">
-                        <Table columns={saranColumns} data={currentSaranData} actions={saranActions} minRows={5} />
+                        {saranList.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                                <p className="text-gray-600 font-medium">Belum ada saran masuk</p>
+                                <p className="text-sm text-gray-400 mt-1">
+                                    Belum ada saran atau kendala yang dikirimkan oleh pengguna.
+                                </p>
+                            </div>
+                        ) : (
+                            <Table columns={saranColumns} data={currentSaranData} actions={saranActions} minRows={5} />
+                        )}
 
                         {saranList.length > 0 && (
                             <div className="mt-4 flex justify-between items-center">
