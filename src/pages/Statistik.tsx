@@ -1,7 +1,7 @@
 import React from 'react';
 import Card from '../components/ui/Card';
 import DonutChart from '../components/charts/DonutChart';
-import PieChart from '../components/charts/PieChart';
+import PieChart from '../components/charts/ChartKelurahan';
 import HorizontalBarChart from '../components/charts/HorizontalBarChart';
 
 interface ChartData {
