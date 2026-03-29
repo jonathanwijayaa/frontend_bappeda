@@ -895,7 +895,7 @@ const handleAddAssignment = () => {
                     <input
                         type="text"
                         value={assignment.detail}
-                        
+                        onChange={(e) => onFieldChange(index, 'detail', e.target.value)}
                         placeholder="Detail jabatan (contoh: Anggota Umum Bidang X)"
                         disabled={isReadOnly}
                         className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
