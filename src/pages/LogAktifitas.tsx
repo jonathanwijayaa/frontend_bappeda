@@ -162,6 +162,15 @@ const LogAktifitas: React.FC = () => {
                         <Loader2 size={28} className="animate-spin text-gray-400" />
                         <span className="ml-3 text-gray-500">Memuat log aktifitas...</span>
                     </div>
+                ) : filteredData.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <p className="text-gray-600 font-medium">Belum ada log aktifitas</p>
+                        <p className="text-sm text-gray-400 mt-1">
+                            {searchTerm || filterJenis || filterRole
+                                ? 'Tidak ada log yang cocok dengan filter atau pencarian Anda.'
+                                : 'Belum ada aktifitas yang tercatat dalam sistem.'}
+                        </p>
+                    </div>
                 ) : (
                     <Table columns={columns} data={currentData} minRows={5} />
                 )}
@@ -186,12 +195,6 @@ const LogAktifitas: React.FC = () => {
                                 Selanjutnya <ChevronRight size={16} />
                             </Button>
                         </div>
-                    </div>
-                )}
-
-                {!isLoading && filteredData.length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                        Tidak ada log yang sesuai dengan filter
                     </div>
                 )}
             </Card>

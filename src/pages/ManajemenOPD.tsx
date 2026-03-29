@@ -302,6 +302,15 @@ const ManajemenOPD: React.FC = () => {
                         <Loader2 size={28} className="animate-spin text-gray-400" />
                         <span className="ml-3 text-gray-500">Memuat data OPD...</span>
                     </div>
+                ) : filteredData.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <p className="text-gray-600 font-medium">Belum ada OPD</p>
+                        <p className="text-sm text-gray-400 mt-1">
+                            {searchTerm
+                                ? 'Tidak ada OPD yang cocok dengan pencarian Anda.'
+                                : 'Belum ada OPD yang terdaftar. Klik "Tambah OPD" untuk memulai.'}
+                        </p>
+                    </div>
                 ) : (
                     <Table columns={columns} data={currentData} actions={actions} minRows={5} />
                 )}
