@@ -9,7 +9,7 @@ interface ChartDataItem {
 interface HorizontalBarChartProps {
     data: ChartDataItem[];
     dataKey: string;
-    yAxisKey: string;
+    xAxisKey: string;
     color?: string;
     height?: number;
 }
@@ -17,7 +17,7 @@ interface HorizontalBarChartProps {
 const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
     data,
     dataKey,
-    yAxisKey,
+    xAxisKey,
     color = '#F4A261', // Oranye Amber – Kader & OPD
     height = 300
 }) => {
@@ -25,13 +25,13 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
         <ResponsiveContainer width="100%" height={height}>
             <RechartsBarChart
                 data={data}
-                layout="horizontal"
+                layout="vertical"
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
                 <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
                 <XAxis type="number" tick={{ fontSize: 12 }} />
                 <YAxis
-                    dataKey={yAxisKey}
+                    dataKey={xAxisKey}
                     type="category"
                     tick={{ fontSize: 12 }}
                     width={100}
