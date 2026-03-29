@@ -39,45 +39,39 @@ const Statistik: React.FC = () => {
     ];
 
     return (
-        <div className="space-y-6">
-            {/* Baris Atas- Donut and Pie Charts Gender dan Umur*/}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                <Card title="Demografi Gender" collapsible>
-                    <DonutChart
-                        data={genderData}
-                        dataKey="value"
-                        nameKey="name"
-                    />
-                </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            <Card title="Demografi Gender" collapsible>
+                <DonutChart
+                    data={genderData}
+                    dataKey="value"
+                    nameKey="name"
+                />
+            </Card>
 
-                <Card title="Demografi Kelurahan" collapsible>
-                    <HorizontalBarChart
-                        data={kelurahanData}
-                        dataKey="value"
-                        xAxisKey="name"
-                        color="#E76F51"
-                    />
-                </Card>
-            </div>
+            <Card title="Demografi Kelurahan" collapsible>
+                <HorizontalBarChart
+                    data={kelurahanData}
+                    dataKey="value"
+                    xAxisKey="name"
+                    color="#E76F51"
+                />
+            </Card>
 
-            {/* Baris Bawah - Horizontal Bar Charts Jumlah Relawan per Kader dan OPD */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-                <Card title="Jumlah Relawan Per Kader" collapsible>
-                    <HorizontalBarChart
-                        data={relawanPerKaderData}
-                        dataKey="value"
-                        xAxisKey="name"
-                    />
-                </Card>
+            <Card title="Jumlah Relawan Per Kader" collapsible>
+                <HorizontalBarChart
+                    data={relawanPerKaderData}
+                    dataKey="value"
+                    xAxisKey="name"
+                />
+            </Card>
 
-                <Card title="Jumlah Kader Per OPD" collapsible>
-                    <HorizontalBarChart
-                        data={kaderPerOPDData}
-                        dataKey="value"
-                        xAxisKey="name"
-                    />
-                </Card>
-            </div>
+            <Card title="Jumlah Kader Per OPD" collapsible>
+                <HorizontalBarChart
+                    data={kaderPerOPDData}
+                    dataKey="value"
+                    xAxisKey="name"
+                />
+            </Card>
         </div>
     );
 };
