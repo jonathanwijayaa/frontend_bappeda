@@ -144,40 +144,38 @@ const DataRelawan: React.FC = () => {
 
     // ── Fetch kader berdasarkan opd_id untuk assignment tertentu ──
     const fetchKaderByOpdId = useCallback(async (opdId: number, assignmentIndex: number) => {
-        console.log(`🔍 fetchKaderByOpdId called:`, { opdId, assignmentIndex });
-        
         if (!opdId) {
-            console.warn(`⚠️ fetchKaderByOpdId: opdId is ${opdId}, skipping fetch`);
             setKaderOptionsByIndex(prev => ({ ...prev, [assignmentIndex]: [] }));
             return;
         }
 
         setIsLoadingKaderByIndex(prev => ({ ...prev, [assignmentIndex]: true }));
         try {
-            console.log(`🌐 API Call: /kader?opd_id=${opdId}`);
-            const res = await apiFetch(`/kader?opd_id=${opdId}`);
+            // ✅ FIX: OPD pakai endpoint /opd-admin/kader (tidak perlu opd_id, backend ambil otomatis)
+            //         Super Admin tetap pakai /kader?opd_id=...
+            const endpoint = isOPD
+                ? `/opd-admin/kader`
+                : `/kader?opd_id=${opdId}`;
+
+            const res = await apiFetch(endpoint);
             const result = await res.json();
-            
-            console.log(`📦 API Response:`, result);
-            
+
             if (result.success) {
                 const options: AutoOption[] = result.data.map((k: any) => ({
                     label: k.nama_kader,
                     value: String(k.kader_id)
                 }));
-                console.log(`✅ Kader options loaded:`, options.length, 'cadres');
                 setKaderOptionsByIndex(prev => ({ ...prev, [assignmentIndex]: options }));
             } else {
-                console.warn(`⚠️ API returned success=false:`, result.message);
                 setKaderOptionsByIndex(prev => ({ ...prev, [assignmentIndex]: [] }));
             }
         } catch (err) {
-            console.error('❌ Gagal mengambil kader untuk OPD:', opdId, err);
+            console.error('Gagal mengambil kader:', err);
             setKaderOptionsByIndex(prev => ({ ...prev, [assignmentIndex]: [] }));
         } finally {
             setIsLoadingKaderByIndex(prev => ({ ...prev, [assignmentIndex]: false }));
         }
-    }, []);
+    }, [isOPD]); // ← tambahkan isOPD ke dependency
 
     // ── Fetch Functions ──
     const fetchRelawan = useCallback(async () => {
