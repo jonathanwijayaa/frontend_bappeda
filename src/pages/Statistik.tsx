@@ -39,39 +39,45 @@ const Statistik: React.FC = () => {
     ];
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            <Card title="Demografi Gender" collapsible>
-                <DonutChart
-                    data={genderData}
-                    dataKey="value"
-                    nameKey="name"
-                />
-            </Card>
+        <div className="flex flex-col md:flex-row gap-6 items-start">
+            {/* Kolom Kiri */}
+            <div className="flex flex-col gap-6 flex-1">
+                <Card title="Demografi Gender" collapsible>
+                    <DonutChart
+                        data={genderData}
+                        dataKey="value"
+                        nameKey="name"
+                    />
+                </Card>
 
-            <Card title="Demografi Kelurahan" collapsible>
-                <HorizontalBarChart
-                    data={kelurahanData}
-                    dataKey="value"
-                    xAxisKey="name"
-                    color="#E76F51"
-                />
-            </Card>
+                <Card title="Jumlah Relawan Per Kader" collapsible>
+                    <HorizontalBarChart
+                        data={relawanPerKaderData}
+                        dataKey="value"
+                        xAxisKey="name"
+                    />
+                </Card>
+            </div>
 
-            <Card title="Jumlah Relawan Per Kader" collapsible>
-                <HorizontalBarChart
-                    data={relawanPerKaderData}
-                    dataKey="value"
-                    xAxisKey="name"
-                />
-            </Card>
+            {/* Kolom Kanan */}
+            <div className="flex flex-col gap-6 flex-1">
+                <Card title="Demografi Kelurahan" collapsible>
+                    <HorizontalBarChart
+                        data={kelurahanData}
+                        dataKey="value"
+                        xAxisKey="name"
+                        color="#E76F51"
+                    />
+                </Card>
 
-            <Card title="Jumlah Kader Per OPD" collapsible>
-                <HorizontalBarChart
-                    data={kaderPerOPDData}
-                    dataKey="value"
-                    xAxisKey="name"
-                />
-            </Card>
+                <Card title="Jumlah Kader Per OPD" collapsible>
+                    <HorizontalBarChart
+                        data={kaderPerOPDData}
+                        dataKey="value"
+                        xAxisKey="name"
+                    />
+                </Card>
+            </div>
         </div>
     );
 };
