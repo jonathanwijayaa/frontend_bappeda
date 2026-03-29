@@ -5,22 +5,22 @@ import { BarChart as RechartsBarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip
  * Palet warna siap pakai untuk Demografi Kelurahan (14 kemantren)
  * Gradasi Oranye (#E76F51) → Kuning (#E9C46A)
  */
-export const KELURAHAN_COLORS = [
-    '#E76F51', // 1
-    // '#E87A52', // 2
-    '#E88554', // 3
-    // '#E99056', // 4
-    '#E99B57', // 5
-    // '#EAA659', // 6
-    '#EAB15A', // 7
-    // '#EABC5C', // 8
-    '#EAC15D', // 9
-    // '#E9C45E', // 10
-    '#E9C460', // 11
-    // '#E9C462', // 12
-    '#E9C465', // 13
-    // '#E9C46A', // 14
-];
+// export const KELURAHAN_COLORS = [
+//     '#E76F51', // 1
+//     // '#E87A52', // 2
+//     '#E88554', // 3
+//     // '#E99056', // 4
+//     '#E99B57', // 5
+//     // '#EAA659', // 6
+//     '#EAB15A', // 7
+//     // '#EABC5C', // 8
+//     '#EAC15D', // 9
+//     // '#E9C45E', // 10
+//     '#E9C460', // 11
+//     // '#E9C462', // 12
+//     '#E9C465', // 13
+//     // '#E9C46A', // 14
+// ];
 
 interface ChartDataItem {
     name: string;
@@ -35,7 +35,7 @@ interface ChartKelurahan {
     height?: number;
 }
 
-const PieChart: React.FC<ChartKelurahan> = ({
+const ChartKelurahan: React.FC<ChartKelurahan> = ({
     data,
     dataKey,
     yAxisKey,
@@ -65,4 +65,4 @@ const PieChart: React.FC<ChartKelurahan> = ({
     );
 };
 
-export default PieChart;
+export default ChartKelurahan;

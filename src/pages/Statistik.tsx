@@ -1,7 +1,7 @@
 import React from 'react';
 import Card from '../components/ui/Card';
 import DonutChart from '../components/charts/DonutChart';
-import PieChart from '../components/charts/ChartKelurahan';
+import ChartKelurahan from '../components/charts/ChartKelurahan';
 import HorizontalBarChart from '../components/charts/HorizontalBarChart';
 
 interface ChartData {
@@ -15,10 +15,12 @@ const Statistik: React.FC = () => {
         { name: 'Perempuan: 37%', value: 37 },
     ];
 
-    const ageData: ChartData[] = [
-        { name: '18 - 25: 70 %', value: 70 },
-        { name: '26 - 35: 20 %', value: 20 },
-        { name: '36+: 10 %', value: 10 },
+    const kelurahanData: ChartData[] = [
+        { name: 'Sorosutan', value: 156 },
+        { name: 'Kricak', value: 142 },
+        { name: 'Baciro', value: 128 },
+        { name: 'Pringgokusuman', value: 115 },
+        { name: 'Terban', value: 98 },
     ];
 
     const relawanPerKaderData: ChartData[] = [
@@ -49,11 +51,11 @@ const Statistik: React.FC = () => {
                     />
                 </Card>
 
-                <Card title="Range Umur Relawan" collapsible>
-                    <PieChart
-                        data={ageData}
+                <Card title="Demografi Kelurahan" collapsible>
+                    <ChartKelurahan
+                        data={kelurahanData}
                         dataKey="value"
-                        nameKey="name"
+                        yAxisKey="name"
                     />
                 </Card>
             </div>
