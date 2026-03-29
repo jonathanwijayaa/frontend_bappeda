@@ -89,6 +89,11 @@ const DataRelawan: React.FC = () => {
     const [isEditMode, setIsEditMode] = useState<boolean>(false);
     const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
     const [deletingPenugasanId, setDeletingPenugasanId] = useState<number | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<{
+        penugasanId: number;
+        index: number;
+        label: string;
+    } | null>(null);
 
 
     const [detailFormData, setDetailFormData] = useState({
@@ -117,7 +122,6 @@ const DataRelawan: React.FC = () => {
             JSON.stringify(detailFormData.assignments) !== JSON.stringify(selectedRelawan.assignments || [])
         );
     }, [selectedRelawan, detailFormData]);
-    void hasChanges;
 
     const [formData, setFormData] = useState({
         namaRelawan: '',
@@ -201,12 +205,13 @@ const DataRelawan: React.FC = () => {
                             alamat: row.alamat_ktp || '-',
                             kelurahan: row.kelurahan || '-',
                             jenisKelamin: row.jenis_kelamin || 'L',
-                            // Jadikan penugasan pertama sebagai perwakilan di kolom tabel utama
                             kader: row.nama_kader || '-',
                             jabatan: row.jabatan || '-',
                             penugasan: row.nama_opd || row.penugasan || '-',
-                            assignments: [] // Siapkan array kosong
-                        });
+                            assignments: [],
+                            relawan_id: row.relawan_id,  // ← TAMBAH INI
+                            user_id: row.user_id,        // ← TAMBAH INI (jaga-jaga)
+                        } as any);
                     }
                     
                     // Masukkan data penugasan ke dalam array 'assignments' milik relawan tersebut
@@ -653,6 +658,12 @@ const handleAddAssignment = () => {
 
     const handleSaveEdit = async () => {
         if (!selectedRelawan) return;
+
+        if (!hasChanges) {
+            setToast({ message: 'Tidak ada data yang diubah', type: 'error' });
+            return;
+        }
+        
         setIsSavingEdit(true);
         try {
             const relawanId = (selectedRelawan as any).relawan_id;
@@ -668,7 +679,7 @@ const handleAddAssignment = () => {
                     kelurahan: detailFormData.kelurahan,
                     jenis_kelamin: detailFormData.jenisKelamin,
                     assignments: detailFormData.assignments.map(a => ({
-                        penugasan_id: (a as any).id && !(a as any).id.includes('.') ? parseInt((a as any).id) : undefined,
+                        penugasan_id: !String((a as any).id).startsWith('new-') && !isNaN(parseInt((a as any).id)) ? parseInt((a as any).id) : undefined,
                         opd_id: (a as any).opd_id || null,
                         opd: a.opd,
                         kader_id: (a as any).kader_id || null,
@@ -695,7 +706,7 @@ const handleAddAssignment = () => {
     };
 
     const handleDeletePenugasan = async (penugasanId: number, index: number) => {
-        // Jika penugasan belum tersimpan (baru ditambah di form), cukup hapus dari state
+        // Jika penugasan baru (belum tersimpan), langsung hapus dari state
         if (!penugasanId) {
             setDetailFormData(prev => ({
                 ...prev,
@@ -703,6 +714,25 @@ const handleAddAssignment = () => {
             }));
             return;
         }
+
+        // ✅ FIX: Tampilkan confirm dialog dengan info penugasan
+        const assignment = detailFormData.assignments[index] as any;
+        const label = [
+            selectedRelawan?.namaLengkap,
+            assignment.opd ? `dari ${assignment.opd}` : '',
+            assignment.kader ? `(Kader: ${assignment.kader})` : '',
+            assignment.peran ? `— ${assignment.peran}` : '',
+        ].filter(Boolean).join(' ');
+
+        setDeleteConfirm({ penugasanId, index, label });
+    };
+
+    // ✅ FIX: Fungsi eksekusi hapus setelah konfirmasi
+    const handleConfirmDelete = async () => {
+        if (!deleteConfirm) return;
+        const { penugasanId, index } = deleteConfirm;
+        setDeleteConfirm(null);
+
         setDeletingPenugasanId(penugasanId);
         try {
             const endpoint = isSuperAdmin
@@ -711,10 +741,11 @@ const handleAddAssignment = () => {
             const res = await apiFetch(endpoint, { method: 'DELETE' });
             const result = await res.json();
             if (result.success) {
-                setDetailFormData(prev => ({
-                    ...prev,
-                    assignments: prev.assignments.filter((_, i) => i !== index)
-                }));
+                // ✅ FIX: Update detailFormData DAN selectedRelawan sekaligus
+                const updatedAssignments = detailFormData.assignments.filter((_, i) => i !== index);
+                setDetailFormData(prev => ({ ...prev, assignments: updatedAssignments }));
+                setSelectedRelawan(prev => prev ? { ...prev, assignments: updatedAssignments } : null);
+                fetchRelawan(); // ✅ Refresh data background
                 setToast({ message: 'Penugasan berhasil dihapus', type: 'success' });
             } else {
                 setToast({ message: result.message || 'Gagal menghapus penugasan', type: 'error' });
@@ -1283,7 +1314,34 @@ const handleAddAssignment = () => {
                 templateName="Data Relawan"
                 dataType="relawan"
             />
-
+            {/* Modal Konfirmasi Hapus Penugasan */}
+            {deleteConfirm && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+                    <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4 space-y-4">
+                        <h3 className="text-lg font-semibold text-gray-900">Hapus Penugasan?</h3>
+                        <p className="text-sm text-gray-600">
+                            Apakah Anda yakin ingin menghapus penugasan{' '}
+                            <span className="font-medium text-gray-800">"{deleteConfirm.label}"</span>?
+                            Tindakan ini tidak dapat dibatalkan.
+                        </p>
+                        <div className="flex justify-end gap-3 pt-2">
+                            <Button
+                                variant="outline"
+                                onClick={() => setDeleteConfirm(null)}
+                                className="px-6"
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                onClick={handleConfirmDelete}
+                                className="bg-red-600 hover:bg-red-700 text-white px-6"
+                            >
+                                Ya, Hapus
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );
