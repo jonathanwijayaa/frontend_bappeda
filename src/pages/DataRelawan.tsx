@@ -86,6 +86,10 @@ const DataRelawan: React.FC = () => {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const itemsPerPage = 5;
+    const [isEditMode, setIsEditMode] = useState<boolean>(false);
+    const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
+    const [deletingPenugasanId, setDeletingPenugasanId] = useState<number | null>(null);
+
 
     const [detailFormData, setDetailFormData] = useState({
         namaRelawan: '',
@@ -602,6 +606,107 @@ const handleAddAssignment = () => {
         });
     };
 
+    const handleSaveEdit = async () => {
+        if (!selectedRelawan) return;
+        setIsSavingEdit(true);
+        try {
+            const relawanId = (selectedRelawan as any).relawan_id;
+            const endpoint = isSuperAdmin
+                ? `/admin/relawan/${relawanId}`
+                : `/opd-admin/relawan/${relawanId}`;
+
+            const res = await apiFetch(endpoint, {
+                method: 'PUT',
+                body: JSON.stringify({
+                    nama_lengkap: detailFormData.namaRelawan,
+                    alamat_ktp: detailFormData.alamat,
+                    kelurahan: detailFormData.kelurahan,
+                    jenis_kelamin: detailFormData.jenisKelamin,
+                    assignments: detailFormData.assignments.map(a => ({
+                        penugasan_id: (a as any).id && !(a as any).id.includes('.') ? parseInt((a as any).id) : undefined,
+                        opd_id: (a as any).opd_id || null,
+                        opd: a.opd,
+                        kader_id: (a as any).kader_id || null,
+                        peran: a.peran,
+                        detail: a.detail,
+                        statusKeaktifan: a.statusKeaktifan
+                    }))
+                })
+            });
+            const result = await res.json();
+            if (result.success) {
+                setToast({ message: result.message, type: 'success' });
+                setIsEditMode(false);
+                setIsDetailModalOpen(false);
+                fetchRelawan();
+            } else {
+                setToast({ message: result.message || 'Gagal menyimpan perubahan', type: 'error' });
+            }
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } finally {
+            setIsSavingEdit(false);
+        }
+    };
+
+    const handleDeletePenugasan = async (penugasanId: number, index: number) => {
+        // Jika penugasan belum tersimpan (baru ditambah di form), cukup hapus dari state
+        if (!penugasanId) {
+            setDetailFormData(prev => ({
+                ...prev,
+                assignments: prev.assignments.filter((_, i) => i !== index)
+            }));
+            return;
+        }
+        setDeletingPenugasanId(penugasanId);
+        try {
+            const endpoint = isSuperAdmin
+                ? `/admin/relawan/penugasan/${penugasanId}`
+                : `/opd-admin/relawan/penugasan/${penugasanId}`;
+            const res = await apiFetch(endpoint, { method: 'DELETE' });
+            const result = await res.json();
+            if (result.success) {
+                setDetailFormData(prev => ({
+                    ...prev,
+                    assignments: prev.assignments.filter((_, i) => i !== index)
+                }));
+                setToast({ message: 'Penugasan berhasil dihapus', type: 'success' });
+            } else {
+                setToast({ message: result.message || 'Gagal menghapus penugasan', type: 'error' });
+            }
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } finally {
+            setDeletingPenugasanId(null);
+        }
+    };
+
+    const handleAddDetailAssignment = () => {
+        setDetailFormData(prev => ({
+            ...prev,
+            assignments: [
+                ...prev.assignments,
+                {
+                    id: `new-${Date.now()}`,
+                    opd: isOPD ? ((user as any)?.nama_opd || '') : '',
+                    opd_id: isOPD ? ((user as any)?.opd_id || 0) : 0,
+                    kader: '',
+                    kader_id: null,
+                    peran: '',
+                    detail: '',
+                    statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
+                    nomorSK: '',
+                    skId: ''
+                } as any
+            ]
+        }));
+        // Auto-fetch kader jika OPD
+        if (isOPD && (user as any)?.opd_id) {
+            const newIndex = detailFormData.assignments.length;
+            fetchKaderByOpdId((user as any).opd_id, newIndex);
+        }
+    };
+
     const renderAssignmentFields = (
         assignment: any,
         index: number,
@@ -914,23 +1019,57 @@ const handleAddAssignment = () => {
             </Modal>
 
             {/* Modal Detail Relawan */}
-            <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Detail Relawan" subtitle="Informasi lengkap relawan" maxWidth="2xl">
+            <Modal
+                isOpen={isDetailModalOpen}
+                onClose={() => { setIsDetailModalOpen(false); setIsEditMode(false); }}
+                title="Detail Relawan"
+                subtitle={isEditMode ? 'Mode Edit — ubah data lalu klik Simpan' : 'Informasi lengkap relawan'}
+                maxWidth="2xl"
+            >
                 {selectedRelawan && (
                     <div className="space-y-6">
+                        {/* Tombol Edit / Batal di pojok atas */}
+                        <div className="flex justify-end">
+                            {!isEditMode ? (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => setIsEditMode(true)}
+                                    className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                                >
+                                    Edit Data
+                                </Button>
+                            ) : (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => { setIsEditMode(false); handleDetailClick(selectedRelawan); }}
+                                    className="border-gray-400 text-gray-600 hover:bg-gray-50"
+                                >
+                                    Batal
+                                </Button>
+                            )}
+                        </div>
+
+                        {/* Field profil — editable saat isEditMode */}
                         {[
-                            { label: 'Nama Relawan', name: 'namaRelawan', value: detailFormData.namaRelawan },
-                            { label: 'NIK', name: 'nik', value: detailFormData.nik },
-                            { label: 'Alamat KTP', name: 'alamat', value: detailFormData.alamat },
-                            { label: 'Kelurahan', name: 'kelurahan', value: detailFormData.kelurahan },
-                            { label: 'Jabatan', name: 'jabatan', value: detailFormData.jabatan },
+                            { label: 'Nama Relawan', name: 'namaRelawan' },
+                            { label: 'NIK', name: 'nik' },
+                            { label: 'Alamat KTP', name: 'alamat' },
+                            { label: 'Kelurahan', name: 'kelurahan' },
+                            { label: 'Jabatan', name: 'jabatan' },
                         ].map(field => (
                             <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                                 <label className="text-lg font-medium text-gray-900">{field.label}</label>
                                 <input
                                     type="text"
-                                    value={field.value}
-                                    readOnly
-                                    className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 focus:outline-none"
+                                    value={(detailFormData as any)[field.name]}
+                                    readOnly={!isEditMode || field.name === 'nik' || field.name === 'jabatan'}
+                                    onChange={(e) => setDetailFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                    className={`col-span-2 px-4 py-2 border rounded-lg focus:outline-none
+                                        ${isEditMode && field.name !== 'nik' && field.name !== 'jabatan'
+                                            ? 'border-blue-300 focus:ring-2 focus:ring-blue-500 bg-white'
+                                            : 'border-gray-300 bg-gray-50'}`}
                                 />
                             </div>
                         ))}
@@ -939,25 +1078,78 @@ const handleAddAssignment = () => {
                             <label className="text-lg font-medium text-gray-900">Jenis Kelamin</label>
                             <select
                                 value={detailFormData.jenisKelamin}
-                                disabled
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none bg-gray-50 text-gray-500 cursor-not-allowed"
+                                disabled={!isEditMode}
+                                onChange={(e) => setDetailFormData(prev => ({ ...prev, jenisKelamin: e.target.value as 'L' | 'P' }))}
+                                className={`col-span-2 px-4 py-2 border rounded-lg focus:outline-none
+                                    ${isEditMode ? 'border-blue-300 bg-white' : 'bg-gray-50 border-gray-300 text-gray-500 cursor-not-allowed'}`}
                             >
                                 <option value="L">Laki-laki (L)</option>
                                 <option value="P">Perempuan (P)</option>
                             </select>
                         </div>
 
+                        {/* Daftar Penugasan */}
                         <div className="pt-4 border-t border-gray-200">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Daftar Penugasan:</h3>
-                            {/* ✨ FIXED: Pastikan detailFormData.assignments benar-benar array sebelum dicek length-nya */}
                             {Array.isArray(detailFormData.assignments) && detailFormData.assignments.length > 0 ? (
-                                detailFormData.assignments.map((assignment, index) =>
-                                    renderAssignmentFields(assignment, index, true, 'detail')
-                                )
+                                detailFormData.assignments.map((assignment, index) => {
+                                    const penugasanId = parseInt((assignment as any).id);
+                                    const isNewAssignment = isNaN(penugasanId) || String((assignment as any).id).startsWith('new-');
+                                    return (
+                                        <div key={(assignment as any).id} className="relative bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4 space-y-4">
+                                            {/* Tombol hapus penugasan — hanya di edit mode */}
+                                            {isEditMode && (
+                                                <div className="flex justify-end -mt-2 -mr-2 mb-2">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleDeletePenugasan(isNewAssignment ? 0 : penugasanId, index)}
+                                                        disabled={deletingPenugasanId === penugasanId}
+                                                        className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors disabled:opacity-50"
+                                                        title="Hapus Penugasan"
+                                                    >
+                                                        {deletingPenugasanId === penugasanId
+                                                            ? <Loader2 size={18} className="animate-spin" />
+                                                            : <X size={18} />}
+                                                    </button>
+                                                </div>
+                                            )}
+                                            {renderAssignmentFields(assignment, index, !isEditMode, isEditMode ? 'form' : 'detail')}
+                                        </div>
+                                    );
+                                })
                             ) : (
                                 <div className="text-center text-gray-500 italic py-4">Belum ada penugasan terdaftar.</div>
                             )}
+
+                            {/* Tombol tambah penugasan — hanya di edit mode */}
+                            {isEditMode && (
+                                <div className="flex justify-center mt-2">
+                                    <Button type="button" variant="primary" size="sm" onClick={handleAddDetailAssignment}>
+                                        <Plus size={16} />
+                                        Tambah Penugasan
+                                    </Button>
+                                </div>
+                            )}
                         </div>
+
+                        {/* Footer tombol Simpan — hanya di edit mode */}
+                        {isEditMode && (
+                            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                                <Button
+                                    onClick={() => { setIsEditMode(false); handleDetailClick(selectedRelawan); }}
+                                    className="bg-gray-200 text-gray-700 hover:bg-gray-300 px-6"
+                                >
+                                    Batal
+                                </Button>
+                                <Button
+                                    onClick={handleSaveEdit}
+                                    disabled={isSavingEdit}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-10 disabled:opacity-50"
+                                >
+                                    {isSavingEdit ? <Loader2 size={16} className="animate-spin" /> : 'Simpan Perubahan'}
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 )}
             </Modal>
