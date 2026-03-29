@@ -606,6 +606,51 @@ const handleAddAssignment = () => {
         });
     };
 
+    const handleDetailAssignmentChange = (index: number, field: string, value: string) => {
+        setDetailFormData(prev => {
+            const newAssignments = [...prev.assignments];
+            newAssignments[index] = { ...newAssignments[index], [field]: value };
+            return { ...prev, assignments: newAssignments };
+        });
+    };
+
+    const handleDetailAssignmentOpdChange = (index: number, namaOpd: string) => {
+        const matched = opdOptions.find(o => o.label.toLowerCase() === namaOpd.toLowerCase());
+        const opdId = matched ? Number(matched.value) : 0;
+
+        setDetailFormData(prev => {
+            const newAssignments = [...prev.assignments];
+            newAssignments[index] = {
+                ...newAssignments[index],
+                opd: namaOpd,
+                opd_id: opdId,
+                kader: '',
+                kader_id: null
+            } as any;
+            return { ...prev, assignments: newAssignments };
+        });
+
+        if (opdId > 0) fetchKaderByOpdId(opdId, index);
+        else setKaderOptionsByIndex(prev => ({ ...prev, [index]: [] }));
+    };
+
+    const handleDetailAssignmentKaderChange = (index: number, value: string) => {
+        const kaderId = value ? Number(value) : null;
+        const options = kaderOptionsByIndex[index] || [];
+        const matched = options.find(o => o.value === value);
+        const kaderName = matched ? matched.label : '';
+
+        setDetailFormData(prev => {
+            const newAssignments = [...prev.assignments];
+            newAssignments[index] = {
+                ...newAssignments[index],
+                kader: kaderName,
+                kader_id: kaderId
+            } as any;
+            return { ...prev, assignments: newAssignments };
+        });
+    };
+
     const handleSaveEdit = async () => {
         if (!selectedRelawan) return;
         setIsSavingEdit(true);
@@ -711,7 +756,13 @@ const handleAddAssignment = () => {
         assignment: any,
         index: number,
         isReadOnly: boolean,
-        context: 'form' | 'detail' = 'form'
+        context: 'form' | 'detail' = 'form',
+        // ← Tambah parameter baru
+        handlers?: {
+            onFieldChange?: (index: number, field: string, value: string) => void;
+            onOpdChange?: (index: number, val: string) => void;
+            onKaderChange?: (index: number, val: string) => void;
+        }
     ) => {
         // Kader options: jika form → pakai yang dinamis, jika detail → pakai semua kader
         const currentKaderOptions = context === 'form'
@@ -721,6 +772,9 @@ const handleAddAssignment = () => {
         const isKaderLoading = isLoadingKaderByIndex[index] || false;
         // ✅ FIXED: Untuk OPD user, OPD selalu dianggap selected (karena auto-filled)
         const hasOpdSelected = isOPD || assignment.opd_id > 0 || assignment.opd !== '';
+        const onFieldChange = handlers?.onFieldChange ?? handleAssignmentChange;
+        const onOpdChange = handlers?.onOpdChange;
+        const onKaderChange = handlers?.onKaderChange ?? handleAssignmentKaderChange;
 
         return (
             <div key={assignment.id} className="relative bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4 space-y-4">
@@ -754,10 +808,7 @@ const handleAddAssignment = () => {
                                 name={`opd-${index}`}
                                 value={assignment.opd}
                                 options={opdOptions}
-                                onChange={(val) => context === 'form'
-                                    ? handleAssignmentOpdChange(index, val)
-                                    : handleAssignmentChange(index, 'opd', val)
-                                }
+                                onChange={(val) => onOpdChange ? onOpdChange(index, val) : onFieldChange(index, 'opd', val)}
                                 placeholder="Cari nama OPD..."
                                 disabled={isReadOnly}
                             />
@@ -779,7 +830,7 @@ const handleAddAssignment = () => {
                                     name={`kader-${index}`}
                                     value={assignment.kader_id ? String(assignment.kader_id) : ''}
                                     options={currentKaderOptions}
-                                    onChange={(val) => handleAssignmentKaderChange(index, val)}
+                                    onChange={(val) => onKaderChange(index, val)}
                                     placeholder={
                                         !hasOpdSelected
                                             ? 'Pilih OPD terlebih dahulu...'
@@ -823,7 +874,7 @@ const handleAddAssignment = () => {
                     <label className="text-lg font-medium text-gray-900">Peran/Jabatan</label>
                     <select
                         value={assignment.peran}
-                        onChange={(e) => handleAssignmentChange(index, 'peran', e.target.value)}
+                        onChange={(e) => onFieldChange(index, 'peran', e.target.value)}
                         disabled={isReadOnly}
                         className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
                     >
@@ -844,7 +895,7 @@ const handleAddAssignment = () => {
                     <input
                         type="text"
                         value={assignment.detail}
-                        onChange={(e) => handleAssignmentChange(index, 'detail', e.target.value)}
+                        
                         placeholder="Detail jabatan (contoh: Anggota Umum Bidang X)"
                         disabled={isReadOnly}
                         className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
@@ -862,7 +913,7 @@ const handleAddAssignment = () => {
                                     name={`statusKeaktifan-${index}`}
                                     value={status}
                                     checked={assignment.statusKeaktifan === status}
-                                    onChange={(e) => handleAssignmentChange(index, 'statusKeaktifan', e.target.value)}
+                                    onChange={(e) => onFieldChange(index, 'statusKeaktifan', e.target.value)}
                                     disabled={isReadOnly}
                                     className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
                                 />
@@ -1113,7 +1164,17 @@ const handleAddAssignment = () => {
                                                     </button>
                                                 </div>
                                             )}
-                                            {renderAssignmentFields(assignment, index, !isEditMode, isEditMode ? 'form' : 'detail')}
+                                            {renderAssignmentFields(
+                                                assignment,
+                                                index,
+                                                !isEditMode,
+                                                isEditMode ? 'form' : 'detail',
+                                                isEditMode ? {
+                                                    onFieldChange: handleDetailAssignmentChange,
+                                                    onOpdChange: handleDetailAssignmentOpdChange,
+                                                    onKaderChange: handleDetailAssignmentKaderChange,
+                                                } : undefined
+                                            )}
                                         </div>
                                     );
                                 })
