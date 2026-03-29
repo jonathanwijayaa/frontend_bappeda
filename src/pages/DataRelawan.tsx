@@ -984,6 +984,15 @@ const handleAddAssignment = () => {
                         <Loader2 size={28} className="animate-spin text-gray-400" />
                         <span className="ml-3 text-gray-500">Memuat data relawan...</span>
                     </div>
+                ) : filteredRelawanData.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <p className="text-gray-600 font-medium">Belum ada relawan</p>
+                        <p className="text-sm text-gray-400 mt-1">
+                            {searchTerm
+                                ? 'Tidak ada relawan yang cocok dengan pencarian Anda.'
+                                : 'Belum ada relawan yang terdaftar. Klik "Tambah Relawan" untuk memulai.'}
+                        </p>
+                    </div>
                 ) : (
                     <Table columns={relawanColumns} data={currentRelawanData} actions={relawanActions} minRows={5} />
                 )}
