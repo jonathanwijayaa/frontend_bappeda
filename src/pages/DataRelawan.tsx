@@ -438,39 +438,44 @@ const DataRelawan: React.FC = () => {
             }
             
             const result = await res.json();
-            if (result.success) {
-                setToast({ message: result.message, type: 'success' });
-                setIsModalOpen(false);
-                
-                // Reset form
-                setFormData({
-                    namaRelawan: '',
-                    nik: '',
-                    jenisKelamin: 'L',
-                    alamat: '',
-                    kelurahan: '',
+            const insertedCount = result.data?.insertedCount ?? 0;
+            const hasWarning = (result.data?.errors?.length ?? 0) > 0 || (result.data?.skipped?.length ?? 0) > 0;
+            if (result.success && insertedCount > 0) {
+            // ✅ Benar-benar berhasil: tutup modal, reset form, toast hijau
+            setToast({ message: result.message, type: 'success' });
+            setIsModalOpen(false);
+            setFormData({
+                namaRelawan: '',
+                nik: '',
+                jenisKelamin: 'L',
+                alamat: '',
+                kelurahan: '',
+                kader: '',
+                jabatan: '',
+                penugasan: '',
+                detail_penugasan: '',
+                assignments: [{
+                    id: Date.now().toString(),
+                    opd: '',
+                    opd_id: 0,
                     kader: '',
-                    jabatan: '',
-                    penugasan: '',
-                    detail_penugasan: '',
-                    assignments: [{
-                        id: Date.now().toString(),
-                        opd: '',
-                        opd_id: 0,
-                        kader: '',
-                        kader_id: null,
-                        peran: '',
-                        detail: '',
-                        statusKeaktifan: 'Aktif',
-                        nomorSK: '',
-                        skId: ''
-                    }]
-                });
-                setKaderOptionsByIndex({});
-                fetchRelawan();
-            } else {
-                setToast({ message: result.message || 'Gagal menambahkan relawan', type: 'error' });
-            }
+                    kader_id: null,
+                    peran: '',
+                    detail: '',
+                    statusKeaktifan: 'Aktif',
+                    nomorSK: '',
+                    skId: ''
+                }]
+            });
+            setKaderOptionsByIndex({});
+            fetchRelawan();
+        } else {
+            const errorMsg = result.data?.errors?.[0]
+                ?? result.data?.skipped?.[0]
+                ?? result.message
+                ?? 'Gagal menambahkan relawan';
+            setToast({ message: errorMsg, type: 'error' });
+        }
         } catch (err: any) {
             setToast({ message: `Koneksi gagal: ${err?.message || 'unknown error'}`, type: 'error' });
         } finally {
