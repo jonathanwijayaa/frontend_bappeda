@@ -54,7 +54,7 @@ const Statistik: React.FC = () => {
                     <HorizontalBarChart
                         data={kelurahanData}
                         dataKey="value"
-                        yAxisKey="name"
+                        xAxisKey="name"
                         color="#E76F51"
                     />
                 </Card>
@@ -66,7 +66,7 @@ const Statistik: React.FC = () => {
                     <HorizontalBarChart
                         data={relawanPerKaderData}
                         dataKey="value"
-                        yAxisKey="name"
+                        xAxisKey="name"
                     />
                 </Card>
 
@@ -74,7 +74,7 @@ const Statistik: React.FC = () => {
                     <HorizontalBarChart
                         data={kaderPerOPDData}
                         dataKey="value"
-                        yAxisKey="name"
+                        xAxisKey="name"
                     />
                 </Card>
             </div>
