@@ -1,7 +1,6 @@
 import React from 'react';
 import Card from '../components/ui/Card';
 import DonutChart from '../components/charts/DonutChart';
-import ChartKelurahan from '../components/charts/ChartKelurahan';
 import HorizontalBarChart from '../components/charts/HorizontalBarChart';
 
 interface ChartData {
@@ -52,10 +51,11 @@ const Statistik: React.FC = () => {
                 </Card>
 
                 <Card title="Demografi Kelurahan" collapsible>
-                    <ChartKelurahan
+                    <HorizontalBarChart
                         data={kelurahanData}
                         dataKey="value"
                         yAxisKey="name"
+                        color="#E76F51"
                     />
                 </Card>
             </div>
