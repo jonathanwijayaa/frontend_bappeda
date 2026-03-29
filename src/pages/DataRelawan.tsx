@@ -963,6 +963,16 @@ const handleAddAssignment = () => {
                         <Loader2 size={24} className="animate-spin text-gray-400" />
                         <span className="ml-3 text-gray-500">Memuat data pengajuan...</span>
                     </div>
+                ) : pengajuanUIData.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-3-3v6M4.5 12a7.5 7.5 0 1115 0 7.5 7.5 0 01-15 0z" />
+                            </svg>
+                        </div>
+                        <p className="text-gray-600 font-medium">Belum ada pengajuan</p>
+                        <p className="text-sm text-gray-400 mt-1">Saat ini belum ada relawan yang mengajukan perubahan data.</p>
+                    </div>
                 ) : (
                     <Table columns={pengajuanColumns} data={pengajuanUIData} actions={pengajuanActions} minRows={3} />
                 )}
