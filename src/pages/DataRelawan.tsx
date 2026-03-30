@@ -306,9 +306,20 @@ const DataRelawan: React.FC = () => {
             }
         }
     }, [isModalOpen, isOPD, user]);  // ✅ Hapus formData.assignments dari dependency
-
-// ❌ HAPUS useEffect auto-fetch kader yang lama (line ~295-305)
-// Karena sudah digabung dengan auto-fill OPD di atas
+    
+    // ── Auto-fetch kader untuk semua assignment yang ada saat OPD user masuk edit mode ──
+    useEffect(() => {
+        if (isEditMode && isOPD && (user as any)?.opd_id) {
+            const opdId = (user as any).opd_id;
+            // Fetch kader untuk setiap assignment yang sudah ada di form detail
+            detailFormData.assignments.forEach((_, index) => {
+                // Hanya fetch jika belum ada options untuk index ini
+                if (!kaderOptionsByIndex[index]) {
+                    fetchKaderByOpdId(opdId, index);
+                }
+            });
+        }
+    }, [isEditMode]); // ← hanya trigger saat isEditMode berubah
 
     const filteredRelawanData = useMemo(() => {
         return relawanList.filter(relawan =>
