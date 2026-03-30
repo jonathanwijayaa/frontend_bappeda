@@ -1,11 +1,12 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
 import Toast, { ToastType } from '../components/ui/Toast';
+import Pagination from '../components/ui/Pagination';
 import { apiFetch } from '../utils/api';
 import { ChangeEvent } from 'react';
 
@@ -107,7 +108,6 @@ const LogAktifitas: React.FC = () => {
             render: (row: LogData) => (
                 <div>
                     <p className="text-sm font-medium">{row.table_name}</p>
-                    {row.record_id && <p className="text-xs text-gray-400">ID: {row.record_id}</p>}
                 </div>
             )
         },
@@ -181,20 +181,11 @@ const LogAktifitas: React.FC = () => {
                         <div className="text-sm text-gray-500">
                             Menampilkan {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredData.length)} dari {filteredData.length} log
                         </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} className="disabled:opacity-50 disabled:cursor-not-allowed">
-                                <ChevronLeft size={16} /> Sebelumnya
-                            </Button>
-                            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i + 1).map((page) => (
-                                <Button key={page} variant={currentPage === page ? "primary" : "outline"} size="sm" onClick={() => setCurrentPage(page)} className="min-w-[40px]">
-                                    {page}
-                                </Button>
-                            ))}
-                            {totalPages > 7 && <span className="px-2 py-1 text-gray-400">...</span>}
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages} className="disabled:opacity-50 disabled:cursor-not-allowed">
-                                Selanjutnya <ChevronRight size={16} />
-                            </Button>
-                        </div>
+                        <Pagination 
+                            currentPage={currentPage} 
+                            totalPages={totalPages} 
+                            onPageChange={(page) => setCurrentPage(page)} 
+                        />
                     </div>
                 )}
             </Card>
