@@ -30,6 +30,7 @@ export interface PengajuanData {
 }
 
 export interface RelawanData {
+    no_hp: string;
     user_id?: number;
     nik: string;
     namaLengkap: string;

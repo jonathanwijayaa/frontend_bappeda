@@ -63,7 +63,10 @@ const DaftarKader: React.FC = () => {
         nama_kader: '',
         deskripsi: '',
         pic: '',
-        nik_pic: ''
+        nik_pic: '',
+        alamat_pic: '',
+        kelurahan_pic: '',
+        no_hp_pic: ''
     });
 
     const [detailFormData, setDetailFormData] = useState({
@@ -216,7 +219,10 @@ const DaftarKader: React.FC = () => {
                 nama_kader: formData.nama_kader,
                 deskripsi: formData.deskripsi || null,
                 pic: formData.pic || null,
-                nik_pic: formData.nik_pic || null
+                nik_pic: formData.nik_pic || null,
+                alamat_pic: formData.alamat_pic || null,
+                kelurahan_pic: formData.kelurahan_pic || null,
+                no_hp_pic: formData.no_hp_pic || null
             };
             if (isSuperAdmin) body.opd_id = formData.opd_id;
 
@@ -235,7 +241,7 @@ const DaftarKader: React.FC = () => {
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });
                 setIsModalOpen(false);
-                setFormData({ opd_name: '', opd_id: 0, nama_kader: '', deskripsi: '', pic: '', nik_pic: '' });
+                setFormData({ opd_name: '', opd_id: 0, nama_kader: '', deskripsi: '', pic: '', nik_pic: '', alamat_pic: '', kelurahan_pic: '', no_hp_pic: '' });
                 fetchKader();
             } else {
                 setToast({ message: result.message || 'Gagal menambahkan kader', type: 'error' });
@@ -436,8 +442,11 @@ const DaftarKader: React.FC = () => {
 
                     {[
                         { label: 'Nama Kader', name: 'nama_kader', required: true, placeholder: 'Nama Kader atau komunitas' },
-                        { label: 'PIC', name: 'pic', required: false, placeholder: 'Person in Charge (opsional)' },
+                        { label: 'PIC', name: 'pic', required: false, placeholder: 'Nama Person in Charge (opsional)' },
                         { label: 'NIK PIC', name: 'nik_pic', required: true, placeholder: '16 digit NIK PIC', maxLength: 16 },
+                        { label: 'No. HP PIC', name: 'no_hp_pic', required: false, placeholder: 'Nomor HP PIC (opsional)' },
+                        { label: 'Alamat PIC', name: 'alamat_pic', required: false, placeholder: 'Alamat sesuai KTP (opsional)' },
+                        { label: 'Kelurahan PIC', name: 'kelurahan_pic', required: false, placeholder: 'Kelurahan/Desa (opsional)' },
                         { label: 'Deskripsi', name: 'deskripsi', required: false, placeholder: 'Deskripsi singkat (opsional)' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
