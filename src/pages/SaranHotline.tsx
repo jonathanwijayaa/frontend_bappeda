@@ -1,12 +1,13 @@
 //SaranHotline.tsx
 import React, { useState, useEffect } from 'react';
-import { Phone, MessageCircle, Clock, Check, Eye, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Phone, MessageCircle, Clock, Check, Eye, Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import RelawanMenu from '../components/RelawanMenu';
 import Table from '../components/ui/Table';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import Toast, { ToastType } from '../components/ui/Toast';
+import Pagination from '../components/ui/Pagination';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../utils/api';
 
@@ -315,19 +316,11 @@ const SaranHotline: React.FC = () => {
                                 <div className="text-sm text-gray-500">
                                     Menampilkan {startIndex + 1}-{Math.min(endIndex, saranList.length)} dari {saranList.length} Saran
                                 </div>
-                                <div className="flex gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} className="disabled:opacity-50">
-                                        <ChevronLeft size={16} /> Sebelumnya
-                                    </Button>
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                        <Button key={page} variant={currentPage === page ? "primary" : "outline"} size="sm" onClick={() => setCurrentPage(page)} className="min-w-[40px]">
-                                            {page}
-                                        </Button>
-                                    ))}
-                                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages} className="disabled:opacity-50">
-                                        Selanjutnya <ChevronRight size={16} />
-                                    </Button>
-                                </div>
+                                <Pagination 
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    onPageChange={(page) => setCurrentPage(page)}
+                                />
                             </div>
                         )}
                     </Card>

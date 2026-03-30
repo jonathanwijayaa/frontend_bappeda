@@ -1,6 +1,6 @@
 //DaftarKader.tsx — Role-aware: Super Admin & OPD
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Plus, FileDown, Loader2, ChevronLeft, ChevronRight, Upload } from 'lucide-react';
+import { Plus, FileDown, Loader2, Upload } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
@@ -9,6 +9,7 @@ import Modal from '../components/ui/Modal';
 import AutocompleteInput from '../components/ui/AutocompleteInput';
 import Toast, { ToastType } from '../components/ui/Toast';
 import UploadExcelModal from '../components/ui/UploadExcelModal';
+import Pagination from '../components/ui/Pagination';
 import { exportToPDF } from '../utils/exportToPDF';
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
@@ -394,19 +395,11 @@ const DaftarKader: React.FC = () => {
                         <div className="text-sm text-gray-500">
                             Menampilkan {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredData.length)} dari {filteredData.length} Kader
                         </div>
-                        <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1} className="disabled:opacity-50 disabled:cursor-not-allowed">
-                                <ChevronLeft size={16} /> Sebelumnya
-                            </Button>
-                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                <Button key={page} variant={currentPage === page ? "primary" : "outline"} size="sm" onClick={() => setCurrentPage(page)} className="min-w-[40px]">
-                                    {page}
-                                </Button>
-                            ))}
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === totalPages} className="disabled:opacity-50 disabled:cursor-not-allowed">
-                                Selanjutnya <ChevronRight size={16} />
-                            </Button>
-                        </div>
+                        <Pagination 
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={(page) => setCurrentPage(page)}
+                        />
                     </div>
                 )}
             </Card>
