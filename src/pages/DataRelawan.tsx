@@ -49,6 +49,7 @@ const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
     nik: r.nik,
     namaLengkap: r.nama_lengkap,
     alamat: r.alamat_ktp || '-',
+    no_hp: r.no_hp || '-',
     kelurahan: r.kelurahan || '-',
     kader: r.nama_kader || '-',
     jabatan: r.penugasan || '-',   // ← fix: bukan status_penugasan
