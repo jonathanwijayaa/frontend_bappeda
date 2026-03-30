@@ -93,12 +93,11 @@ const LogAktifitas: React.FC = () => {
         {
             header: 'AKTIFITAS',
             render: (row: LogData) => (
-                <span className={`px-2 py-1 rounded text-xs font-semibold uppercase ${
-                    row.action_type === 'INSERT' ? 'bg-green-100 text-green-700' :
-                    row.action_type === 'UPDATE' ? 'bg-blue-100 text-blue-700' :
-                    row.action_type === 'DELETE' ? 'bg-red-100 text-red-700' :
-                    'bg-gray-100 text-gray-700'
-                }`}>
+                <span className={`px-2 py-1 rounded text-xs font-semibold uppercase ${row.action_type === 'INSERT' ? 'bg-green-100 text-green-700' :
+                        row.action_type === 'UPDATE' ? 'bg-blue-100 text-blue-700' :
+                            row.action_type === 'DELETE' ? 'bg-red-100 text-red-700' :
+                                'bg-gray-100 text-gray-700'
+                    }`}>
                     {row.action_type}
                 </span>
             )
@@ -118,6 +117,7 @@ const LogAktifitas: React.FC = () => {
                 <span className="text-xs text-gray-500">{row.ip_address || '-'}</span>
             )
         },
+
     ];
 
     return (
