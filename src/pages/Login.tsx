@@ -53,8 +53,8 @@ const Login = () => {
                 <Card className="shadow-lg">
                     <div className="p-5 sm:p-8">
                         <div className="flex justify-center mb-4">
-                            <img src={logoBappeda} alt="Logo Bappeda" className="w-24 h-24 mx-auto mb-4" />
-                            <img src={logoJogja} alt="Logo Jogja" className="w-24 h-24 mx-auto mb-4" />
+                            <img src={logoBappeda} alt="Logo Bappeda" className="w-20 h-24 mx-auto mb-4" />
+                            <img src={logoJogja} alt="Logo Jogja" className="w-20 h-24 mx-auto mb-4" />
                         </div>
                         <h1 className="text-xl sm:text-2xl font-bold text-center text-gray-800 mb-6 sm:mb-8">
                             Selamat Datang
