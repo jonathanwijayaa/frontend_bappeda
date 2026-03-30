@@ -10,10 +10,10 @@ import opdAdminRoutes from './src/routes/opdAdminRoutes';
 import relawanAdminRoutes from './src/routes/relawanAdminRoutes';
 import relawanRoutes from './src/routes/relawanRoutes';
 import skRoutes from './src/routes/skRoutes';
-import bpjsRoutes from './src/routes/bpjsRoutes';
 import logRoutes from './src/routes/logRoutes';
 import saranRoutes from './src/routes/saranRoutes';
 import kaderRoutes from './src/routes/kaderRoutes';
+import profileRoutes from './src/routes/profileRoutes';
 
 dotenv.config();
 
@@ -49,14 +49,14 @@ app.use('/api/opd-admin', opdAdminRoutes);
 // 4. Relawan Routes
 app.use('/api/relawan', relawanRoutes);
 
-// 5. BPJS Routes
-app.use('/api/bpjs', bpjsRoutes);
-
 // 6. Saran Routes
 app.use('/api/saran', saranRoutes);
 
 // 7. Komunitas Routes
 app.use('/api/kader', kaderRoutes);
+
+// 8. Profile Routes (semua role)
+app.use('/api/profile', profileRoutes);
 
 // === TEST ENDPOINT ===
 app.get('/', (req, res) => {
