@@ -49,6 +49,7 @@ const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
     nik: r.nik,
     namaLengkap: r.nama_lengkap,
     alamat: r.alamat_ktp || '-',
+    no_hp: r.no_hp || '-',
     kelurahan: r.kelurahan || '-',
     kader: r.nama_kader || '-',
     jabatan: r.penugasan || '-',   // ← fix: bukan status_penugasan
@@ -100,6 +101,7 @@ const DataRelawan: React.FC = () => {
         namaRelawan: '',
         nik: '',
         alamat: '',
+        no_hp: '',
         kelurahan: '',
         kader: '',
         jabatan: '',
@@ -114,6 +116,7 @@ const DataRelawan: React.FC = () => {
             detailFormData.namaRelawan !== selectedRelawan.namaLengkap ||
             detailFormData.nik !== selectedRelawan.nik ||
             detailFormData.alamat !== selectedRelawan.alamat ||
+            detailFormData.no_hp !== selectedRelawan.no_hp ||
             detailFormData.kelurahan !== selectedRelawan.kelurahan ||
             detailFormData.kader !== selectedRelawan.kader ||
             detailFormData.jabatan !== selectedRelawan.jabatan ||
@@ -128,6 +131,7 @@ const DataRelawan: React.FC = () => {
         nik: '',
         jenisKelamin: 'L' as 'L' | 'P',
         alamat: '',
+        no_hp: '',
         kelurahan: '',
         kader: '',
         jabatan: '',
@@ -203,6 +207,7 @@ const DataRelawan: React.FC = () => {
                             nik: row.nik,
                             namaLengkap: row.nama_lengkap,
                             alamat: row.alamat_ktp || '-',
+                            no_hp: row.no_hp || '-',
                             kelurahan: row.kelurahan || '-',
                             jenisKelamin: row.jenis_kelamin || 'L',
                             kader: row.nama_kader || '-',
@@ -369,6 +374,7 @@ const DataRelawan: React.FC = () => {
             namaRelawan: relawan.namaLengkap || '',
             nik: relawan.nik || '',
             alamat: relawan.alamat || '-',
+            no_hp: relawan.no_hp || '-',
             kelurahan: relawan.kelurahan || '-',
             kader: relawan.kader || '-',
             jabatan: relawan.jabatan || '-',
@@ -438,6 +444,7 @@ const DataRelawan: React.FC = () => {
                     nik: formData.nik,
                     jenis_kelamin: formData.jenisKelamin,
                     alamat_ktp: formData.alamat,
+                    no_hp: formData.no_hp,
                     kelurahan: formData.kelurahan,
                     assignments: formData.assignments.map(a => ({
                         opd_id: a.opd_id || null, // Backend akan otomatis baca opd_id jika ada (kita sudah perbarui ini sebelumnya)
@@ -469,6 +476,7 @@ const DataRelawan: React.FC = () => {
                 nik: '',
                 jenisKelamin: 'L',
                 alamat: '',
+                no_hp: '',
                 kelurahan: '',
                 kader: '',
                 jabatan: '',
@@ -687,6 +695,7 @@ const handleAddAssignment = () => {
                 body: JSON.stringify({
                     nama_lengkap: detailFormData.namaRelawan,
                     alamat_ktp: detailFormData.alamat,
+                    no_hp: detailFormData.no_hp,
                     kelurahan: detailFormData.kelurahan,
                     jenis_kelamin: detailFormData.jenisKelamin,
                     assignments: detailFormData.assignments.map(a => ({
@@ -1068,6 +1077,7 @@ const handleAddAssignment = () => {
                         { label: 'Nama Relawan', name: 'namaRelawan', required: true, placeholder: 'Nama Lengkap Relawan' },
                         { label: 'NIK', name: 'nik', required: true, placeholder: '16 digit NIK', maxLength: 16 },
                         { label: 'Alamat KTP', name: 'alamat', placeholder: 'Alamat sesuai KTP' },
+                        { label: 'No. HP', name: 'no_hp', placeholder: 'Nomor HP' },
                         { label: 'Kelurahan', name: 'kelurahan', placeholder: 'Kelurahan/Desa' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
@@ -1163,6 +1173,7 @@ const handleAddAssignment = () => {
                             { label: 'Nama Relawan', name: 'namaRelawan' },
                             { label: 'NIK', name: 'nik' },
                             { label: 'Alamat KTP', name: 'alamat' },
+                            { label: 'No. HP', name: 'no_hp' },
                             { label: 'Kelurahan', name: 'kelurahan' },
                             { label: 'Jabatan', name: 'jabatan' },
                         ].map(field => (
