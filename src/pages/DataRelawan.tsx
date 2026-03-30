@@ -40,6 +40,8 @@ interface PengajuanAPIData {
     nama_lengkap: string;
     nik: string;
     relawan_id: number;
+    data_baru?: any;
+    data_lama?: any;
 }
 
 interface AutoOption { label: string; value: string; }
@@ -1295,6 +1297,36 @@ const handleAddAssignment = () => {
                                 <span className="font-medium">Catatan Relawan:</span><span>{selectedPengajuan.catatan_relawan || '-'}</span>
                             </div>
                         </div>
+
+                        {/* Menampilkan Data Baru yang diajukan jika ada */}
+                        {selectedPengajuan.data_baru && (() => {
+                            const dataBaru = typeof selectedPengajuan.data_baru === 'string' 
+                                            ? JSON.parse(selectedPengajuan.data_baru) 
+                                            : selectedPengajuan.data_baru;
+                            
+                            if (Object.keys(dataBaru).length === 0) return null;
+
+                            return (
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-2 mt-4">
+                                    <p className="text-sm font-medium text-yellow-800">Detail Perubahan yang Diajukan</p>
+                                    <div className="grid grid-cols-2 gap-2 text-sm text-yellow-700">
+                                        {dataBaru.nama_lengkap && (
+                                            <>
+                                                <span className="font-medium">Nama Lengkap Baru:</span>
+                                                <span className="font-semibold">{dataBaru.nama_lengkap}</span>
+                                            </>
+                                        )}
+                                        {dataBaru.alamat_ktp && (
+                                            <>
+                                                <span className="font-medium">Alamat KTP Baru:</span>
+                                                <span className="font-semibold">{dataBaru.alamat_ktp}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })()}
+
 
                         <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg">
                             <input type="checkbox" id="dataChecked" checked={isDataChecked} onChange={(e) => setIsDataChecked(e.target.checked)} className="w-4 h-4 text-blue-600" />
