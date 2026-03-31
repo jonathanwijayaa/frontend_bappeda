@@ -441,6 +441,15 @@ const DataRelawan: React.FC = () => {
             return;
         }
 
+        // ✅ Validasi OPD, Kader, dan Jabatan pada assignment manual
+        const hasInvalidAssignment = formData.assignments.some(
+            (a) => !a.opd || !a.kader || !a.peran
+        );
+        if (hasInvalidAssignment) {
+            setToast({ message: 'Instansi (OPD), Kader, dan Peran/Jabatan pada setiap penugasan wajib diisi.', type: 'error' });
+            return;
+        }
+
         setIsSaving(true);
         try {
             // ✅ FIXED: Menggunakan endpoint /bulk karena kita mengirim array

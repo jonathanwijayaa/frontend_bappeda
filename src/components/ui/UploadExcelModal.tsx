@@ -74,6 +74,28 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                 error: `Format file tidak sesuai template. Kolom inti tidak terdeteksi: ${missingFields.join(', ')}. Pastikan menggunakan template yang tersedia.`
             };
         }
+
+        if (dataType === 'relawan') {
+            for (let i = 0; i < data.length; i++) {
+                const row = data[i];
+                const getVal = (possibleKeys: string[]) => {
+                    const key = Object.keys(row).find(k => possibleKeys.includes(k.toLowerCase().replace(/[^a-z0-9]/g, '')));
+                    return key ? String(row[key]).trim() : '';
+                };
+
+                const opd = getVal(['opd', 'instansi']);
+                const kader = getVal(['kader', 'komunitaskader', 'komunitas']);
+                const jabatan = getVal(['jabatan', 'peran']);
+
+                if (!opd || !kader || !jabatan) {
+                    return {
+                        isValid: false,
+                        error: `Baris ${i + 2}: Data instansi (OPD), kader, dan jabatan wajib diisi untuk semua penugasan relawan!`
+                    };
+                }
+            }
+        }
+
         return { isValid: true };
     };
 
