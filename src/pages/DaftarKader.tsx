@@ -24,6 +24,9 @@ interface KaderData {
     is_active: boolean;
     created_at: string;
     updated_at: string;
+    no_hp_pic?: string | null;
+    alamat_pic?: string | null;
+    kelurahan_pic?: string | null;
     jumlah_anggota?: number; // khusus response OPD
 }
 
@@ -74,7 +77,10 @@ const DaftarKader: React.FC = () => {
         nama_kader: '',
         deskripsi: '',
         pic: '',
-        nik_pic: ''
+        nik_pic: '',
+        no_hp_pic: '',
+        alamat_pic: '',
+        kelurahan_pic: ''
     });
 
     const opdOptions: AutoOption[] = useMemo(
@@ -87,7 +93,11 @@ const DaftarKader: React.FC = () => {
         return (
             detailFormData.nama_kader !== (selectedKader.nama_kader || '') ||
             detailFormData.deskripsi !== (selectedKader.deskripsi || '') ||
-            detailFormData.pic !== (selectedKader.pic || '')
+            detailFormData.pic !== (selectedKader.pic || '') ||
+            detailFormData.nik_pic !== (selectedKader.nik_pic || '') ||
+            detailFormData.no_hp_pic !== (selectedKader.no_hp_pic || '') ||
+            detailFormData.alamat_pic !== (selectedKader.alamat_pic || '') ||
+            detailFormData.kelurahan_pic !== (selectedKader.kelurahan_pic || '')
         );
     }, [selectedKader, detailFormData]);
 
@@ -172,7 +182,10 @@ const DaftarKader: React.FC = () => {
             nama_kader: kader.nama_kader,
             deskripsi: kader.deskripsi || '',
             pic: kader.pic || '',
-            nik_pic: kader.nik_pic || ''
+            nik_pic: kader.nik_pic || '',
+            no_hp_pic: kader.no_hp_pic || '',
+            alamat_pic: kader.alamat_pic || '',
+            kelurahan_pic: kader.kelurahan_pic || ''
         });
         setIsDetailModalOpen(true);
     };
@@ -266,6 +279,10 @@ const DaftarKader: React.FC = () => {
                     nama_kader: detailFormData.nama_kader,
                     deskripsi: detailFormData.deskripsi || null,
                     pic: detailFormData.pic || null,
+                    nik_pic: detailFormData.nik_pic || null,
+                    no_hp_pic: detailFormData.no_hp_pic || null,
+                    alamat_pic: detailFormData.alamat_pic || null,
+                    kelurahan_pic: detailFormData.kelurahan_pic || null
                 })
             });
             const result = await res.json();
@@ -312,7 +329,7 @@ const DaftarKader: React.FC = () => {
                 method: 'POST',
                 body: JSON.stringify(data)
             });
-            
+
             const result = await res.json();
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });
@@ -395,7 +412,7 @@ const DaftarKader: React.FC = () => {
                         <div className="text-sm text-gray-500">
                             Menampilkan {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredData.length)} dari {filteredData.length} Kader
                         </div>
-                        <Pagination 
+                        <Pagination
                             currentPage={currentPage}
                             totalPages={totalPages}
                             onPageChange={(page) => setCurrentPage(page)}
@@ -483,6 +500,10 @@ const DaftarKader: React.FC = () => {
                             { label: 'Nama Kader', name: 'nama_kader' },
                             { label: 'PIC', name: 'pic' },
                             { label: 'Deskripsi', name: 'deskripsi' },
+                            { label: 'NIK PIC', name: 'nik_pic' },
+                            { label: 'No. HP PIC', name: 'no_hp_pic' },
+                            { label: 'Alamat PIC', name: 'alamat_pic' },
+                            { label: 'Kelurahan PIC', name: 'kelurahan_pic' }
                         ].map(field => (
                             <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                                 <label className="text-lg font-medium text-gray-900">{field.label}</label>
