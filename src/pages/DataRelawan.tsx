@@ -627,21 +627,18 @@ const DataRelawan: React.FC = () => {
     };
 
     // ✅ TAMBAHKAN FUNCTION INI (baru setelah handleAssignmentChange)
-    const handleAssignmentKaderChange = (index: number, value: string) => {
-        // value di sini adalah kader_id (string) dari AutocompleteInput
-        const kaderId = value ? Number(value) : null;
-
-        // Cari nama kader dari options untuk ditampilkan
+    const handleAssignmentKaderChange = (index: number, namaKader: string) => {
+        // namaKader di sini adalah label teks dari AutocompleteInput
         const options = kaderOptionsByIndex[index] || [];
-        const matched = options.find(o => o.value === value);
-        const kaderName = matched ? matched.label : '';
+        const matched = options.find(o => o.label.toLowerCase() === namaKader.toLowerCase());
+        const kaderId = matched ? Number(matched.value) : null;
 
         setFormData(prev => {
             const newAssignments = [...prev.assignments];
             newAssignments[index] = {
                 ...newAssignments[index],
-                kader: kaderName,      // Nama untuk display
-                kader_id: kaderId      // ID untuk dikirim ke backend
+                kader: namaKader,      // Simpan teks yang diketik/dipilih
+                kader_id: kaderId      // ID jika cocok
             };
             return { ...prev, assignments: newAssignments };
         });
@@ -896,7 +893,7 @@ const DataRelawan: React.FC = () => {
                             <>
                                 <AutocompleteInput
                                     name={`kader-${index}`}
-                                    value={assignment.kader_id ? String(assignment.kader_id) : ''}
+                                    value={assignment.kader}
                                     options={currentKaderOptions}
                                     onChange={(val) => onKaderChange(index, val)}
                                     placeholder={
