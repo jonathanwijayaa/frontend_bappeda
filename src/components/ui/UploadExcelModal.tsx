@@ -19,20 +19,28 @@ interface UploadExcelModalProps {
 
 // ── Mapping: field wajib sesuai nama kolom AKTUAL di template Excel ──
 const REQUIRED_FIELDS: Record<string, string[]> = {
-    opd:     ['namaopd', 'nikpic'],
-    kader:   ['namakader', 'opd', 'nikpic'],
+    opd:     ['namaopd', 'status', 'alamat', 'pic', 'nikpic', 'kontak'],
+    kader:   ['opd', 'namakader', 'pic', 'nikpic', 'nohp', 'alamatpic', 'kelurahanpic'],
     relawan: ['namalengkap', 'jeniskelamin', 'nik', 'alamat', 'nohp', 'opd', 'kelurahan', 'kader', 'jabatan', 'detailjabatan', 'penugasan'],
 };
 
 const REQUIRED_FIELDS_CHECK: Record<string, { keys: string[], label: string }[]> = {
     opd:     [
         { keys: ['namaopd', 'nama'], label: 'Nama OPD' },
-        { keys: ['nikpic', 'nik'], label: 'NIK PIC' }
+        { keys: ['status'], label: 'Status' },
+        { keys: ['alamat'], label: 'Alamat' },
+        { keys: ['pic', 'namapic'], label: 'PIC' },
+        { keys: ['nikpic', 'nik'], label: 'NIK PIC' },
+        { keys: ['kontak', 'nohp'], label: 'Kontak' }
     ],
     kader:   [
+        { keys: ['opd', 'instansi'], label: 'OPD' },
         { keys: ['namakader', 'kader', 'nama'], label: 'Nama Kader' },
-        { keys: ['opd', 'instansi'], label: 'OPD/Instansi' },
-        { keys: ['nikpic', 'nik'], label: 'NIK PIC' }
+        { keys: ['pic', 'namapic'], label: 'PIC' },
+        { keys: ['nikpic', 'nik'], label: 'NIK PIC' },
+        { keys: ['nohp', 'kontak', 'hp'], label: 'No HP' },
+        { keys: ['alamatpic', 'alamat'], label: 'Alamat PIC' },
+        { keys: ['kelurahanpic', 'kelurahan'], label: 'Kelurahan PIC' }
     ],
     relawan: [
         { keys: ['namalengkap', 'nama'], label: 'Nama Lengkap' },
@@ -139,13 +147,24 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
             // defval: '' agar kolom kosong tetap terbaca sebagai string kosong
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
 
-            const validation = validateDataAndGetErrors(jsonData);
+            // Menghapus ' (petik tunggal) di awal string jika user menambahkannya untuk mencegah auto-scientific Excel
+            const sanitizedData = jsonData.map((row: any) => {
+                const newRow = { ...row };
+                for (const key in newRow) {
+                    if (typeof newRow[key] === 'string' && newRow[key].startsWith("'")) {
+                        newRow[key] = newRow[key].substring(1);
+                    }
+                }
+                return newRow;
+            });
+
+            const validation = validateDataAndGetErrors(sanitizedData);
             if (!validation.isValid && validation.globalError) {
                 setError(validation.globalError);
                 return;
             }
 
-            setParsedData(jsonData);
+            setParsedData(sanitizedData);
             setParsedErrors(validation.rowErrors || []);
             setIsReviewModalOpen(true);
         } catch (err) {

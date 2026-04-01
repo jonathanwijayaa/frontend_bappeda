@@ -523,17 +523,26 @@ const DaftarKader: React.FC = () => {
 
                         {/* Info Kader — editable */}
                         {[
-                            { label: 'Nama Kader', name: 'nama_kader' },
-                            { label: 'Deskripsi',  name: 'deskripsi'  }
+                            { label: 'Nama Kader', name: 'nama_kader', type: 'input' },
+                            { label: 'Deskripsi',  name: 'deskripsi', type: 'textarea' }
                         ].map(field => (
-                            <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
-                                <label className="text-lg font-medium text-gray-900">{field.label}</label>
-                                <input
-                                    type="text"
-                                    value={(detailFormData as any)[field.name]}
-                                    onChange={(e) => setDetailFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
-                                    className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                />
+                            <div key={field.name} className={`grid grid-cols-3 gap-4 ${field.type === 'textarea' ? 'items-start' : 'items-center'}`}>
+                                <label className={`text-lg font-medium text-gray-900 ${field.type === 'textarea' ? 'pt-2' : ''}`}>{field.label}</label>
+                                {field.type === 'textarea' ? (
+                                    <textarea
+                                        value={(detailFormData as any)[field.name]}
+                                        onChange={(e) => setDetailFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                        rows={4}
+                                        className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                                    />
+                                ) : (
+                                    <input
+                                        type="text"
+                                        value={(detailFormData as any)[field.name]}
+                                        onChange={(e) => setDetailFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                        className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                )}
                             </div>
                         ))}
 

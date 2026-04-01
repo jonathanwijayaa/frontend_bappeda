@@ -38,8 +38,16 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
         const exportData = dirtyDataList.map((row) => {
             const originalIndex = data.findIndex(d => d === row);
             const rowError = errors.find(e => e.rowNumber === originalIndex + 2);
+            
+            // Format NIK to be string in Excel by prefixing with '
+            const formattedRow = { ...row };
+            const nikKey = Object.keys(formattedRow).find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '').includes('nik'));
+            if (nikKey && formattedRow[nikKey]) {
+                formattedRow[nikKey] = "'" + formattedRow[nikKey];
+            }
+            
             return {
-                ...row,
+                ...formattedRow,
                 Keterangan_Error: rowError ? `Kolom kosong: ${rowError.emptyColumns.join(', ')}` : 'Error tidak diketahui'
             };
         });
@@ -61,6 +69,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PIC</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK PIC</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kontak</th>
                     </tr>
                 );
@@ -68,10 +77,14 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                 return (
                     <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">OPD</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Kader</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Deskripsi</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PIC</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kontak</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK PIC</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No HP</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat PIC</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelurahan PIC</th>
                     </tr>
                 );
             case 'relawan':
@@ -114,18 +127,23 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['namaopd', 'nama'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['status'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['alamat'])}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{get(['pic'])}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{get(['kontak'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['pic', 'namapic'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['nikpic', 'nik'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['kontak', 'nohp'])}</td>
                         </tr>
                     );
                 case 'kader':
                     return (
                         <tr key={index} className="hover:bg-gray-50 border-b">
                             <td className="px-4 py-3 text-sm text-gray-900">{index + 1}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['opd', 'instansi'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['namakader', 'kader', 'nama'])}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{get(['opd'])}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{get(['pic'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['deskripsi'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['pic', 'namapic'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['nikpic', 'nik'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['nohp', 'kontak', 'hp'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['alamatpic', 'alamat'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['kelurahanpic', 'kelurahan'])}</td>
                         </tr>
                     );
                 case 'relawan':
