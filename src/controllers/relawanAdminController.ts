@@ -10,7 +10,7 @@ export const getAllRelawan = async (req: AuthRequest, res: Response): Promise<vo
     try {
         const query = `
             SELECT 
-                u.user_id, u.nik, u.nama_lengkap, u.email, u.no_hp, u.is_active,
+                u.user_id, u.nik, u.nama_lengkap, u.no_hp, u.is_active,
                 r.relawan_id, r.jenis_kelamin,
                 r.alamat_ktp, r.kelurahan,
                 pr.penugasan_id, pr.penugasan, pr.jabatan, pr.detail_jabatan, pr.status_keaktifan AS status_penugasan,
@@ -42,7 +42,7 @@ export const getRelawanById = async (req: AuthRequest, res: Response): Promise<v
     try {
         const query = `
             SELECT 
-                u.user_id, u.nik, u.nama_lengkap, u.email, u.no_hp, u.foto_profil, u.is_active,
+                u.user_id, u.nik, u.nama_lengkap, u.no_hp, u.foto_profil, u.is_active,
                 r.relawan_id, r.jenis_kelamin, r.alamat_ktp, r.kelurahan,
                 pr.penugasan_id, pr.penugasan, pr.jabatan, pr.detail_jabatan,
                 pr.status_keaktifan AS status_penugasan, pr.nomor_sk_manual,
@@ -77,8 +77,9 @@ export const getRelawanById = async (req: AuthRequest, res: Response): Promise<v
 export const getPengajuanPerubahanDaftar = async (req: AuthRequest, res: Response): Promise<void> => {
     try {
         const query = `
-            SELECT 
+                   SELECT 
                 pp.pengajuan_id, pp.jenis_perubahan, pp.status, pp.tanggal_pengajuan, pp.catatan_relawan,
+                pp.data_baru, pp.data_lama, 
                 u.nama_lengkap, u.nik, r.relawan_id
             FROM pengajuan_perubahan_data pp
             JOIN relawan r ON pp.relawan_id = r.relawan_id
@@ -103,10 +104,15 @@ export const reviewPengajuan = async (req: AuthRequest, res: Response): Promise<
     const { id } = req.params;
     const { status, catatan_verifikator } = req.body;
 
+    // Frontend mengirim 'Disetujui' atau 'Ditolak'
     if (!['Disetujui', 'Ditolak'].includes(status)) {
         res.status(400).json({ success: false, message: "Status harus 'Disetujui' atau 'Ditolak'" });
         return;
     }
+
+    // ✅ FIX: Map nilai frontend ke nilai ENUM database PostgreSQL
+    // DB ENUM: ('Menunggu Review', 'Diterima', 'Ditolak') - bukan 'Disetujui'!
+    const statusDB = status === 'Disetujui' ? 'Diterima' : 'Ditolak';
 
     try {
         const pengajuanQuery = `SELECT * FROM pengajuan_perubahan_data WHERE pengajuan_id = $1 AND status = 'Menunggu Review'`;
@@ -124,16 +130,34 @@ export const reviewPengajuan = async (req: AuthRequest, res: Response): Promise<
             SET status = $1, catatan_verifikator = $2, tanggal_verifikasi = CURRENT_TIMESTAMP, verifikator_id = $3
             WHERE pengajuan_id = $4
         `;
-        await executeQueryWithContext(updatePengajuanQuery, [status, catatan_verifikator || null, req.user!.id, id], req.user);
+        // ✅ FIX: Gunakan statusDB ('Diterima'/'Ditolak') yang sesuai ENUM database
+        await executeQueryWithContext(updatePengajuanQuery, [statusDB, catatan_verifikator || null, req.user!.id, id], req.user);
 
         if (status === 'Disetujui' && pengajuan.data_baru) {
-            // IMPLEMENTASI MENDATANG: Eksekusi update dinamis ke tabel Relawan/Users sesuai isi data_baru
+            // Parsing JSON data_baru (berjaga-jaga jika format string/json)
+            const dataBaru = typeof pengajuan.data_baru === 'string'
+                ? JSON.parse(pengajuan.data_baru)
+                : pengajuan.data_baru;
+
+            // Update nama jika ada perubahan
+            if (dataBaru.nama_lengkap) {
+                await executeQueryWithContext(`
+                    UPDATE users 
+                    SET nama_lengkap = $1 
+                    WHERE user_id = (SELECT user_id FROM relawan WHERE relawan_id = $2)
+                `, [dataBaru.nama_lengkap, pengajuan.relawan_id], req.user);
+            }
+
+            // Update alamat jika ada perubahan
+            if (dataBaru.alamat_ktp) {
+                await executeQueryWithContext(`
+                    UPDATE relawan 
+                    SET alamat_ktp = $1 
+                    WHERE relawan_id = $2
+                `, [dataBaru.alamat_ktp, pengajuan.relawan_id], req.user);
+            }
         }
 
-        res.status(200).json({
-            success: true,
-            message: `Pengajuan berhasil di-${status}`
-        });
 
     } catch (error: any) {
         console.error('Error in reviewPengajuan:', error);
@@ -148,10 +172,11 @@ export const createRelawan = async (req: AuthRequest, res: Response): Promise<vo
     const alamat_ktp = req.body.alamat_ktp || req.body.alamat;
     const kelurahan = req.body.kelurahan;
     const jenis_kelamin = req.body.jenis_kelamin || req.body.jenisKelamin || 'L';
-    
+    const no_hp = req.body.no_hp || req.body.noHp || null;
+
     // Tangkap array assignments dari frontend
-    const assignmentsToProcess: any[] = req.body.assignments && req.body.assignments.length > 0 
-        ? req.body.assignments 
+    const assignmentsToProcess: any[] = req.body.assignments && req.body.assignments.length > 0
+        ? req.body.assignments
         : [];
 
     if (!nik || !nama_lengkap) {
@@ -159,10 +184,10 @@ export const createRelawan = async (req: AuthRequest, res: Response): Promise<vo
         return;
     }
 
-    const client = await pool.connect(); 
+    const client = await pool.connect();
 
     try {
-        await client.query('BEGIN'); 
+        await client.query('BEGIN');
 
         // 0. Cek Duplikasi NIK (Karena ini form Relawan Baru, NIK tidak boleh sudah ada)
         const checkNikQuery = `SELECT user_id FROM users WHERE nik = $1`;
@@ -179,9 +204,9 @@ export const createRelawan = async (req: AuthRequest, res: Response): Promise<vo
 
         // 1. INSERT users
         const userRes = await client.query(`
-            INSERT INTO users (nik, nama_lengkap, password, role, is_active)
-            VALUES ($1, $2, $3, 'relawan', true) RETURNING user_id;
-        `, [nik, nama_lengkap, hashedPassword]);
+            INSERT INTO users (nik, nama_lengkap, no_hp, password, role, is_active)
+            VALUES ($1, $2, $3, $4, 'relawan', true) RETURNING user_id;
+        `, [nik, nama_lengkap, no_hp, hashedPassword]);
         const userId = userRes.rows[0].user_id;
 
         // 2. INSERT relawan
@@ -225,21 +250,21 @@ export const createRelawan = async (req: AuthRequest, res: Response): Promise<vo
                 INSERT INTO penugasan_relawan (relawan_id, opd_id, kader_id, jabatan, detail_jabatan, penugasan, status_keaktifan)
                 VALUES ($1, $2, $3, $4, $5, $6, $7)
             `, [
-                relawanId, opdId, kaderId, 
-                assign.peran || null, assign.detail || null, 
+                relawanId, opdId, kaderId,
+                assign.peran || null, assign.detail || null,
                 assign.penugasan || namaOpd || null, assign.statusKeaktifan || 'Aktif'
             ]);
         }
 
-        await client.query('COMMIT'); 
+        await client.query('COMMIT');
         res.status(201).json({ success: true, message: 'Berhasil menambahkan data relawan beserta penugasannya' });
 
     } catch (error: any) {
-        await client.query('ROLLBACK'); 
+        await client.query('ROLLBACK');
         console.error('Error in createRelawan (Single):', error);
         res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server saat menambahkan data relawan' });
     } finally {
-        client.release(); 
+        client.release();
     }
 };
 
@@ -256,7 +281,7 @@ export const createBulkRelawan = async (req: AuthRequest, res: Response): Promis
     const normalizeItem = (raw: any) => {
         const cleanExcelData: Record<string, any> = {};
         for (const key of Object.keys(raw)) {
-            const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, ''); 
+            const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
             cleanExcelData[cleanKey] = raw[key];
         }
 
@@ -269,17 +294,18 @@ export const createBulkRelawan = async (req: AuthRequest, res: Response): Promis
         };
 
         return {
-            nik:          getVal('nik', ['nik']).trim(),
-            namaLengkap:  getVal('nama_lengkap', ['namalengkap', 'nama']).trim(),
+            nik: getVal('nik', ['nik']).trim(),
+            namaLengkap: getVal('nama_lengkap', ['namalengkap', 'nama']).trim(),
             jenisKelamin: getVal('jenis_kelamin', ['jeniskelamin', 'jk', 'kelamin']).trim().toUpperCase() === 'P' ? 'P' : 'L',
-            alamat:       getVal('alamat_ktp', ['alamatktp', 'alamat', 'domisili']).trim() || '-',
-            kelurahan:    getVal('kelurahan', ['kelurahan', 'desa']).trim() || '-',
-            opd:          getVal('opd', ['opd', 'instansi']).trim(),
-            kader:        getVal('kader', ['kader', 'komunitaskader', 'komunitas']).trim(),
-            jabatan:      getVal('jabatan', ['jabatan', 'peran']).trim() || null,
-            detailJabatan:getVal('detail_jabatan', ['detailjabatan', 'detail']).trim() || null,
-            penugasan:    getVal('penugasan', ['penugasan', 'tugas']).trim() || null,
-            assignments:  raw.assignments || null,
+            alamat: getVal('alamat_ktp', ['alamatktp', 'alamat', 'domisili']).trim() || '-',
+            kelurahan: getVal('kelurahan', ['kelurahan', 'desa']).trim() || '-',
+            opd: getVal('opd', ['opd', 'instansi']).trim(),
+            kader: getVal('kader', ['kader', 'komunitaskader', 'komunitas']).trim(),
+            jabatan: getVal('jabatan', ['jabatan', 'peran']).trim() || null,
+            detailJabatan: getVal('detail_jabatan', ['detailjabatan', 'detail']).trim() || null,
+            penugasan: getVal('penugasan', ['penugasan', 'tugas']).trim() || null,
+            assignments: raw.assignments || null,
+            noHp: getVal('no_hp', ['nohp', 'nomorhp', 'telepon']).trim() || null,
         };
     };
 
@@ -307,12 +333,12 @@ export const createBulkRelawan = async (req: AuthRequest, res: Response): Promis
 
                 // Cek apakah NIK sudah ada
                 const checkRes = await client.query(`SELECT user_id FROM users WHERE nik = $1`, [item.nik]);
-                
+
                 if (checkRes.rows.length > 0) {
                     // NIK sudah ada - ambil ID-nya
                     userId = checkRes.rows[0].user_id;
                     const getRelawan = await client.query(`SELECT relawan_id FROM relawan WHERE user_id = $1`, [userId]);
-                    
+
                     if (getRelawan.rows.length > 0) {
                         relawanId = getRelawan.rows[0].relawan_id;
                     } else {
@@ -328,11 +354,11 @@ export const createBulkRelawan = async (req: AuthRequest, res: Response): Promis
                     // NIK baru - Buat User dan Relawan baru
                     const salt = await bcrypt.genSalt(10);
                     const hashedPassword = await bcrypt.hash(item.nik, salt);
-                    
+
                     const userRes = await client.query(
-                        `INSERT INTO users (nik, nama_lengkap, password, role, is_active)
-                         VALUES ($1, $2, $3, 'relawan', true) RETURNING user_id`,
-                        [item.nik, item.namaLengkap, hashedPassword]
+                        `INSERT INTO users (nik, nama_lengkap, no_hp, password, role, is_active)
+                         VALUES ($1, $2, $3, $4, 'relawan', true) RETURNING user_id`,
+                        [item.nik, item.namaLengkap, item.noHp, hashedPassword]
                     );
                     userId = userRes.rows[0].user_id;
 
@@ -371,7 +397,7 @@ export const createBulkRelawan = async (req: AuthRequest, res: Response): Promis
 
                     if (!opdId) {
                         errors.push(`Baris ${rowNumber} (NIK ${item.nik}): OPD "${namaOpd}" tidak ditemukan. Data relawan tersimpan, tapi tanpa penugasan.`);
-                        continue; 
+                        continue;
                     }
 
                     // Cari Kader ID
@@ -418,9 +444,9 @@ export const createBulkRelawan = async (req: AuthRequest, res: Response): Promis
                                  updated_at = CURRENT_TIMESTAMP
                              WHERE penugasan_id = $4`,
                             [
-                                assign.detail || assign.detailJabatan || null, 
+                                assign.detail || assign.detailJabatan || null,
                                 assign.penugasan || namaOpd || null,
-                                assign.statusKeaktifan || 'Aktif', 
+                                assign.statusKeaktifan || 'Aktif',
                                 checkPenugasan.rows[0].penugasan_id
                             ]
                         );
@@ -431,17 +457,17 @@ export const createBulkRelawan = async (req: AuthRequest, res: Response): Promis
                                 (relawan_id, opd_id, kader_id, jabatan, penugasan, detail_jabatan, status_keaktifan)
                              VALUES ($1, $2, $3, $4, $5, $6, $7)`,
                             [
-                                relawanId, 
-                                opdId, 
-                                kaderId, 
-                                assign.peran || assign.jabatan || null, 
+                                relawanId,
+                                opdId,
+                                kaderId,
+                                assign.peran || assign.jabatan || null,
                                 assign.penugasan || namaOpd || null,
                                 assign.detail || assign.detailJabatan || null,
                                 assign.statusKeaktifan || 'Aktif'
                             ]
                         );
                     }
-            }
+                }
 
                 await client.query('COMMIT');
                 insertedCount++;
@@ -498,7 +524,7 @@ export const getkaderByOpd = async (req: AuthRequest, res: Response): Promise<vo
         res.status(500).json({ success: false, message: 'Terjadi kesalahan server' });
     }
 
-    
+
 };
 
 // Tambahkan di bagian bawah file (setelah getkaderByOpd)
@@ -540,14 +566,14 @@ export const updateRelawan = async (req: AuthRequest, res: Response): Promise<vo
                              status_keaktifan = $5, updated_at = CURRENT_TIMESTAMP
                          WHERE penugasan_id = $6`,
                         [opdId, assign.kader_id || null, assign.peran || null, assign.detail || null,
-                         assign.statusKeaktifan || 'Aktif', assign.penugasan_id]
+                            assign.statusKeaktifan || 'Aktif', assign.penugasan_id]
                     );
                 } else {
                     await client.query(
                         `INSERT INTO penugasan_relawan (relawan_id, opd_id, kader_id, jabatan, detail_jabatan, status_keaktifan)
                          VALUES ($1, $2, $3, $4, $5, $6)`,
                         [relawanId, opdId, assign.kader_id || null, assign.peran || null,
-                         assign.detail || null, assign.statusKeaktifan || 'Aktif']
+                            assign.detail || null, assign.statusKeaktifan || 'Aktif']
                     );
                 }
             }
