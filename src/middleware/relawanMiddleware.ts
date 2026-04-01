@@ -22,8 +22,6 @@ export const requireRelawanContext = async (req: RelawanAuthRequest, res: Respon
             [req.user.id]
         );
 
-        console.log('🔍 Query result rows:', result.rows.length); // ← tambah ini
-
         if (result.rows.length === 0) {
             res.status(403).json({ success: false, message: 'Data biodata relawan belum terdata.' });
             return;
