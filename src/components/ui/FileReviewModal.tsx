@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Modal from './Modal';
 import Button from './Button';
+import * as XLSX from 'xlsx';
 
 interface FileReviewModalProps {
     isOpen: boolean;
@@ -21,7 +22,34 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
     title,
     errors = []
 }) => {
-    const hasErrors = errors && errors.length > 0;
+    const [hasDownloadedDirty, setHasDownloadedDirty] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            setHasDownloadedDirty(false);
+        }
+    }, [isOpen]);
+
+    const cleanData = data.filter((_, idx) => !errors?.some(e => e.rowNumber === idx + 2));
+    const dirtyDataList = data.filter((_, idx) => errors?.some(e => e.rowNumber === idx + 2));
+    const hasDirtyData = dirtyDataList.length > 0;
+
+    const handleDownloadDirtyData = () => {
+        const exportData = dirtyDataList.map((row) => {
+            const originalIndex = data.findIndex(d => d === row);
+            const rowError = errors.find(e => e.rowNumber === originalIndex + 2);
+            return {
+                ...row,
+                Keterangan_Error: rowError ? `Kolom kosong: ${rowError.emptyColumns.join(', ')}` : 'Error tidak diketahui'
+            };
+        });
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Data Kotor");
+        XLSX.writeFile(workbook, `Data_Kotor_${dataType}.xlsx`);
+        setHasDownloadedDirty(true);
+    };
 
     const renderTableHeaders = () => {
         switch (dataType) {
@@ -62,9 +90,8 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
         }
     };
 
-    const renderTableRows = () => {
-        return data.map((item, index) => {
-            // Normalisasi semua key: lowercase + hapus non-alfanumerik
+    const renderTableRows = (displayData: any[]) => {
+        return displayData.map((item, index) => {
             const r: Record<string, any> = {};
             for (const key of Object.keys(item)) {
                 r[key.toLowerCase().replace(/[^a-z0-9]/g, '')] = item[key];
@@ -78,7 +105,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
             switch (dataType) {
                 case 'opd':
                     return (
-                        <tr key={index} className="hover:bg-gray-50">
+                        <tr key={index} className="hover:bg-gray-50 border-b">
                             <td className="px-4 py-3 text-sm text-gray-900">{index + 1}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['namaopd', 'nama'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['status'])}</td>
@@ -89,7 +116,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                     );
                 case 'kader':
                     return (
-                        <tr key={index} className="hover:bg-gray-50">
+                        <tr key={index} className="hover:bg-gray-50 border-b">
                             <td className="px-4 py-3 text-sm text-gray-900">{index + 1}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['namakader', 'kader', 'nama'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['opd'])}</td>
@@ -99,7 +126,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                     );
                 case 'relawan':
                     return (
-                        <tr key={index} className="hover:bg-gray-50">
+                        <tr key={index} className="hover:bg-gray-50 border-b">
                             <td className="px-4 py-3 text-sm text-gray-900">{index + 1}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['namalengkap', 'nama'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['nik'])}</td>
@@ -114,47 +141,100 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
         });
     };
 
+    const isConfirmDisabled = hasDirtyData && !hasDownloadedDirty;
+
     return (
         <Modal
             isOpen={isOpen}
             onClose={onClose}
             title={title}
-            subtitle={hasErrors ? `Ditemukan ${errors.length} data bermasalah yang tidak dapat diupload` : `Review data yang akan ditambahkan (${data.length} data)`}
-            maxWidth="4xl"
+            subtitle={`Review data yang akan ditambahkan. Tersedia ${cleanData.length} data bersih yang bisa diupload.`}
+            maxWidth="6xl"
         >
             <div className="space-y-6">
-                {/* Table */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                    <div className="max-h-96 overflow-y-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50 sticky top-0 border-b border-gray-200 shadow-sm z-10">
-                                {hasErrors ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Sisi Kiri: Data Bersih */}
+                    <div className="flex flex-col space-y-3 max-h-[500px]">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-green-700">
+                                ✅ Data Bersih ({cleanData.length})
+                            </h3>
+                        </div>
+                        <div className="border border-green-200 rounded-lg overflow-y-auto flex-1 bg-white">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-green-50 sticky top-0 border-b border-green-200 z-10 shadow-sm">
+                                    {renderTableHeaders()}
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {cleanData.length > 0 ? (
+                                        renderTableRows(cleanData)
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
+                                                Tidak ada data bersih
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Sisi Kanan: Data Kotor */}
+                    <div className="flex flex-col space-y-3 max-h-[500px]">
+                        <div className="flex items-center justify-between">
+                            <h3 className="text-lg font-semibold text-red-700">
+                                ❌ Data Kotor ({dirtyDataList.length})
+                            </h3>
+                        </div>
+                        <div className={`border rounded-lg overflow-y-auto flex-1 bg-white ${hasDirtyData ? 'border-red-200' : 'border-gray-200'}`}>
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className={`${hasDirtyData ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'} sticky top-0 border-b z-10 shadow-sm`}>
                                     <tr>
                                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Baris</th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Kosong / Bermasalah</th>
                                     </tr>
-                                ) : renderTableHeaders()}
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {hasErrors ? errors.map((err, idx) => (
-                                    <tr key={idx} className="hover:bg-red-50">
-                                        <td className="px-4 py-3 text-sm text-gray-900 text-center font-medium bg-red-50">{err.rowNumber}</td>
-                                        <td className="px-6 py-3 text-sm text-red-600 font-medium">
-                                            {err.emptyColumns.join(', ')}
-                                        </td>
-                                    </tr>
-                                )) : renderTableRows()}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {hasDirtyData ? (
+                                        errors.map((err, idx) => (
+                                            <tr key={idx} className="hover:bg-red-50 border-b">
+                                                <td className="px-4 py-3 text-sm text-gray-900 text-center font-medium bg-red-50 border-r">{err.rowNumber}</td>
+                                                <td className="px-6 py-3 text-sm text-red-600 font-medium whitespace-pre-wrap">
+                                                    {err.emptyColumns.join(', ')}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={2} className="px-4 py-8 text-center text-gray-500">
+                                                Tidak ada data kotor
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        {hasDirtyData && (
+                            <div className="pt-2 text-right">
+                                <button
+                                    type="button"
+                                    onClick={handleDownloadDirtyData}
+                                    className="text-blue-600 hover:text-blue-800 underline text-sm font-medium flex items-center justify-end w-full"
+                                >
+                                    Unduh {dirtyDataList.length} Data Kotor untuk Diperbaiki
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
                 {/* Info */}
-                <div className={`${hasErrors ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'} border rounded-lg p-4`}>
-                    <p className={`text-sm ${hasErrors ? 'text-red-800' : 'text-blue-800'}`}>
-                        <span className="font-semibold">Perhatian:</span> {hasErrors 
-                            ? 'Segera perbaiki data yang kosong agar bisa diupload.'
-                            : 'Pastikan data yang ditampilkan sudah benar sebelum melakukan konfirmasi. Data yang sudah dikonfirmasi akan langsung ditambahkan ke sistem.'}
+                <div className={`${hasDirtyData && !hasDownloadedDirty ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-200'} border rounded-lg p-4`}>
+                    <p className={`text-sm ${hasDirtyData && !hasDownloadedDirty ? 'text-amber-800' : 'text-blue-800'}`}>
+                        <span className="font-semibold">Informasi:</span> {hasDirtyData && !hasDownloadedDirty
+                            ? 'Anda harus mengunduh data kotor terlebih dahulu sebelum dapat mengkonfirmasi (menyimpan data bersih).'
+                            : 'Data bersih akan langsung ditambahkan ke sistem setelah Anda memberikan konfirmasi. Pastikan data sudah benar.'}
                     </p>
                 </div>
 
@@ -170,10 +250,10 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                     <Button
                         type="button"
                         onClick={onConfirm}
-                        disabled={hasErrors}
-                        className={`${hasErrors ? 'bg-gray-400 cursor-not-allowed opacity-50' : 'bg-green-600 hover:bg-green-700'} text-white px-12`}
+                        disabled={isConfirmDisabled || cleanData.length === 0}
+                        className={`${isConfirmDisabled || cleanData.length === 0 ? 'bg-gray-400 cursor-not-allowed opacity-50' : 'bg-green-600 hover:bg-green-700'} text-white px-12 transition-colors`}
                     >
-                        Konfirmasi
+                        {cleanData.length === 0 ? 'Tidak Ada Data Bersih' : 'Simpan Data Bersih'}
                     </Button>
                 </div>
             </div>
@@ -182,3 +262,4 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
 };
 
 export default FileReviewModal;
+
