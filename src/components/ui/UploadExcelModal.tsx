@@ -154,7 +154,8 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
     };
 
     const handleConfirmReview = () => {
-        onConfirm(parsedData);
+        const cleanData = parsedData.filter((_, idx) => !parsedErrors.some(e => e.rowNumber === idx + 2));
+        onConfirm(cleanData);
         handleClose();
     };
 
