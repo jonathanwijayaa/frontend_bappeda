@@ -935,19 +935,6 @@ const DataRelawan: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Penugasan */}
-                <div className="grid grid-cols-3 gap-4 items-center">
-                    <label className="text-lg font-medium text-gray-900">Penugasan</label>
-                    <input
-                        type="text"
-                        value={assignment.penugasan || ''}
-                        onChange={(e) => onFieldChange(index, 'penugasan', e.target.value)}
-                        placeholder="Nama/detail penugasan"
-                        disabled={isReadOnly}
-                        className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
-                    />
-                </div>
-
                 {/* Peran/Jabatan */}
                 <div className="grid grid-cols-3 gap-4 items-center">
                     <label className="text-lg font-medium text-gray-900">Peran/Jabatan</label>
@@ -976,6 +963,19 @@ const DataRelawan: React.FC = () => {
                         value={assignment.detail}
                         onChange={(e) => onFieldChange(index, 'detail', e.target.value)}
                         placeholder="Detail jabatan (contoh: Anggota Umum Bidang X)"
+                        disabled={isReadOnly}
+                        className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                    />
+                </div>
+
+                {/* Penugasan */}
+                <div className="grid grid-cols-3 gap-4 items-center">
+                    <label className="text-lg font-medium text-gray-900">Penugasan</label>
+                    <input
+                        type="text"
+                        value={assignment.penugasan || ''}
+                        onChange={(e) => onFieldChange(index, 'penugasan', e.target.value)}
+                        placeholder="Nama/detail penugasan"
                         disabled={isReadOnly}
                         className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
                     />
