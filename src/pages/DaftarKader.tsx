@@ -18,15 +18,17 @@ interface KaderData {
     kader_id: number;
     nama_kader: string;
     deskripsi: string | null;
-    pic: string | null;
-    nik_pic?: string | null;
     nama_opd: string;
+    opd_id: number;
     is_active: boolean;
     created_at: string;
     updated_at: string;
-    no_hp_pic?: string | null;
-    alamat_pic?: string | null;
-    kelurahan_pic?: string | null;
+    // PIC — dari tabel pic_kader → relawan → users
+    pic_nama: string | null;
+    pic_nik: string | null;
+    pic_no_hp: string | null;
+    pic_relawan_id: number | null;
+    pic_tanggal_mulai: string | null;
     jumlah_anggota?: number; // khusus response OPD
 }
 
@@ -66,22 +68,29 @@ const DaftarKader: React.FC = () => {
         opd_id: 0,
         nama_kader: '',
         deskripsi: '',
-        pic: '',
+        nama_pic: '',       // ← ganti 'pic' menjadi 'nama_pic'
         nik_pic: '',
         alamat_pic: '',
         kelurahan_pic: '',
         no_hp_pic: ''
     });
 
+
     const [detailFormData, setDetailFormData] = useState({
         nama_kader: '',
-        deskripsi: '',
-        pic: '',
+        deskripsi: ''
+    });
+
+    // State untuk modal Ganti PIC
+    const [isAssignPicModalOpen, setIsAssignPicModalOpen] = useState(false);
+    const [assignPicForm, setAssignPicForm] = useState({
         nik_pic: '',
+        nama_pic: '',
         no_hp_pic: '',
         alamat_pic: '',
         kelurahan_pic: ''
     });
+
 
     const opdOptions: AutoOption[] = useMemo(
         () => opdList.map(o => ({ label: o.nama_opd, value: String(o.opd_id) })),
@@ -92,14 +101,10 @@ const DaftarKader: React.FC = () => {
         if (!selectedKader) return false;
         return (
             detailFormData.nama_kader !== (selectedKader.nama_kader || '') ||
-            detailFormData.deskripsi !== (selectedKader.deskripsi || '') ||
-            detailFormData.pic !== (selectedKader.pic || '') ||
-            detailFormData.nik_pic !== (selectedKader.nik_pic || '') ||
-            detailFormData.no_hp_pic !== (selectedKader.no_hp_pic || '') ||
-            detailFormData.alamat_pic !== (selectedKader.alamat_pic || '') ||
-            detailFormData.kelurahan_pic !== (selectedKader.kelurahan_pic || '')
+            detailFormData.deskripsi !== (selectedKader.deskripsi || '')
         );
     }, [selectedKader, detailFormData]);
+
 
     // ── Fetch ──────────────────────────────────────────────────────
     const fetchKader = useCallback(async () => {
@@ -161,7 +166,7 @@ const DaftarKader: React.FC = () => {
         },
         // Kolom OPD hanya tampil untuk super_admin (OPD sudah tahu OPD-nya sendiri)
         ...(isSuperAdmin ? [{ header: 'OPD', accessor: 'nama_opd' as keyof KaderData }] : []),
-        { header: 'PIC', render: (row: KaderData) => <span>{row.pic || '-'}</span> },
+        { header: 'PIC', render: (row: KaderData) => <span>{row.pic_nama || '-'}</span> },
         {
             header: isOPD ? 'JUMLAH ANGGOTA' : 'DESKRIPSI',
             render: (row: KaderData) => isOPD
@@ -180,12 +185,7 @@ const DaftarKader: React.FC = () => {
         setSelectedKader(kader);
         setDetailFormData({
             nama_kader: kader.nama_kader,
-            deskripsi: kader.deskripsi || '',
-            pic: kader.pic || '',
-            nik_pic: kader.nik_pic || '',
-            no_hp_pic: kader.no_hp_pic || '',
-            alamat_pic: kader.alamat_pic || '',
-            kelurahan_pic: kader.kelurahan_pic || ''
+            deskripsi: kader.deskripsi || ''
         });
         setIsDetailModalOpen(true);
     };
@@ -232,12 +232,13 @@ const DaftarKader: React.FC = () => {
             const body: any = {
                 nama_kader: formData.nama_kader,
                 deskripsi: formData.deskripsi || null,
-                pic: formData.pic || null,
+                nama_pic: formData.nama_pic || null,   // ← ganti 'pic' → 'nama_pic'
                 nik_pic: formData.nik_pic || null,
                 alamat_pic: formData.alamat_pic || null,
                 kelurahan_pic: formData.kelurahan_pic || null,
                 no_hp_pic: formData.no_hp_pic || null
             };
+
             if (isSuperAdmin) body.opd_id = formData.opd_id;
 
             const res = await apiFetch(API_BASE, {
@@ -255,7 +256,7 @@ const DaftarKader: React.FC = () => {
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });
                 setIsModalOpen(false);
-                setFormData({ opd_name: '', opd_id: 0, nama_kader: '', deskripsi: '', pic: '', nik_pic: '', alamat_pic: '', kelurahan_pic: '', no_hp_pic: '' });
+                setFormData({ opd_name: '', opd_id: 0, nama_kader: '', deskripsi: '', nama_pic: '', nik_pic: '', alamat_pic: '', kelurahan_pic: '', no_hp_pic: '' });
                 fetchKader();
             } else {
                 setToast({ message: result.message || 'Gagal menambahkan kader', type: 'error' });
@@ -277,12 +278,7 @@ const DaftarKader: React.FC = () => {
                 method,
                 body: JSON.stringify({
                     nama_kader: detailFormData.nama_kader,
-                    deskripsi: detailFormData.deskripsi || null,
-                    pic: detailFormData.pic || null,
-                    nik_pic: detailFormData.nik_pic || null,
-                    no_hp_pic: detailFormData.no_hp_pic || null,
-                    alamat_pic: detailFormData.alamat_pic || null,
-                    kelurahan_pic: detailFormData.kelurahan_pic || null
+                    deskripsi: detailFormData.deskripsi || null
                 })
             });
             const result = await res.json();
@@ -300,6 +296,35 @@ const DaftarKader: React.FC = () => {
         }
     };
 
+    const handleAssignPic = async () => {
+        if (!selectedKader) return;
+        if (!assignPicForm.nik_pic || assignPicForm.nik_pic.length !== 16) {
+            setToast({ message: 'NIK PIC harus 16 digit', type: 'error' });
+            return;
+        }
+        setIsSaving(true);
+        try {
+            const res = await apiFetch(`${API_BASE}/${selectedKader.kader_id}/assign-pic`, {
+                method: 'POST',
+                body: JSON.stringify(assignPicForm)
+            });
+            const result = await res.json();
+            if (result.success) {
+                setToast({ message: result.message, type: 'success' });
+                setIsAssignPicModalOpen(false);
+                setAssignPicForm({ nik_pic: '', nama_pic: '', no_hp_pic: '', alamat_pic: '', kelurahan_pic: '' });
+                fetchKader();
+            } else {
+                setToast({ message: result.message || 'Gagal mengganti PIC', type: 'error' });
+            }
+        } catch {
+            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+
     const handleExportPDF = async () => {
         setIsExporting(true);
         try {
@@ -308,10 +333,10 @@ const DaftarKader: React.FC = () => {
                 columns: [
                     { header: 'NAMA KADER', dataKey: 'nama_kader' },
                     ...(isSuperAdmin ? [{ header: 'OPD', dataKey: 'nama_opd' }] : []),
-                    { header: 'PIC', dataKey: 'pic' },
+                    { header: 'PIC', dataKey: 'pic_nama' },
                     { header: 'DESKRIPSI', dataKey: 'deskripsi' }
                 ],
-                data: filteredData.map(k => ({ ...k, pic: k.pic || '-', deskripsi: k.deskripsi || '-' })),
+                data: filteredData.map(k => ({ ...k, pic_nama: k.pic_nama || '-', deskripsi: k.deskripsi || '-' })),
                 filename: `daftar-kader-${new Date().toISOString().split('T')[0]}.pdf`
             });
             setToast({ message: 'Data berhasil diekspor ke PDF', type: 'success' });
@@ -451,13 +476,13 @@ const DaftarKader: React.FC = () => {
                     )}
 
                     {[
-                        { label: 'Nama Kader', name: 'nama_kader', required: true, placeholder: 'Nama Kader atau komunitas' },
-                        { label: 'PIC', name: 'pic', required: false, placeholder: 'Nama Person in Charge (opsional)' },
-                        { label: 'NIK PIC', name: 'nik_pic', required: true, placeholder: '16 digit NIK PIC', maxLength: 16 },
-                        { label: 'No. HP PIC', name: 'no_hp_pic', required: false, placeholder: 'Nomor HP PIC (opsional)' },
-                        { label: 'Alamat PIC', name: 'alamat_pic', required: false, placeholder: 'Alamat sesuai KTP (opsional)' },
-                        { label: 'Kelurahan PIC', name: 'kelurahan_pic', required: false, placeholder: 'Kelurahan/Desa (opsional)' },
-                        { label: 'Deskripsi', name: 'deskripsi', required: false, placeholder: 'Deskripsi singkat (opsional)' },
+                        { label: 'Nama Kader',    name: 'nama_kader',    required: true,  placeholder: 'Nama Kader atau komunitas' },
+                        { label: 'Nama PIC',     name: 'nama_pic',      required: false, placeholder: 'Nama Person in Charge (opsional)' },
+                        { label: 'NIK PIC',      name: 'nik_pic',       required: true,  placeholder: '16 digit NIK PIC', maxLength: 16 },
+                        { label: 'No. HP PIC',   name: 'no_hp_pic',     required: false, placeholder: 'Nomor HP PIC (opsional)' },
+                        { label: 'Alamat PIC',   name: 'alamat_pic',    required: false, placeholder: 'Alamat sesuai KTP (opsional)' },
+                        { label: 'Kelurahan PIC',name: 'kelurahan_pic', required: false, placeholder: 'Kelurahan/Desa (opsional)' },
+                        { label: 'Deskripsi',    name: 'deskripsi',     required: false, placeholder: 'Deskripsi singkat (opsional)' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">
@@ -496,14 +521,10 @@ const DaftarKader: React.FC = () => {
                                 className="col-span-2 px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 italic" />
                         </div>
 
+                        {/* Info Kader — editable */}
                         {[
                             { label: 'Nama Kader', name: 'nama_kader' },
-                            { label: 'PIC', name: 'pic' },
-                            { label: 'Deskripsi', name: 'deskripsi' },
-                            { label: 'NIK PIC', name: 'nik_pic' },
-                            { label: 'No. HP PIC', name: 'no_hp_pic' },
-                            { label: 'Alamat PIC', name: 'alamat_pic' },
-                            { label: 'Kelurahan PIC', name: 'kelurahan_pic' }
+                            { label: 'Deskripsi',  name: 'deskripsi'  }
                         ].map(field => (
                             <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                                 <label className="text-lg font-medium text-gray-900">{field.label}</label>
@@ -516,6 +537,38 @@ const DaftarKader: React.FC = () => {
                             </div>
                         ))}
 
+                        {/* Info PIC — read-only + tombol ganti */}
+                        <div className="border-t border-gray-100 pt-4 space-y-3">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-base font-semibold text-gray-700">Informasi PIC Aktif</h3>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => {
+                                        setIsAssignPicModalOpen(true);
+                                        setIsDetailModalOpen(false);
+                                    }}
+                                >
+                                    Ganti PIC
+                                </Button>
+                            </div>
+                            <div className="grid grid-cols-3 gap-3 text-sm">
+                                <span className="text-gray-500 font-medium">Nama PIC</span>
+                                <span className="col-span-2 text-gray-800">{selectedKader.pic_nama || <span className="italic text-gray-400">Belum ada PIC</span>}</span>
+                                <span className="text-gray-500 font-medium">NIK PIC</span>
+                                <span className="col-span-2 text-gray-800">{selectedKader.pic_nik || '-'}</span>
+                                <span className="text-gray-500 font-medium">No. HP PIC</span>
+                                <span className="col-span-2 text-gray-800">{selectedKader.pic_no_hp || '-'}</span>
+                                <span className="text-gray-500 font-medium">PIC Sejak</span>
+                                <span className="col-span-2 text-gray-800">
+                                    {selectedKader.pic_tanggal_mulai
+                                        ? new Date(selectedKader.pic_tanggal_mulai).toLocaleDateString('id-ID')
+                                        : '-'}
+                                </span>
+                            </div>
+                        </div>
+
                         <div className="flex justify-between pt-6 border-t border-gray-100">
                             <div className="text-sm text-gray-400 italic">
                                 Dibuat: {new Date(selectedKader.created_at).toLocaleString('id-ID')}
@@ -527,6 +580,43 @@ const DaftarKader: React.FC = () => {
                         </div>
                     </div>
                 )}
+            </Modal>
+
+            {/* Modal Ganti PIC */}
+            <Modal isOpen={isAssignPicModalOpen} onClose={() => setIsAssignPicModalOpen(false)}
+                title="Ganti PIC Kader" subtitle="Masukkan NIK PIC baru. Histori PIC lama akan tersimpan." maxWidth="xl">
+                <div className="space-y-4">
+                    {[
+                        { label: 'NIK PIC Baru',    name: 'nik_pic',       required: true,  placeholder: '16 digit NIK', maxLength: 16 },
+                        { label: 'Nama PIC',        name: 'nama_pic',      required: false, placeholder: 'Nama (jika NIK belum terdaftar)' },
+                        { label: 'No. HP PIC',      name: 'no_hp_pic',     required: false, placeholder: 'Nomor HP (opsional)' },
+                        { label: 'Alamat PIC',      name: 'alamat_pic',    required: false, placeholder: 'Alamat KTP (opsional)' },
+                        { label: 'Kelurahan PIC',   name: 'kelurahan_pic', required: false, placeholder: 'Kelurahan (opsional)' },
+                    ].map(field => (
+                        <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
+                            <label className="text-sm font-medium text-gray-700">
+                                {field.label}{field.required && <span className="text-red-500 ml-1">*</span>}
+                            </label>
+                            <input
+                                type="text"
+                                value={(assignPicForm as any)[field.name]}
+                                onChange={(e) => setAssignPicForm(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                placeholder={field.placeholder}
+                                maxLength={(field as any).maxLength}
+                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            />
+                        </div>
+                    ))}
+                    <p className="text-xs text-gray-400 italic pt-2">
+                        * Jika NIK sudah terdaftar di sistem, data relawan yang ada akan langsung digunakan sebagai PIC baru.
+                    </p>
+                    <div className="flex justify-between pt-4">
+                        <Button type="button" onClick={() => setIsAssignPicModalOpen(false)} className="bg-gray-500 hover:bg-gray-600 text-white px-6">Batal</Button>
+                        <Button type="button" onClick={handleAssignPic} disabled={isSaving} className="bg-blue-600 hover:bg-blue-700 text-white px-6">
+                            {isSaving ? <><Loader2 size={16} className="animate-spin mr-1" />Menyimpan...</> : 'Simpan PIC Baru'}
+                        </Button>
+                    </div>
+                </div>
             </Modal>
 
             {/* Confirmation Modal — hanya dipakai super_admin */}
