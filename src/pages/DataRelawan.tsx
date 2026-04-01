@@ -717,6 +717,7 @@ const DataRelawan: React.FC = () => {
                         opd: a.opd,
                         kader_id: (a as any).kader_id || null,
                         peran: a.peran,
+                        penugasan: a.penugasan,
                         detail: a.detail,
                         statusKeaktifan: a.statusKeaktifan
                     }))
@@ -932,6 +933,19 @@ const DataRelawan: React.FC = () => {
                             />
                         )}
                     </div>
+                </div>
+
+                {/* Penugasan */}
+                <div className="grid grid-cols-3 gap-4 items-center">
+                    <label className="text-lg font-medium text-gray-900">Penugasan</label>
+                    <input
+                        type="text"
+                        value={assignment.penugasan || ''}
+                        onChange={(e) => onFieldChange(index, 'penugasan', e.target.value)}
+                        placeholder="Nama/detail penugasan"
+                        disabled={isReadOnly}
+                        className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                    />
                 </div>
 
                 {/* Peran/Jabatan */}
