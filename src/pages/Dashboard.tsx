@@ -60,7 +60,7 @@ const Dashboard: React.FC = () => {
         }
     }, [isSuperAdmin, isOPD]);
 
-    // ✅ FIXED: useMemo sekarang akan bekerja karena sudah di-import
+    //  FIXED: useMemo sekarang akan bekerja karena sudah di-import
     const chartData: ChartDataItem[] = useMemo(() => {
         if (!dashboardData?.grafik_relawan_per_opd || !Array.isArray(dashboardData.grafik_relawan_per_opd)) {
             return [];

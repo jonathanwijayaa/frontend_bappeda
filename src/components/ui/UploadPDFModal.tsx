@@ -10,7 +10,6 @@ interface UploadPDFModalProps {
     onClose: () => void;
     onConfirm: (file: File, metadata: any) => Promise<void>;
     title: string;
-    // ✨ Tambahan Props untuk Role-Aware
     isOPD?: boolean;
     userOpdData?: { id?: number; name?: string };
 }
@@ -213,7 +212,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                         />
                     </div>
 
-                    {/* ✨ KOLOM OPD ROLE-AWARE ✨ */}
+                    {/*  KOLOM OPD ROLE-AWARE */}
                     <div className="col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             OPD <span className="text-red-500">*</span>

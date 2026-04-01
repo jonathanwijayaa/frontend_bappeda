@@ -146,7 +146,7 @@ const DataRelawan: React.FC = () => {
                 opd: '',
                 opd_id: 0,
                 kader: '',
-                // ✅ FIXED: Hapus tanda kutip agar tipenya menjadi null/number, bukan string ''
+                //  FIXED: Hapus tanda kutip agar tipenya menjadi null/number, bukan string ''
                 kader_id: null as number | null,
                 peran: '',
                 detail: '',
@@ -166,7 +166,7 @@ const DataRelawan: React.FC = () => {
 
         setIsLoadingKaderByIndex(prev => ({ ...prev, [assignmentIndex]: true }));
         try {
-            // ✅ FIX: OPD pakai endpoint /opd-admin/kader (tidak perlu opd_id, backend ambil otomatis)
+            //  FIX: OPD pakai endpoint /opd-admin/kader (tidak perlu opd_id, backend ambil otomatis)
             //         Super Admin tetap pakai /kader?opd_id=...
             const endpoint = isOPD
                 ? `/opd-admin/kader`
@@ -229,7 +229,7 @@ const DataRelawan: React.FC = () => {
                             opd: row.nama_opd || '',
                             opd_id: row.opd_id || 0, // Termasuk opd_id agar komplit
                             kader: row.nama_kader || '',
-                            // ✅ FIXED: Tambahkan properti ini untuk sinkronisasi state UI
+                            //  FIXED: Tambahkan properti ini untuk sinkronisasi state UI
                             kader_id: row.kader_id || null,
                             peran: row.jabatan || '',
                             detail: row.detail_jabatan || '',
@@ -237,7 +237,7 @@ const DataRelawan: React.FC = () => {
                             statusKeaktifan: row.status_penugasan || 'Aktif',
                             nomorSK: row.nomor_sk_manual || '',
                             skId: ''
-                        } as any); // ✅ FIXED: Gunakan "as any" untuk melewati pengecekan ketat interface saat render awal
+                        } as any); //  FIXED: Gunakan "as any" untuk melewati pengecekan ketat interface saat render awal
                     }
                 });
 
@@ -255,7 +255,7 @@ const DataRelawan: React.FC = () => {
 
     const fetchPengajuan = useCallback(async (showLoader: boolean = true) => {
 
-        // ✨ FIXED: Hentikan fungsi jika yang login bukan Super Admin
+        //  FIXED: Hentikan fungsi jika yang login bukan Super Admin
         if (!isSuperAdmin) {
             if (showLoader) setIsLoadingPengajuan(false);
             return;
@@ -296,7 +296,7 @@ const DataRelawan: React.FC = () => {
             const opdName = (user as any)?.nama_opd;
 
             if (opdId && opdName && formData.assignments[0].opd_id === 0) {
-                // ✅ FIXED: Auto-fill OPD
+                //  FIXED: Auto-fill OPD
                 setFormData(prev => ({
                     ...prev,
                     assignments: prev.assignments.map((a, index) => ({
@@ -306,14 +306,14 @@ const DataRelawan: React.FC = () => {
                     }))
                 }));
 
-                // ✅ FIXED: Langsung fetch kader SETELAH setFormData (tidak tunggu useEffect lain)
+                //  FIXED: Langsung fetch kader SETELAH setFormData (tidak tunggu useEffect lain)
                 formData.assignments.forEach((_, index) => {
-                    console.log(`🔍 Debug: Fetching kader for OPD ${opdId}, assignment index ${index}`);
+                    console.log(` Debug: Fetching kader for OPD ${opdId}, assignment index ${index}`);
                     fetchKaderByOpdId(opdId, index);
                 });
             }
         }
-    }, [isModalOpen, isOPD, user]);  // ✅ Hapus formData.assignments dari dependency
+    }, [isModalOpen, isOPD, user]);  //  Hapus formData.assignments dari dependency
 
     // ── Auto-fetch kader untuk semua assignment yang ada saat OPD user masuk edit mode ──
     useEffect(() => {
@@ -388,7 +388,7 @@ const DataRelawan: React.FC = () => {
             jabatan: relawan.jabatan || '-',
             penugasan: relawan.penugasan || '-',
             jenisKelamin: (relawan.jenisKelamin as 'L' | 'P') || 'L',
-            // ✨ FIXED: Jaga-jaga jika relawan.assignments null/undefined
+            //  FIXED: Jaga-jaga jika relawan.assignments null/undefined
             assignments: Array.isArray(relawan.assignments) ? relawan.assignments : []
         });
         setIsDetailModalOpen(true);
@@ -435,24 +435,24 @@ const DataRelawan: React.FC = () => {
         }
     };
 
-    // ✅ BENAR: Object tunggal untuk form manual
-    // ✅ BENAR: Object tunggal untuk form manual
+    //  BENAR: Object tunggal untuk form manual
+    //  BENAR: Object tunggal untuk form manual
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // ✅ Validasi NIK & Nama SEKALI di root
+        //  Validasi NIK & Nama SEKALI di root
         if (!formData.namaRelawan || !formData.nik) {
             setToast({ message: 'NIK dan Nama wajib diisi', type: 'error' });
             return;
         }
 
-        // ✅ Validasi minimal 1 assignment
+        //  Validasi minimal 1 assignment
         if (formData.assignments.length === 0) {
             setToast({ message: 'Minimal 1 penugasan wajib diisi', type: 'error' });
             return;
         }
 
-        // ✅ Validasi OPD, Kader, dan Jabatan pada assignment manual
+        //  Validasi OPD, Kader, dan Jabatan pada assignment manual
         const hasInvalidAssignment = formData.assignments.some(
             (a) => !a.opd || !a.kader || !a.peran
         );
@@ -463,10 +463,10 @@ const DataRelawan: React.FC = () => {
 
         setIsSaving(true);
         try {
-            // ✅ FIXED: Menggunakan endpoint /bulk karena kita mengirim array
+            //  FIXED: Menggunakan endpoint /bulk karena kita mengirim array
             const res = await apiFetch(`${API_BASE}/bulk`, {
                 method: 'POST',
-                // ✅ FIXED: Format data disejajarkan dengan apa yang diharapkan oleh fitur Bulk Backend
+                //  FIXED: Format data disejajarkan dengan apa yang diharapkan oleh fitur Bulk Backend
                 body: JSON.stringify([{
                     nama_lengkap: formData.namaRelawan,
                     nik: formData.nik,
@@ -566,7 +566,7 @@ const DataRelawan: React.FC = () => {
             ]
         }));
 
-        // ✅ FIXED: Auto-fetch kader untuk assignment baru jika OPD user
+        //  FIXED: Auto-fetch kader untuk assignment baru jika OPD user
         if (isOPD && (user as any)?.opd_id) {
             fetchKaderByOpdId((user as any).opd_id, newIndex);
         }
@@ -597,7 +597,7 @@ const DataRelawan: React.FC = () => {
                 ...newAssignments[index],
                 opd: namaOpd,
                 opd_id: opdId,
-                kader: '', // ✨ Reset kader saat OPD berubah
+                kader: '', //  Reset kader saat OPD berubah
                 kader_id: null
             };
             return { ...prev, assignments: newAssignments };
@@ -619,7 +619,7 @@ const DataRelawan: React.FC = () => {
         });
     };
 
-    // ✅ TAMBAHKAN FUNCTION INI (baru setelah handleAssignmentChange)
+    //  TAMBAHKAN FUNCTION INI (baru setelah handleAssignmentChange)
     const handleAssignmentKaderChange = (index: number, namaKader: string) => {
         // namaKader di sini adalah label teks dari AutocompleteInput
         const options = kaderOptionsByIndex[index] || [];
@@ -742,7 +742,7 @@ const DataRelawan: React.FC = () => {
             return;
         }
 
-        // ✅ FIX: Tampilkan confirm dialog dengan info penugasan
+        //  FIX: Tampilkan confirm dialog dengan info penugasan
         const assignment = detailFormData.assignments[index] as any;
         const label = [
             selectedRelawan?.namaLengkap,
@@ -754,7 +754,7 @@ const DataRelawan: React.FC = () => {
         setDeleteConfirm({ penugasanId, index, label });
     };
 
-    // ✅ FIX: Fungsi eksekusi hapus setelah konfirmasi
+    //  FIX: Fungsi eksekusi hapus setelah konfirmasi
     const handleConfirmDelete = async () => {
         if (!deleteConfirm) return;
         const { penugasanId, index } = deleteConfirm;
@@ -768,11 +768,11 @@ const DataRelawan: React.FC = () => {
             const res = await apiFetch(endpoint, { method: 'DELETE' });
             const result = await res.json();
             if (result.success) {
-                // ✅ FIX: Update detailFormData DAN selectedRelawan sekaligus
+                //  FIX: Update detailFormData DAN selectedRelawan sekaligus
                 const updatedAssignments = detailFormData.assignments.filter((_, i) => i !== index);
                 setDetailFormData(prev => ({ ...prev, assignments: updatedAssignments }));
                 setSelectedRelawan(prev => prev ? { ...prev, assignments: updatedAssignments } : null);
-                fetchRelawan(); // ✅ Refresh data background
+                fetchRelawan(); //  Refresh data background
                 setToast({ message: 'Penugasan berhasil dihapus', type: 'success' });
             } else {
                 setToast({ message: result.message || 'Gagal menghapus penugasan', type: 'error' });
@@ -828,7 +828,7 @@ const DataRelawan: React.FC = () => {
             : [];
 
         const isKaderLoading = isLoadingKaderByIndex[index] || false;
-        // ✅ FIXED: Untuk OPD user, OPD selalu dianggap selected (karena auto-filled)
+        //  FIXED: Untuk OPD user, OPD selalu dianggap selected (karena auto-filled)
         const hasOpdSelected = isOPD || assignment.opd_id > 0 || assignment.opd !== '';
         const onFieldChange = handlers?.onFieldChange ?? handleAssignmentChange;
         const onOpdChange = handlers?.onOpdChange ?? handleAssignmentOpdChange;
@@ -853,7 +853,7 @@ const DataRelawan: React.FC = () => {
                 <div className="grid grid-cols-3 gap-4 items-start">
                     <label className="text-lg font-medium text-gray-900 pt-2">OPD</label>
                     <div className="col-span-2">
-                        {/* ✨ FIXED: Tambahkan (user as any) di value */}
+                        {/*  FIXED: Tambahkan (user as any) di value */}
                         {isOPD ? (
                             <input
                                 type="text"
@@ -910,7 +910,7 @@ const DataRelawan: React.FC = () => {
                                 {/* Warning jika OPD tidak punya kader */}
                                 {!isReadOnly && hasOpdSelected && !isKaderLoading && currentKaderOptions.length === 0 && assignment.opd_id > 0 && (
                                     <p className="mt-1 text-xs text-yellow-600">
-                                        ⚠️ OPD ini belum memiliki kader
+                                        ️ OPD ini belum memiliki kader
                                     </p>
                                 )}
                             </>
