@@ -78,12 +78,16 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                 return (
                     <tr>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Lengkap</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">L/P</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">NIK</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No HP</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">OPD</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelurahan</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kader</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jabatan</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detail Jabatan</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Penugasan</th>
                     </tr>
                 );
@@ -129,12 +133,16 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                         <tr key={index} className="hover:bg-gray-50 border-b">
                             <td className="px-4 py-3 text-sm text-gray-900">{index + 1}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['namalengkap', 'nama'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['jeniskelamin', 'jk', 'jenis'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['nik'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['alamat', 'alamatktp'])}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{get(['kelurahan'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['nohp', 'hp', 'telepon'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['opd', 'instansi'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['kelurahan', 'desa'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['kader', 'komunitaskader'])}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{get(['jabatan'])}</td>
-                            <td className="px-4 py-3 text-sm text-gray-900">{get(['penugasan', 'opd'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['jabatan', 'peran'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['detailjabatan', 'detail'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['penugasan', 'tugas'])}</td>
                         </tr>
                     );
             }

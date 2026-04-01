@@ -21,7 +21,7 @@ interface UploadExcelModalProps {
 const REQUIRED_FIELDS: Record<string, string[]> = {
     opd:     ['namaopd', 'nikpic'],
     kader:   ['namakader', 'opd', 'nikpic'],
-    relawan: ['namalengkap', 'nik', 'jeniskelamin', 'opd'],
+    relawan: ['namalengkap', 'jeniskelamin', 'nik', 'alamat', 'nohp', 'opd', 'kelurahan', 'kader', 'jabatan', 'detailjabatan', 'penugasan'],
 };
 
 const REQUIRED_FIELDS_CHECK: Record<string, { keys: string[], label: string }[]> = {
@@ -36,11 +36,16 @@ const REQUIRED_FIELDS_CHECK: Record<string, { keys: string[], label: string }[]>
     ],
     relawan: [
         { keys: ['namalengkap', 'nama'], label: 'Nama Lengkap' },
-        { keys: ['nik'], label: 'NIK' },
         { keys: ['jeniskelamin', 'jk', 'jenis'], label: 'Jenis Kelamin' },
+        { keys: ['nik'], label: 'NIK' },
+        { keys: ['alamat'], label: 'Alamat' },
+        { keys: ['nohp', 'hp', 'nomerhp', 'telepon'], label: 'No HP' },
         { keys: ['opd', 'instansi'], label: 'OPD/Instansi' },
+        { keys: ['kelurahan', 'desa'], label: 'Kelurahan' },
         { keys: ['kader', 'komunitaskader', 'komunitas'], label: 'Kader' },
-        { keys: ['jabatan', 'peran'], label: 'Jabatan/Peran' }
+        { keys: ['jabatan', 'peran'], label: 'Jabatan/Peran' },
+        { keys: ['detailjabatan', 'detail'], label: 'Detail Jabatan' },
+        { keys: ['penugasan', 'tugas'], label: 'Penugasan' }
     ],
 };
 
