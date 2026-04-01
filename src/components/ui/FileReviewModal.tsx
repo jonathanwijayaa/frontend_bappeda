@@ -9,6 +9,7 @@ interface FileReviewModalProps {
     data: any[];
     dataType: 'opd' | 'kader' | 'relawan';
     title: string;
+    errors?: { rowNumber: number; emptyColumns: string[] }[];
 }
 
 const FileReviewModal: React.FC<FileReviewModalProps> = ({
@@ -17,8 +18,11 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
     onConfirm,
     data,
     dataType,
-    title
+    title,
+    errors = []
 }) => {
+    const hasErrors = errors && errors.length > 0;
+
     const renderTableHeaders = () => {
         switch (dataType) {
             case 'opd':
@@ -115,7 +119,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
             isOpen={isOpen}
             onClose={onClose}
             title={title}
-            subtitle={`Review data yang akan ditambahkan (${data.length} data)`}
+            subtitle={hasErrors ? `Ditemukan ${errors.length} data bermasalah yang tidak dapat diupload` : `Review data yang akan ditambahkan (${data.length} data)`}
             maxWidth="4xl"
         >
             <div className="space-y-6">
@@ -123,21 +127,34 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                     <div className="max-h-96 overflow-y-auto">
                         <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50 sticky top-0">
-                                {renderTableHeaders()}
+                            <thead className="bg-gray-50 sticky top-0 border-b border-gray-200 shadow-sm z-10">
+                                {hasErrors ? (
+                                    <tr>
+                                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Baris</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Kosong / Bermasalah</th>
+                                    </tr>
+                                ) : renderTableHeaders()}
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {renderTableRows()}
+                                {hasErrors ? errors.map((err, idx) => (
+                                    <tr key={idx} className="hover:bg-red-50">
+                                        <td className="px-4 py-3 text-sm text-gray-900 text-center font-medium bg-red-50">{err.rowNumber}</td>
+                                        <td className="px-6 py-3 text-sm text-red-600 font-medium">
+                                            {err.emptyColumns.join(', ')}
+                                        </td>
+                                    </tr>
+                                )) : renderTableRows()}
                             </tbody>
                         </table>
                     </div>
                 </div>
 
                 {/* Info */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <p className="text-sm text-blue-800">
-                        <span className="font-semibold">Perhatian:</span> Pastikan data yang ditampilkan sudah benar sebelum melakukan konfirmasi.
-                        Data yang sudah dikonfirmasi akan langsung ditambahkan ke sistem.
+                <div className={`${hasErrors ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'} border rounded-lg p-4`}>
+                    <p className={`text-sm ${hasErrors ? 'text-red-800' : 'text-blue-800'}`}>
+                        <span className="font-semibold">Perhatian:</span> {hasErrors 
+                            ? 'Segera perbaiki data yang kosong agar bisa diupload.'
+                            : 'Pastikan data yang ditampilkan sudah benar sebelum melakukan konfirmasi. Data yang sudah dikonfirmasi akan langsung ditambahkan ke sistem.'}
                     </p>
                 </div>
 
@@ -153,7 +170,8 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                     <Button
                         type="button"
                         onClick={onConfirm}
-                        className="bg-green-600 hover:bg-green-700 text-white px-12"
+                        disabled={hasErrors}
+                        className={`${hasErrors ? 'bg-gray-400 cursor-not-allowed opacity-50' : 'bg-green-600 hover:bg-green-700'} text-white px-12`}
                     >
                         Konfirmasi
                     </Button>
