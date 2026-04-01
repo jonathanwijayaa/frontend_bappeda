@@ -146,9 +146,9 @@ const DataRelawan: React.FC = () => {
                 opd: '',
                 opd_id: 0,
                 kader: '',
-                //  FIXED: Hapus tanda kutip agar tipenya menjadi null/number, bukan string ''
                 kader_id: null as number | null,
                 peran: '',
+                penugasan: '',
                 detail: '',
                 statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
                 nomorSK: '',
@@ -480,6 +480,7 @@ const DataRelawan: React.FC = () => {
                         kader_id: a.kader_id || null,
                         kader: a.kader,
                         peran: a.peran,           // Backend pakai 'peran'
+                        penugasan: a.penugasan,
                         detail: a.detail,         // Backend pakai 'detail'
                         statusKeaktifan: a.statusKeaktifan
                     }))
@@ -510,7 +511,7 @@ const DataRelawan: React.FC = () => {
                     kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
                     assignments: [{
                         id: Date.now().toString(), opd: '', opd_id: 0, kader: '',
-                        kader_id: null, peran: '', detail: '', statusKeaktifan: 'Aktif',
+                        kader_id: null, peran: '', penugasan: '', detail: '', statusKeaktifan: 'Aktif',
                         nomorSK: '', skId: ''
                     }]
                 });
@@ -562,6 +563,7 @@ const DataRelawan: React.FC = () => {
                     kader: '',
                     kader_id: null,
                     peran: '',
+                    penugasan: '',
                     detail: '',
                     statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
                     nomorSK: '',
@@ -800,6 +802,7 @@ const DataRelawan: React.FC = () => {
                     kader: '',
                     kader_id: null,
                     peran: '',
+                    penugasan: '',
                     detail: '',
                     statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
                     nomorSK: '',
