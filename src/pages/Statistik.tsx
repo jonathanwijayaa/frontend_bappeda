@@ -86,7 +86,7 @@ const Statistik: React.FC = () => {
                 <Card
                     title={
                         isOpd
-                            ? 'Jumlah Relawan Per Kader (OPD Saya)'
+                            ? 'Jumlah Relawan Per Kader (${user?.nama_opd ??})'
                             : 'Jumlah Relawan Per Kader'
                     }
                     collapsible
@@ -115,7 +115,7 @@ const Statistik: React.FC = () => {
                     <Card
                         title={
                             isOpd
-                                ? 'Jumlah Kader (OPD Saya)'
+                                ? 'Jumlah Kader (${user?.nama_opd ??})'
                                 : 'Jumlah Kader Per OPD'
                         }
                         collapsible
