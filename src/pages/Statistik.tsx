@@ -1,61 +1,98 @@
-import React from 'react';
+//Statistik.tsx
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Card from '../components/ui/Card';
 import DonutChart from '../components/charts/DonutChart';
 import HorizontalBarChart from '../components/charts/HorizontalBarChart';
-
-interface ChartData {
-    name: string;
-    value: number;
-}
+import { ChartData, StatistikState } from '../types/statistik.types';
+import { apiFetch } from '../utils/api';
 
 const Statistik: React.FC = () => {
-    const { isSuperAdmin } = useAuth();
-    
-    const genderData: ChartData[] = [
-        { name: 'Laki - Laki: 63 %', value: 63 },
-        { name: 'Perempuan: 37%', value: 37 },
-    ];
+    const { isSuperAdmin, user } = useAuth();
+    const isOpd = user?.role === 'opd';
 
-    const kelurahanData: ChartData[] = [
-        { name: 'Sorosutan', value: 156 },
-        { name: 'Kricak', value: 142 },
-        { name: 'Baciro', value: 128 },
-        { name: 'Pringgokusuman', value: 115 },
-        { name: 'Terban', value: 98 },
-    ];
+    const [state, setState] = useState<StatistikState>({
+        gender: [],
+        kelurahan: [],
+        relawanPerKader: [],
+        kaderPerOpd: [],    
+        loading: true,
+        error: null,
+    });
 
-    const relawanPerKaderData: ChartData[] = [
-        { name: 'Kader Kesehatan', value: 250 },
-        { name: 'Kader Pendidikan', value: 200 },
-        { name: 'Kader Sosial Kemasyarakatan', value: 150 },
-        { name: 'Kader Lingkungan', value: 100 },
-        { name: 'Kader Ekonomi Kreatif', value: 50 },
-    ];
+    useEffect(() => {
+    const fetchAll = async () => {
+        setState(prev => ({ ...prev, loading: true, error: null }));
+        try {
+            const [genderRes, kelurahanRes, relawanKaderRes, kaderOpdRes] =
+                await Promise.all([
+                    apiFetch('/statistik/gender').then(r => r.json()),
+                    apiFetch('/statistik/kelurahan').then(r => r.json()),
+                    apiFetch('/statistik/relawan-per-kader').then(r => r.json()),
+                    apiFetch('/statistik/kader-per-opd').then(r => r.json()),
+                ]);
 
-    const kaderPerOPDData: ChartData[] = [
-        { name: 'Dinas Kesehatan', value: 250 },
-        { name: 'Dinas Pendidikan', value: 220 },
-        { name: 'Dinas Perhubungan', value: 150 },
-        { name: 'Dinas Sosial', value: 100 },
-        { name: 'Dinas Pariwisata', value: 50 },
-    ];
+            const genderFormatted: ChartData[] = genderRes.data.map(
+                (d: { gender: string; jumlah: string }) => ({
+                    name: d.gender === 'L' ? 'Laki-laki' : 'Perempuan',
+                    value: parseInt(d.jumlah),
+                })
+            );
+
+            const kelurahanFormatted: ChartData[] = kelurahanRes.data.map(
+                (d: { kelurahan: string; jumlah: string }) => ({
+                    name: d.kelurahan,
+                    value: parseInt(d.jumlah),
+                })
+            );
+
+            setState({
+                gender: genderFormatted,
+                kelurahan: kelurahanFormatted,
+                relawanPerKader: relawanKaderRes.data.map((d: ChartData) => ({
+                    ...d,
+                    value: parseInt(d.value as any),
+                })),
+                kaderPerOpd: kaderOpdRes.data.map((d: ChartData) => ({
+                    ...d,
+                    value: parseInt(d.value as any),
+                })),
+                loading: false,
+                error: null,
+            });
+        } catch (err) {
+            setState(prev => ({
+                ...prev,
+                loading: false,
+                error: 'Gagal memuat data statistik.',
+            }));
+        }
+    };
+
+    fetchAll();
+}, []);
+
+    if (state.loading) return <p className="text-center py-10">Memuat statistik...</p>;
+    if (state.error) return <p className="text-center text-red-500 py-10">{state.error}</p>;
 
     return (
         <div className="flex flex-col md:flex-row gap-6 items-start">
             {/* Kolom Kiri */}
             <div className="flex flex-col gap-6 flex-1">
                 <Card title="Demografi Gender" collapsible>
-                    <DonutChart
-                        data={genderData}
-                        dataKey="value"
-                        nameKey="name"
-                    />
+                    <DonutChart data={state.gender} dataKey="value" nameKey="name" />
                 </Card>
 
-                <Card title="Jumlah Relawan Per Kader" collapsible>
+                <Card
+                    title={
+                        isOpd
+                            ? 'Jumlah Relawan Per Kader (OPD Saya)'
+                            : 'Jumlah Relawan Per Kader'
+                    }
+                    collapsible
+                >
                     <HorizontalBarChart
-                        data={relawanPerKaderData}
+                        data={state.relawanPerKader}
                         dataKey="value"
                         xAxisKey="name"
                     />
@@ -66,17 +103,25 @@ const Statistik: React.FC = () => {
             <div className="flex flex-col gap-6 flex-1">
                 <Card title="Demografi Kelurahan" collapsible>
                     <HorizontalBarChart
-                        data={kelurahanData}
+                        data={state.kelurahan}
                         dataKey="value"
                         xAxisKey="name"
                         color="#E76F51"
                     />
                 </Card>
 
-                {isSuperAdmin && (
-                    <Card title="Jumlah Kader Per OPD" collapsible>
+                {/* Super admin: semua OPD | OPD: hanya OPD sendiri */}
+                {(isSuperAdmin || isOpd) && (
+                    <Card
+                        title={
+                            isOpd
+                                ? 'Jumlah Kader (OPD Saya)'
+                                : 'Jumlah Kader Per OPD'
+                        }
+                        collapsible
+                    >
                         <HorizontalBarChart
-                            data={kaderPerOPDData}
+                            data={state.kaderPerOpd}
                             dataKey="value"
                             xAxisKey="name"
                         />
