@@ -311,7 +311,7 @@ export const createBulkRelawan = async (req: AuthRequest, res: Response): Promis
 
     const client = await pool.connect();
     let insertedCount = 0;
-    const skippedNIK: string[] = [];
+    let updatedCount = 0;
     const errors: string[] = [];
 
     try {
@@ -450,6 +450,7 @@ export const createBulkRelawan = async (req: AuthRequest, res: Response): Promis
                                 checkPenugasan.rows[0].penugasan_id
                             ]
                         );
+                        updatedCount++;
                     } else {
                         // INSERT new penugasan
                         await client.query(
@@ -466,11 +467,11 @@ export const createBulkRelawan = async (req: AuthRequest, res: Response): Promis
                                 assign.statusKeaktifan || 'Aktif'
                             ]
                         );
+                        insertedCount++;
                     }
                 }
 
                 await client.query('COMMIT');
-                insertedCount++;
 
             } catch (rowError: any) {
                 await client.query('ROLLBACK');
@@ -479,14 +480,17 @@ export const createBulkRelawan = async (req: AuthRequest, res: Response): Promis
             }
         }
 
-        const parts: string[] = [`Berhasil menambahkan ${insertedCount} relawan.`];
-        if (skippedNIK.length > 0) parts.push(`${skippedNIK.length} NIK dilewati (sudah terdaftar).`);
-        if (errors.length > 0) parts.push(`Ada ${errors.length} peringatan/error (cek detail).`);
+        const parts: string[] = [];
+        if (insertedCount > 0) parts.push(`Berhasil menambahkan ${insertedCount} data baru.`);
+        if (updatedCount > 0) parts.push(`Berhasil mengupdate ${updatedCount} data.`);
+        if (errors.length > 0) parts.push(`Ada ${errors.length} peringatan/error.`);
 
-        res.status(201).json({
-            success: true,
-            message: parts.join(' '),
-            data: { insertedCount, skippedNIK, errors }
+        const totalSuccess = insertedCount + updatedCount;
+
+        res.status(totalSuccess > 0 ? 201 : 400).json({
+            success: totalSuccess > 0,
+            message: parts.join('\n') || 'Tidak ada data yang diproses',
+            data: { insertedCount, updatedCount, errors }
         });
 
     } catch (fatalError: any) {

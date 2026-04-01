@@ -493,23 +493,17 @@ const DataRelawan: React.FC = () => {
             }
             const result = await res.json();
             const errors = result.data?.errors ?? [];
-            // Handle both 'skipped' and 'skippedNIK' from different controller responses
             const skipped = result.data?.skipped ?? result.data?.skippedNIK ?? [];
             
             if (!res.ok || errors.length > 0 || skipped.length > 0) {
-                // Ada error yang perlu ditampilkan atau ada data yang di-skip karena duplicate
-                let errorMsg = result.message || 'Gagal menambahkan relawan';
-                
-                if (errors.length > 0) {
-                    errorMsg = typeof errors[0] === 'string' ? errors[0] : JSON.stringify(errors[0]);
-                } else if (skipped.length > 0) {
-                    errorMsg = result.message?.includes('dilewati') ? result.message : `Gagal menambahkan: NIK sudah terdaftar di database`;
-                }
-                
+                // Ada error atau dilewati seutuhnya = error toast
+                let errorMsg = result.message || 'Gagal memproses data relawan';
+                if (errors.length > 0) errorMsg = typeof errors[0] === 'string' ? errors[0] : JSON.stringify(errors[0]);
+                else if (skipped.length > 0) errorMsg = result.message || `Beberapa NIK sudah terdaftar dan dilewati`;
                 setToast({ message: errorMsg, type: 'error' });
             } else {
-                // Berhasil
-                setToast({ message: result.message || 'Relawan berhasil ditambahkan', type: 'success' });
+                // Berhasil dimasukkan atau di-update
+                setToast({ message: result.message || 'Data berhasil diproses', type: 'success' });
                 setIsModalOpen(false);
                 setFormData({
                     namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', no_hp: '',
@@ -539,16 +533,8 @@ const DataRelawan: React.FC = () => {
             const result = await res.json();
             
             if (result.success) {
-                // Parse metrics to see if everything was skipped
-                const insertedCount = result.data?.insertedCount ?? 0;
-                const skippedCount = (result.data?.skipped ?? []).length + (result.data?.skippedNIK ?? []).length;
-                
-                if (insertedCount === 0 && skippedCount > 0) {
-                    setToast({ message: `Gagal menambahkan: Semua baris data sudah terdaftar di database`, type: 'error' });
-                } else {
-                    setToast({ message: result.message || 'Berhasil memproses Excel', type: 'success' });
-                    fetchRelawan();
-                }
+                setToast({ message: result.message || 'Berhasil memproses Excel', type: 'success' });
+                fetchRelawan();
             } else {
                 setToast({ message: result.message || 'Gagal import Excel', type: 'error' });
             }
