@@ -1,4 +1,5 @@
 import React from 'react';
+import { useAuth } from '../context/AuthContext';
 import Card from '../components/ui/Card';
 import DonutChart from '../components/charts/DonutChart';
 import HorizontalBarChart from '../components/charts/HorizontalBarChart';
@@ -9,6 +10,8 @@ interface ChartData {
 }
 
 const Statistik: React.FC = () => {
+    const { isSuperAdmin } = useAuth();
+    
     const genderData: ChartData[] = [
         { name: 'Laki - Laki: 63 %', value: 63 },
         { name: 'Perempuan: 37%', value: 37 },
@@ -70,13 +73,15 @@ const Statistik: React.FC = () => {
                     />
                 </Card>
 
-                <Card title="Jumlah Kader Per OPD" collapsible>
-                    <HorizontalBarChart
-                        data={kaderPerOPDData}
-                        dataKey="value"
-                        xAxisKey="name"
-                    />
-                </Card>
+                {isSuperAdmin && (
+                    <Card title="Jumlah Kader Per OPD" collapsible>
+                        <HorizontalBarChart
+                            data={kaderPerOPDData}
+                            dataKey="value"
+                            xAxisKey="name"
+                        />
+                    </Card>
+                )}
             </div>
         </div>
     );

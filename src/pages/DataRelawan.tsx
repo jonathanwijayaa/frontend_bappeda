@@ -193,8 +193,8 @@ const DataRelawan: React.FC = () => {
     }, [isOPD]); // ← tambahkan isOPD ke dependency
 
     // ── Fetch Functions ──
-    const fetchRelawan = useCallback(async () => {
-        setIsLoadingRelawan(true);
+    const fetchRelawan = useCallback(async (showLoader: boolean = true) => {
+        if (showLoader) setIsLoadingRelawan(true);
         try {
             const res = await apiFetch(API_BASE)
             const result = await res.json();
@@ -249,19 +249,19 @@ const DataRelawan: React.FC = () => {
         } catch {
             setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
         } finally {
-            setIsLoadingRelawan(false);
+            if (showLoader) setIsLoadingRelawan(false);
         }
-    }, []);
+    }, [API_BASE]);
 
-    const fetchPengajuan = useCallback(async () => {
+    const fetchPengajuan = useCallback(async (showLoader: boolean = true) => {
 
         // ✨ FIXED: Hentikan fungsi jika yang login bukan Super Admin
         if (!isSuperAdmin) {
-            setIsLoadingPengajuan(false);
+            if (showLoader) setIsLoadingPengajuan(false);
             return;
         }
 
-        setIsLoadingPengajuan(true);
+        if (showLoader) setIsLoadingPengajuan(true);
         try {
             const res = await apiFetch(`${API_BASE}/pengajuan`);
             const result = await res.json();
@@ -273,9 +273,9 @@ const DataRelawan: React.FC = () => {
         } catch {
             setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
         } finally {
-            setIsLoadingPengajuan(false);
+            if (showLoader) setIsLoadingPengajuan(false);
         }
-    }, []);
+    }, [isSuperAdmin, API_BASE]);
 
     useEffect(() => {
         fetchRelawan();
@@ -412,8 +412,19 @@ const DataRelawan: React.FC = () => {
             const result = await res.json();
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });
+                
+                // Optimistically update the status in UI list
+                setPengajuanList(prev => prev.map(p => 
+                    p.pengajuan_id === selectedPengajuan.pengajuan_id ? { ...p, status: status } : p
+                ));
+                
                 setIsReviewModalOpen(false);
-                fetchPengajuan();
+                
+                // Fetch in background without UI loader
+                fetchPengajuan(false);
+                if (status === 'Disetujui') {
+                    fetchRelawan(false);
+                }
             } else {
                 setToast({ message: result.message || 'Gagal memproses pengajuan', type: 'error' });
             }
