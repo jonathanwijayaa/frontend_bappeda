@@ -154,6 +154,15 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                     if (typeof newRow[key] === 'string' && newRow[key].startsWith("'")) {
                         newRow[key] = newRow[key].substring(1);
                     }
+
+                    // Paksa NIK dan No HP menjadi format String asli di Javascript
+                    // Dengan begitu, json_to_sheet otomatis akan menulis sel tersebut sebagai format Text tanpa petik ('s') 
+                    const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    if (cleanKey.includes('nik') || cleanKey.includes('nohp') || cleanKey.includes('hp') || cleanKey.includes('kontak')) {
+                        if (newRow[key] !== null && newRow[key] !== undefined && newRow[key] !== '') {
+                            newRow[key] = String(newRow[key]);
+                        }
+                    }
                 }
                 return newRow;
             });

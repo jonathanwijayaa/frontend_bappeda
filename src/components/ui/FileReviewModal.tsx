@@ -39,15 +39,8 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
             const originalIndex = data.findIndex(d => d === row);
             const rowError = errors.find(e => e.rowNumber === originalIndex + 2);
             
-            // Format NIK to be string in Excel by prefixing with '
-            const formattedRow = { ...row };
-            const nikKey = Object.keys(formattedRow).find(k => k.toLowerCase().replace(/[^a-z0-9]/g, '').includes('nik'));
-            if (nikKey && formattedRow[nikKey]) {
-                formattedRow[nikKey] = "'" + formattedRow[nikKey];
-            }
-            
             return {
-                ...formattedRow,
+                ...row,
                 Keterangan_Error: rowError ? `Kolom kosong: ${rowError.emptyColumns.join(', ')}` : 'Error tidak diketahui'
             };
         });
