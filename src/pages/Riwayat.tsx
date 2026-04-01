@@ -116,7 +116,7 @@ const Riwayat = () => {
                 {/* Info banner */}
                 <div className="mb-5 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                     <p className="text-xs text-blue-700 leading-relaxed">
-                        <span className="font-semibold">ℹ️</span> Pengajuan perubahan data memerlukan persetujuan Admin. Status pengajuan: <span className="font-semibold text-yellow-700">Menunggu Review</span> → disetujui menjadi <span className="font-semibold text-green-700">Diterima</span> atau <span className="font-semibold text-red-600">Ditolak</span>.
+                        <span className="font-semibold">️</span> Pengajuan perubahan data memerlukan persetujuan Admin. Status pengajuan: <span className="font-semibold text-yellow-700">Menunggu Review</span> → disetujui menjadi <span className="font-semibold text-green-700">Diterima</span> atau <span className="font-semibold text-red-600">Ditolak</span>.
                     </p>
                 </div>
 
@@ -231,7 +231,7 @@ const Riwayat = () => {
                                 {/* Status info */}
                                 {selectedItem.status === 'Menunggu Review' && (
                                     <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                        <p className="text-xs text-yellow-800">⏳ Pengajuan Anda sedang menunggu review dari Admin. Data belum berubah sampai disetujui.</p>
+                                        <p className="text-xs text-yellow-800"> Pengajuan Anda sedang menunggu review dari Admin. Data belum berubah sampai disetujui.</p>
                                     </div>
                                 )}
                             </div>

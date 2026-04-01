@@ -132,7 +132,7 @@ const ProfilRelawan = () => {
                         {/* Info pengajuan */}
                         <div className="mt-5 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                             <p className="text-xs text-blue-700 leading-relaxed">
-                                <span className="font-semibold">ℹ️ Informasi:</span> Perubahan data hanya dapat dilakukan pada Informasi Pribadi dan memerlukan persetujuan dari Admin OPD atau Super Admin. Pengajuan yang dikirim akan berstatus <span className="font-semibold">Menunggu Review</span> hingga diproses.
+                                <span className="font-semibold">️ Informasi:</span> Perubahan data hanya dapat dilakukan pada Informasi Pribadi dan memerlukan persetujuan dari Admin OPD atau Super Admin. Pengajuan yang dikirim akan berstatus <span className="font-semibold">Menunggu Review</span> hingga diproses.
                             </p>
                         </div>
 
@@ -165,7 +165,7 @@ const ProfilRelawan = () => {
                                 {/* Peringatan */}
                                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                                     <p className="text-xs text-yellow-800 leading-relaxed">
-                                        <span className="font-semibold">⚠️ Perhatian:</span> Pengajuan ini hanya untuk perubahan <span className="font-semibold">Informasi Pribadi</span>. Data tidak akan langsung berubah — perubahan akan berlaku setelah disetujui oleh Admin.
+                                        <span className="font-semibold">️ Perhatian:</span> Pengajuan ini hanya untuk perubahan <span className="font-semibold">Informasi Pribadi</span>. Data tidak akan langsung berubah — perubahan akan berlaku setelah disetujui oleh Admin.
                                     </p>
                                 </div>
 

@@ -198,7 +198,7 @@ const SaranHotline: React.FC = () => {
                         ? 'bg-green-50 text-green-700 border-green-200'
                         : 'bg-yellow-50 text-yellow-700 border-yellow-200'
                 }`}>
-                    {row.status === 'Selesai' ? '✓ Selesai' : '⏳ Menunggu'}
+                    {row.status === 'Selesai' ? '✓ Selesai' : ' Menunggu'}
                 </span>
             )
         }
@@ -383,7 +383,7 @@ const SaranHotline: React.FC = () => {
                                                     className="w-4 h-4 text-green-600"
                                                 />
                                                 <span className={`text-sm font-medium ${s === 'Selesai' ? 'text-green-700' : 'text-yellow-700'}`}>
-                                                    {s === 'Selesai' ? '✓ Selesai' : '⏳ Menunggu'}
+                                                    {s === 'Selesai' ? '✓ Selesai' : ' Menunggu'}
                                                 </span>
                                             </label>
                                         ))}

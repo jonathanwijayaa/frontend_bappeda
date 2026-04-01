@@ -17,10 +17,10 @@ import {
 import { 
     getRelawanByOpd, 
     getSkByOpd,
-    createRelawanByOpd, // ✨ Tambahan baru (untuk nanti)
+    createRelawanByOpd, //  Tambahan baru (untuk nanti)
     createBulkRelawanByOpd,
     updateRelawanByOpd,      
-    deletePenugasanByOpd, // ✨ Tambahan baru (untuk nanti)
+    deletePenugasanByOpd, //  Tambahan baru (untuk nanti)
 } from '../controllers/opdRelawanController';
 
 const router = Router();
@@ -34,17 +34,17 @@ router.get('/dashboard', getOpdDashboardStats);
 // 2. Manajemen Kader
 router.get('/kader', getKaderByOpd);
 router.post('/kader', createKaderByOpd); // (Manual)
-router.post('/kader/bulk', createBulkKaderByOpd); // ✨ (Excel Bulk khusus OPD)
+router.post('/kader/bulk', createBulkKaderByOpd); //  (Excel Bulk khusus OPD)
 router.patch('/kader/:id', updateKaderByOpd);
 router.delete('/kader/:id', deleteKaderByOpd);
 router.get('/kader/:id/pic-history', getPicKaderHistory);
 router.post('/kader/:id/assign-pic', assignPicKader);
-// 🚨 router.patch('/kader/:id/status', toggleKaderStatus); <-- BARIS INI SUDAH DIHAPUS DEMI KEAMANAN!
+//  router.patch('/kader/:id/status', toggleKaderStatus); <-- BARIS INI SUDAH DIHAPUS DEMI KEAMANAN!
 
 // 3. Data Relawan & Surat Keputusan
 router.get('/relawan', getRelawanByOpd);
-router.post('/relawan', createRelawanByOpd); // ✨ (Manual khusus OPD)
-router.post('/relawan/bulk', createBulkRelawanByOpd); // ✨ (Excel Bulk khusus OPD)
+router.post('/relawan', createRelawanByOpd); //  (Manual khusus OPD)
+router.post('/relawan/bulk', createBulkRelawanByOpd); //  (Excel Bulk khusus OPD)
 router.get('/sk', getSkByOpd);
 router.put('/relawan/:relawan_id', updateRelawanByOpd);
 router.delete('/relawan/penugasan/:penugasan_id', deletePenugasanByOpd);

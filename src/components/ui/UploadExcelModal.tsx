@@ -239,7 +239,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                     {/* Panduan urutan upload */}
                     {dataType !== 'opd' && (
                         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                            <p className="font-medium mb-1">⚠️ Perhatian urutan upload:</p>
+                            <p className="font-medium mb-1">️ Perhatian urutan upload:</p>
                             <p>
                                 {dataType === 'kader'
                                     ? 'Pastikan data OPD sudah di-upload terlebih dahulu. Nama OPD di kolom "OPD" harus persis sama dengan yang ada di sistem.'

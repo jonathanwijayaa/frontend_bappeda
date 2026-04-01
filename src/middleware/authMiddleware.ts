@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-// ✅ Custom Type: Request yang membawa data User
+//  Custom Type: Request yang membawa data User
 export interface AuthRequest extends Request {
     user?: {
         id: number;
@@ -16,8 +16,8 @@ export interface AuthRequest extends Request {
         nama_opd?: string;
         ip?: string;
     };
-    file?: any;  // ✅ Untuk multer single file
-    files?: any;  // ✅ Untuk multer multiple files
+    file?: any;  //  Untuk multer single file
+    files?: any;  //  Untuk multer multiple files
 }
 
 const verifyToken = (req: AuthRequest, res: Response, next: NextFunction): void => {
@@ -32,7 +32,7 @@ const verifyToken = (req: AuthRequest, res: Response, next: NextFunction): void 
     try {
         const verified = jwt.verify(token, process.env.JWT_SECRET || 'rahasia_skripsi_caesar');
         
-        // ✅ FIXED: Type assertion untuk JWT payload
+        //  FIXED: Type assertion untuk JWT payload
         const decoded = verified as {
             id: number;
             role: string;

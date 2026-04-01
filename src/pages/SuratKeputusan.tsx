@@ -290,7 +290,7 @@ const SuratKeputusan: React.FC = () => {
                         <AlertCircle size={20} />
                     </div>
                     <div className="text-sm text-blue-800 flex-1">
-                        <p className="font-semibold mb-2">📋 Panduan Upload Surat Keputusan:</p>
+                        <p className="font-semibold mb-2"> Panduan Upload Surat Keputusan:</p>
                         <ol className="list-decimal list-inside space-y-1 text-blue-700">
                             <li>Pastikan <strong>OPD</strong> sudah terdaftar → <a href="/manajemen-opd" className="underline font-medium hover:text-blue-900">Manajemen OPD</a></li>
                             <li>Pastikan <strong>Kader</strong> sudah terdaftar → <a href="/daftar-kader" className="underline font-medium hover:text-blue-900">Daftar Kader</a></li>
@@ -310,7 +310,7 @@ const SuratKeputusan: React.FC = () => {
                             <AlertCircle size={20} />
                         </div>
                         <div className="text-sm text-red-800 flex-1">
-                            <p className="font-semibold mb-2">⚠️ {errorHint.title}</p>
+                            <p className="font-semibold mb-2">️ {errorHint.title}</p>
                             <ol className="list-decimal list-inside space-y-1 text-red-700">
                                 {errorHint.steps.map((step, idx) => (
                                     <li key={idx}>{step}</li>
@@ -522,7 +522,7 @@ const SuratKeputusan: React.FC = () => {
                 onConfirm={handlePDFUploadConfirm}
                 title="Upload Surat Keputusan (PDF)"
                 isOPD={isOPD} 
-                // ✅ FIXED: Tambahkan "as any" agar TypeScript tidak komplain
+                //  FIXED: Tambahkan "as any" agar TypeScript tidak komplain
                 userOpdData={{ 
                     id: (user as any)?.opd_id, 
                     name: (user as any)?.nama_opd 

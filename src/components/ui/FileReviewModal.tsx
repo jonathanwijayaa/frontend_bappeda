@@ -176,7 +176,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                     <div className="flex flex-col space-y-3 max-h-[500px]">
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-semibold text-green-700">
-                                ✅ Data Bersih ({cleanData.length})
+                                Data Bersih ({cleanData.length})
                             </h3>
                         </div>
                         <div className="border border-green-200 rounded-lg overflow-y-auto flex-1 bg-white">
@@ -203,7 +203,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                     <div className="flex flex-col space-y-3 max-h-[500px]">
                         <div className="flex items-center justify-between">
                             <h3 className="text-lg font-semibold text-red-700">
-                                ❌ Data Kotor ({dirtyDataList.length})
+                                Data Kotor ({dirtyDataList.length})
                             </h3>
                         </div>
                         <div className={`border rounded-lg overflow-y-auto flex-1 bg-white ${hasDirtyData ? 'border-red-200' : 'border-gray-200'}`}>

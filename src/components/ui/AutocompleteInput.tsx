@@ -112,7 +112,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
             {/* Warning badge */}
             {showWarning && (
                 <div className="mt-1 flex items-start gap-1 text-yellow-700 text-xs">
-                    <span>⚠️</span>
+                    <span>️</span>
                     <span>{warnMessage}</span>
                 </div>
             )}

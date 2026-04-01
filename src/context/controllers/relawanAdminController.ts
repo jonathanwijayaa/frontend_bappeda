@@ -110,7 +110,7 @@ export const reviewPengajuan = async (req: AuthRequest, res: Response): Promise<
         return;
     }
 
-    // ✅ FIX: Map nilai frontend ke nilai ENUM database PostgreSQL
+    //  FIX: Map nilai frontend ke nilai ENUM database PostgreSQL
     // DB ENUM: ('Menunggu Review', 'Diterima', 'Ditolak') - bukan 'Disetujui'!
     const statusDB = status === 'Disetujui' ? 'Diterima' : 'Ditolak';
 
@@ -130,7 +130,7 @@ export const reviewPengajuan = async (req: AuthRequest, res: Response): Promise<
             SET status = $1, catatan_verifikator = $2, tanggal_verifikasi = CURRENT_TIMESTAMP, verifikator_id = $3
             WHERE pengajuan_id = $4
         `;
-        // ✅ FIX: Gunakan statusDB ('Diterima'/'Ditolak') yang sesuai ENUM database
+        //  FIX: Gunakan statusDB ('Diterima'/'Ditolak') yang sesuai ENUM database
         await executeQueryWithContext(updatePengajuanQuery, [statusDB, catatan_verifikator || null, req.user!.id, id], req.user);
 
         if (status === 'Disetujui' && pengajuan.data_baru) {
@@ -424,7 +424,7 @@ export const createBulkRelawan = async (req: AuthRequest, res: Response): Promis
                         }
                     }
 
-                    // ✅ FIXED: Menggunakan assign.peran, assign.detail, assign.penugasan
+                    //  FIXED: Menggunakan assign.peran, assign.detail, assign.penugasan
                     const checkPenugasan = await client.query(
                         `SELECT penugasan_id FROM penugasan_relawan 
                          WHERE relawan_id = $1 

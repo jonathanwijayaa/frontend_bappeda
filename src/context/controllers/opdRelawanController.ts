@@ -61,7 +61,7 @@ export const getSkByOpd = async (req: OpdAuthRequest, res: Response): Promise<vo
 
 // 3. Tambah Relawan Manual Khusus OPD (1 Penugasan saja)
 export const createRelawanByOpd = async (req: OpdAuthRequest, res: Response): Promise<void> => {
-    const opdId = req.opd_id; // 🔒 Paksa gunakan OPD ID dari token
+    const opdId = req.opd_id; //  Paksa gunakan OPD ID dari token
 
     const nama_lengkap = req.body.nama_lengkap || req.body.namaLengkap || req.body.namaRelawan;
     const nik = req.body.nik;
@@ -148,7 +148,7 @@ export const createRelawanByOpd = async (req: OpdAuthRequest, res: Response): Pr
 // 4. Tambah Relawan Excel Khusus OPD (Bulk - FIXED VERSION)
 export const createBulkRelawanByOpd = async (req: OpdAuthRequest, res: Response): Promise<void> => {
     const rawData = req.body;
-    const opdId = req.opd_id; // 🔒 Paksa gunakan OPD ID dari token
+    const opdId = req.opd_id; //  Paksa gunakan OPD ID dari token
 
     if (!Array.isArray(rawData) || rawData.length === 0) {
         res.status(400).json({ success: false, message: 'Data yang dikirim harus berupa array yang tidak kosong' });
@@ -242,7 +242,7 @@ export const createBulkRelawanByOpd = async (req: OpdAuthRequest, res: Response)
                     if (kaderLookup.rows.length > 0) kaderId = kaderLookup.rows[0].kader_id;
                 }
                 
-                // ✅ FIXED: Menggunakan variabel 'peran' dan 'detail' dari ekstraksi Excel
+                //  FIXED: Menggunakan variabel 'peran' dan 'detail' dari ekstraksi Excel
                 const checkPenugasan = await client.query(
                     `SELECT penugasan_id FROM penugasan_relawan 
                      WHERE relawan_id = $1 

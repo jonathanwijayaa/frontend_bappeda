@@ -8,7 +8,7 @@ export const getOpdDashboardStats = async (req: OpdAuthRequest, res: Response): 
     try {
         const opdId = req.opd_id;
 
-        // ✅ FIXED: Tambah query untuk get nama_opd
+        //  FIXED: Tambah query untuk get nama_opd
         const opdInfoRes = await executeQueryWithContext(
             `SELECT nama_opd FROM opd WHERE opd_id = $1`,
             [opdId],
@@ -61,21 +61,21 @@ export const getOpdDashboardStats = async (req: OpdAuthRequest, res: Response): 
             `, [opdId], req.user)
         ]);
 
-        // ✅ FIXED: Sesuaikan response dengan yang frontend expect
+        //  FIXED: Sesuaikan response dengan yang frontend expect
         res.status(200).json({
             success: true,
             message: 'Berhasil mengambil data statistik dashboard OPD',
             data: {
-                nama_opd: opdInfoRes.rows[0]?.nama_opd || 'OPD',  // ✅ Tambah nama_opd
+                nama_opd: opdInfoRes.rows[0]?.nama_opd || 'OPD',  //  Tambah nama_opd
                 ringkasan: {
                     total_relawan_aktif: parseInt(totalRelawanRes.rows[0].total, 10),
-                    total_opd: 1,  // ✅ OPD user hanya punya 1 OPD (dirinya sendiri)
-                    total_kader: parseInt(totalKaderRes.rows[0].total, 10),  // ✅ Fix field name
-                    pengajuan_pending: 0  // ✅ Tambah field ini (bisa diimplementasi nanti)
+                    total_opd: 1,  //  OPD user hanya punya 1 OPD (dirinya sendiri)
+                    total_kader: parseInt(totalKaderRes.rows[0].total, 10),  //  Fix field name
+                    pengajuan_pending: 0  //  Tambah field ini (bisa diimplementasi nanti)
                 },
-                // ✅ FIXED: Ubah nama field agar match dengan frontend
+                //  FIXED: Ubah nama field agar match dengan frontend
                 grafik_relawan_per_opd: chartRelawanPerKaderRes.rows.map(row => ({
-                    nama_opd: row.nama_kader,  // ✅ Untuk OPD, chart adalah per kader
+                    nama_opd: row.nama_kader,  //  Untuk OPD, chart adalah per kader
                     jumlah_relawan: parseInt(row.jumlah_relawan, 10)
                 })),
                 // Keep ini untuk referensi (bisa dipakai untuk chart lain nanti)
@@ -91,7 +91,7 @@ export const getOpdDashboardStats = async (req: OpdAuthRequest, res: Response): 
         res.status(500).json({ 
             success: false, 
             message: 'Terjadi kesalahan saat menghitung statistik OPD',
-            data: null  // ✅ Return null bukan undefined
+            data: null  //  Return null bukan undefined
         });
     }
 };
