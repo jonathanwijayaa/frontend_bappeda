@@ -24,6 +24,26 @@ const REQUIRED_FIELDS: Record<string, string[]> = {
     relawan: ['namalengkap', 'nik', 'jeniskelamin', 'opd'],
 };
 
+const REQUIRED_FIELDS_CHECK: Record<string, { keys: string[], label: string }[]> = {
+    opd:     [
+        { keys: ['namaopd', 'nama'], label: 'Nama OPD' },
+        { keys: ['nikpic', 'nik'], label: 'NIK PIC' }
+    ],
+    kader:   [
+        { keys: ['namakader', 'kader', 'nama'], label: 'Nama Kader' },
+        { keys: ['opd', 'instansi'], label: 'OPD/Instansi' },
+        { keys: ['nikpic', 'nik'], label: 'NIK PIC' }
+    ],
+    relawan: [
+        { keys: ['namalengkap', 'nama'], label: 'Nama Lengkap' },
+        { keys: ['nik'], label: 'NIK' },
+        { keys: ['jeniskelamin', 'jk', 'jenis'], label: 'Jenis Kelamin' },
+        { keys: ['opd', 'instansi'], label: 'OPD/Instansi' },
+        { keys: ['kader', 'komunitaskader', 'komunitas'], label: 'Kader' },
+        { keys: ['jabatan', 'peran'], label: 'Jabatan/Peran' }
+    ],
+};
+
 const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
     isOpen,
     onClose,
@@ -35,6 +55,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [error, setError] = useState<string>('');
     const [parsedData, setParsedData] = useState<any[]>([]);
+    const [parsedErrors, setParsedErrors] = useState<{ rowNumber: number; emptyColumns: string[] }[]>([]);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
 
     const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
@@ -56,9 +77,9 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
         multiple: false
     });
 
-    const validateData = (data: any[]): { isValid: boolean; error?: string } => {
+    const validateDataAndGetErrors = (data: any[]) => {
         if (!data || data.length === 0)
-            return { isValid: false, error: 'File tidak mengandung data. Pastikan ada baris isi di bawah header.' };
+            return { isValid: false, globalError: 'File tidak mengandung data. Pastikan ada baris isi di bawah header.' };
 
         // Normalisasi key Excel: lowercase + hapus semua non-alfanumerik
         const normalizedKeys = Object.keys(data[0]).map(k =>
@@ -71,32 +92,37 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
         if (missingFields.length > 0) {
             return {
                 isValid: false,
-                error: `Format file tidak sesuai template. Kolom inti tidak terdeteksi: ${missingFields.join(', ')}. Pastikan menggunakan template yang tersedia.`
+                globalError: `Format file tidak sesuai template. Kolom inti tidak terdeteksi: ${missingFields.join(', ')}. Pastikan menggunakan template yang tersedia.`
             };
         }
 
-        if (dataType === 'relawan') {
-            for (let i = 0; i < data.length; i++) {
-                const row = data[i];
-                const getVal = (possibleKeys: string[]) => {
-                    const key = Object.keys(row).find(k => possibleKeys.includes(k.toLowerCase().replace(/[^a-z0-9]/g, '')));
-                    return key ? String(row[key]).trim() : '';
-                };
+        const rowErrors: { rowNumber: number; emptyColumns: string[] }[] = [];
+        const fieldsToCheck = REQUIRED_FIELDS_CHECK[dataType];
 
-                const opd = getVal(['opd', 'instansi']);
-                const kader = getVal(['kader', 'komunitaskader', 'komunitas']);
-                const jabatan = getVal(['jabatan', 'peran']);
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            const emptyCols: string[] = [];
+            
+            const getVal = (possibleKeys: string[]) => {
+                const key = Object.keys(row).find(k => possibleKeys.includes(k.toLowerCase().replace(/[^a-z0-9]/g, '')));
+                return key ? String(row[key]).trim() : '';
+            };
 
-                if (!opd || !kader || !jabatan) {
-                    return {
-                        isValid: false,
-                        error: `Baris ${i + 2}: Data instansi (OPD), kader, dan jabatan wajib diisi untuk semua penugasan relawan!`
-                    };
+            fieldsToCheck.forEach(field => {
+                if (!getVal(field.keys)) {
+                    emptyCols.push(field.label);
                 }
+            });
+
+            if (emptyCols.length > 0) {
+                rowErrors.push({
+                    rowNumber: i + 2, // 1 is header
+                    emptyColumns: emptyCols
+                });
             }
         }
 
-        return { isValid: true };
+        return { isValid: true, rowErrors };
     };
 
     const parseExcelFile = async (file: File) => {
@@ -108,13 +134,14 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
             // defval: '' agar kolom kosong tetap terbaca sebagai string kosong
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
 
-            const validation = validateData(jsonData);
-            if (!validation.isValid) {
-                setError(validation.error || 'Data tidak valid');
+            const validation = validateDataAndGetErrors(jsonData);
+            if (!validation.isValid && validation.globalError) {
+                setError(validation.globalError);
                 return;
             }
 
             setParsedData(jsonData);
+            setParsedErrors(validation.rowErrors || []);
             setIsReviewModalOpen(true);
         } catch (err) {
             console.error('Error parsing Excel file:', err);
@@ -137,6 +164,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
         setSelectedFile(null);
         setError('');
         setParsedData([]);
+        setParsedErrors([]);
         setIsReviewModalOpen(false);
         onClose();
     };
@@ -270,6 +298,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                 data={parsedData}
                 dataType={dataType}
                 title={`Review ${title}`}
+                errors={parsedErrors}
             />
         </>
     );
