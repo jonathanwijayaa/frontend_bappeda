@@ -412,14 +412,14 @@ const DataRelawan: React.FC = () => {
             const result = await res.json();
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });
-                
+
                 // Optimistically update the status in UI list
-                setPengajuanList(prev => prev.map(p => 
+                setPengajuanList(prev => prev.map(p =>
                     p.pengajuan_id === selectedPengajuan.pengajuan_id ? { ...p, status: status } : p
                 ));
-                
+
                 setIsReviewModalOpen(false);
-                
+
                 // Fetch in background without UI loader
                 fetchPengajuan(false);
                 if (status === 'Disetujui') {
@@ -491,46 +491,28 @@ const DataRelawan: React.FC = () => {
                 setToast({ message: errData.message || `Server error: ${res.status}`, type: 'error' });
                 return;
             }
-
             const result = await res.json();
-            const insertedCount = result.data?.insertedCount ?? 0;
-            const hasWarning = (result.data?.errors?.length ?? 0) > 0 || (result.data?.skipped?.length ?? 0) > 0;
-            if (result.success && insertedCount > 0) {
-                // ✅ Benar-benar berhasil: tutup modal, reset form, toast hijau
+            const errors = result.data?.errors ?? [];
+            const skipped = result.data?.skipped ?? [];
+            if (!res.ok || errors.length > 0) {
+                // Ada error yang perlu ditampilkan
+                const errorMsg = errors[0] ?? skipped[0] ?? result.message ?? 'Gagal menambahkan relawan';
+                setToast({ message: errorMsg, type: 'error' });
+            } else {
+                // Berhasil (termasuk jika ada yang di-skip tapi ada yang berhasil)
                 setToast({ message: result.message, type: 'success' });
                 setIsModalOpen(false);
                 setFormData({
-                    namaRelawan: '',
-                    nik: '',
-                    jenisKelamin: 'L',
-                    alamat: '',
-                    no_hp: '',
-                    kelurahan: '',
-                    kader: '',
-                    jabatan: '',
-                    penugasan: '',
-                    detail_penugasan: '',
+                    namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', no_hp: '',
+                    kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
                     assignments: [{
-                        id: Date.now().toString(),
-                        opd: '',
-                        opd_id: 0,
-                        kader: '',
-                        kader_id: null,
-                        peran: '',
-                        detail: '',
-                        statusKeaktifan: 'Aktif',
-                        nomorSK: '',
-                        skId: ''
+                        id: Date.now().toString(), opd: '', opd_id: 0, kader: '',
+                        kader_id: null, peran: '', detail: '', statusKeaktifan: 'Aktif',
+                        nomorSK: '', skId: ''
                     }]
                 });
                 setKaderOptionsByIndex({});
                 fetchRelawan();
-            } else {
-                const errorMsg = result.data?.errors?.[0]
-                    ?? result.data?.skipped?.[0]
-                    ?? result.message
-                    ?? 'Gagal menambahkan relawan';
-                setToast({ message: errorMsg, type: 'error' });
             }
         } catch (err: any) {
             setToast({ message: `Koneksi gagal: ${err?.message || 'unknown error'}`, type: 'error' });
