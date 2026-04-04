@@ -9,10 +9,10 @@ export interface RelawanAuthRequest extends AuthRequest {
 
 export const requireRelawanContext = async (req: RelawanAuthRequest, res: Response, next: NextFunction): Promise<void> => {
     try {
-        console.log(' requireRelawanContext - user:', req.user); // ← tambah ini
+        console.log('🔍 requireRelawanContext - user:', req.user); // ← tambah ini
 
         if (!req.user || req.user.role !== 'relawan') {
-            console.log(' Role check failed:', req.user?.role);  // ← tambah ini
+            console.log('❌ Role check failed:', req.user?.role);  // ← tambah ini
             res.status(403).json({ success: false, message: 'Akses ditolak.' });
             return;
         }

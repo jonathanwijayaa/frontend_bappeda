@@ -1,76 +1,57 @@
-import express from 'express';
+//index.ts
+import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
-// Import semua Route
+// Import Routes
 import authRoutes from './src/routes/authRoutes';
-import dashboardRoutes from './src/routes/dashboardRoutes';
-import opdRoutes from './src/routes/opdRoutes';
-import opdAdminRoutes from './src/routes/opdAdminRoutes';
-import relawanAdminRoutes from './src/routes/relawanAdminRoutes';
 import relawanRoutes from './src/routes/relawanRoutes';
+import opdRoutes from './src/routes/opdRoutes';
+import relawanAdminRoutes from './src/routes/relawanAdminRoutes';
 import skRoutes from './src/routes/skRoutes';
+import dashboardRoutes from './src/routes/dashboardRoutes';
 import logRoutes from './src/routes/logRoutes';
+import opdAdminRoutes from './src/routes/opdAdminRoutes';
+import debugRoutes from './src/routes/debugRoutes';
 import saranRoutes from './src/routes/saranRoutes';
 import kaderRoutes from './src/routes/kaderRoutes';
 import profileRoutes from './src/routes/profileRoutes';
+import statistikRoutes from './src/routes/statistikRoutes';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const PORT = process.env.PORT || 3000;
 
-// === MIDDLEWARE DASAR ===
-app.use(cors({
-    origin: [
-        /^http:\/\/localhost:\d+$/,     // Izinkan semua port di localhost (contoh: localhost:3000, localhost:5173)
-        /^http:\/\/127\.0\.0\.1:\d+$/,  // Izinkan juga kalau pakai IP lokal 127.0.0.1
-        'https://frontend-bappeda.vercel.app' // link vercel
-    ],
-    credentials: true // Wajib ditambah kalau API kamu pakai token/cookies untuk login
-}));                   // Izinkan frontend akses API
-app.use(express.json());           // Parse body JSON dari request
+app.use(cors());
+app.use(express.json());
 
-// === DAFTARKAN SEMUA ROUTE ===
-
-// 1. Auth (Login & Register) - Publik
-app.use('/api/auth', authRoutes);
-
-// 2. Super Admin Routes
-app.use('/api/admin/dashboard', dashboardRoutes);
-app.use('/api/admin/relawan', relawanAdminRoutes);
-app.use('/api/admin/sk', skRoutes);
-app.use('/api/admin/logs', logRoutes);
-
-// 3. OPD Routes
-app.use('/api/opd', opdRoutes);
-app.use('/api/opd-admin', opdAdminRoutes);
-
-// 4. Relawan Routes
+// === DAFTAR ROUTES (API MAP) ===
+app.use('/api/auth', authRoutes);       
 app.use('/api/relawan', relawanRoutes);
-
-// 6. Saran Routes
-app.use('/api/saran', saranRoutes);
-
-// 7. Komunitas Routes
-app.use('/api/kader', kaderRoutes);
-
-// 8. Profile Routes (semua role)
+app.use('/api/opd', opdRoutes);        
+app.use('/api/admin/relawan', relawanAdminRoutes);
+app.use('/api/admin/sk', skRoutes);     
+app.use('/api/admin/dashboard', dashboardRoutes); 
+app.use('/api/admin/logs', logRoutes);  
+app.use('/api/opd-admin', opdAdminRoutes); 
+app.use('/api/saran', saranRoutes);        
+app.use('/api/kader', kaderRoutes); 
+app.use('/api/debug', debugRoutes); 
 app.use('/api/profile', profileRoutes);
+app.use('/api/statistik', statistikRoutes);
 
-// === TEST ENDPOINT ===
-app.get('/', (req, res) => {
-    res.json({ message: '🚀 Backend Bappeda API berjalan!' });
+// Test Root
+app.get('/', (req: Request, res: Response) => {
+    res.send('Server Backend Skripsi (TypeScript) Berjalan! 🚀');
 });
 
-// === JALANKAN SERVER ===
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`
-    =============================================
-    ✅ Server berhasil dijalankan!
-    📍 Port: ${PORT}
-    🏠 Host: 0.0.0.0
-    🔗 Health Check: http://localhost:${PORT}/
-    =============================================
-    `);
+// Jalankan Server
+app.listen(PORT, () => {
+    console.log(`Server berjalan di http://localhost:${PORT}`);
+});
+
+// Handle unhandled rejections
+process.on('unhandledRejection', (reason) => {
+    console.error('Unhandled Rejection:', reason);
 });

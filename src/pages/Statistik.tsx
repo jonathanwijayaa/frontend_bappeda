@@ -19,7 +19,7 @@ const Statistik: React.FC = () => {
         loading: true,
         error: null,
     });
-
+    
     useEffect(() => {
     const fetchAll = async () => {
         setState(prev => ({ ...prev, loading: true, error: null }));
