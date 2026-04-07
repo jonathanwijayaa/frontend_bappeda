@@ -628,7 +628,7 @@ export const createBulkKaderByOpd = async (req: OpdAuthRequest, res: Response): 
     const client = await pool.connect();
 
     try {
-        //  FIXED: Cari tahu apa nama asli OPD yang sedang login ini
+        // ✨ FIXED: Cari tahu apa nama asli OPD yang sedang login ini
         const opdInfo = await client.query(`SELECT nama_opd FROM opd WHERE opd_id = $1`, [opdId]);
         const actualOpdName = opdInfo.rows[0].nama_opd.toLowerCase().replace(/[^a-z0-9]/g, '');
 
@@ -642,7 +642,7 @@ export const createBulkKaderByOpd = async (req: OpdAuthRequest, res: Response): 
                 item[key.toLowerCase().replace(/[^a-z0-9]/g, '')] = rawItem[key];
             }
 
-            //  FIXED: PINDAHKAN getVal KE SINI (sebelum dipakai)
+            // ✅ FIXED: PINDAHKAN getVal KE SINI (sebelum dipakai)
             const getVal = (possibleKeys: string[]) => {
                 for (const key of possibleKeys) {
                     if (item[key] !== undefined) return String(item[key]);
@@ -661,7 +661,7 @@ export const createBulkKaderByOpd = async (req: OpdAuthRequest, res: Response): 
             const alamatPic = getVal(['alamatpic', 'alamat']).trim() || null;
             const kelurahanPic = getVal(['kelurahanpic', 'kelurahan']).trim() || null;
 
-            //  FIXED: Validasi OPD
+            // ✨ FIXED: Validasi OPD
             if (namaOpdClean && namaOpdClean !== actualOpdName) {
                 errors.push(`Baris ${rowNumber} ("${namaKader}"): Ditolak. Anda tidak diizinkan mengunggah data untuk Instansi "${namaOpd}".`);
                 continue;

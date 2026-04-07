@@ -141,7 +141,7 @@ export const getOPDList = async (req: AuthRequest, res: Response): Promise<void>
         } = req.body;
 
         // ============================================
-        //  VALIDASI: File wajib ada (di awal fungsi!)
+        // ✅ VALIDASI: File wajib ada (di awal fungsi!)
         // ============================================
         if (!req.file) {
             res.status(400).json({
@@ -230,7 +230,7 @@ export const getOPDList = async (req: AuthRequest, res: Response): Promise<void>
                 await client.query("SELECT set_config('app.current_user_role', $1, true);", [req.user.role]);
             }
 
-            //  FIXED: Gunakan ! operator (setelah null check di atas)
+            // ✅ FIXED: Gunakan ! operator (setelah null check di atas)
             const base64File = req.file!.buffer.toString('base64');
             const mimeType = req.file!.mimetype;
             const base64String = `${mimeType};base64,${base64File}`;
@@ -363,7 +363,7 @@ export const getOPDList = async (req: AuthRequest, res: Response): Promise<void>
                 data: {
                     sk_id: new_sk_id,
                     nomor_sk,
-                    file_size: `${(req.file!.size / 1024).toFixed(2)} KB`,  //  Pakai ! operator
+                    file_size: `${(req.file!.size / 1024).toFixed(2)} KB`,  // ✅ Pakai ! operator
                     total_relawan_ditugaskan: penugasanBerhasil.length,
                     relawan_berhasil: penugasanBerhasil,
                     relawan_gagal: penugasanGagal,

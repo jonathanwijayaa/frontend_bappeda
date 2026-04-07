@@ -1,15 +1,26 @@
-//opdRelawanControllers.ts
+//opRelawanController.ts
 import { Response } from 'express';
 import { executeQueryWithContext } from '../../config/db';
 import { OpdAuthRequest } from '../middleware/opdMiddleware';
 import pool from '../../config/db';
 import bcrypt from 'bcrypt';
 
-// 1. Dapatkan Daftar Relawan yang bertugas di OPD ini
+/**
+ * Set RLS context pada raw client — dipanggil tepat setelah BEGIN.
+ * Menggunakan set_config(..., true) agar transaction-local, identik dengan db.ts.
+ * user.id bukan user_id — sesuai shape AuthRequest dari authMiddleware.ts
+ */
+const setClientContext = async (client: any, user: NonNullable<OpdAuthRequest['user']>, opdId?: number) => {
+    await client.query("SELECT set_config('app.current_user_id', $1, true)", [user.id.toString()]);
+    await client.query("SELECT set_config('app.current_user_role', $1, true)", [user.role]);
+    await client.query("SELECT set_config('app.current_opd_id', $1, true)", [(opdId ?? user.opd_id ?? 0).toString()]);
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. Daftar Relawan milik OPD
+// ─────────────────────────────────────────────────────────────────────────────
 export const getRelawanByOpd = async (req: OpdAuthRequest, res: Response): Promise<void> => {
     try {
-        const opdId = req.opd_id;
-
         const result = await executeQueryWithContext(`
             SELECT 
                 u.user_id, u.nik, u.nama_lengkap, u.is_active,
@@ -25,8 +36,7 @@ export const getRelawanByOpd = async (req: OpdAuthRequest, res: Response): Promi
             LEFT JOIN kader k ON pr.kader_id = k.kader_id
             WHERE pr.opd_id = $1
             ORDER BY u.nama_lengkap ASC
-        `, [opdId], req.user);
-
+        `, [req.opd_id], req.user);
         res.status(200).json({ success: true, data: result.rows });
     } catch (error: any) {
         console.error('Error in getRelawanByOpd:', error);
@@ -34,48 +44,42 @@ export const getRelawanByOpd = async (req: OpdAuthRequest, res: Response): Promi
     }
 };
 
-// 2. Dapatkan Daftar Surat Keputusan (SK) milik OPD ini
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. Daftar SK milik OPD
+// ─────────────────────────────────────────────────────────────────────────────
 export const getSkByOpd = async (req: OpdAuthRequest, res: Response): Promise<void> => {
     try {
-        const opdId = req.opd_id;
-
         const result = await executeQueryWithContext(`
             SELECT 
-                sk.sk_id, sk.nomor_sk, sk.judul_sk, sk.tanggal_terbit, 
+                sk.sk_id, sk.nomor_sk, sk.judul_sk, sk.tanggal_terbit,
                 sk.batas_aktif, sk.status,
-                (SELECT COUNT(*) FROM penugasan_relawan pr WHERE pr.sk_id = sk.sk_id) as jumlah_relawan
+                (SELECT COUNT(*) FROM penugasan_relawan pr WHERE pr.sk_id = sk.sk_id) AS jumlah_relawan
             FROM surat_keputusan sk
             WHERE sk.opd_id = $1
             ORDER BY sk.tanggal_terbit DESC
-        `, [opdId], req.user);
-
-        res.status(200).json({
-            success: true,
-            data: result.rows
-        });
+        `, [req.opd_id], req.user);
+        res.status(200).json({ success: true, data: result.rows });
     } catch (error: any) {
         console.error('Error in getSkByOpd:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
 
-// 3. Tambah Relawan Manual Khusus OPD (1 Penugasan saja)
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. Tambah Relawan Manual (1 penugasan, khusus OPD ini)
+// ─────────────────────────────────────────────────────────────────────────────
 export const createRelawanByOpd = async (req: OpdAuthRequest, res: Response): Promise<void> => {
-    const opdId = req.opd_id; //  Paksa gunakan OPD ID dari token
-
-    const nama_lengkap = req.body.nama_lengkap || req.body.namaLengkap || req.body.namaRelawan;
-    const nik = req.body.nik;
-    const alamat_ktp = req.body.alamat_ktp || req.body.alamat;
-    const kelurahan = req.body.kelurahan;
+    const opdId     = req.opd_id!;
+    const nik       = req.body.nik;
+    const nama_lengkap  = req.body.nama_lengkap || req.body.namaLengkap || req.body.namaRelawan;
+    const alamat_ktp    = req.body.alamat_ktp || req.body.alamat;
+    const kelurahan     = req.body.kelurahan;
     const jenis_kelamin = req.body.jenis_kelamin || req.body.jenisKelamin || 'L';
-    const no_hp = req.body.no_hp || req.body.noHp || null;
+    const no_hp         = req.body.no_hp || req.body.noHp || null;
 
-    const assignment = req.body.assignments && req.body.assignments.length > 0 
-        ? req.body.assignments[0] 
-        : req.body;
-
-    const kaderText = assignment.kader || assignment.kader_kader;
-    const jabatan = assignment.jabatan || assignment.peran;
+    const assignment    = req.body.assignments?.length > 0 ? req.body.assignments[0] : req.body;
+    const kaderText     = assignment.kader || assignment.kader_kader;
+    const jabatan       = assignment.jabatan || assignment.peran;
     const detail_jabatan = assignment.detail_jabatan || assignment.detail;
 
     if (!nik || !nama_lengkap) {
@@ -84,282 +88,289 @@ export const createRelawanByOpd = async (req: OpdAuthRequest, res: Response): Pr
     }
 
     const client = await pool.connect();
-
     try {
         await client.query('BEGIN');
+        await setClientContext(client, req.user!, opdId);
 
-        const checkNikQuery = `SELECT user_id FROM users WHERE nik = $1`;
-        const checkNikRes = await client.query(checkNikQuery, [nik]);
-
-        if (checkNikRes.rows.length > 0) {
+        const checkNik = await client.query(`SELECT user_id FROM users WHERE nik = $1`, [nik]);
+        if (checkNik.rows.length > 0) {
             await client.query('ROLLBACK');
             res.status(400).json({ success: false, message: 'NIK sudah terdaftar, silakan gunakan fitur edit.' });
             return;
         }
 
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(nik, salt);
-
-        const userRes = await client.query(
-            `INSERT INTO users (nik, nama_lengkap, no_hp, password, role, is_active)
-             VALUES ($1, $2, $3, $4, 'relawan', true) RETURNING user_id;`,
-            [nik, nama_lengkap, no_hp, hashedPassword]
-        );
+        const hashedPassword = await bcrypt.hash(nik, await bcrypt.genSalt(10));
+        const userRes = await client.query(`
+            INSERT INTO users (nik, nama_lengkap, no_hp, password, role, is_active)
+            VALUES ($1,$2,$3,$4,'relawan',true) RETURNING user_id
+        `, [nik, nama_lengkap, no_hp, hashedPassword]);
         const userId = userRes.rows[0].user_id;
 
-        const relawanRes = await client.query(
-            `INSERT INTO relawan (user_id, jenis_kelamin, alamat_ktp, kelurahan)
-             VALUES ($1, $2, $3, $4) RETURNING relawan_id;`,
-            [userId, jenis_kelamin, alamat_ktp || '-', kelurahan || '-']
-        );
+        const relawanRes = await client.query(`
+            INSERT INTO relawan (user_id, jenis_kelamin, alamat_ktp, kelurahan)
+            VALUES ($1,$2,$3,$4) RETURNING relawan_id
+        `, [userId, jenis_kelamin, alamat_ktp || '-', kelurahan || '-']);
         const relawanId = relawanRes.rows[0].relawan_id;
 
         let kaderId: number | null = null;
         const namaKader = kaderText ? kaderText.trim() : '';
-
         if (namaKader && namaKader !== '-') {
-            const kaderLookup = await client.query(
-                `SELECT kader_id FROM kader WHERE LOWER(TRIM(nama_kader)) = LOWER(TRIM($1)) AND opd_id = $2 LIMIT 1`,
-                [namaKader, opdId]
-            );
-            if (kaderLookup.rows.length > 0) {
-                kaderId = kaderLookup.rows[0].kader_id;
-            }
+            const r = await client.query(`SELECT kader_id FROM kader WHERE LOWER(TRIM(nama_kader)) = LOWER(TRIM($1)) AND opd_id = $2 LIMIT 1`, [namaKader, opdId]);
+            if (r.rows.length > 0) kaderId = r.rows[0].kader_id;
         }
 
-        await client.query(
-            `INSERT INTO penugasan_relawan (relawan_id, opd_id, kader_id, jabatan, detail_jabatan, status_keaktifan)
-             VALUES ($1, $2, $3, $4, $5, 'Aktif')`,
-            [relawanId, opdId, kaderId, jabatan || null, detail_jabatan || null]
-        );
+        await client.query(`
+            INSERT INTO penugasan_relawan (relawan_id, opd_id, kader_id, jabatan, detail_jabatan, status_keaktifan)
+            VALUES ($1,$2,$3,$4,$5,'Aktif')
+        `, [relawanId, opdId, kaderId, jabatan || null, detail_jabatan || null]);
 
         await client.query('COMMIT');
         res.status(201).json({ success: true, message: 'Berhasil menambahkan data relawan' });
-
     } catch (error: any) {
         await client.query('ROLLBACK');
         console.error('Error in createRelawanByOpd:', error);
-        res.status(500).json({ success: false, message: 'Terjadi kesalahan pada server saat menambahkan data relawan' });
+        res.status(500).json({ success: false, message: 'Terjadi kesalahan server' });
     } finally {
         client.release();
     }
 };
 
-// 4. Tambah Relawan Excel Khusus OPD (Bulk - FIXED VERSION)
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. Tambah / Update Relawan Bulk Excel (khusus OPD ini)
+// ─────────────────────────────────────────────────────────────────────────────
 export const createBulkRelawanByOpd = async (req: OpdAuthRequest, res: Response): Promise<void> => {
     const rawData = req.body;
-    const opdId = req.opd_id; //  Paksa gunakan OPD ID dari token
+    const opdId   = req.opd_id!;
 
     if (!Array.isArray(rawData) || rawData.length === 0) {
-        res.status(400).json({ success: false, message: 'Data yang dikirim harus berupa array yang tidak kosong' });
+        res.status(400).json({ success: false, message: 'Data harus berupa array yang tidak kosong' });
         return;
     }
 
     const client = await pool.connect();
-    let insertedCount = 0;
-    let updatedCount = 0;
+    let insertedCount = 0, updatedCount = 0, updatedProfileCount = 0;
     const errors: string[] = [];
 
     try {
         for (let i = 0; i < rawData.length; i++) {
             const rawItem = rawData[i];
-            const rowNumber = i + 1;
+            const rowNumber = i + 2;
 
-            const item: Record<string, any> = {};
-            for (const key of Object.keys(rawItem)) {
-                item[key.toLowerCase().replace(/[^a-z0-9]/g, '')] = rawItem[key];
-            }
-
-            const getVal = (possibleKeys: string[]) => {
-                for (const key of possibleKeys) {
-                    if (item[key] !== undefined) return String(item[key]);
-                }
+            const flat: Record<string, any> = {};
+            for (const key of Object.keys(rawItem)) flat[key.toLowerCase().replace(/[^a-z0-9]/g, '')] = rawItem[key];
+            const get = (keys: string[]): string => {
+                for (const k of keys) if (flat[k] !== undefined && flat[k] !== null && flat[k] !== '') return String(flat[k]);
                 return '';
             };
 
-            const nik = getVal(['nik']).trim();
-            const namaLengkap = getVal(['namalengkap', 'nama']).trim();
-            const jenisKelamin = getVal(['jeniskelamin', 'jk', 'kelamin']).trim().toUpperCase() === 'P' ? 'P' : 'L';
-            const alamat = getVal(['alamatktp', 'alamat', 'domisili']).trim() || '-';
-            const kelurahan = getVal(['kelurahan', 'desa']).trim() || '-';
-            const kaderName = getVal(['kader', 'komunitaskader', 'komunitas']).trim();
-            const peran = getVal(['jabatan', 'peran']).trim() || null;
-            const detail = getVal(['detailjabatan', 'detail']).trim() || null;
-            const noHp = getVal(['nohp', 'nomorhp', 'telepon']).trim() || null;
+            const nik          = get(['nik', 'nomorindukkependudukan']).trim();
+            const namaLengkap  = get(['namalengkap', 'nama', 'namarelawan']).trim();
+            const jenisKelamin = get(['jeniskelamin', 'jk', 'kelamin']).trim().toUpperCase() === 'P' ? 'P' : 'L';
+            const alamat       = get(['alamatktp', 'alamat', 'domisili']).trim() || '-';
+            const kelurahan    = get(['kelurahan', 'desa']).trim() || '-';
+            const kaderName    = get(['kader', 'komunitaskader', 'komunitas']).trim();
+            const peran        = get(['jabatan', 'peran', 'jabatanperan']).trim() || null;
+            const detail       = get(['detailjabatan', 'detail']).trim() || null;
+            const penugasanText = get(['penugasan', 'tugas']).trim() || null;
+            const noHp         = get(['nohp', 'nomorhp', 'telepon']).trim() || null;
 
             if (!nik || !namaLengkap) {
-                errors.push(`Baris ${rowNumber} dilewati: NIK atau Nama Lengkap kosong.`);
+                errors.push(`Baris ${rowNumber} dilewati: NIK atau Nama kosong/tidak terbaca.`);
                 continue;
             }
 
             try {
                 await client.query('BEGIN');
+                await setClientContext(client, req.user!, opdId);
 
                 let userId: number;
                 let relawanId: number;
 
                 const checkRes = await client.query(`SELECT user_id FROM users WHERE nik = $1`, [nik]);
-                
+
                 if (checkRes.rows.length > 0) {
+                    // ── NIK sudah ada → UPDATE profil ─────────────────────────
                     userId = checkRes.rows[0].user_id;
-                    const getRelawan = await client.query(`SELECT relawan_id FROM relawan WHERE user_id = $1`, [userId]);
-                    if (getRelawan.rows.length > 0) {
-                        relawanId = getRelawan.rows[0].relawan_id;
+
+                    // UPDATE users (tabel ini tidak ada RLS, selalu berhasil)
+                    await client.query(`
+                        UPDATE users
+                        SET nama_lengkap = $1,
+                            no_hp        = COALESCE(NULLIF($2, ''), no_hp),
+                            updated_at   = CURRENT_TIMESTAMP
+                        WHERE user_id = $3
+                    `, [namaLengkap, noHp, userId]);
+
+                    const relawanCheck = await client.query(
+                        `SELECT relawan_id FROM relawan WHERE user_id = $1`, [userId]
+                    );
+
+                    if (relawanCheck.rows.length > 0) {
+                        relawanId = relawanCheck.rows[0].relawan_id;
+
+                        // UPDATE relawan — cek rowCount, bisa 0 jika RLS blocking
+                        const updateR = await client.query(`
+                            UPDATE relawan
+                            SET jenis_kelamin = $1,
+                                alamat_ktp   = $2,
+                                kelurahan    = $3,
+                                updated_at   = CURRENT_TIMESTAMP
+                            WHERE relawan_id = $4
+                            RETURNING relawan_id
+                        `, [jenisKelamin, alamat, kelurahan, relawanId]);
+
+                        if ((updateR.rowCount ?? 0) > 0) {
+                            updatedProfileCount++;
+                        } else {
+                            // RLS masih blocking: coba INSERT fallback tidak masuk akal,
+                            // tapi setidaknya laporkan agar tidak silent
+                            errors.push(`Baris ${rowNumber} (${namaLengkap}): Profil relawan tidak dapat diperbarui — periksa RLS policy untuk role 'opd'.`);
+                        }
                     } else {
-                        // User ada tapi profil relawan tidak ada - create relawan profile
-                        const relawanRes = await client.query(
-                            `INSERT INTO relawan (user_id, jenis_kelamin, alamat_ktp, kelurahan)
-                             VALUES ($1, $2, $3, $4) RETURNING relawan_id`,
-                            [userId, jenisKelamin, alamat, kelurahan]
-                        );
-                        relawanId = relawanRes.rows[0].relawan_id;
+                        // User ada tapi relawan belum — buat baru
+                        const r = await client.query(`
+                            INSERT INTO relawan (user_id, jenis_kelamin, alamat_ktp, kelurahan)
+                            VALUES ($1,$2,$3,$4) RETURNING relawan_id
+                        `, [userId, jenisKelamin, alamat, kelurahan]);
+                        relawanId = r.rows[0].relawan_id;
+                        updatedProfileCount++;
                     }
                 } else {
-                    const salt = await bcrypt.genSalt(10);
-                    const hashedPassword = await bcrypt.hash(nik, salt);
-                    
-                    const userRes = await client.query(
-                        `INSERT INTO users (nik, nama_lengkap, no_hp, password, role, is_active)
-                         VALUES ($1, $2, $3, $4, 'relawan', true) RETURNING user_id`,
-                        [nik, namaLengkap, noHp, hashedPassword]
-                    );
-                    userId = userRes.rows[0].user_id;
+                    // ── NIK baru → INSERT user + relawan ──────────────────────
+                    const hashedPassword = await bcrypt.hash(nik, await bcrypt.genSalt(10));
+                    const uRes = await client.query(`
+                        INSERT INTO users (nik, nama_lengkap, no_hp, password, role, is_active)
+                        VALUES ($1,$2,$3,$4,'relawan',true) RETURNING user_id
+                    `, [nik, namaLengkap, noHp, hashedPassword]);
+                    userId = uRes.rows[0].user_id;
 
-                    const relawanRes = await client.query(
-                        `INSERT INTO relawan (user_id, jenis_kelamin, alamat_ktp, kelurahan)
-                         VALUES ($1, $2, $3, $4) RETURNING relawan_id`,
-                        [userId, jenisKelamin, alamat, kelurahan]
-                    );
-                    relawanId = relawanRes.rows[0].relawan_id;
+                    const rRes = await client.query(`
+                        INSERT INTO relawan (user_id, jenis_kelamin, alamat_ktp, kelurahan)
+                        VALUES ($1,$2,$3,$4) RETURNING relawan_id
+                    `, [userId, jenisKelamin, alamat, kelurahan]);
+                    relawanId = rRes.rows[0].relawan_id;
                 }
 
-                // --- SETUP PENUGASAN (KHUSUS OPD INI SAJA) ---
+                // ── Penugasan (khusus OPD ini) ─────────────────────────────────
                 let kaderId: number | null = null;
                 if (kaderName && kaderName !== '-') {
-                    const kaderLookup = await client.query(
+                    const r = await client.query(
                         `SELECT kader_id FROM kader WHERE LOWER(TRIM(nama_kader)) = LOWER(TRIM($1)) AND opd_id = $2 LIMIT 1`,
                         [kaderName, opdId]
                     );
-                    if (kaderLookup.rows.length > 0) kaderId = kaderLookup.rows[0].kader_id;
+                    if (r.rows.length > 0) kaderId = r.rows[0].kader_id;
                 }
-                
-                //  FIXED: Menggunakan variabel 'peran' dan 'detail' dari ekstraksi Excel
-                const checkPenugasan = await client.query(
-                    `SELECT penugasan_id FROM penugasan_relawan 
-                     WHERE relawan_id = $1 
-                       AND opd_id = $2 
-                       AND kader_id IS NOT DISTINCT FROM $3 
-                       AND jabatan IS NOT DISTINCT FROM $4`,
-                    [relawanId, opdId, kaderId, peran || null]
-                );
 
-                if (checkPenugasan.rows.length > 0) {
-                    // UPDATE existing penugasan
-                    await client.query(
-                        `UPDATE penugasan_relawan
-                         SET detail_jabatan = $1,
-                             status_keaktifan = $2,
-                             updated_at = CURRENT_TIMESTAMP
-                         WHERE penugasan_id = $3`,
-                        [detail || null, 'Aktif', checkPenugasan.rows[0].penugasan_id]
-                    );
-                    updatedCount++;
+                const checkP = await client.query(`
+                    SELECT penugasan_id FROM penugasan_relawan
+                    WHERE relawan_id = $1 AND opd_id = $2
+                    LIMIT 1
+                `, [relawanId, opdId]);
+
+                if (checkP.rows.length > 0) {
+                    const updateP = await client.query(`
+                        UPDATE penugasan_relawan
+                        SET kader_id       = $1,
+                            jabatan        = $2,
+                            detail_jabatan = $3,
+                            penugasan      = $4,
+                            status_keaktifan = $5,
+                            updated_at     = CURRENT_TIMESTAMP
+                        WHERE penugasan_id = $6
+                        RETURNING penugasan_id
+                    `, [kaderId, peran, detail, penugasanText, 'Aktif', checkP.rows[0].penugasan_id]);
+
+                    if ((updateP.rowCount ?? 0) > 0) {
+                        updatedCount++;
+                    } else {
+                        errors.push(`Baris ${rowNumber} (${namaLengkap}): Penugasan tidak dapat diperbarui — periksa RLS policy untuk role 'opd'.`);
+                    }
                 } else {
-                    // INSERT new penugasan
-                    await client.query(
-                        `INSERT INTO penugasan_relawan
-                            (relawan_id, opd_id, kader_id, jabatan, detail_jabatan, status_keaktifan)
-                         VALUES ($1, $2, $3, $4, $5, 'Aktif')`,
-                        [relawanId, opdId, kaderId, peran || null, detail || null]
-                    );
+                    await client.query(`
+                        INSERT INTO penugasan_relawan
+                            (relawan_id, opd_id, kader_id, jabatan, detail_jabatan, penugasan, status_keaktifan)
+                        VALUES ($1,$2,$3,$4,$5,$6,'Aktif')
+                    `, [relawanId, opdId, kaderId, peran, detail, penugasanText]);
                     insertedCount++;
                 }
 
                 await client.query('COMMIT');
-
             } catch (rowError: any) {
                 await client.query('ROLLBACK');
-                console.error(`Error processing row ${rowNumber}:`, rowError);
-                errors.push(`Baris ${rowNumber} gagal: ${rowError.message}`);
+                console.error(`Error row ${rowNumber} (${namaLengkap}):`, rowError);
+                errors.push(`Baris ${rowNumber} gagal diproses: ${rowError.message}`);
             }
         }
 
         const parts: string[] = [];
-        if (insertedCount > 0) parts.push(`Berhasil menambahkan ${insertedCount} data baru.`);
-        if (updatedCount > 0) parts.push(`Berhasil mengupdate ${updatedCount} data.`);
-        if (errors.length > 0) parts.push(`Ada ${errors.length} peringatan/error.`);
+        if (insertedCount > 0)       parts.push(`${insertedCount} relawan baru ditambahkan.`);
+        if (updatedProfileCount > 0) parts.push(`${updatedProfileCount} profil diperbarui.`);
+        if (updatedCount > 0)        parts.push(`${updatedCount} penugasan diperbarui.`);
+        if (errors.length > 0)       parts.push(`${errors.length} peringatan.`);
 
-        const totalSuccess = insertedCount + updatedCount;
-
+        const totalSuccess = insertedCount + updatedProfileCount + updatedCount;
         res.status(totalSuccess > 0 ? 201 : 400).json({
             success: totalSuccess > 0,
-            message: parts.join('\n') || 'Tidak ada data yang diproses',
-            data: { insertedCount, updatedCount, errors }
+            message: parts.join(' ') || 'Tidak ada data yang diproses',
+            data: { insertedCount, updatedProfileCount, updatedCount, errors }
         });
-
     } catch (fatalError: any) {
         console.error('Fatal error in createBulkRelawanByOpd:', fatalError);
-        res.status(500).json({ success: false, message: 'Terjadi kesalahan sistem yang fatal.', errorDetail: fatalError.message });
+        res.status(500).json({ success: false, message: 'Terjadi kesalahan sistem.', errorDetail: (fatalError as any).message });
     } finally {
         client.release();
     }
 };
 
-// Tambahkan fungsi baru ini di bagian bawah file
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. Update Relawan (form edit, khusus OPD ini)
+// ─────────────────────────────────────────────────────────────────────────────
 export const updateRelawanByOpd = async (req: OpdAuthRequest, res: Response): Promise<void> => {
-    const opdId = req.opd_id;
+    const opdId     = req.opd_id!;
     const relawanId = parseInt(req.params.relawan_id as string);
     const { nama_lengkap, alamat_ktp, kelurahan, jenis_kelamin, assignments } = req.body;
 
     const client = await pool.connect();
     try {
         await client.query('BEGIN');
+        await setClientContext(client, req.user!, opdId);
 
         // Pastikan relawan ini memang ada di OPD ini
         const checkAccess = await client.query(
-            `SELECT pr.penugasan_id FROM penugasan_relawan pr
-             WHERE pr.relawan_id = $1 AND pr.opd_id = $2 LIMIT 1`,
+            `SELECT penugasan_id FROM penugasan_relawan WHERE relawan_id = $1 AND opd_id = $2 LIMIT 1`,
             [relawanId, opdId]
         );
         if (checkAccess.rows.length === 0) {
+            await client.query('ROLLBACK');
             res.status(403).json({ success: false, message: 'Relawan ini tidak terdaftar di instansi Anda' });
             return;
         }
 
-        // Update profil dasar relawan
-        await client.query(
-            `UPDATE relawan SET alamat_ktp = $1, kelurahan = $2, jenis_kelamin = $3, updated_at = CURRENT_TIMESTAMP
-             WHERE relawan_id = $4`,
-            [alamat_ktp, kelurahan, jenis_kelamin, relawanId]
-        );
+        await client.query(`
+            UPDATE relawan SET alamat_ktp = $1, kelurahan = $2, jenis_kelamin = $3, updated_at = CURRENT_TIMESTAMP
+            WHERE relawan_id = $4
+        `, [alamat_ktp, kelurahan, jenis_kelamin, relawanId]);
+
         if (nama_lengkap) {
-            await client.query(
-                `UPDATE users SET nama_lengkap = $1, updated_at = CURRENT_TIMESTAMP
-                 WHERE user_id = (SELECT user_id FROM relawan WHERE relawan_id = $2)`,
-                [nama_lengkap, relawanId]
-            );
+            await client.query(`
+                UPDATE users SET nama_lengkap = $1, updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = (SELECT user_id FROM relawan WHERE relawan_id = $2)
+            `, [nama_lengkap, relawanId]);
         }
 
-        // Update penugasan — hanya yang milik OPD ini
         if (Array.isArray(assignments)) {
             for (const assign of assignments) {
                 if (assign.penugasan_id) {
-                    // UPDATE penugasan yang sudah ada
-                    await client.query(
-                        `UPDATE penugasan_relawan
-                         SET kader_id = $1, jabatan = $2, detail_jabatan = $3, status_keaktifan = $4, updated_at = CURRENT_TIMESTAMP
-                         WHERE penugasan_id = $5 AND opd_id = $6`,
-                        [assign.kader_id || null, assign.peran || null, assign.detail || null,
-                         assign.statusKeaktifan || 'Aktif', assign.penugasan_id, opdId]
-                    );
+                    await client.query(`
+                        UPDATE penugasan_relawan
+                        SET kader_id = $1, jabatan = $2, detail_jabatan = $3, status_keaktifan = $4, updated_at = CURRENT_TIMESTAMP
+                        WHERE penugasan_id = $5 AND opd_id = $6
+                    `, [assign.kader_id || null, assign.peran || null, assign.detail || null, assign.statusKeaktifan || 'Aktif', assign.penugasan_id, opdId]);
                 } else {
-                    // INSERT penugasan baru
-                    await client.query(
-                        `INSERT INTO penugasan_relawan (relawan_id, opd_id, kader_id, jabatan, detail_jabatan, status_keaktifan)
-                         VALUES ($1, $2, $3, $4, $5, $6)`,
-                        [relawanId, opdId, assign.kader_id || null, assign.peran || null,
-                         assign.detail || null, assign.statusKeaktifan || 'Aktif']
-                    );
+                    await client.query(`
+                        INSERT INTO penugasan_relawan (relawan_id, opd_id, kader_id, jabatan, detail_jabatan, status_keaktifan)
+                        VALUES ($1,$2,$3,$4,$5,$6)
+                    `, [relawanId, opdId, assign.kader_id || null, assign.peran || null, assign.detail || null, assign.statusKeaktifan || 'Aktif']);
                 }
             }
         }
@@ -375,14 +386,15 @@ export const updateRelawanByOpd = async (req: OpdAuthRequest, res: Response): Pr
     }
 };
 
-// Tambahkan juga endpoint hapus penugasan khusus OPD
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. Hapus Penugasan (khusus OPD ini)
+// ─────────────────────────────────────────────────────────────────────────────
 export const deletePenugasanByOpd = async (req: OpdAuthRequest, res: Response): Promise<void> => {
-    const opdId = req.opd_id;
     const penugasanId = parseInt(req.params.penugasan_id as string);
     try {
         const result = await executeQueryWithContext(
             `DELETE FROM penugasan_relawan WHERE penugasan_id = $1 AND opd_id = $2 RETURNING penugasan_id`,
-            [penugasanId, opdId], req.user
+            [penugasanId, req.opd_id], req.user
         );
         if (result.rows.length === 0) {
             res.status(404).json({ success: false, message: 'Penugasan tidak ditemukan' });
