@@ -37,3 +37,16 @@ coverage
 
 # OS files
 Thumbs.db
+
+# Testing
+node_modules/
+/playwright-report/
+/bappeda-results/
+/bappeda-report/
+/blob-report/
+/playwright/.cache/
+.env.bappeda
+
+# Playwright
+/test-results/
+/playwright/.auth/

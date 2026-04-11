@@ -1,0 +1,9 @@
+{
+  "extends": ["@jupri-lab/typescript", "plugin:prettier/recommended"],
+  "rules": {
+    "prettier/prettier": ["error", { "endOfLine": "auto" }]
+  },
+  "parserOptions": {
+    "project": "./tsconfig.eslint.json"
+  }
+}
