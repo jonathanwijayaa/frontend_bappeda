@@ -105,7 +105,7 @@ pnpm ta:test-ui
 
 ## 🛠️ Customization
 
-- **Adding New Tests**: Place new test files under the respective `src/tests/Super Admin` or `src/tests/Travel Agency` directory.
+- **Adding New Tests**: Place new test files under the respective `src/tests` directory.
 - **Shared Helpers**: Add or update utility functions in the `helpers` directory.
 - **Config**: Modify Playwright configuration in `playwright.config.<app_name>.ts` if needed (e.g., timeouts, browsers, reporters).
 
