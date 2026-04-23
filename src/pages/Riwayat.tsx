@@ -1,61 +1,43 @@
 //Riwaya.tsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import RelawanMenu from '../components/RelawanMenu';
 import Toast, { ToastType } from '../components/ui/Toast';
-import { apiFetch } from '../utils/api';
 import { Loader2 } from 'lucide-react';
 import { PengajuanItem } from '../types';
-
+import { useRiwayatPengajuan } from '../hooks/riwayat/useRiwayatPengajuan';
 
 const STATUS_CONFIG = {
     'Menunggu Review': { label: 'Menunggu Review', dot: 'bg-yellow-400', text: 'text-yellow-700' },
-    'Diterima': { label: 'Diterima', dot: 'bg-green-500', text: 'text-green-700' },
-    'Ditolak': { label: 'Ditolak', dot: 'bg-red-500', text: 'text-red-600' },
+    'Diterima':        { label: 'Diterima',        dot: 'bg-green-500',  text: 'text-green-700' },
+    'Ditolak':         { label: 'Ditolak',          dot: 'bg-red-500',    text: 'text-red-600' },
 };
 
 const FIELD_LABELS: Record<string, string> = {
     nama_lengkap: 'Nama Lengkap',
-    alamat_ktp: 'Alamat KTP',
-    kelurahan: 'Kelurahan',
-    no_hp: 'No. HP',
-    email: 'Email',
+    alamat_ktp:   'Alamat KTP',
+    kelurahan:    'Kelurahan',
+    no_hp:        'No. HP',
+    email:        'Email',
 };
 
 const Riwayat = () => {
-    const [pengajuanList, setPengajuanList] = useState<PengajuanItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'diproses' | 'selesai'>('diproses');
+    // ── Server State ──────────────────────────────────────────
+    const { data: pengajuanList = [], isLoading } = useRiwayatPengajuan();
+
+    // ── UI State ──────────────────────────────────────────────
+    const [activeTab, setActiveTab]       = useState<'diproses' | 'selesai'>('diproses');
     const [selectedItem, setSelectedItem] = useState<PengajuanItem | null>(null);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
-    const fetchHistory = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const res = await apiFetch('/relawan/history');
-            const result = await res.json();
-            if (result.success) {
-                setPengajuanList(result.data.riwayat_pengajuan || []);
-            } else {
-                setToast({ message: 'Gagal memuat riwayat', type: 'error' });
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { fetchHistory(); }, [fetchHistory]);
-
-    const diprosesItems = pengajuanList.filter(p => p.status === 'Menunggu Review');
-    const selesaiItems = pengajuanList.filter(p => p.status !== 'Menunggu Review');
-    const currentItems = activeTab === 'diproses' ? diprosesItems : selesaiItems;
+    const diprosesItems  = useMemo(() => pengajuanList.filter(p => p.status === 'Menunggu Review'), [pengajuanList]);
+    const selesaiItems   = useMemo(() => pengajuanList.filter(p => p.status !== 'Menunggu Review'), [pengajuanList]);
+    const currentItems   = activeTab === 'diproses' ? diprosesItems : selesaiItems;
 
     const getStatusBadge = (status: PengajuanItem['status']) => {
         const cfg = STATUS_CONFIG[status];
         return (
             <span className={`flex items-center gap-1.5 text-sm font-medium ${cfg.text}`}>
-                <span className={`w-2.5 h-2.5 rounded-full ${cfg.dot}`}></span>
+                <span className={`w-2.5 h-2.5 rounded-full ${cfg.dot}`} />
                 {cfg.label}
             </span>
         );
@@ -64,12 +46,10 @@ const Riwayat = () => {
     const formatDate = (dateStr: string) =>
         new Date(dateStr).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
 
-    // Parse data_baru untuk tampilkan perubahan
     const renderPerubahan = (item: PengajuanItem) => {
         if (!item.data_baru) return null;
         const entries = Object.entries(item.data_baru);
         if (entries.length === 0) return null;
-
         return (
             <div>
                 <h3 className="text-sm font-semibold text-gray-700 mb-3">Data yang Diajukan</h3>
@@ -106,7 +86,10 @@ const Riwayat = () => {
                 {/* Info banner */}
                 <div className="mb-5 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                     <p className="text-xs text-blue-700 leading-relaxed">
-                        <span className="font-semibold">️</span> Pengajuan perubahan data memerlukan persetujuan Admin. Status pengajuan: <span className="font-semibold text-yellow-700">Menunggu Review</span> → disetujui menjadi <span className="font-semibold text-green-700">Diterima</span> atau <span className="font-semibold text-red-600">Ditolak</span>.
+                        <span className="font-semibold">ℹ️</span> Pengajuan perubahan data memerlukan persetujuan Admin.
+                        Status: <span className="font-semibold text-yellow-700">Menunggu Review</span> →{' '}
+                        <span className="font-semibold text-green-700">Diterima</span> atau{' '}
+                        <span className="font-semibold text-red-600">Ditolak</span>.
                     </p>
                 </div>
 
@@ -114,7 +97,7 @@ const Riwayat = () => {
                 <div className="flex justify-center gap-8 mb-6">
                     {[
                         { key: 'diproses', label: 'Diproses', count: diprosesItems.length },
-                        { key: 'selesai', label: 'Selesai', count: selesaiItems.length },
+                        { key: 'selesai',  label: 'Selesai',  count: selesaiItems.length },
                     ].map(tab => (
                         <button
                             key={tab.key}
@@ -183,7 +166,6 @@ const Riwayat = () => {
                             </div>
 
                             <div className="p-5 space-y-4">
-                                {/* Status & Tanggal */}
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-xs text-gray-500">Tanggal Pengajuan</p>
@@ -199,10 +181,8 @@ const Riwayat = () => {
                                     </div>
                                 )}
 
-                                {/* Perubahan yang diajukan */}
                                 {renderPerubahan(selectedItem)}
 
-                                {/* Catatan Relawan */}
                                 {selectedItem.catatan_relawan && (
                                     <div>
                                         <h3 className="text-sm font-semibold text-gray-700 mb-2">Catatan Anda</h3>
@@ -210,7 +190,6 @@ const Riwayat = () => {
                                     </div>
                                 )}
 
-                                {/* Catatan Verifikator */}
                                 {selectedItem.catatan_verifikator && (
                                     <div>
                                         <h3 className="text-sm font-semibold text-blue-700 mb-2">Catatan dari Admin</h3>
@@ -218,10 +197,9 @@ const Riwayat = () => {
                                     </div>
                                 )}
 
-                                {/* Status info */}
                                 {selectedItem.status === 'Menunggu Review' && (
                                     <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                                        <p className="text-xs text-yellow-800"> Pengajuan Anda sedang menunggu review dari Admin. Data belum berubah sampai disetujui.</p>
+                                        <p className="text-xs text-yellow-800">⏳ Pengajuan Anda sedang menunggu review dari Admin.</p>
                                     </div>
                                 )}
                             </div>

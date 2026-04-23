@@ -1,5 +1,5 @@
 //ManejemenOPD.tsx
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, FileDown, Upload, Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -10,22 +10,32 @@ import UploadExcelModal from '../components/ui/UploadExcelModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
 import { exportToPDF } from '../utils/exportToPDF';
-import { apiFetch } from '../utils/api';
 import { OPDData } from '../types';
-
+import { useOpdList } from '../hooks/opd/useOpdList';
+import {
+    useCreateOpd,
+    useUpdateOpd,
+    useToggleOpdStatus,
+    useBulkOpd,
+} from '../hooks/opd/useOpdMutations';
 
 const ManajemenOPD: React.FC = () => {
-    const [opdList, setOpdList] = useState<OPDData[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+    // ── Server State (TanStack Query) ─────────────────────────
+    const { data: opdList = [], isLoading } = useOpdList();
+    const createOpd    = useCreateOpd();
+    const updateOpd    = useUpdateOpd();
+    const toggleStatus = useToggleOpdStatus();
+    const bulkOpd      = useBulkOpd();
+
+    // ── UI State (useState) ───────────────────────────────────
+    const [searchTerm, setSearchTerm]               = useState<string>('');
+    const [isModalOpen, setIsModalOpen]             = useState<boolean>(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
-    const [selectedOPD, setSelectedOPD] = useState<OPDData | null>(null);
-    const [currentPage, setCurrentPage] = useState<number>(1);
-    const [isExporting, setIsExporting] = useState<boolean>(false);
+    const [selectedOPD, setSelectedOPD]             = useState<OPDData | null>(null);
+    const [currentPage, setCurrentPage]             = useState<number>(1);
+    const [isExporting, setIsExporting]             = useState<boolean>(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const itemsPerPage = 5;
 
@@ -49,44 +59,24 @@ const ManajemenOPD: React.FC = () => {
         if (!selectedOPD) return false;
         return (
             detailFormData.nama_opd !== (selectedOPD.nama_opd || '') ||
-            detailFormData.alamat !== (selectedOPD.alamat || '') ||
-            detailFormData.pic !== (selectedOPD.pic || '') ||
-            detailFormData.nik_pic !== (selectedOPD.nik_pic || '') ||
-            detailFormData.kontak !== (selectedOPD.kontak || '')
+            detailFormData.alamat   !== (selectedOPD.alamat   || '') ||
+            detailFormData.pic      !== (selectedOPD.pic      || '') ||
+            detailFormData.nik_pic  !== (selectedOPD.nik_pic  || '') ||
+            detailFormData.kontak   !== (selectedOPD.kontak   || '')
         );
     }, [selectedOPD, detailFormData]);
 
-    // ── Fetch Data ─────────────────────────────
-    const fetchOPD = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const res = await apiFetch('/opd');
-            const result = await res.json();
-            if (result.success) {
-                setOpdList(result.data);
-            } else {
-                setToast({ message: result.message || 'Gagal memuat data OPD', type: 'error' });
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { fetchOPD(); }, [fetchOPD]);
-
-    // ── Pagination & Filter ─────────────────────
+    // ── Filter & Pagination ────────────────────────────────────
     const filteredData = useMemo(() =>
         opdList.filter(opd =>
             opd.nama_opd.toLowerCase().includes(searchTerm.toLowerCase())
         ), [opdList, searchTerm]);
 
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
+    const totalPages  = Math.ceil(filteredData.length / itemsPerPage);
+    const startIndex  = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-    // ── Columns ─────────────────────────────────
+    // ── Columns ────────────────────────────────────────────────
     const columns = [
         { header: 'NAMA OPD', accessor: 'nama_opd' as keyof OPDData },
         {
@@ -97,20 +87,20 @@ const ManajemenOPD: React.FC = () => {
                 </span>
             )
         },
-        { header: 'ALAMAT', accessor: 'alamat' as keyof OPDData },
-        { header: 'PIC', accessor: 'pic' as keyof OPDData },
-        { header: 'KONTAK', accessor: 'kontak' as keyof OPDData },
+        { header: 'ALAMAT',  accessor: 'alamat'  as keyof OPDData },
+        { header: 'PIC',     accessor: 'pic'     as keyof OPDData },
+        { header: 'KONTAK',  accessor: 'kontak'  as keyof OPDData },
     ];
 
-    // ── Handlers ────────────────────────────────
+    // ── Handlers ──────────────────────────────────────────────
     const handleDetailClick = (opd: OPDData) => {
         setSelectedOPD(opd);
         setDetailFormData({
             nama_opd: opd.nama_opd || '',
-            alamat: opd.alamat || '',
-            pic: opd.pic || '',
-            nik_pic: opd.nik_pic || '',
-            kontak: opd.kontak || ''
+            alamat:   opd.alamat   || '',
+            pic:      opd.pic      || '',
+            nik_pic:  opd.nik_pic  || '',
+            kontak:   opd.kontak   || ''
         });
         setIsDetailModalOpen(true);
     };
@@ -122,72 +112,41 @@ const ManajemenOPD: React.FC = () => {
 
     const handleConfirmToggleStatus = async () => {
         if (!selectedOPD) return;
-        try {
-            const res = await apiFetch(`/opd/${selectedOPD.opd_id}/status`, {
-                method: 'PATCH',
-                body: JSON.stringify({ is_active: !selectedOPD.is_active })
-            });
-            const result = await res.json();
-            if (result.success) {
-                setToast({ message: result.message, type: 'success' });
-                fetchOPD();
-            } else {
-                setToast({ message: result.message || 'Gagal mengubah status', type: 'error' });
+        toggleStatus.mutate(
+            { opd_id: selectedOPD.opd_id, is_active: !selectedOPD.is_active },
+            {
+                onSuccess: (d) => setToast({ message: d.message, type: 'success' }),
+                onError:   (e: any) => setToast({ message: e.message || 'Gagal mengubah status', type: 'error' }),
+                onSettled: () => { setIsConfirmModalOpen(false); setSelectedOPD(null); },
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsConfirmModalOpen(false);
-            setSelectedOPD(null);
-        }
+        );
     };
 
-    const handleDetailSave = async () => {
+    const handleDetailSave = () => {
         if (!selectedOPD || !detailFormData.nama_opd) return;
-        setIsSaving(true);
-        try {
-            const res = await apiFetch(`/opd/${selectedOPD.opd_id}`, {
-                method: 'PUT',
-                body: JSON.stringify(detailFormData)
-            });
-            const result = await res.json();
-            if (result.success) {
-                setToast({ message: 'Data OPD berhasil diperbarui', type: 'success' });
-                setIsDetailModalOpen(false);
-                fetchOPD();
-            } else {
-                setToast({ message: result.message || 'Gagal menyimpan perubahan', type: 'error' });
+        updateOpd.mutate(
+            { opd_id: selectedOPD.opd_id, payload: detailFormData },
+            {
+                onSuccess: () => {
+                    setToast({ message: 'Data OPD berhasil diperbarui', type: 'success' });
+                    setIsDetailModalOpen(false);
+                },
+                onError: (e: any) => setToast({ message: e.message || 'Gagal menyimpan perubahan', type: 'error' }),
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsSaving(false);
-        }
+        );
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.nama_opd) return;
-        setIsSaving(true);
-        try {
-            const res = await apiFetch('/opd', {
-                method: 'POST',
-                body: JSON.stringify(formData)
-            });
-            const result = await res.json();
-            if (result.success) {
+        createOpd.mutate(formData, {
+            onSuccess: () => {
                 setToast({ message: 'OPD baru berhasil ditambahkan', type: 'success' });
                 setIsModalOpen(false);
                 setFormData({ nama_opd: '', alamat: '', pic: '', nik_pic: '', kontak: '' });
-                fetchOPD();
-            } else {
-                setToast({ message: result.message || 'Gagal menambahkan OPD', type: 'error' });
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsSaving(false);
-        }
+            },
+            onError: (e: any) => setToast({ message: e.message || 'Gagal menambahkan OPD', type: 'error' }),
+        });
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -207,10 +166,10 @@ const ManajemenOPD: React.FC = () => {
                 title: 'Data Manajemen OPD',
                 columns: [
                     { header: 'NAMA OPD', dataKey: 'nama_opd' },
-                    { header: 'STATUS', dataKey: 'is_active' },
-                    { header: 'ALAMAT', dataKey: 'alamat' },
-                    { header: 'PIC', dataKey: 'pic' },
-                    { header: 'KONTAK', dataKey: 'kontak' }
+                    { header: 'STATUS',   dataKey: 'is_active' },
+                    { header: 'ALAMAT',   dataKey: 'alamat' },
+                    { header: 'PIC',      dataKey: 'pic' },
+                    { header: 'KONTAK',   dataKey: 'kontak' }
                 ],
                 data: filteredData.map(opd => ({ ...opd, is_active: opd.is_active ? 'Aktif' : 'Tidak Aktif' })),
                 filename: `manajemen-opd-${new Date().toISOString().split('T')[0]}.pdf`
@@ -223,24 +182,14 @@ const ManajemenOPD: React.FC = () => {
         }
     };
 
-    const handleExcelUploadConfirm = async (data: any[]) => {
-        try {
-            const res = await apiFetch('/opd/bulk', {
-                method: 'POST',
-                body: JSON.stringify(data)
-            });
-            const result = await res.json();
-            if (result.success) {
-                setToast({ message: result.message, type: 'success' });
-                fetchOPD();
-            } else {
-                setToast({ message: result.message || 'Gagal import Excel', type: 'error' });
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsUploadModalOpen(false);
-        }
+    const handleExcelUploadConfirm = (data: any[]) => {
+        bulkOpd.mutate(data, {
+            onSuccess: (d) => {
+                setToast({ message: d.message, type: 'success' });
+                setIsUploadModalOpen(false);
+            },
+            onError: (e: any) => setToast({ message: e.message || 'Gagal import Excel', type: 'error' }),
+        });
     };
 
     const actions = (row: OPDData) => (
@@ -255,6 +204,8 @@ const ManajemenOPD: React.FC = () => {
             </Button>
         </>
     );
+
+    const isSaving = createOpd.isPending || updateOpd.isPending || toggleStatus.isPending;
 
     return (
         <div className="space-y-6">
@@ -311,7 +262,7 @@ const ManajemenOPD: React.FC = () => {
                         <div className="text-sm text-gray-500">
                             Menampilkan {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredData.length)} dari {filteredData.length} OPD
                         </div>
-                        <Pagination 
+                        <Pagination
                             currentPage={currentPage}
                             totalPages={totalPages}
                             onPageChange={(page) => setCurrentPage(page)}
@@ -324,11 +275,11 @@ const ManajemenOPD: React.FC = () => {
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Tambah OPD Baru" subtitle="Isi data OPD yang ingin ditambahkan" maxWidth="2xl">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {[
-                        { label: 'Nama OPD', name: 'nama_opd', required: true, placeholder: 'Nama Dinas / OPD' },
-                        { label: 'Alamat', name: 'alamat', placeholder: 'Alamat OPD' },
-                        { label: 'PIC', name: 'pic', placeholder: 'Penanggung jawab' },
-                        { label: 'NIK PIC', name: 'nik_pic', required: true, placeholder: '16 digit NIK PIC', maxLength: 16 },
-                        { label: 'Kontak', name: 'kontak', placeholder: 'Nomor telepon / email' },
+                        { label: 'Nama OPD',  name: 'nama_opd', required: true, placeholder: 'Nama Dinas / OPD' },
+                        { label: 'Alamat',    name: 'alamat',   placeholder: 'Alamat OPD' },
+                        { label: 'PIC',       name: 'pic',      placeholder: 'Penanggung jawab' },
+                        { label: 'NIK PIC',   name: 'nik_pic',  required: true, placeholder: '16 digit NIK PIC', maxLength: 16 },
+                        { label: 'Kontak',    name: 'kontak',   placeholder: 'Nomor telepon / email' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">
@@ -361,10 +312,10 @@ const ManajemenOPD: React.FC = () => {
                     <div className="space-y-6">
                         {[
                             { label: 'Nama OPD', name: 'nama_opd', required: true },
-                            { label: 'Alamat', name: 'alamat' },
-                            { label: 'PIC', name: 'pic' },
-                            { label: 'NIK PIC', name: 'nik_pic', required: true, maxLength: 16 },
-                            { label: 'Kontak', name: 'kontak' },
+                            { label: 'Alamat',   name: 'alamat' },
+                            { label: 'PIC',      name: 'pic' },
+                            { label: 'NIK PIC',  name: 'nik_pic', required: true, maxLength: 16 },
+                            { label: 'Kontak',   name: 'kontak' },
                         ].map(field => (
                             <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                                 <label className="text-lg font-medium text-gray-900">
@@ -418,7 +369,9 @@ const ManajemenOPD: React.FC = () => {
                         </div>
                         <div className="flex justify-center gap-4 pt-6">
                             <Button type="button" onClick={() => setIsConfirmModalOpen(false)} className="bg-gray-500 hover:bg-gray-600 text-white px-8">Batal</Button>
-                            <Button type="button" onClick={handleConfirmToggleStatus} className="bg-red-600 hover:bg-red-700 text-white px-8">Lanjutkan</Button>
+                            <Button type="button" onClick={handleConfirmToggleStatus} disabled={toggleStatus.isPending} className="bg-red-600 hover:bg-red-700 text-white px-8">
+                                {toggleStatus.isPending ? <Loader2 size={16} className="animate-spin" /> : 'Lanjutkan'}
+                            </Button>
                         </div>
                     </div>
                 )}

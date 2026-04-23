@@ -1,81 +1,59 @@
 // Profil.tsx — Halaman Profil (Super Admin & OPD)
 // Terhubung ke API: GET /profile/me, PUT /profile/update, PATCH /profile/change-password
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Camera, Trash2, Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Toast, { ToastType } from '../components/ui/Toast';
 import { useAuth } from '../context/AuthContext';
-import { apiFetch } from '../utils/api';
-import { ProfileData } from '../types';
-
+import { useProfileData } from '../hooks/profil/useProfileData';
+import { useUpdateProfil, useChangePassword } from '../hooks/profil/useProfilMutations';
 
 const Profil: React.FC = () => {
     const { user } = useAuth();
 
-    // ── State ──────────────────────────────────────────────────────────────────
-    const [profileData, setProfileData] = useState<ProfileData | null>(null);
-    const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
+    // ── Server State ──────────────────────────────────────────
+    const { data: profileData, isLoading: isLoadingProfile } = useProfileData();
+    const updateProfil    = useUpdateProfil();
+    const changePassword  = useChangePassword();
 
-    // Form profil
+    // ── UI State ──────────────────────────────────────────────
     const [formData, setFormData] = useState({ nama_lengkap: '', no_hp: '' });
-
-    // Form password
     const [passwordData, setPasswordData] = useState({
         passwordLama: '',
         passwordBaru: '',
         konfirmasiPassword: ''
     });
-
     const [avatarPreview, setAvatarPreview] = useState<string>(
         user?.avatar || 'https://ui-avatars.com/api/?name=User&background=gray&color=fff'
     );
-
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
-    // ── Fetch profil dari database ─────────────────────────────────────────────
-    const fetchProfile = useCallback(async () => {
-        setIsLoadingProfile(true);
-        try {
-            const res    = await apiFetch('/profile/me');
-            const result = await res.json();
-            if (result.success) {
-                const data: ProfileData = result.data;
-                setProfileData(data);
-                setFormData({
-                    nama_lengkap: data.nama_lengkap || '',
-                    no_hp:        data.no_hp || ''
-                });
-                setAvatarPreview(
-                    `https://ui-avatars.com/api/?name=${encodeURIComponent(data.nama_lengkap)}&background=${
-                        data.role === 'super_admin' ? '10B981' : data.role === 'opd' ? '3B82F6' : '6B7280'
-                    }&color=fff`
-                );
-            } else {
-                setToast({ message: result.message || 'Gagal memuat profil', type: 'error' });
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsLoadingProfile(false);
+    // Sync form saat data profil berhasil diload
+    useEffect(() => {
+        if (profileData) {
+            setFormData({
+                nama_lengkap: profileData.nama_lengkap || '',
+                no_hp:        profileData.no_hp        || '',
+            });
+            setAvatarPreview(
+                `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.nama_lengkap)}&background=${
+                    profileData.role === 'super_admin' ? '10B981' : profileData.role === 'opd' ? '3B82F6' : '6B7280'
+                }&color=fff`
+            );
         }
-    }, []);
+    }, [profileData]);
 
-    useEffect(() => { fetchProfile(); }, [fetchProfile]);
-
-    // ── Handler form profil ────────────────────────────────────────────────────
+    // ── Handlers ──────────────────────────────────────────────
     const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    // ── Handler form password ──────────────────────────────────────────────────
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setPasswordData(prev => ({ ...prev, [name]: value }));
     };
 
-    // ── Handler avatar ─────────────────────────────────────────────────────────
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -91,7 +69,6 @@ const Profil: React.FC = () => {
         );
     };
 
-    // ── Submit gabungan (profil + password opsional) ───────────────────────────
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -111,52 +88,30 @@ const Profil: React.FC = () => {
             }
         }
 
-        setIsSaving(true);
         try {
             // 1. Update profil
-            const resProfile = await apiFetch('/profile/update', {
-                method: 'PUT',
-                body: JSON.stringify({
-                    nama_lengkap: formData.nama_lengkap.trim(),
-                    no_hp:        formData.no_hp.trim() || null
-                })
+            await updateProfil.mutateAsync({
+                nama_lengkap: formData.nama_lengkap.trim(),
+                no_hp:        formData.no_hp.trim() || null,
             });
-            const resultProfile = await resProfile.json();
-            if (!resultProfile.success) {
-                setToast({ message: resultProfile.message || 'Gagal menyimpan profil', type: 'error' });
-                return;
-            }
 
             // 2. Ganti password (opsional)
             if (passwordData.passwordLama && passwordData.passwordBaru) {
-                const resPass = await apiFetch('/profile/change-password', {
-                    method: 'PATCH',
-                    body: JSON.stringify({
-                        password_lama: passwordData.passwordLama,
-                        password_baru: passwordData.passwordBaru
-                    })
+                await changePassword.mutateAsync({
+                    password_lama: passwordData.passwordLama,
+                    password_baru: passwordData.passwordBaru,
                 });
-                const resultPass = await resPass.json();
-                if (!resultPass.success) {
-                    setToast({ message: resultPass.message || 'Gagal mengubah password', type: 'error' });
-                    return;
-                }
             }
 
             setToast({ message: 'Profil berhasil diperbarui!', type: 'success' });
-            await fetchProfile();
-
-            // Reset password fields
             setPasswordData({ passwordLama: '', passwordBaru: '', konfirmasiPassword: '' });
-
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsSaving(false);
+        } catch (e: any) {
+            setToast({ message: e.message || 'Gagal menyimpan perubahan', type: 'error' });
         }
     };
 
-    // ── Loading state ──────────────────────────────────────────────────────────
+    const isSaving = updateProfil.isPending || changePassword.isPending;
+
     if (isLoadingProfile) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -166,7 +121,6 @@ const Profil: React.FC = () => {
         );
     }
 
-    // ── Render ─────────────────────────────────────────────────────────────────
     return (
         <div className="space-y-6">
             <form onSubmit={handleSubmit}>
@@ -214,16 +168,12 @@ const Profil: React.FC = () => {
                         <Card>
                             <div className="space-y-8">
 
-                                {/* Informasi Pribadi Section */}
+                                {/* Informasi Pribadi */}
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-800 mb-4">Informasi Pribadi</h3>
                                     <div className="space-y-4">
-
-                                        {/* Nama Lengkap */}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Nama Lengkap
-                                            </label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
                                             <input
                                                 type="text"
                                                 name="nama_lengkap"
@@ -232,8 +182,6 @@ const Profil: React.FC = () => {
                                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                             />
                                         </div>
-
-                                        {/* NIK — read only */}
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                                 NIK
@@ -246,12 +194,8 @@ const Profil: React.FC = () => {
                                                 className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
                                             />
                                         </div>
-
-                                        {/* No. HP */}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                No. Telepon / HP
-                                            </label>
+                                            <label className="block text-sm font-medium text-gray-700 mb-2">No. Telepon / HP</label>
                                             <input
                                                 type="tel"
                                                 name="no_hp"
@@ -264,57 +208,28 @@ const Profil: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Divider */}
-                                <div className="border-t border-gray-200"></div>
+                                <div className="border-t border-gray-200" />
 
-                                {/* Ubah Password Section */}
+                                {/* Ubah Password */}
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-800 mb-4">Ubah Password</h3>
                                     <div className="space-y-4">
-
-                                        {/* Password Saat Ini */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Password Saat Ini
-                                            </label>
-                                            <input
-                                                type="password"
-                                                name="passwordLama"
-                                                value={passwordData.passwordLama}
-                                                onChange={handlePasswordChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                            />
-                                        </div>
-
-                                        {/* Password Baru */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Password Baru
-                                            </label>
-                                            <input
-                                                type="password"
-                                                name="passwordBaru"
-                                                value={passwordData.passwordBaru}
-                                                onChange={handlePasswordChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                            />
-                                        </div>
-
-                                        {/* Konfirmasi Password Baru */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Konfirmasi Password Baru
-                                            </label>
-                                            <input
-                                                type="password"
-                                                name="konfirmasiPassword"
-                                                value={passwordData.konfirmasiPassword}
-                                                onChange={handlePasswordChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                            />
-                                        </div>
-
-                                        {/* Submit Button */}
+                                        {[
+                                            { label: 'Password Saat Ini',        name: 'passwordLama' },
+                                            { label: 'Password Baru',             name: 'passwordBaru' },
+                                            { label: 'Konfirmasi Password Baru',  name: 'konfirmasiPassword' },
+                                        ].map(f => (
+                                            <div key={f.name}>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">{f.label}</label>
+                                                <input
+                                                    type="password"
+                                                    name={f.name}
+                                                    value={(passwordData as any)[f.name]}
+                                                    onChange={handlePasswordChange}
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                                />
+                                            </div>
+                                        ))}
                                         <div className="pt-4">
                                             <button
                                                 type="submit"
@@ -323,9 +238,7 @@ const Profil: React.FC = () => {
                                             >
                                                 {isSaving ? (
                                                     <><Loader2 size={18} className="animate-spin" /> Menyimpan...</>
-                                                ) : (
-                                                    'Simpan'
-                                                )}
+                                                ) : 'Simpan'}
                                             </button>
                                         </div>
                                     </div>
@@ -338,7 +251,6 @@ const Profil: React.FC = () => {
                 </div>
             </form>
 
-            {/* Toast Notification */}
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );

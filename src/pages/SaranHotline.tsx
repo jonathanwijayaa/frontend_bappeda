@@ -1,5 +1,5 @@
 //SaranHotline.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Phone, MessageCircle, Clock, Check, Eye, Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import RelawanMenu from '../components/RelawanMenu';
@@ -9,14 +9,21 @@ import Modal from '../components/ui/Modal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
 import { useAuth } from '../context/AuthContext';
-import { apiFetch } from '../utils/api';
 import { SaranData } from '../types';
+import { useSaranList } from '../hooks/saran/useSaranList';
+import { useCreateSaran, useRespondSaran } from '../hooks/saran/useSaranMutations';
 
 
 const SaranHotline: React.FC = () => {
     const { user, isSuperAdmin } = useAuth();
     const isRelawan = user?.role === 'relawan';
 
+    // ── Server State (TanStack Query) ─────────────────────────
+    const { data: saranList = [], isLoading } = useSaranList(isSuperAdmin);
+    const createSaran  = useCreateSaran();
+    const respondSaran = useRespondSaran();
+
+    // ── UI State ──────────────────────────────────────────────
     const [formData, setFormData] = useState({
         namaLengkap: user?.name || '',
         noTelepon: '',
@@ -24,44 +31,14 @@ const SaranHotline: React.FC = () => {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
-
-    // State Super Admin
-    const [saranList, setSaranList] = useState<SaranData[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
     const [selectedSaran, setSelectedSaran] = useState<SaranData | null>(null);
     const [isResponding, setIsResponding] = useState(false);
-
-    // State modal respon
     const [responForm, setResponForm] = useState({
         status: 'Selesai' as 'Menunggu' | 'Selesai',
         catatan_admin: ''
     });
-
-    // Pagination
     const [currentPage, setCurrentPage] = useState<number>(1);
     const itemsPerPage = 5;
-
-    useEffect(() => {
-        if (!isSuperAdmin) return;
-        fetchSaran();
-    }, [isSuperAdmin]);
-
-    const fetchSaran = async () => {
-        setIsLoading(true);
-        try {
-            const response = await apiFetch('/saran/admin?limit=100');
-            const result = await response.json();
-            if (result.success) {
-                setSaranList(result.data);
-            } else {
-                setToast({ message: result.message || 'Gagal memuat saran masukan', type: 'error' });
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     // Pagination
     const totalPages = Math.ceil(saranList.length / itemsPerPage);
@@ -80,29 +57,21 @@ const SaranHotline: React.FC = () => {
             setToast({ message: 'Mohon lengkapi semua field', type: 'error' });
             return;
         }
-
         setIsSubmitting(true);
-        try {
-            const response = await apiFetch('/saran', {
-                method: 'POST',
-                body: JSON.stringify({
-                    subjek: `Dari: ${formData.namaLengkap} (${formData.noTelepon})`,
-                    pesan: formData.saran
-                })
-            });
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                setToast({ message: 'Saran berhasil dikirim. Terima kasih!', type: 'success' });
-                setFormData({ namaLengkap: user?.name || '', noTelepon: '', saran: '' });
-            } else {
-                setToast({ message: result.message || 'Gagal mengirim saran', type: 'error' });
+        createSaran.mutate(
+            {
+                subjek: `Dari: ${formData.namaLengkap} (${formData.noTelepon})`,
+                pesan:  formData.saran,
+            },
+            {
+                onSuccess: () => {
+                    setToast({ message: 'Saran berhasil dikirim. Terima kasih!', type: 'success' });
+                    setFormData({ namaLengkap: user?.name || '', noTelepon: '', saran: '' });
+                },
+                onError: (err: any) => setToast({ message: err.message || 'Gagal mengirim saran', type: 'error' }),
+                onSettled: () => setIsSubmitting(false),
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsSubmitting(false);
-        }
+        );
     };
 
     // Buka modal detail + siapkan form respon
@@ -118,50 +87,33 @@ const SaranHotline: React.FC = () => {
     const handleRespond = async () => {
         if (!selectedSaran) return;
         setIsResponding(true);
-        try {
-            const response = await apiFetch(`/saran/admin/${selectedSaran.saran_id}/baca`, {
-                method: 'PATCH',
-                body: JSON.stringify({
-                    status: responForm.status,
-                    catatan_admin: responForm.catatan_admin || null
-                })
-            });
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                setToast({ message: result.message, type: 'success' });
-                setSelectedSaran(null);
-                fetchSaran(); // Refresh data
-            } else {
-                setToast({ message: result.message || 'Gagal memperbarui status', type: 'error' });
+        respondSaran.mutate(
+            {
+                saran_id:      selectedSaran.saran_id,
+                status:        responForm.status,
+                catatan_admin: responForm.catatan_admin || null,
+            },
+            {
+                onSuccess: (d) => {
+                    setToast({ message: d.message, type: 'success' });
+                    setSelectedSaran(null);
+                },
+                onError: (err: any) => setToast({ message: err.message || 'Gagal memperbarui status', type: 'error' }),
+                onSettled: () => setIsResponding(false),
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsResponding(false);
-        }
+        );
     };
 
     // Toggle cepat tanpa buka modal
     const handleQuickToggle = async (saran: SaranData) => {
         const newStatus = saran.status === 'Menunggu' ? 'Selesai' : 'Menunggu';
-        try {
-            const response = await apiFetch(`/saran/admin/${saran.saran_id}/baca`, {
-                method: 'PATCH',
-                body: JSON.stringify({ status: newStatus, catatan_admin: saran.catatan_admin || null })
-            });
-            const result = await response.json();
-            if (response.ok && result.success) {
-                setSaranList(prev => prev.map(s =>
-                    s.saran_id === saran.saran_id ? { ...s, status: newStatus } : s
-                ));
-                setToast({ message: result.message, type: 'success' });
-            } else {
-                setToast({ message: result.message || 'Gagal memperbarui status', type: 'error' });
+        respondSaran.mutate(
+            { saran_id: saran.saran_id, status: newStatus, catatan_admin: saran.catatan_admin || null },
+            {
+                onSuccess: (d) => setToast({ message: d.message, type: 'success' }),
+                onError: (err: any) => setToast({ message: err.message || 'Gagal memperbarui status', type: 'error' }),
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        }
+        );
     };
 
     const saranColumns = [

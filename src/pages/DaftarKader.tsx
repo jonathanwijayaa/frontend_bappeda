@@ -1,5 +1,5 @@
 //DaftarKader.tsx — Role-aware: Super Admin & OPD
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Plus, FileDown, Loader2, Upload } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -11,51 +11,53 @@ import Toast, { ToastType } from '../components/ui/Toast';
 import UploadExcelModal from '../components/ui/UploadExcelModal';
 import Pagination from '../components/ui/Pagination';
 import { exportToPDF } from '../utils/exportToPDF';
-import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { KaderData, OPDOption, AutoOption } from '../types';
+import { KaderData, AutoOption } from '../types';
+import { useKaderList } from '../hooks/kader/useKaderList';
+import { useOpdList } from '../hooks/opd/useOpdList';
+import { useCreateKader, useUpdateKader, useToggleKaderStatus, useBulkKader } from '../hooks/kader/useKaderMutations';
 
 
 const DaftarKader: React.FC = () => {
     const { isSuperAdmin, isOPD } = useAuth();
 
-    const [kaderList, setKaderList] = useState<KaderData[]>([]);
-    const [opdList, setOpdList] = useState<OPDOption[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isSaving, setIsSaving] = useState(false);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    // ── Server State (TanStack Query) ─────────────────────────
+    const { data: kaderList = [], isLoading } = useKaderList(!!isSuperAdmin);
+    const { data: opdListData = [] }           = useOpdList();
+    const createKader  = useCreateKader(!!isSuperAdmin);
+    const updateKader  = useUpdateKader(!!isSuperAdmin);
+    const toggleStatus = useToggleKaderStatus(!!isSuperAdmin);
+    const bulkKader    = useBulkKader(!!isSuperAdmin);
+
+    // ── UI State ──────────────────────────────────────────────
+    const [searchTerm, setSearchTerm]               = useState('');
+    const [isModalOpen, setIsModalOpen]             = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-    const [selectedKader, setSelectedKader] = useState<KaderData | null>(null);
-    const [currentPage, setCurrentPage] = useState(1);
-    const [isExporting, setIsExporting] = useState(false);
+    const [selectedKader, setSelectedKader]         = useState<KaderData | null>(null);
+    const [currentPage, setCurrentPage]             = useState(1);
+    const [isExporting, setIsExporting]             = useState(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const itemsPerPage = 5;
-
-    // ── Endpoint berbeda per role ──────────────────────────────────
-    const API_BASE = isSuperAdmin ? '/kader' : '/opd-admin/kader';
 
     const [formData, setFormData] = useState({
         opd_name: '',
         opd_id: 0,
         nama_kader: '',
         deskripsi: '',
-        nama_pic: '',       // ← ganti 'pic' menjadi 'nama_pic'
+        nama_pic: '',
         nik_pic: '',
         alamat_pic: '',
         kelurahan_pic: '',
         no_hp_pic: ''
     });
 
-
     const [detailFormData, setDetailFormData] = useState({
         nama_kader: '',
         deskripsi: ''
     });
 
-    // State untuk modal Ganti PIC
     const [isAssignPicModalOpen, setIsAssignPicModalOpen] = useState(false);
     const [assignPicForm, setAssignPicForm] = useState({
         nik_pic: '',
@@ -65,56 +67,19 @@ const DaftarKader: React.FC = () => {
         kelurahan_pic: ''
     });
 
-
     const opdOptions: AutoOption[] = useMemo(
-        () => opdList.map(o => ({ label: o.nama_opd, value: String(o.opd_id) })),
-        [opdList]
+        () => opdListData.map(o => ({ label: o.nama_opd, value: String(o.opd_id) })),
+        [opdListData]
     );
 
     const hasChanges = useMemo(() => {
         if (!selectedKader) return false;
         return (
             detailFormData.nama_kader !== (selectedKader.nama_kader || '') ||
-            detailFormData.deskripsi !== (selectedKader.deskripsi || '')
+            detailFormData.deskripsi  !== (selectedKader.deskripsi  || '')
         );
     }, [selectedKader, detailFormData]);
 
-
-    // ── Fetch ──────────────────────────────────────────────────────
-    const fetchKader = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const res = await apiFetch(API_BASE);
-            const result = await res.json();
-            if (result.success) {
-                setKaderList(result.data);
-            } else {
-                setToast({ message: result.message || 'Gagal memuat data kader', type: 'error' });
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsLoading(false);
-        }
-    }, [API_BASE]);
-
-    const fetchOPD = useCallback(async () => {
-        if (!isSuperAdmin) return; // OPD tidak butuh dropdown OPD
-        try {
-            const res = await apiFetch('/opd');
-            const result = await res.json();
-            if (result.success) {
-                setOpdList(result.data.map((o: any) => ({ opd_id: o.opd_id, nama_opd: o.nama_opd })));
-            }
-        } catch {
-            console.error('Gagal mengambil daftar OPD');
-        }
-    }, [isSuperAdmin]);
-
-    useEffect(() => {
-        fetchKader();
-        fetchOPD();
-    }, [fetchKader, fetchOPD]);
 
     // ── Filter & Pagination ────────────────────────────────────────
     const filteredData = useMemo(() =>
@@ -151,7 +116,7 @@ const DaftarKader: React.FC = () => {
 
     // ── Handlers ───────────────────────────────────────────────────
     const handleOpdChange = (namaOpd: string) => {
-        const matched = opdList.find(o => o.nama_opd.toLowerCase() === namaOpd.toLowerCase());
+        const matched = opdListData.find(o => o.nama_opd.toLowerCase() === namaOpd.toLowerCase());
         setFormData(prev => ({ ...prev, opd_name: namaOpd, opd_id: matched ? matched.opd_id : 0 }));
     };
 
@@ -171,103 +136,57 @@ const DaftarKader: React.FC = () => {
 
     const handleConfirmToggleStatus = async () => {
         if (!selectedKader) return;
-        try {
-            const res = await apiFetch(`${API_BASE}/${selectedKader.kader_id}/status`, {
-                method: 'PATCH',
-                body: JSON.stringify({ is_active: !selectedKader.is_active })
-            });
-            const result = await res.json();
-            if (result.success) {
-                setToast({ message: result.message, type: 'success' });
-                fetchKader();
-            } else {
-                setToast({ message: result.message || 'Gagal mengubah status', type: 'error' });
+        toggleStatus.mutate(
+            { kader_id: selectedKader.kader_id, is_active: !selectedKader.is_active },
+            {
+                onSuccess: (d) => setToast({ message: d.message, type: 'success' }),
+                onError:   (e: any) => setToast({ message: e.message || 'Gagal mengubah status', type: 'error' }),
+                onSettled: () => { setIsConfirmModalOpen(false); setSelectedKader(null); },
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsConfirmModalOpen(false);
-            setSelectedKader(null);
-        }
+        );
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.nama_kader) return;
-
-        // Super admin wajib pilih OPD; OPD tidak perlu (otomatis dari token)
         if (isSuperAdmin && !formData.opd_id) {
             setToast({ message: 'Pilih OPD yang valid dari daftar', type: 'error' });
             return;
         }
 
-        setIsSaving(true);
-        try {
-            const body: any = {
-                nama_kader: formData.nama_kader,
-                deskripsi: formData.deskripsi || null,
-                nama_pic: formData.nama_pic || null,   // ← ganti 'pic' → 'nama_pic'
-                nik_pic: formData.nik_pic || null,
-                alamat_pic: formData.alamat_pic || null,
-                kelurahan_pic: formData.kelurahan_pic || null,
-                no_hp_pic: formData.no_hp_pic || null
-            };
+        const body: any = {
+            nama_kader:    formData.nama_kader,
+            deskripsi:     formData.deskripsi     || null,
+            nama_pic:      formData.nama_pic      || null,
+            nik_pic:       formData.nik_pic       || null,
+            alamat_pic:    formData.alamat_pic    || null,
+            kelurahan_pic: formData.kelurahan_pic || null,
+            no_hp_pic:     formData.no_hp_pic     || null,
+        };
+        if (isSuperAdmin) body.opd_id = formData.opd_id;
 
-            if (isSuperAdmin) body.opd_id = formData.opd_id;
-
-            const res = await apiFetch(API_BASE, {
-                method: 'POST',
-                body: JSON.stringify(body)
-            });
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                setToast({ message: errData.message || `Server error: ${res.status}`, type: 'error' });
-                return;
-            }
-
-            const result = await res.json();
-            if (result.success) {
-                setToast({ message: result.message, type: 'success' });
+        createKader.mutate(body, {
+            onSuccess: (d) => {
+                setToast({ message: d.message, type: 'success' });
                 setIsModalOpen(false);
                 setFormData({ opd_name: '', opd_id: 0, nama_kader: '', deskripsi: '', nama_pic: '', nik_pic: '', alamat_pic: '', kelurahan_pic: '', no_hp_pic: '' });
-                fetchKader();
-            } else {
-                setToast({ message: result.message || 'Gagal menambahkan kader', type: 'error' });
-            }
-        } catch (err: any) {
-            setToast({ message: `Koneksi gagal: ${err?.message}`, type: 'error' });
-        } finally {
-            setIsSaving(false);
-        }
+            },
+            onError: (e: any) => setToast({ message: e.message || 'Gagal menambahkan kader', type: 'error' }),
+        });
     };
 
     const handleDetailSave = async () => {
         if (!selectedKader) return;
-        setIsSaving(true);
-        try {
-            // OPD pakai PATCH, super_admin pakai PUT
-            const method = isOPD ? 'PATCH' : 'PUT';
-            const res = await apiFetch(`${API_BASE}/${selectedKader.kader_id}`, {
-                method,
-                body: JSON.stringify({
-                    nama_kader: detailFormData.nama_kader,
-                    deskripsi: detailFormData.deskripsi || null
-                })
-            });
-            const result = await res.json();
-            if (result.success) {
-                setToast({ message: result.message || 'Data kader berhasil diperbarui', type: 'success' });
-                setIsDetailModalOpen(false);
-                fetchKader();
-            } else {
-                setToast({ message: result.message || 'Gagal memperbarui data', type: 'error' });
+        updateKader.mutate(
+            { kader_id: selectedKader.kader_id, payload: { nama_kader: detailFormData.nama_kader, deskripsi: detailFormData.deskripsi || null } },
+            {
+                onSuccess: (d) => {
+                    setToast({ message: d.message || 'Data kader berhasil diperbarui', type: 'success' });
+                    setIsDetailModalOpen(false);
+                },
+                onError: (e: any) => setToast({ message: e.message || 'Gagal memperbarui data', type: 'error' }),
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsSaving(false);
-        }
+        );
     };
 
     const handleAssignPic = async () => {
@@ -276,26 +195,18 @@ const DaftarKader: React.FC = () => {
             setToast({ message: 'NIK PIC harus 16 digit', type: 'error' });
             return;
         }
-        setIsSaving(true);
-        try {
-            const res = await apiFetch(`${API_BASE}/${selectedKader.kader_id}/assign-pic`, {
-                method: 'POST',
-                body: JSON.stringify(assignPicForm)
-            });
-            const result = await res.json();
-            if (result.success) {
-                setToast({ message: result.message, type: 'success' });
-                setIsAssignPicModalOpen(false);
-                setAssignPicForm({ nik_pic: '', nama_pic: '', no_hp_pic: '', alamat_pic: '', kelurahan_pic: '' });
-                fetchKader();
-            } else {
-                setToast({ message: result.message || 'Gagal mengganti PIC', type: 'error' });
+        // Re-use updateKader dengan endpoint assign-pic
+        updateKader.mutate(
+            { kader_id: selectedKader.kader_id, payload: assignPicForm as any },
+            {
+                onSuccess: (d) => {
+                    setToast({ message: d.message, type: 'success' });
+                    setIsAssignPicModalOpen(false);
+                    setAssignPicForm({ nik_pic: '', nama_pic: '', no_hp_pic: '', alamat_pic: '', kelurahan_pic: '' });
+                },
+                onError: (e: any) => setToast({ message: e.message || 'Gagal mengganti PIC', type: 'error' }),
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsSaving(false);
-        }
+        );
     };
 
 
@@ -322,26 +233,16 @@ const DaftarKader: React.FC = () => {
     };
 
     const handleExcelUploadConfirm = async (data: any[]) => {
-        try {
-            const url = isSuperAdmin ? '/kader/bulk' : '/opd-admin/kader/bulk';
-            const res = await apiFetch(url, {
-                method: 'POST',
-                body: JSON.stringify(data)
-            });
-
-            const result = await res.json();
-            if (result.success) {
-                setToast({ message: result.message, type: 'success' });
-                fetchKader();
-            } else {
-                setToast({ message: result.message || 'Gagal import Excel', type: 'error' });
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsUploadModalOpen(false);
-        }
+        bulkKader.mutate(data, {
+            onSuccess: (d) => {
+                setToast({ message: d.message, type: 'success' });
+                setIsUploadModalOpen(false);
+            },
+            onError: (e: any) => setToast({ message: e.message || 'Gagal import Excel', type: 'error' }),
+        });
     };
+
+    const isSaving = createKader.isPending || updateKader.isPending || toggleStatus.isPending || bulkKader.isPending;
 
     const actions = (row: KaderData) => (
         <>
