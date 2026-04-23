@@ -869,7 +869,7 @@ const DataRelawan: React.FC = () => {
                             variant="outline"
                             size="sm"
                             onClick={handleExportPdf}
-                            className="flex items-center gap-2 border-red-500 text-red-600 hover:bg-red-50"
+                            className="flex items-center gap-2"
                         >
                             <FileDown size={16} />
                             Export PDF
