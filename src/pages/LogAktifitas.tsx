@@ -1,183 +1,141 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+// LogAktifitas.tsx
+import React, { useState, useMemo } from 'react';
+import { Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';
-import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Table from '../components/ui/Table';
 import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
-import { apiFetch } from '../utils/api';
-import { ChangeEvent } from 'react';
 import { LogData } from '../types';
-
+import { useLogList } from '../hooks/log/useLogList';
+import { ChangeEvent } from 'react';
 
 const LogAktifitas: React.FC = () => {
-    const [logList, setLogList] = useState<LogData[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+    // ── Server State ──────────────────────────────────────────
+    const { data: logList = [], isLoading } = useLogList(200);
 
-    const [searchTerm, setSearchTerm] = useState<string>('');
-    const [filterJenis, setFilterJenis] = useState<string>('');
-    const [filterRole, setFilterRole] = useState<string>('');
-    const [currentPage, setCurrentPage] = useState<number>(1);
+    // ── UI State ──────────────────────────────────────────────
+    const [searchTerm, setSearchTerm]       = useState('');
+    const [filterAction, setFilterAction]   = useState('');
+    const [filterTable, setFilterTable]     = useState('');
+    const [currentPage, setCurrentPage]     = useState(1);
+    const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const itemsPerPage = 10;
 
-    // ── Fetch ────────────────────────────────────
-    const fetchLogs = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const res = await apiFetch('/admin/logs?limit=200');
-            const result = await res.json();
-            if (result.success) {
-                setLogList(result.data);
-            } else {
-                setToast({ message: result.message || 'Gagal memuat log aktifitas', type: 'error' });
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
-
-    useEffect(() => { fetchLogs(); }, [fetchLogs]);
-
-    // ── Filter & Pagination ──────────────────────
-    const filteredData = useMemo(() => {
-        return logList.filter(log => {
-            const matchSearch = !searchTerm || (
+    // ── Filter ────────────────────────────────────────────────
+    const filteredData = useMemo(() =>
+        logList.filter(log => {
+            const matchSearch =
                 (log.nama_pengguna || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (log.nik           || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                 log.action_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                log.table_name.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            const matchJenis = !filterJenis || log.action_type.toUpperCase() === filterJenis.toUpperCase();
-            const matchRole = !filterRole || (log.role_pengguna || '') === filterRole;
-            return matchSearch && matchJenis && matchRole;
-        });
-    }, [logList, searchTerm, filterJenis, filterRole]);
+                log.table_name.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchAction = filterAction ? log.action_type === filterAction : true;
+            const matchTable  = filterTable  ? log.table_name  === filterTable  : true;
+            return matchSearch && matchAction && matchTable;
+        }), [logList, searchTerm, filterAction, filterTable]);
 
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
+    const totalPages  = Math.ceil(filteredData.length / itemsPerPage);
+    const startIndex  = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-    // ── Columns ──────────────────────────────────
+    const uniqueActions = useMemo(() => [...new Set(logList.map(l => l.action_type))], [logList]);
+    const uniqueTables  = useMemo(() => [...new Set(logList.map(l => l.table_name))],  [logList]);
+
     const columns = [
         {
             header: 'WAKTU',
             render: (row: LogData) => (
-                <span className="text-xs">{new Date(row.timestamp).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' })}</span>
-            )
+                <span className="text-sm text-gray-600">
+                    {new Date(row.timestamp).toLocaleString('id-ID')}
+                </span>
+            ),
         },
+        { header: 'PENGGUNA',  accessor: 'nama_pengguna' as keyof LogData },
+        { header: 'NIK',       accessor: 'nik'           as keyof LogData },
         {
-            header: 'PENGGUNA',
+            header: 'AKSI',
             render: (row: LogData) => (
-                <div>
-                    <p className="font-medium text-sm">{row.nama_pengguna || '-'}</p>
-                    <p className="text-xs text-gray-400">{row.role_pengguna || ''}</p>
-                </div>
-            )
-        },
-        {
-            header: 'AKTIFITAS',
-            render: (row: LogData) => (
-                <span className={`px-2 py-1 rounded text-xs font-semibold uppercase ${row.action_type === 'INSERT' ? 'bg-green-100 text-green-700' :
-                        row.action_type === 'UPDATE' ? 'bg-blue-100 text-blue-700' :
-                            row.action_type === 'DELETE' ? 'bg-red-100 text-red-700' :
-                                'bg-gray-100 text-gray-700'
-                    }`}>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    row.action_type === 'INSERT' ? 'bg-green-100 text-green-700' :
+                    row.action_type === 'UPDATE' ? 'bg-blue-100 text-blue-700'  :
+                    row.action_type === 'DELETE' ? 'bg-red-100 text-red-700'    :
+                    'bg-gray-100 text-gray-700'
+                }`}>
                     {row.action_type}
                 </span>
-            )
+            ),
         },
-        {
-            header: 'TABEL / OBJEK',
-            render: (row: LogData) => (
-                <div>
-                    <p className="text-sm font-medium">{row.table_name}</p>
-                </div>
-            )
-        },
-        {
-            header: 'IP ADDRESS',
-            render: (row: LogData) => (
-                <span className="text-xs text-gray-500">{row.ip_address || '-'}</span>
-            )
-        },
-
+        { header: 'TABEL', accessor: 'table_name' as keyof LogData },
+        { header: 'IP ADDRESS', accessor: 'ip_address' as keyof LogData },
     ];
 
     return (
         <div className="space-y-6">
-            {/* Filters */}
-            <div className="flex gap-4 items-center flex-wrap">
-                <Select
-                    value={filterJenis}
-                    onChange={(e: ChangeEvent<HTMLSelectElement>) => { setFilterJenis(e.target.value); setCurrentPage(1); }}
-                    placeholder="Semua Jenis"
-                    options={[
-                        { value: '', label: 'Semua Jenis' },
-                        { value: 'INSERT', label: 'Tambah (INSERT)' },
-                        { value: 'UPDATE', label: 'Ubah (UPDATE)' },
-                        { value: 'DELETE', label: 'Hapus (DELETE)' },
-                    ]}
+            {/* Filter Row */}
+            <div className="flex flex-wrap gap-3 items-center">
+                <SearchInput
+                    value={searchTerm}
+                    onChange={(e: ChangeEvent<HTMLInputElement>) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                    className="w-64"
                 />
                 <Select
-                    value={filterRole}
-                    onChange={(e: ChangeEvent<HTMLSelectElement>) => { setFilterRole(e.target.value); setCurrentPage(1); }}
-                    placeholder="Semua Role"
+                    value={filterAction}
+                    onChange={(e) => { setFilterAction(e.target.value); setCurrentPage(1); }}
                     options={[
-                        { value: '', label: 'Semua Role' },
-                        { value: 'super_admin', label: 'Super Admin' },
-                        { value: 'opd', label: 'OPD' },
-                        { value: 'relawan', label: 'Relawan' },
+                        { label: 'Semua Aksi', value: '' },
+                        ...uniqueActions.map(a => ({ label: a, value: a })),
                     ]}
+                    className="w-44"
+                />
+                <Select
+                    value={filterTable}
+                    onChange={(e) => { setFilterTable(e.target.value); setCurrentPage(1); }}
+                    options={[
+                        { label: 'Semua Tabel', value: '' },
+                        ...uniqueTables.map(t => ({ label: t, value: t })),
+                    ]}
+                    className="w-44"
                 />
             </div>
 
-            {/* Search */}
-            <SearchInput
-                value={searchTerm}
-                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                className="w-full"
-            />
-
             {/* Table */}
-            <Card title="Tabel Log Aktifitas">
+            <Card>
+                <div className="mb-4">
+                    <h2 className="text-xl font-semibold text-gray-900">Log Aktivitas</h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Menampilkan {filteredData.length} dari {logList.length} log
+                    </p>
+                </div>
+
                 {isLoading ? (
                     <div className="flex items-center justify-center h-40">
                         <Loader2 size={28} className="animate-spin text-gray-400" />
-                        <span className="ml-3 text-gray-500">Memuat log aktifitas...</span>
+                        <span className="ml-3 text-gray-500">Memuat log aktivitas...</span>
                     </div>
                 ) : filteredData.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <p className="text-gray-600 font-medium">Belum ada log aktifitas</p>
-                        <p className="text-sm text-gray-400 mt-1">
-                            {searchTerm || filterJenis || filterRole
-                                ? 'Tidak ada log yang cocok dengan filter atau pencarian Anda.'
-                                : 'Belum ada aktifitas yang tercatat dalam sistem.'}
-                        </p>
+                        <p className="text-gray-600 font-medium">Tidak ada log yang sesuai filter</p>
                     </div>
                 ) : (
-                    <Table columns={columns} data={currentData} minRows={5} />
+                    <Table columns={columns} data={currentData} minRows={10} />
                 )}
 
-                {/* Pagination */}
                 {!isLoading && filteredData.length > 0 && (
                     <div className="mt-4 flex justify-between items-center">
                         <div className="text-sm text-gray-500">
                             Menampilkan {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredData.length)} dari {filteredData.length} log
                         </div>
-                        <Pagination 
-                            currentPage={currentPage} 
-                            totalPages={totalPages} 
-                            onPageChange={(page) => setCurrentPage(page)} 
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={(page) => setCurrentPage(page)}
                         />
                     </div>
                 )}
             </Card>
 
-            {/* Toast */}
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );

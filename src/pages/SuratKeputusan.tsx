@@ -1,5 +1,5 @@
 //SuratKeputusan.tsx
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FileDown, Upload, Loader2, Eye, Trash2, AlertCircle, ExternalLink } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -10,48 +10,37 @@ import UploadPDFModal from '../components/ui/UploadPDFModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
 import { exportToPDF } from '../utils/exportToPDF';
-import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { SKData, SKDetail, ErrorHint } from '../types';
-
+import { useSkList, useSkDetail, useSkPdf } from '../hooks/sk/useSkList';
+import { useCreateSk, useDeleteSk } from '../hooks/sk/useSkMutations';
 
 const SuratKeputusan: React.FC = () => {
     const { isSuperAdmin, isOPD, user } = useAuth();
-    const [skList, setSkList] = useState<SKData[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [isLoadingDetail, setIsLoadingDetail] = useState(false);
-    const [isExporting, setIsExporting] = useState(false);
 
-    const [searchTerm, setSearchTerm] = useState<string>('');
+    // ── Server State ──────────────────────────────────────────
+    const { data: skList = [], isLoading }   = useSkList();
+    const createSk = useCreateSk();
+    const deleteSk = useDeleteSk();
+
+    // ── UI State ──────────────────────────────────────────────
+    const [searchTerm, setSearchTerm]             = useState<string>('');
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
-    const [selectedSK, setSelectedSK] = useState<SKDetail | null>(null);
-    const [pdfBase64, setPdfBase64] = useState<string | null>(null);
-    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [selectedSkId, setSelectedSkId]         = useState<number>(0);
+    const [previewSkId, setPreviewSkId]           = useState<number>(0);
+    const [currentPage, setCurrentPage]           = useState<number>(1);
+    const [isExporting, setIsExporting]           = useState<boolean>(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
-    const [errorHint, setErrorHint] = useState<ErrorHint | null>(null);
+    const [errorHint, setErrorHint]               = useState<ErrorHint | null>(null);
     const itemsPerPage = 5;
 
-    const fetchSK = useCallback(async () => {
-        setIsLoading(true);
-        try {
-            const res = await apiFetch('/admin/sk');
-            const result = await res.json();
-            if (result.success) {
-                setSkList(result.data);
-            } else {
-                setToast({ message: result.message || 'Gagal memuat data SK', type: 'error' });
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
+    // ── Lazy query — hanya aktif saat modal detail terbuka ────
+    const { data: selectedSK, isLoading: isLoadingDetail } = useSkDetail(selectedSkId);
+    const { data: pdfBase64 } = useSkPdf(previewSkId);
 
-    useEffect(() => { fetchSK(); }, [fetchSK]);
-
+    // ── Filter & Pagination ────────────────────────────────────
     const filteredData = useMemo(() =>
         skList.filter(sk =>
             sk.nomor_sk.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -59,129 +48,69 @@ const SuratKeputusan: React.FC = () => {
             sk.nama_opd.toLowerCase().includes(searchTerm.toLowerCase())
         ), [skList, searchTerm]);
 
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
+    const totalPages  = Math.ceil(filteredData.length / itemsPerPage);
+    const startIndex  = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-    const handleDetailClick = async (sk: SKData) => {
-        setIsLoadingDetail(true);
+    // ── Handlers ──────────────────────────────────────────────
+    const handleDetailClick = (sk: SKData) => {
+        setSelectedSkId(sk.sk_id);
         setIsDetailModalOpen(true);
-        try {
-            const res = await apiFetch(`/admin/sk/${sk.sk_id}`);
-            const result = await res.json();
-            if (result.success) {
-                setSelectedSK(result.data);
-            } else {
-                setToast({ message: 'Gagal memuat detail SK', type: 'error' });
-                setIsDetailModalOpen(false);
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-            setIsDetailModalOpen(false);
-        } finally {
-            setIsLoadingDetail(false);
-        }
     };
 
-    const handlePreviewPDF = async (sk: SKData) => {
-        try {
-            const res = await apiFetch(`/admin/sk/${sk.sk_id}/pdf`);
-            const result = await res.json();
-            if (result.success) {
-                setPdfBase64(result.data.file_path);
-                setIsPreviewModalOpen(true);
-            } else {
-                setToast({ message: 'Gagal memuat PDF', type: 'error' });
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        }
+    const handlePreviewPDF = (sk: SKData | SKDetail) => {
+        setPreviewSkId(sk.sk_id);
+        setIsPreviewModalOpen(true);
     };
 
     const handlePDFUploadConfirm = async (file: File, metadata: any) => {
         setErrorHint(null);
 
-        // Validasi ukuran file (2MB)
         if (file.size > 2 * 1024 * 1024) {
             setToast({ message: 'Ukuran file terlalu besar. Maksimal 2MB.', type: 'error' });
             return;
         }
-
-        // Validasi tipe file
         if (file.type !== 'application/pdf') {
             setToast({ message: 'Hanya file PDF yang diperbolehkan.', type: 'error' });
             return;
         }
 
-        try {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('nomor_sk', metadata.nomorSK);
-            formData.append('judul_sk', metadata.judulSK);
-            formData.append('tanggal_terbit', metadata.tanggalTerbit);
-            formData.append('batas_aktif', metadata.batasAktif || '');
-            formData.append('opd_id', metadata.opd_id || '1');
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('nomor_sk',      metadata.nomorSK);
+        formData.append('judul_sk',      metadata.judulSK);
+        formData.append('tanggal_terbit', metadata.tanggalTerbit);
+        formData.append('batas_aktif',   metadata.batasAktif || '');
+        formData.append('opd_id',        metadata.opd_id || '1');
+        if (metadata.daftar_relawan) {
+            formData.append('daftar_relawan', JSON.stringify(metadata.daftar_relawan));
+        }
 
-            // Jika ada daftar relawan dari Excel/JSON
-            if (metadata.daftar_relawan) {
-                formData.append('daftar_relawan', JSON.stringify(metadata.daftar_relawan));
-            }
-
-            const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/sk`, {
-                method: 'POST',
-                headers: { 
-                    Authorization: `Bearer ${localStorage.getItem('token')}`
-                },
-                body: formData
-            });
-            const result = await res.json();
-            
-            if (result.success) {
-                setToast({ 
-                    message: `SK berhasil diunggah! ${result.data.total_relawan_ditugaskan || 0} relawan ditugaskan.`, 
-                    type: 'success' 
+        createSk.mutate(formData, {
+            onSuccess: (d) => {
+                setToast({
+                    message: `SK berhasil diunggah! ${d.data?.total_relawan_ditugaskan || 0} relawan ditugaskan.`,
+                    type: 'success',
                 });
                 setIsUploadModalOpen(false);
-                fetchSK();
-            } else {
-                setToast({ message: result.message || 'Gagal mengunggah SK', type: 'error' });
-                
-                // Tampilkan hint jika ada
-                if (result.hint) {
-                    setErrorHint(result.hint);
-                }
-                
-                // Jika ada detail relawan yang gagal
-                if (result.data?.relawan_gagal) {
-                    console.error('Relawan yang gagal:', result.data.relawan_gagal);
-                }
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        }
+            },
+            onError: (e: any) => {
+                setToast({ message: e.message || 'Gagal mengunggah SK', type: 'error' });
+                if (e.response?.data?.hint) setErrorHint(e.response.data.hint);
+            },
+        });
     };
 
-    const handleDeleteSK = async (sk_id: number) => {
+    const handleDeleteSK = (sk_id: number) => {
         if (!confirm('Apakah Anda yakin ingin menghapus SK ini?')) return;
-
-        try {
-            const res = await apiFetch(`/admin/sk/${sk_id}`, {
-                method: 'DELETE'
-            });
-            const result = await res.json();
-            if (result.success) {
+        deleteSk.mutate(sk_id, {
+            onSuccess: () => {
                 setToast({ message: 'SK berhasil dihapus', type: 'success' });
-                fetchSK();
                 setIsDetailModalOpen(false);
-            } else {
-                setToast({ message: result.message || 'Gagal menghapus SK', type: 'error' });
-                if (result.hint) {
-                    setErrorHint(result.hint);
-                }
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        }
+                setSelectedSkId(0);
+            },
+            onError: (e: any) => setToast({ message: e.message || 'Gagal menghapus SK', type: 'error' }),
+        });
     };
 
     const handleExportPDF = async () => {
@@ -190,11 +119,11 @@ const SuratKeputusan: React.FC = () => {
             exportToPDF({
                 title: 'Daftar Surat Keputusan',
                 columns: [
-                    { header: 'NOMOR SK', dataKey: 'nomor_sk' },
-                    { header: 'JUDUL SK', dataKey: 'judul_sk' },
-                    { header: 'OPD', dataKey: 'nama_opd' },
-                    { header: 'STATUS', dataKey: 'status' },
-                    { header: 'JML RELAWAN', dataKey: 'jumlah_relawan' },
+                    { header: 'NOMOR SK',     dataKey: 'nomor_sk' },
+                    { header: 'JUDUL SK',     dataKey: 'judul_sk' },
+                    { header: 'OPD',          dataKey: 'nama_opd' },
+                    { header: 'STATUS',       dataKey: 'status' },
+                    { header: 'JML RELAWAN',  dataKey: 'jumlah_relawan' },
                 ],
                 data: filteredData,
                 filename: `surat-keputusan-${new Date().toISOString().split('T')[0]}.pdf`
@@ -210,7 +139,7 @@ const SuratKeputusan: React.FC = () => {
     const columns = [
         { header: 'NOMOR SK', accessor: 'nomor_sk' as keyof SKData },
         { header: 'JUDUL SK', accessor: 'judul_sk' as keyof SKData },
-        { header: 'OPD', accessor: 'nama_opd' as keyof SKData },
+        { header: 'OPD',      accessor: 'nama_opd' as keyof SKData },
         {
             header: 'TANGGAL TERBIT',
             render: (row: SKData) => (
@@ -227,9 +156,7 @@ const SuratKeputusan: React.FC = () => {
         },
         {
             header: 'JUMLAH RELAWAN',
-            render: (row: SKData) => (
-                <span className="font-medium">{row.jumlah_relawan}</span>
-            )
+            render: (row: SKData) => <span className="font-medium">{row.jumlah_relawan}</span>
         },
     ];
 
@@ -251,53 +178,39 @@ const SuratKeputusan: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* INFO BOX - Panduan Upload SK */}
+            {/* INFO BOX */}
             <Card className="bg-blue-50 border-blue-200">
                 <div className="flex items-start gap-3">
-                    <div className="text-blue-600 mt-0.5">
-                        <AlertCircle size={20} />
-                    </div>
+                    <div className="text-blue-600 mt-0.5"><AlertCircle size={20} /></div>
                     <div className="text-sm text-blue-800 flex-1">
-                        <p className="font-semibold mb-2"> Panduan Upload Surat Keputusan:</p>
+                        <p className="font-semibold mb-2">📋 Panduan Upload Surat Keputusan:</p>
                         <ol className="list-decimal list-inside space-y-1 text-blue-700">
                             <li>Pastikan <strong>OPD</strong> sudah terdaftar → <a href="/manajemen-opd" className="underline font-medium hover:text-blue-900">Manajemen OPD</a></li>
                             <li>Pastikan <strong>Kader</strong> sudah terdaftar → <a href="/daftar-kader" className="underline font-medium hover:text-blue-900">Daftar Kader</a></li>
                             <li>Pastikan <strong>Relawan</strong> sudah terdaftar → <a href="/data-relawan" className="underline font-medium hover:text-blue-900">Data Relawan</a></li>
                             <li>Upload file PDF SK (maksimal 2MB)</li>
-                            <li>Relawan dapat ditugaskan di <strong>berbagai SK</strong> dengan <strong>kader berbeda</strong> dalam OPD yang sama</li>
+                            <li>Relawan dapat ditugaskan di <strong>berbagai SK</strong> dalam OPD yang sama</li>
                         </ol>
                     </div>
                 </div>
             </Card>
 
-            {/* ERROR HINT BOX - Muncul jika ada error */}
+            {/* ERROR HINT BOX */}
             {errorHint && (
                 <Card className="bg-red-50 border-red-200">
                     <div className="flex items-start gap-3">
-                        <div className="text-red-600 mt-0.5">
-                            <AlertCircle size={20} />
-                        </div>
+                        <div className="text-red-600 mt-0.5"><AlertCircle size={20} /></div>
                         <div className="text-sm text-red-800 flex-1">
-                            <p className="font-semibold mb-2">️ {errorHint.title}</p>
+                            <p className="font-semibold mb-2">⚠️ {errorHint.title}</p>
                             <ol className="list-decimal list-inside space-y-1 text-red-700">
-                                {errorHint.steps.map((step, idx) => (
-                                    <li key={idx}>{step}</li>
-                                ))}
+                                {errorHint.steps.map((step, idx) => <li key={idx}>{step}</li>)}
                             </ol>
                             {errorHint.link && (
-                                <a 
-                                    href={errorHint.link} 
-                                    className="inline-flex items-center gap-1 mt-2 text-red-600 font-medium hover:text-red-800 underline"
-                                >
+                                <a href={errorHint.link} className="inline-flex items-center gap-1 mt-2 text-red-600 font-medium hover:text-red-800 underline">
                                     {errorHint.link_text} <ExternalLink size={12} />
                                 </a>
                             )}
-                            <button 
-                                onClick={() => setErrorHint(null)}
-                                className="ml-4 text-red-500 hover:text-red-700"
-                            >
-                                ✕ Tutup
-                            </button>
+                            <button onClick={() => setErrorHint(null)} className="ml-4 text-red-500 hover:text-red-700">✕ Tutup</button>
                         </div>
                     </div>
                 </Card>
@@ -348,23 +261,18 @@ const SuratKeputusan: React.FC = () => {
                     <Table columns={columns} data={currentData} actions={actions} minRows={5} />
                 )}
 
-                {/* Pagination */}
                 {!isLoading && filteredData.length > 0 && (
                     <div className="mt-4 flex justify-between items-center">
                         <div className="text-sm text-gray-500">
                             Menampilkan {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredData.length)} dari {filteredData.length} SK
                         </div>
-                        <Pagination 
-                            currentPage={currentPage}
-                            totalPages={totalPages}
-                            onPageChange={(page) => setCurrentPage(page)}
-                        />
+                        <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                     </div>
                 )}
             </Card>
 
             {/* Detail SK Modal */}
-            <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Detail Surat Keputusan" maxWidth="2xl">
+            <Modal isOpen={isDetailModalOpen} onClose={() => { setIsDetailModalOpen(false); setSelectedSkId(0); }} title="Detail Surat Keputusan" maxWidth="2xl">
                 {isLoadingDetail ? (
                     <div className="flex items-center justify-center h-40">
                         <Loader2 size={24} className="animate-spin text-gray-400" />
@@ -374,12 +282,12 @@ const SuratKeputusan: React.FC = () => {
                     <div className="space-y-6">
                         <div className="space-y-3">
                             {[
-                                { label: 'Nomor SK', value: selectedSK.nomor_sk },
-                                { label: 'Judul SK', value: selectedSK.judul_sk || '-' },
-                                { label: 'OPD', value: selectedSK.nama_opd },
+                                { label: 'Nomor SK',      value: selectedSK.nomor_sk },
+                                { label: 'Judul SK',      value: selectedSK.judul_sk || '-' },
+                                { label: 'OPD',           value: selectedSK.nama_opd },
                                 { label: 'Tanggal Terbit', value: selectedSK.tanggal_terbit ? new Date(selectedSK.tanggal_terbit).toLocaleDateString('id-ID') : '-' },
-                                { label: 'Batas Aktif', value: selectedSK.batas_aktif ? new Date(selectedSK.batas_aktif).toLocaleDateString('id-ID') : '-' },
-                                { label: 'Status', value: selectedSK.status },
+                                { label: 'Batas Aktif',   value: selectedSK.batas_aktif ? new Date(selectedSK.batas_aktif).toLocaleDateString('id-ID') : '-' },
+                                { label: 'Status',        value: selectedSK.status },
                             ].map(item => (
                                 <div key={item.label} className="grid grid-cols-3 gap-4 items-center border-b border-gray-100 pb-2">
                                     <span className="text-sm font-medium text-gray-600">{item.label}</span>
@@ -390,12 +298,7 @@ const SuratKeputusan: React.FC = () => {
                             {selectedSK.has_file && (
                                 <div className="grid grid-cols-3 gap-4 items-center border-b border-gray-100 pb-2">
                                     <span className="text-sm font-medium text-gray-600">File SK</span>
-                                    <Button 
-                                        variant="outline" 
-                                        size="sm" 
-                                        onClick={() => handlePreviewPDF(selectedSK)}
-                                        className="col-span-2 flex items-center gap-2 justify-start"
-                                    >
+                                    <Button variant="outline" size="sm" onClick={() => handlePreviewPDF(selectedSK)} className="col-span-2 flex items-center gap-2 justify-start">
                                         <Eye size={14} />
                                         Lihat Dokumen PDF
                                     </Button>
@@ -412,11 +315,9 @@ const SuratKeputusan: React.FC = () => {
                                     <table className="w-full text-sm">
                                         <thead className="bg-gray-50">
                                             <tr>
-                                                <th className="px-4 py-2 text-left font-medium text-gray-600">NIK</th>
-                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Nama</th>
-                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Kader</th>
-                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Jabatan</th>
-                                                <th className="px-4 py-2 text-left font-medium text-gray-600">Status</th>
+                                                {['NIK','Nama','Kader','Jabatan','Status'].map(h => (
+                                                    <th key={h} className="px-4 py-2 text-left font-medium text-gray-600">{h}</th>
+                                                ))}
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-100">
@@ -443,8 +344,8 @@ const SuratKeputusan: React.FC = () => {
 
                         {isSuperAdmin && (
                             <div className="flex justify-end gap-2 pt-4 border-t">
-                                <Button variant="outline" onClick={() => setIsDetailModalOpen(false)}>Tutup</Button>
-                                <Button variant="secondary" onClick={() => handleDeleteSK(selectedSK.sk_id)}>
+                                <Button variant="outline" onClick={() => { setIsDetailModalOpen(false); setSelectedSkId(0); }}>Tutup</Button>
+                                <Button variant="secondary" onClick={() => handleDeleteSK(selectedSK.sk_id)} disabled={deleteSk.isPending}>
                                     <Trash2 size={14} className="mr-2" />
                                     Hapus SK
                                 </Button>
@@ -455,19 +356,15 @@ const SuratKeputusan: React.FC = () => {
             </Modal>
 
             {/* PDF Preview Modal */}
-            <Modal isOpen={isPreviewModalOpen} onClose={() => setIsPreviewModalOpen(false)} title="Preview Surat Keputusan" maxWidth="4xl">
+            <Modal isOpen={isPreviewModalOpen} onClose={() => { setIsPreviewModalOpen(false); setPreviewSkId(0); }} title="Preview Surat Keputusan" maxWidth="4xl">
                 {pdfBase64 ? (
                     <div className="space-y-4">
-                        <iframe
-                            src={pdfBase64}
-                            className="w-full h-[600px] border rounded-lg"
-                            title="PDF Preview"
-                        />
+                        <iframe src={pdfBase64} className="w-full h-[600px] border rounded-lg" title="PDF Preview" />
                         <div className="flex justify-end gap-2">
-                            <Button variant="outline" onClick={() => setIsPreviewModalOpen(false)}>Tutup</Button>
+                            <Button variant="outline" onClick={() => { setIsPreviewModalOpen(false); setPreviewSkId(0); }}>Tutup</Button>
                             <a
                                 href={pdfBase64}
-                                download={`SK-${selectedSK?.nomor_sk || 'document'}.pdf`}
+                                download={`SK-document.pdf`}
                                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
                             >
                                 <FileDown size={16} className="mr-2" />
@@ -489,12 +386,11 @@ const SuratKeputusan: React.FC = () => {
                 onClose={() => setIsUploadModalOpen(false)}
                 onConfirm={handlePDFUploadConfirm}
                 title="Upload Surat Keputusan (PDF)"
-                isOPD={isOPD} 
-                //  FIXED: Tambahkan "as any" agar TypeScript tidak komplain
-                userOpdData={{ 
-                    id: (user as any)?.opd_id, 
-                    name: (user as any)?.nama_opd 
-                }} 
+                isOPD={isOPD}
+                userOpdData={{
+                    id: (user as any)?.opd_id,
+                    name: (user as any)?.nama_opd,
+                }}
             />
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
