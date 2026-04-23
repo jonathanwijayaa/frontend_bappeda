@@ -1,6 +1,6 @@
 // HistoriRelawan.tsx
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
-import { Loader2, History } from 'lucide-react';
+import { Loader2, History, Search } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Table from '../components/ui/Table';
@@ -67,6 +67,7 @@ const HistoriRelawan: React.FC = () => {
     const [filterKader, setFilterKader] = useState<string>('');
     const [filterTahunAwal, setFilterTahunAwal] = useState<string>('');
     const [filterTahunAkhir, setFilterTahunAkhir] = useState<string>('');
+    const [searchTerm, setSearchTerm] = useState<string>('');
 
     // ── Dropdown options ──────────────────────────────────────────
     const [opdOptions, setOpdOptions] = useState<AutoOption[]>([]);
@@ -74,7 +75,7 @@ const HistoriRelawan: React.FC = () => {
 
     // ── Pagination ────────────────────────────────────────────────
     const [currentPage, setCurrentPage] = useState<number>(1);
-    const itemsPerPage = 10;
+    const itemsPerPage = 5;
 
     // ── Detail modal ──────────────────────────────────────────────
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -130,7 +131,13 @@ const HistoriRelawan: React.FC = () => {
 
     // ── Filtering ─────────────────────────────────────────────────
     const filteredData = useMemo(() => {
+        const q = searchTerm.toLowerCase();
         return relawanList.filter(relawan => {
+            // Searchbar: nama atau NIK
+            const matchSearch = !q ||
+                relawan.namaLengkap.toLowerCase().includes(q) ||
+                relawan.nik.toLowerCase().includes(q);
+
             // Filter Nama OPD: relawan punya minimal satu assignment di OPD tsb
             const matchOpd = !filterOpd || relawan.assignments.some(
                 a => a.opd.toLowerCase() === filterOpd.toLowerCase()
@@ -142,22 +149,20 @@ const HistoriRelawan: React.FC = () => {
             );
 
             // Filter Tahun — berdasarkan field tahun di assignment (jika ada)
-            // Fallback: jika tidak ada field tahun di data, abaikan filter tahun
             const matchTahun = (() => {
                 if (!filterTahunAwal && !filterTahunAkhir) return true;
-                // Jika relawan punya assignment dengan tahun dalam rentang
                 return relawan.assignments.some(a => {
                     const tahun = a.tahun ? Number(a.tahun) : null;
-                    if (!tahun) return true; // data tanpa tahun tetap ditampilkan
+                    if (!tahun) return true;
                     const awal = filterTahunAwal ? Number(filterTahunAwal) : 0;
                     const akhir = filterTahunAkhir ? Number(filterTahunAkhir) : 9999;
                     return tahun >= awal && tahun <= akhir;
                 });
             })();
 
-            return matchOpd && matchKader && matchTahun;
+            return matchSearch && matchOpd && matchKader && matchTahun;
         });
-    }, [relawanList, filterOpd, filterKader, filterTahunAwal, filterTahunAkhir]);
+    }, [relawanList, searchTerm, filterOpd, filterKader, filterTahunAwal, filterTahunAkhir]);
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -175,6 +180,7 @@ const HistoriRelawan: React.FC = () => {
         setFilterKader('');
         setFilterTahunAwal('');
         setFilterTahunAkhir('');
+        setSearchTerm('');
         setCurrentPage(1);
     };
 
@@ -310,6 +316,18 @@ const HistoriRelawan: React.FC = () => {
                     )}
                 </div>
             </Card>
+
+            {/* ── Searchbar ── */}
+            <div className="relative">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                    placeholder="Cari nama atau NIK relawan..."
+                    className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white shadow-sm"
+                />
+            </div>
 
             {/* ── Tabel Histori ── */}
             <Card title="Tabel Histori Data Relawan">

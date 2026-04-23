@@ -131,6 +131,16 @@ const Dashboard: React.FC = () => {
                         <div className="space-y-4">
                             <table className="w-full">
                                 <tbody>
+                                    <tr>
+                                        <td className="text-gray-600 py-1.5">Total Relawan Aktif</td>
+                                        <td className="font-semibold py-1.5 w-4 text-center">:</td>
+                                        <td className="font-semibold py-1.5 text-right">{dashboardData.ringkasan.total_relawan_aktif.toLocaleString('id-ID')}</td>
+                                    </tr>
+                                    <tr>
+                                        <td className="text-gray-600 py-1.5">Total Kader</td>
+                                        <td className="font-semibold py-1.5 w-4 text-center">:</td>
+                                        <td className="font-semibold py-1.5 text-right">{dashboardData.ringkasan.total_kader}</td>
+                                    </tr>
                                     {isSuperAdmin && (
                                         <tr>
                                             <td className="text-gray-600 py-1.5">Total OPD</td>
@@ -138,16 +148,6 @@ const Dashboard: React.FC = () => {
                                             <td className="font-semibold py-1.5 text-right">{dashboardData.ringkasan.total_opd}</td>
                                         </tr>
                                     )}
-                                    <tr>
-                                        <td className="text-gray-600 py-1.5">Total Kader</td>
-                                        <td className="font-semibold py-1.5 w-4 text-center">:</td>
-                                        <td className="font-semibold py-1.5 text-right">{dashboardData.ringkasan.total_kader}</td>
-                                    </tr>
-                                    <tr>
-                                        <td className="text-gray-600 py-1.5">Total Relawan Aktif</td>
-                                        <td className="font-semibold py-1.5 w-4 text-center">:</td>
-                                        <td className="font-semibold py-1.5 text-right">{dashboardData.ringkasan.total_relawan_aktif.toLocaleString('id-ID')}</td>
-                                    </tr>
                                     {isSuperAdmin && (
                                         <tr>
                                             <td className="text-gray-600 py-1.5">Pengajuan Pending</td>

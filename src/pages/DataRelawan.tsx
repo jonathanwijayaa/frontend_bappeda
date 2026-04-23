@@ -1,6 +1,6 @@
 //DataRelawan.tsx
 import React, { useState, useMemo, useCallback } from 'react';
-import { Plus, Upload, Loader2, X } from 'lucide-react';
+import { Plus, Upload, Loader2, X, FileDown } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
@@ -19,6 +19,8 @@ import { useOpdList } from '../hooks/opd/useOpdList';
 import { useKaderByOpd } from '../hooks/relawan/useKaderByOpd';
 import { useQueryClient } from '@tanstack/react-query';
 import apiClient from '../lib/axios';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 
 const DataRelawan: React.FC = () => {
@@ -174,6 +176,47 @@ const DataRelawan: React.FC = () => {
             relawan.nik.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [relawanList, searchTerm]);
+
+    // ── Export PDF seluruh data relawan yang difilter ──
+    const handleExportPdf = useCallback(() => {
+        const doc = new jsPDF({ orientation: 'landscape' });
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Data Relawan', 14, 16);
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100);
+        doc.text(`Dicetak: ${new Date().toLocaleString('id-ID')}  |  Total: ${filteredRelawanData.length} relawan`, 14, 23);
+        doc.setTextColor(0);
+        autoTable(doc, {
+            startY: 28,
+            head: [['No', 'Nama Lengkap', 'NIK', 'Alamat KTP', 'Kelurahan', 'Jenis Kelamin', 'OPD / Penugasan', 'Kader']],
+            body: filteredRelawanData.map((r, i) => [
+                i + 1,
+                r.namaLengkap || '-',
+                r.nik || '-',
+                r.alamat || '-',
+                r.kelurahan || '-',
+                r.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan',
+                r.assignments && r.assignments.length > 0
+                    ? [...new Set(r.assignments.map((a: any) => a.opd).filter(Boolean))].join(', ') || r.penugasan || '-'
+                    : r.penugasan || '-',
+                r.assignments && r.assignments.length > 0
+                    ? [...new Set(r.assignments.map((a: any) => a.kader).filter(Boolean))].join(', ') || r.kader || '-'
+                    : r.kader || '-',
+            ]),
+            styles: { fontSize: 8, cellPadding: 3 },
+            headStyles: { fillColor: [22, 163, 74], textColor: 255, fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [240, 253, 244] },
+            columnStyles: {
+                0: { cellWidth: 10, halign: 'center' },
+                2: { cellWidth: 35 },
+                5: { cellWidth: 22, halign: 'center' },
+            },
+            margin: { left: 14, right: 14 },
+        });
+        doc.save(`data-relawan-${new Date().toISOString().slice(0,10)}.pdf`);
+    }, [filteredRelawanData]);
 
     const totalPages = Math.ceil(filteredRelawanData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -821,6 +864,17 @@ const DataRelawan: React.FC = () => {
             <Card>
                 <div className="mb-4 flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-gray-900">Daftar Relawan</h2>
+                    {!isLoadingRelawan && filteredRelawanData.length > 0 && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleExportPdf}
+                            className="flex items-center gap-2 border-red-500 text-red-600 hover:bg-red-50"
+                        >
+                            <FileDown size={16} />
+                            Export PDF
+                        </Button>
+                    )}
                 </div>
 
                 {isLoadingRelawan ? (
