@@ -10,42 +10,11 @@ import AutocompleteInput from '../components/ui/AutocompleteInput';
 import UploadExcelModal from '../components/ui/UploadExcelModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
-import { RelawanData, Assignment } from '../types/relawan.types';
+import { RelawanData, Assignment, RelawanAPIData, PengajuanAPIData } from '../types/relawan.types';
+import { AutoOption } from '../types/common.types';
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 
-// Tipe data dari backend API (mapping ke RelawanData untuk keperluan UI)
-interface RelawanAPIData {
-    user_id: number;
-    nik: string;
-    nama_lengkap: string;
-    email: string | null;
-    no_hp: string | null;
-    is_active: boolean;
-    relawan_id: number;
-    jenis_kelamin: string;
-    alamat_ktp: string | null;
-    kelurahan: string | null;
-    penugasan: string | null;
-    status_penugasan: string | null;
-    nama_opd: string | null;
-    nama_kader: string | null;
-}
-
-interface PengajuanAPIData {
-    pengajuan_id: number;
-    jenis_perubahan: string;
-    status: string;
-    tanggal_pengajuan: string;
-    catatan_relawan: string | null;
-    nama_lengkap: string;
-    nik: string;
-    relawan_id: number;
-    data_baru?: any;
-    data_lama?: any;
-}
-
-interface AutoOption { label: string; value: string; }
 
 const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
     user_id: r.user_id,  // ← tambahkan ini (pastikan juga ada di interface RelawanData)

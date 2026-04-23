@@ -10,19 +10,8 @@ import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../utils/api';
+import { SaranData } from '../types';
 
-interface SaranData {
-    saran_id: number;
-    nama_lengkap: string;
-    no_hp: string;
-    subjek: string | null;
-    pesan: string;
-    status: 'Menunggu' | 'Selesai';
-    catatan_admin: string | null;
-    created_at: string;
-    updated_at: string;
-    role: string;
-}
 
 const SaranHotline: React.FC = () => {
     const { user, isSuperAdmin } = useAuth();

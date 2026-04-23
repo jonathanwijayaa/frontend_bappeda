@@ -10,42 +10,10 @@ import UploadPDFModal from '../components/ui/UploadPDFModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
 import { exportToPDF } from '../utils/exportToPDF';
-import { apiFetch } from '../utils/api'
+import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { SKData, SKDetail, ErrorHint } from '../types';
 
-interface SKData {
-    sk_id: number;
-    nomor_sk: string;
-    judul_sk: string | null;
-    tanggal_terbit: string | null;
-    batas_aktif: string | null;
-    status: string;
-    nama_opd: string;
-    opd_id?: number;
-    jumlah_relawan: number;
-    has_file: boolean;
-}
-
-interface SKDetail extends SKData {
-    file_path?: string;
-    daftar_relawan: {
-        penugasan_id: number;
-        nik: string;
-        nama_lengkap: string;
-        no_hp: string | null;
-        nama_kader: string | null;
-        kader_id: number | null;
-        status_keaktifan: string;
-        jabatan: string | null;
-    }[];
-}
-
-interface ErrorHint {
-    title: string;
-    steps: string[];
-    link?: string;
-    link_text?: string;
-}
 
 const SuratKeputusan: React.FC = () => {
     const { isSuperAdmin, isOPD, user } = useAuth();
