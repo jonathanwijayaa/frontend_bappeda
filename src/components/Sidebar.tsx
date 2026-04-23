@@ -1,6 +1,7 @@
-//Sidebar.tsxs
+//Sidebar.tsx
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import logoBappeda from '../assets/image/logo-bappeda.png';
 import {
     Home,
     Building2,
@@ -80,7 +81,7 @@ const Sidebar: React.FC = () => {
             <div className={`p-4 border-b border-green-600 flex items-center flex-shrink-0 h-[88px] gap-3 ${isCollapsed ? 'justify-center' : ''
                 }`}>
                 <img
-                    src="/src/assets/image/logo-bappeda.png"
+                    src={logoBappeda}
                     alt="Logo Bappeda"
                     className="w-10 h-10 object-contain flex-shrink-0"
                 />
