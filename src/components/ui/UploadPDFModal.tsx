@@ -29,7 +29,11 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
 }) => {
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
-    
+    // === STATE BARU: Pemilihan Kader ===
+    const [kaderOptions, setKaderOptions] = useState<{ kader_id: number; nama_kader: string }[]>([]);
+    const [selectedKaderIds, setSelectedKaderIds] = useState<number[]>([]);
+    const [isSelectAllKader, setIsSelectAllKader] = useState(true); // Default: Semua Kader
+
     // State untuk opsi OPD dari database (Hanya diambil jika user adalah Super Admin)
     const [opdOptions, setOpdOptions] = useState<AutoOption[]>([]);
 
@@ -41,7 +45,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
         opd_id: '',
         opd_name: '' // Tambahan state untuk menyimpan text nama OPD
     });
-    
+
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Reset dan atur nilai awal saat modal terbuka
@@ -57,7 +61,10 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                 opd_name: isOPD && userOpdData?.name ? userOpdData.name : ''
             });
             setFile(null);
-            
+            setKaderOptions([]);
+            setSelectedKaderIds([]);
+            setIsSelectAllKader(true);
+
             // Ambil daftar OPD dari API HANYA jika yang login adalah Super Admin
             if (!isOPD) {
                 apiFetch('/opd')
@@ -74,6 +81,24 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
             }
         }
     }, [isOpen, isOPD, userOpdData]);
+
+    // === useEffect BARU: Fetch Kader berdasarkan OPD ===
+    useEffect(() => {
+        const opdId = metadata.opd_id;
+        if (!opdId || !isOpen) {
+            setKaderOptions([]);
+            return;
+        }
+
+        apiFetch(`/admin/relawan/kader?opd_id=${opdId}`)
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    setKaderOptions(result.data);
+                }
+            })
+            .catch(() => console.error("Gagal mengambil daftar Kader"));
+    }, [metadata.opd_id, isOpen]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
@@ -100,6 +125,22 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
         }));
     };
 
+    // === HANDLER: Toggle "Semua Kader" ===
+    const handleSelectAllKader = () => {
+        setIsSelectAllKader(true);
+        setSelectedKaderIds([]); // Kosongkan pilihan spesifik
+    };
+
+    // === HANDLER: Toggle satu Kader ===
+    const handleToggleKader = (kaderId: number) => {
+        setIsSelectAllKader(false); // Lepas centang "Semua"
+        setSelectedKaderIds(prev =>
+            prev.includes(kaderId)
+                ? prev.filter(id => id !== kaderId) // Hapus jika sudah dipilih
+                : [...prev, kaderId]                // Tambah jika belum
+        );
+    };
+
     const handleSubmit = async () => {
         if (!file || !metadata.nomorSK) {
             alert('File PDF dan Nomor SK wajib diisi');
@@ -107,13 +148,29 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
         }
         // Validasi ekstra: Super Admin tidak boleh upload kalau tidak pilih OPD yang valid
         if (!isOPD && !metadata.opd_id) {
-             alert('Harap pilih OPD yang valid dari daftar.');
-             return;
+            alert('Harap pilih OPD yang valid dari daftar.');
+            return;
         }
-
+        // === VALIDASI: Pemilihan Kader ===
+        if (!isOPD) { // Hanya berlaku untuk Super Admin
+            if (isSelectAllKader) {
+                // Mode "Semua Kader", kita kosongkan metadata.kader_id agar API mengerti
+                setMetadata(prev => ({ ...prev, kader_ids: [] }));
+            } else {
+                if (selectedKaderIds.length === 0) {
+                    alert('Harap pilih minimal 1 Kader atau centang "Semua Kader".');
+                    return;
+                }
+                // Kirim array ID kader
+                setMetadata(prev => ({ ...prev, kader_ids: selectedKaderIds }));
+            }
+        }
         setIsUploading(true);
         try {
-            await onConfirm(file, metadata);
+            await onConfirm(file, {
+                ...metadata,
+                kader_ids: isSelectAllKader ? 'ALL' : selectedKaderIds
+            });
         } finally {
             setIsUploading(false);
         }
@@ -218,10 +275,10 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                             OPD <span className="text-red-500">*</span>
                         </label>
                         {isOPD ? (
-                            <input 
-                                type="text" 
-                                disabled 
-                                value={metadata.opd_name || 'Instansi Anda'} 
+                            <input
+                                type="text"
+                                disabled
+                                value={metadata.opd_name || 'Instansi Anda'}
                                 className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 italic cursor-not-allowed"
                             />
                         ) : (
@@ -243,6 +300,50 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                         )}
                     </div>
                 </div>
+
+                {/* === PEMILIHAN KADER (Muncul hanya jika OPD sudah dipilih) === */}
+                {metadata.opd_id && (
+                    <div className="col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Target Kader <span className="text-red-500">*</span>
+                        </label>
+
+                        {kaderOptions.length === 0 ? (
+                            <p className="text-sm text-gray-400 italic">Tidak ada kader terdaftar di OPD ini.</p>
+                        ) : (
+                            <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
+                                {/* Opsi: Semua Kader */}
+                                <label className="flex items-center gap-2 cursor-pointer p-1 rounded hover:bg-blue-50">
+                                    <input
+                                        type="checkbox"
+                                        checked={isSelectAllKader}
+                                        onChange={handleSelectAllKader}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                    />
+                                    <span className="text-sm font-semibold text-gray-700">
+                                        Semua Kader ({kaderOptions.length} kader)
+                                    </span>
+                                </label>
+
+                                <hr className="border-gray-200" />
+
+                                {/* Opsi: Per Kader */}
+                                {kaderOptions.map(kader => (
+                                    <label key={kader.kader_id} className="flex items-center gap-2 cursor-pointer p-1 rounded hover:bg-gray-50">
+                                        <input
+                                            type="checkbox"
+                                            checked={isSelectAllKader || selectedKaderIds.includes(kader.kader_id)}
+                                            disabled={isSelectAllKader}
+                                            onChange={() => handleToggleKader(kader.kader_id)}
+                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span className="text-sm text-gray-600">{kader.nama_kader}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex justify-end gap-2 pt-4 border-t">

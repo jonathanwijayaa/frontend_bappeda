@@ -19,21 +19,21 @@ const SuratKeputusan: React.FC = () => {
     const { isSuperAdmin, isOPD, user } = useAuth();
 
     // ── Server State ──────────────────────────────────────────
-    const { data: skList = [], isLoading }   = useSkList();
+    const { data: skList = [], isLoading } = useSkList();
     const createSk = useCreateSk();
     const deleteSk = useDeleteSk();
 
     // ── UI State ──────────────────────────────────────────────
-    const [searchTerm, setSearchTerm]             = useState<string>('');
+    const [searchTerm, setSearchTerm] = useState<string>('');
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState<boolean>(false);
-    const [selectedSkId, setSelectedSkId]         = useState<number>(0);
-    const [previewSkId, setPreviewSkId]           = useState<number>(0);
-    const [currentPage, setCurrentPage]           = useState<number>(1);
-    const [isExporting, setIsExporting]           = useState<boolean>(false);
+    const [selectedSkId, setSelectedSkId] = useState<number>(0);
+    const [previewSkId, setPreviewSkId] = useState<number>(0);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [isExporting, setIsExporting] = useState<boolean>(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
-    const [errorHint, setErrorHint]               = useState<ErrorHint | null>(null);
+    const [errorHint, setErrorHint] = useState<ErrorHint | null>(null);
     const itemsPerPage = 5;
 
     // ── Lazy query — hanya aktif saat modal detail terbuka ────
@@ -48,8 +48,8 @@ const SuratKeputusan: React.FC = () => {
             sk.nama_opd.toLowerCase().includes(searchTerm.toLowerCase())
         ), [skList, searchTerm]);
 
-    const totalPages  = Math.ceil(filteredData.length / itemsPerPage);
-    const startIndex  = (currentPage - 1) * itemsPerPage;
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
     // ── Handlers ──────────────────────────────────────────────
@@ -77,19 +77,25 @@ const SuratKeputusan: React.FC = () => {
 
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('nomor_sk',      metadata.nomorSK);
-        formData.append('judul_sk',      metadata.judulSK);
+        formData.append('nomor_sk', metadata.nomorSK);
+        formData.append('judul_sk', metadata.judulSK);
         formData.append('tanggal_terbit', metadata.tanggalTerbit);
-        formData.append('batas_aktif',   metadata.batasAktif || '');
-        formData.append('opd_id',        metadata.opd_id || '1');
-        if (metadata.daftar_relawan) {
-            formData.append('daftar_relawan', JSON.stringify(metadata.daftar_relawan));
+        formData.append('batas_aktif', metadata.batasAktif || '');
+        formData.append('opd_id', metadata.opd_id || '1');
+        // Kirim kader_ids (bisa 'ALL' atau array angka)
+        if (metadata.kader_ids) {
+            formData.append('kader_ids',
+                metadata.kader_ids === 'ALL'
+                    ? 'ALL'
+                    : JSON.stringify(metadata.kader_ids)
+            );
         }
+
 
         createSk.mutate(formData, {
             onSuccess: (d) => {
                 setToast({
-                    message: `SK berhasil diunggah! ${d.data?.total_relawan_ditugaskan || 0} relawan ditugaskan.`,
+                    message: 'SK berhasil diunggah! ' + (d.data?.total_kader_terkait || 0) + ' kader & ' + (d.data?.total_relawan_terkait || 0) + ' relawan ditautkan.',
                     type: 'success',
                 });
                 setIsUploadModalOpen(false);
@@ -119,11 +125,11 @@ const SuratKeputusan: React.FC = () => {
             exportToPDF({
                 title: 'Daftar Surat Keputusan',
                 columns: [
-                    { header: 'NOMOR SK',     dataKey: 'nomor_sk' },
-                    { header: 'JUDUL SK',     dataKey: 'judul_sk' },
-                    { header: 'OPD',          dataKey: 'nama_opd' },
-                    { header: 'STATUS',       dataKey: 'status' },
-                    { header: 'JML RELAWAN',  dataKey: 'jumlah_relawan' },
+                    { header: 'NOMOR SK', dataKey: 'nomor_sk' },
+                    { header: 'JUDUL SK', dataKey: 'judul_sk' },
+                    { header: 'OPD', dataKey: 'nama_opd' },
+                    { header: 'STATUS', dataKey: 'status' },
+                    { header: 'JML RELAWAN', dataKey: 'jumlah_relawan' },
                 ],
                 data: filteredData,
                 filename: `surat-keputusan-${new Date().toISOString().split('T')[0]}.pdf`
@@ -139,7 +145,7 @@ const SuratKeputusan: React.FC = () => {
     const columns = [
         { header: 'NOMOR SK', accessor: 'nomor_sk' as keyof SKData },
         { header: 'JUDUL SK', accessor: 'judul_sk' as keyof SKData },
-        { header: 'OPD',      accessor: 'nama_opd' as keyof SKData },
+        { header: 'OPD', accessor: 'nama_opd' as keyof SKData },
         {
             header: 'TANGGAL TERBIT',
             render: (row: SKData) => (
@@ -282,12 +288,12 @@ const SuratKeputusan: React.FC = () => {
                     <div className="space-y-6">
                         <div className="space-y-3">
                             {[
-                                { label: 'Nomor SK',      value: selectedSK.nomor_sk },
-                                { label: 'Judul SK',      value: selectedSK.judul_sk || '-' },
-                                { label: 'OPD',           value: selectedSK.nama_opd },
+                                { label: 'Nomor SK', value: selectedSK.nomor_sk },
+                                { label: 'Judul SK', value: selectedSK.judul_sk || '-' },
+                                { label: 'OPD', value: selectedSK.nama_opd },
                                 { label: 'Tanggal Terbit', value: selectedSK.tanggal_terbit ? new Date(selectedSK.tanggal_terbit).toLocaleDateString('id-ID') : '-' },
-                                { label: 'Batas Aktif',   value: selectedSK.batas_aktif ? new Date(selectedSK.batas_aktif).toLocaleDateString('id-ID') : '-' },
-                                { label: 'Status',        value: selectedSK.status },
+                                { label: 'Batas Aktif', value: selectedSK.batas_aktif ? new Date(selectedSK.batas_aktif).toLocaleDateString('id-ID') : '-' },
+                                { label: 'Status', value: selectedSK.status },
                             ].map(item => (
                                 <div key={item.label} className="grid grid-cols-3 gap-4 items-center border-b border-gray-100 pb-2">
                                     <span className="text-sm font-medium text-gray-600">{item.label}</span>
@@ -315,7 +321,7 @@ const SuratKeputusan: React.FC = () => {
                                     <table className="w-full text-sm">
                                         <thead className="bg-gray-50">
                                             <tr>
-                                                {['NIK','Nama','Kader','Jabatan','Status'].map(h => (
+                                                {['NIK', 'Nama', 'Kader', 'Jabatan', 'Status'].map(h => (
                                                     <th key={h} className="px-4 py-2 text-left font-medium text-gray-600">{h}</th>
                                                 ))}
                                             </tr>
