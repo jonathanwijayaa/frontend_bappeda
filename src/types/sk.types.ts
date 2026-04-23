@@ -1,24 +1,37 @@
-// Surat Keputusan (Decision Letter) Types
+// Surat Keputusan (SK) Data Types — sesuai response API backend
+
 export interface SKData {
-    id: string;
-    nomorSK: string;
-    judulSK: string;
-    tanggalTerbit: string;
-    batasAktif: string;
-    opdId: number;
-    namaOPD: string;
-    namaKader?: string;
-    jumlahRelawan: number;
-    status: 'Aktif' | 'Nonaktif';
-    filePath?: string;
+    sk_id: number;
+    nomor_sk: string;
+    judul_sk: string | null;
+    tanggal_terbit: string | null;
+    batas_aktif: string | null;
+    status: string;
+    nama_opd: string;
+    opd_id?: number;
+    jumlah_relawan: number;
+    has_file: boolean;
 }
 
-export interface SKFormData {
-    nomorSK: string;
-    judulSK: string;
-    tanggalTerbit: string;
-    opdId: number;
-    namaOPD: string;
-    namaKader?: string;
-    status: 'Aktif' | 'Nonaktif';
+export interface SKRelawanItem {
+    penugasan_id: number;
+    nik: string;
+    nama_lengkap: string;
+    no_hp: string | null;
+    nama_kader: string | null;
+    kader_id: number | null;
+    status_keaktifan: string;
+    jabatan: string | null;
+}
+
+export interface SKDetail extends SKData {
+    file_path?: string;
+    daftar_relawan: SKRelawanItem[];
+}
+
+export interface ErrorHint {
+    title: string;
+    steps: string[];
+    link?: string;
+    link_text?: string;
 }

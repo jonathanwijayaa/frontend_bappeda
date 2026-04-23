@@ -13,6 +13,7 @@ import {
     ChevronRight,
     UserCircle,
     FolderOpen,
+    History,
     LucideIcon
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -44,6 +45,7 @@ const Sidebar: React.FC = () => {
         { path: '/log-aktifitas', icon: Clock, label: 'Log/Aktifitas' },
         { path: '/statistik', icon: BarChart3, label: 'Statistik' },
         { path: '/dokumen', icon: FolderOpen, label: 'Dokumen' },
+        { path: '/histori-relawan', icon: History, label: 'Histori Relawan' },
     ];
 
     const opdMenu: MenuItem[] = [
@@ -54,6 +56,7 @@ const Sidebar: React.FC = () => {
         { path: '/log-aktifitas', icon: Clock, label: 'Log/Aktifitas' },
         { path: '/statistik', icon: BarChart3, label: 'Statistik' },
         { path: '/dokumen', icon: FolderOpen, label: 'Dokumen' },
+        { path: '/histori-relawan', icon: History, label: 'Histori Relawan' },
     ];
 
     const menuItems = isSuperAdmin ? superAdminMenu : opdMenu;

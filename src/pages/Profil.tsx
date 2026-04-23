@@ -6,15 +6,8 @@ import Card from '../components/ui/Card';
 import Toast, { ToastType } from '../components/ui/Toast';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../utils/api';
+import { ProfileData } from '../types';
 
-interface ProfileData {
-    user_id: number;
-    nik: string;
-    nama_lengkap: string;
-    no_hp: string | null;
-    email: string | null;
-    role: string;
-}
 
 const Profil: React.FC = () => {
     const { user } = useAuth();

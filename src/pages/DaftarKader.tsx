@@ -13,34 +13,8 @@ import Pagination from '../components/ui/Pagination';
 import { exportToPDF } from '../utils/exportToPDF';
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { KaderData, OPDOption, AutoOption } from '../types';
 
-interface KaderData {
-    kader_id: number;
-    nama_kader: string;
-    deskripsi: string | null;
-    nama_opd: string;
-    opd_id: number;
-    is_active: boolean;
-    created_at: string;
-    updated_at: string;
-    // PIC — dari tabel pic_kader → relawan → users
-    pic_nama: string | null;
-    pic_nik: string | null;
-    pic_no_hp: string | null;
-    pic_relawan_id: number | null;
-    pic_tanggal_mulai: string | null;
-    jumlah_anggota?: number; // khusus response OPD
-}
-
-interface OPDOption {
-    opd_id: number;
-    nama_opd: string;
-}
-
-interface AutoOption {
-    label: string;
-    value: string;
-}
 
 const DaftarKader: React.FC = () => {
     const { isSuperAdmin, isOPD } = useAuth();

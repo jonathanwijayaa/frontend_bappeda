@@ -4,18 +4,8 @@ import RelawanMenu from '../components/RelawanMenu';
 import Toast, { ToastType } from '../components/ui/Toast';
 import { apiFetch } from '../utils/api';
 import { Loader2 } from 'lucide-react';
+import { PengajuanItem } from '../types';
 
-interface PengajuanItem {
-    pengajuan_id: number;
-    jenis_perubahan: string;
-    status: 'Menunggu Review' | 'Diterima' | 'Ditolak';
-    catatan_relawan: string | null;
-    catatan_verifikator: string | null;
-    tanggal_pengajuan: string;
-    tanggal_verifikasi: string | null;
-    data_baru?: Record<string, any>;
-    data_lama?: Record<string, any>;
-}
 
 const STATUS_CONFIG = {
     'Menunggu Review': { label: 'Menunggu Review', dot: 'bg-yellow-400', text: 'text-yellow-700' },

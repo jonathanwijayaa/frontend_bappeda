@@ -11,19 +11,8 @@ import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
 import { exportToPDF } from '../utils/exportToPDF';
 import { apiFetch } from '../utils/api';
+import { OPDData } from '../types';
 
-// Interface sesuai response backend
-interface OPDData {
-    opd_id: number;
-    nama_opd: string;
-    alamat: string | null;
-    pic: string | null;
-    nik_pic: string | null;
-    kontak: string | null;
-    is_active: boolean;
-    created_at: string;
-    updated_at: string;
-}
 
 const ManajemenOPD: React.FC = () => {
     const [opdList, setOpdList] = useState<OPDData[]>([]);

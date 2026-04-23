@@ -9,21 +9,8 @@ import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
 import { apiFetch } from '../utils/api';
 import { ChangeEvent } from 'react';
+import { LogData } from '../types';
 
-// Interface sesuai response backend getAuditLogs
-interface LogData {
-    log_id: number;
-    action_type: string;
-    table_name: string;
-    record_id: number | null;
-    old_value: any | null;
-    new_value: any | null;
-    ip_address: string | null;
-    timestamp: string;
-    nama_pengguna: string | null;
-    role_pengguna: string | null;
-    nik: string | null;
-}
 
 const LogAktifitas: React.FC = () => {
     const [logList, setLogList] = useState<LogData[]>([]);

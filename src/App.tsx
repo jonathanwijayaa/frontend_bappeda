@@ -16,6 +16,7 @@ import Profil from './pages/Profil';
 import ProfilRelawan from './pages/ProfilRelawan';
 import Riwayat from './pages/Riwayat';
 import KomunitasSaya from './pages/KomunitasSaya';
+import HistoriRelawan from './pages/HistoriRelawan';
 import Login from './pages/Login';
 import { ReactNode } from 'react';
 
@@ -144,6 +145,13 @@ function AppRoutes() {
                 <ProtectedRoute>
                     <Layout>
                         <Dokumen />
+                    </Layout>
+                </ProtectedRoute>
+            } />
+            <Route path="/histori-relawan" element={
+                <ProtectedRoute>
+                    <Layout>
+                        <HistoriRelawan />
                     </Layout>
                 </ProtectedRoute>
             } />
