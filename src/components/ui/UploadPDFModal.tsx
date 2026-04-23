@@ -127,7 +127,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
 
     // === HANDLER: Toggle "Semua Kader" ===
     const handleSelectAllKader = () => {
-        setIsSelectAllKader(true);
+        setIsSelectAllKader(!isSelectAllKader);
         setSelectedKaderIds([]); // Kosongkan pilihan spesifik
     };
 
