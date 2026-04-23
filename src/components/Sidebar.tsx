@@ -77,12 +77,17 @@ const Sidebar: React.FC = () => {
             </button>
 
             {/* Header */}
-            <div className={`p-6 border-b border-green-600 flex items-center flex-shrink-0 h-[88px] ${isCollapsed ? 'justify-center' : ''
+            <div className={`p-4 border-b border-green-600 flex items-center flex-shrink-0 h-[88px] gap-3 ${isCollapsed ? 'justify-center' : ''
                 }`}>
-                <h1 className={`text-white font-bold text-xl transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
+                <img
+                    src="/src/assets/image/logo-bappeda.png"
+                    alt="Logo Bappeda"
+                    className="w-10 h-10 object-contain flex-shrink-0"
+                />
+                <span className={`text-white font-bold text-base whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
                     }`}>
-                    Icon App
-                </h1>
+                    Bappeda Yogyakarta
+                </span>
             </div>
 
             {/* Navigation Menu - Scrollable */}

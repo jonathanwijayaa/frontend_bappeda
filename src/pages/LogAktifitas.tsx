@@ -119,7 +119,7 @@ const LogAktifitas: React.FC = () => {
                         <p className="text-gray-600 font-medium">Tidak ada log yang sesuai filter</p>
                     </div>
                 ) : (
-                    <Table columns={columns} data={currentData} minRows={10} />
+                    <Table columns={columns} data={currentData} minRows={5} />
                 )}
 
                 {!isLoading && filteredData.length > 0 && (
