@@ -46,7 +46,7 @@ const DonutChart: React.FC<DonutChartProps> = ({
                     stroke="#ffffff"
                     strokeWidth={1.5}
                 >
-                    {data.map((entry, index) => (
+                    {data.map((_entry, index) => (
                         <Cell
                             key={`cell-${index}`}
                             fill={COLORS[index % COLORS.length]}

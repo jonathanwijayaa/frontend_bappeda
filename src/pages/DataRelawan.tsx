@@ -1,5 +1,5 @@
 //DataRelawan.tsx
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Plus, Upload, Loader2, X } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -10,42 +10,44 @@ import AutocompleteInput from '../components/ui/AutocompleteInput';
 import UploadExcelModal from '../components/ui/UploadExcelModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
-import { RelawanData, Assignment, RelawanAPIData, PengajuanAPIData } from '../types/relawan.types';
+import { RelawanData, Assignment, PengajuanAPIData } from '../types/relawan.types';
 import { AutoOption } from '../types/common.types';
-import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
+import { useRelawanList, RELAWAN_KEYS } from '../hooks/relawan/useRelawanList';
+import { usePengajuanList, PENGAJUAN_KEYS } from '../hooks/relawan/usePengajuanList';
+import { useOpdList } from '../hooks/opd/useOpdList';
+import { useKaderByOpd } from '../hooks/relawan/useKaderByOpd';
+import { useQueryClient } from '@tanstack/react-query';
+import apiClient from '../lib/axios';
 
-
-const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
-    user_id: r.user_id,  // ← tambahkan ini (pastikan juga ada di interface RelawanData)
-    nik: r.nik,
-    namaLengkap: r.nama_lengkap,
-    alamat: r.alamat_ktp || '-',
-    no_hp: r.no_hp || '-',
-    kelurahan: r.kelurahan || '-',
-    kader: r.nama_kader || '-',
-    jabatan: r.penugasan || '-',   // ← fix: bukan status_penugasan
-    penugasan: r.nama_opd || '-',
-    jenisKelamin: r.jenis_kelamin || 'L',
-    assignments: []
-});
 
 const DataRelawan: React.FC = () => {
     const { isSuperAdmin, isOPD, user } = useAuth();
     const API_BASE = isSuperAdmin ? '/admin/relawan' : '/opd-admin/relawan';
+    const qc = useQueryClient();
 
-    const [relawanList, setRelawanList] = useState<RelawanData[]>([]);
-    const [pengajuanList, setPengajuanList] = useState<PengajuanAPIData[]>([]);
-    const [isLoadingRelawan, setIsLoadingRelawan] = useState(true);
-    const [isLoadingPengajuan, setIsLoadingPengajuan] = useState(true);
+    // ── Server State (TanStack Query) ─────────────────────────────
+    const { data: relawanList = [], isLoading: isLoadingRelawan } = useRelawanList(!!isSuperAdmin);
+    const { data: pengajuanList = [], isLoading: isLoadingPengajuan } = usePengajuanList(!!isSuperAdmin);
+    const { data: opdListData = [] } = useOpdList();
+
+    // OPD options untuk autocomplete
+    const opdOptions = useMemo<AutoOption[]>(
+        () => opdListData.map(o => ({ label: o.nama_opd, value: String(o.opd_id) })),
+        [opdListData]
+    );
+
+    // kaderOptionsByIndex — dihitung setelah formData dideklarasi (lihat bawah)
+    const [activeOpdId, setActiveOpdId] = useState<number>(0);
+    const { data: kaderOptions = [], isFetching: isKaderLoading } = useKaderByOpd(
+        activeOpdId,
+        !!isOPD,
+        activeOpdId > 0 || !!isOPD
+    );
+
+
     const [isReviewing, setIsReviewing] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-
-    const [opdOptions, setOpdOptions] = useState<AutoOption[]>([]);
-
-    // ── Kader options per assignment index (dinamis berdasarkan OPD) ──
-    const [kaderOptionsByIndex, setKaderOptionsByIndex] = useState<Record<number, AutoOption[]>>({});
-    const [isLoadingKaderByIndex, setIsLoadingKaderByIndex] = useState<Record<number, boolean>>({});
+    const [isSaving, setIsSaving] = useState(false); // untuk loading tombol submit tambah relawan
 
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -84,18 +86,29 @@ const DataRelawan: React.FC = () => {
 
     const hasChanges = useMemo(() => {
         if (!selectedRelawan) return false;
-        return (
-            detailFormData.namaRelawan !== selectedRelawan.namaLengkap ||
-            detailFormData.nik !== selectedRelawan.nik ||
-            detailFormData.alamat !== selectedRelawan.alamat ||
-            detailFormData.no_hp !== selectedRelawan.no_hp ||
-            detailFormData.kelurahan !== selectedRelawan.kelurahan ||
-            detailFormData.kader !== selectedRelawan.kader ||
-            detailFormData.jabatan !== selectedRelawan.jabatan ||
-            detailFormData.penugasan !== selectedRelawan.penugasan ||
-            detailFormData.jenisKelamin !== (selectedRelawan.jenisKelamin || 'L') ||
-            JSON.stringify(detailFormData.assignments) !== JSON.stringify(selectedRelawan.assignments || [])
-        );
+        const orig = selectedRelawan;
+        // Field-level comparison — tidak perlu JSON.stringify array
+        if (
+            detailFormData.namaRelawan !== orig.namaLengkap ||
+            detailFormData.nik !== orig.nik ||
+            detailFormData.alamat !== orig.alamat ||
+            detailFormData.no_hp !== orig.no_hp ||
+            detailFormData.kelurahan !== orig.kelurahan ||
+            detailFormData.jenisKelamin !== (orig.jenisKelamin || 'L')
+        ) return true;
+        // Assignment length change
+        const origAssign = orig.assignments ?? [];
+        if (detailFormData.assignments.length !== origAssign.length) return true;
+        // Deep compare per field (cheaper than JSON.stringify karena exit-early)
+        return detailFormData.assignments.some((a, i) => {
+            const o = origAssign[i] as any;
+            return !o ||
+                a.opd !== o.opd ||
+                a.kader !== o.kader ||
+                a.peran !== o.peran ||
+                a.penugasan !== o.penugasan ||
+                a.statusKeaktifan !== o.statusKeaktifan;
+        });
     }, [selectedRelawan, detailFormData]);
 
     const [formData, setFormData] = useState({
@@ -126,177 +139,34 @@ const DataRelawan: React.FC = () => {
         ]
     });
 
-    // ── Fetch kader berdasarkan opd_id untuk assignment tertentu ──
-    const fetchKaderByOpdId = useCallback(async (opdId: number, assignmentIndex: number) => {
-        if (!opdId) {
-            setKaderOptionsByIndex(prev => ({ ...prev, [assignmentIndex]: [] }));
-            return;
-        }
+    // kaderOptionsByIndex — shared per opd_id via TanStack Query cache
+    const kaderOptionsByIndex = useMemo<Record<number, AutoOption[]>>(() => {
+        const result: Record<number, AutoOption[]> = {};
+        formData.assignments.forEach((a, i) => {
+            if (isOPD || (a.opd_id ?? 0) === activeOpdId) result[i] = kaderOptions;
+        });
+        return result;
+    }, [kaderOptions, activeOpdId, isOPD, formData.assignments.length]);
 
-        setIsLoadingKaderByIndex(prev => ({ ...prev, [assignmentIndex]: true }));
-        try {
-            //  FIX: OPD pakai endpoint /opd-admin/kader (tidak perlu opd_id, backend ambil otomatis)
-            //         Super Admin tetap pakai /kader?opd_id=...
-            const endpoint = isOPD
-                ? `/opd-admin/kader`
-                : `/kader?opd_id=${opdId}`;
+    const isLoadingKaderByIndex = useMemo<Record<number, boolean>>(() => {
+        const result: Record<number, boolean> = {};
+        if (isKaderLoading) formData.assignments.forEach((_, i) => { result[i] = true; });
+        return result;
+    }, [isKaderLoading, formData.assignments.length]);
 
-            const res = await apiFetch(endpoint);
-            const result = await res.json();
+    // ── fetchKaderByOpdId — sekarang melalui TanStack Query (setActiveOpdId) ──
+    const fetchKaderByOpdId = useCallback((opdId: number, _assignmentIndex: number) => {
+        setActiveOpdId(opdId > 0 ? opdId : (isOPD ? ((user as any)?.opd_id ?? 0) : 0));
+    }, [isOPD, user]);
 
-            if (result.success) {
-                const options: AutoOption[] = result.data.map((k: any) => ({
-                    label: k.nama_kader,
-                    value: String(k.kader_id)
-                }));
-                setKaderOptionsByIndex(prev => ({ ...prev, [assignmentIndex]: options }));
-            } else {
-                setKaderOptionsByIndex(prev => ({ ...prev, [assignmentIndex]: [] }));
-            }
-        } catch (err) {
-            console.error('Gagal mengambil kader:', err);
-            setKaderOptionsByIndex(prev => ({ ...prev, [assignmentIndex]: [] }));
-        } finally {
-            setIsLoadingKaderByIndex(prev => ({ ...prev, [assignmentIndex]: false }));
-        }
-    }, [isOPD]); // ← tambahkan isOPD ke dependency
+    // ── Invalidate cache setelah mutasi ──
+    const invalidateRelawan = useCallback(() =>
+        qc.invalidateQueries({ queryKey: RELAWAN_KEYS.all }),
+    [qc]);
+    const invalidatePengajuan = useCallback(() =>
+        qc.invalidateQueries({ queryKey: PENGAJUAN_KEYS.all }),
+    [qc]);
 
-    // ── Fetch Functions ──
-    const fetchRelawan = useCallback(async (showLoader: boolean = true) => {
-        if (showLoader) setIsLoadingRelawan(true);
-        try {
-            const res = await apiFetch(API_BASE)
-            const result = await res.json();
-
-            if (result.success) {
-                // ── LOGIKA GROUPING MULTI-PENUGASAN ──
-                const groupedMap = new Map<string, RelawanData>();
-
-                result.data.forEach((row: any) => {
-                    // Jika NIK belum ada di Map, buat kerangka profil utamanya
-                    if (!groupedMap.has(row.nik)) {
-                        groupedMap.set(row.nik, {
-                            nik: row.nik,
-                            namaLengkap: row.nama_lengkap,
-                            alamat: row.alamat_ktp || '-',
-                            no_hp: row.no_hp || '-',
-                            kelurahan: row.kelurahan || '-',
-                            jenisKelamin: row.jenis_kelamin || 'L',
-                            kader: row.nama_kader || '-',
-                            jabatan: row.jabatan || '-',
-                            penugasan: row.nama_opd || row.penugasan || '-',
-                            assignments: [],
-                            relawan_id: row.relawan_id,  // ← TAMBAH INI
-                            user_id: row.user_id,        // ← TAMBAH INI (jaga-jaga)
-                        } as any);
-                    }
-
-                    // Masukkan data penugasan ke dalam array 'assignments' milik relawan tersebut
-                    if (row.nama_opd || row.penugasan || row.nama_kader) {
-                        groupedMap.get(row.nik)!.assignments!.push({
-                            id: row.penugasan_id?.toString() || Math.random().toString(),
-                            opd: row.nama_opd || '',
-                            opd_id: row.opd_id || 0, // Termasuk opd_id agar komplit
-                            kader: row.nama_kader || '',
-                            //  FIXED: Tambahkan properti ini untuk sinkronisasi state UI
-                            kader_id: row.kader_id || null,
-                            peran: row.jabatan || '',
-                            detail: row.detail_jabatan || '',
-                            penugasan: row.penugasan || '',
-                            statusKeaktifan: row.status_penugasan || 'Aktif',
-                            nomorSK: row.nomor_sk_manual || '',
-                            skId: ''
-                        } as any); //  FIXED: Gunakan "as any" untuk melewati pengecekan ketat interface saat render awal
-                    }
-                });
-
-                // Ubah Map kembali menjadi Array untuk dirender oleh tabel
-                setRelawanList(Array.from(groupedMap.values()));
-            } else {
-                setToast({ message: result.message || 'Gagal memuat data relawan', type: 'error' });
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            if (showLoader) setIsLoadingRelawan(false);
-        }
-    }, [API_BASE]);
-
-    const fetchPengajuan = useCallback(async (showLoader: boolean = true) => {
-
-        //  FIXED: Hentikan fungsi jika yang login bukan Super Admin
-        if (!isSuperAdmin) {
-            if (showLoader) setIsLoadingPengajuan(false);
-            return;
-        }
-
-        if (showLoader) setIsLoadingPengajuan(true);
-        try {
-            const res = await apiFetch(`${API_BASE}/pengajuan`);
-            const result = await res.json();
-            if (result.success) {
-                setPengajuanList(result.data);
-            } else {
-                setToast({ message: result.message || 'Gagal memuat data pengajuan', type: 'error' });
-            }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
-        } finally {
-            if (showLoader) setIsLoadingPengajuan(false);
-        }
-    }, [isSuperAdmin, API_BASE]);
-
-    useEffect(() => {
-        fetchRelawan();
-        fetchPengajuan();
-
-        // Fetch OPD options untuk autocomplete
-        apiFetch('/opd').then(r => r.json()).then(result => {
-            if (result.success) {
-                setOpdOptions(result.data.map((o: any) => ({ label: o.nama_opd, value: String(o.opd_id) })));
-            }
-        }).catch(() => { });
-    }, [fetchRelawan, fetchPengajuan]);
-
-    // ── Auto-fill OPD untuk OPD user saat modal dibuka ──
-    useEffect(() => {
-        if (isModalOpen && isOPD && user && formData.assignments.length > 0) {
-            const opdId = (user as any)?.opd_id;
-            const opdName = (user as any)?.nama_opd;
-
-            if (opdId && opdName && formData.assignments[0].opd_id === 0) {
-                //  FIXED: Auto-fill OPD
-                setFormData(prev => ({
-                    ...prev,
-                    assignments: prev.assignments.map((a, index) => ({
-                        ...a,
-                        opd: opdName,
-                        opd_id: opdId
-                    }))
-                }));
-
-                //  FIXED: Langsung fetch kader SETELAH setFormData (tidak tunggu useEffect lain)
-                formData.assignments.forEach((_, index) => {
-                    console.log(` Debug: Fetching kader for OPD ${opdId}, assignment index ${index}`);
-                    fetchKaderByOpdId(opdId, index);
-                });
-            }
-        }
-    }, [isModalOpen, isOPD, user]);  //  Hapus formData.assignments dari dependency
-
-    // ── Auto-fetch kader untuk semua assignment yang ada saat OPD user masuk edit mode ──
-    useEffect(() => {
-        if (isEditMode && isOPD && (user as any)?.opd_id) {
-            const opdId = (user as any).opd_id;
-            // Fetch kader untuk setiap assignment yang sudah ada di form detail
-            detailFormData.assignments.forEach((_, index) => {
-                // Hanya fetch jika belum ada options untuk index ini
-                if (!kaderOptionsByIndex[index]) {
-                    fetchKaderByOpdId(opdId, index);
-                }
-            });
-        }
-    }, [isEditMode]); // ← hanya trigger saat isEditMode berubah
 
     const filteredRelawanData = useMemo(() => {
         return relawanList.filter(relawan =>
@@ -310,13 +180,13 @@ const DataRelawan: React.FC = () => {
     const endIndex = startIndex + itemsPerPage;
     const currentRelawanData = filteredRelawanData.slice(startIndex, endIndex);
 
-    const pengajuanUIData = pengajuanList.map(p => ({
+    const pengajuanUIData = useMemo(() => pengajuanList.map(p => ({
         nik: p.nik,
         namaLengkap: p.nama_lengkap,
         tanggalPengajuan: new Date(p.tanggal_pengajuan).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }),
         status: p.status,
         _raw: p
-    }));
+    })), [pengajuanList]);
 
     const pengajuanColumns = [
         { header: 'NIK', accessor: 'nik' as const },
@@ -374,31 +244,20 @@ const DataRelawan: React.FC = () => {
         if (!selectedPengajuan) return;
         setIsReviewing(true);
         try {
-            const res = await apiFetch(`/admin/relawan/pengajuan/${selectedPengajuan.pengajuan_id}/review`, {
-                method: 'POST',
-                body: JSON.stringify({ status, catatan_verifikator: verificationNote })
-            });
-            const result = await res.json();
-            if (result.success) {
-                setToast({ message: result.message, type: 'success' });
-
-                // Optimistically update the status in UI list
-                setPengajuanList(prev => prev.map(p =>
-                    p.pengajuan_id === selectedPengajuan.pengajuan_id ? { ...p, status: status } : p
-                ));
-
+            const { data } = await apiClient.post(
+                `/admin/relawan/pengajuan/${selectedPengajuan.pengajuan_id}/review`,
+                { status, catatan_verifikator: verificationNote }
+            );
+            if (data.success) {
+                setToast({ message: data.message, type: 'success' });
                 setIsReviewModalOpen(false);
-
-                // Fetch in background without UI loader
-                fetchPengajuan(false);
-                if (status === 'Disetujui') {
-                    fetchRelawan(false);
-                }
+                invalidatePengajuan();
+                if (status === 'Disetujui') invalidateRelawan();
             } else {
-                setToast({ message: result.message || 'Gagal memproses pengajuan', type: 'error' });
+                setToast({ message: data.message || 'Gagal memproses pengajuan', type: 'error' });
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } catch (e: any) {
+            setToast({ message: e.response?.data?.message || 'Tidak dapat terhubung ke server', type: 'error' });
         } finally {
             setIsReviewing(false);
         }
@@ -432,63 +291,45 @@ const DataRelawan: React.FC = () => {
 
         setIsSaving(true);
         try {
-            //  FIXED: Menggunakan endpoint /bulk karena kita mengirim array
-            const res = await apiFetch(`${API_BASE}/bulk`, {
-                method: 'POST',
-                //  FIXED: Format data disejajarkan dengan apa yang diharapkan oleh fitur Bulk Backend
-                body: JSON.stringify([{
-                    nama_lengkap: formData.namaRelawan,
-                    nik: formData.nik,
-                    jenis_kelamin: formData.jenisKelamin,
-                    alamat_ktp: formData.alamat,
-                    no_hp: formData.no_hp,
-                    kelurahan: formData.kelurahan,
-                    assignments: formData.assignments.map(a => ({
-                        opd_id: a.opd_id || null, // Backend akan otomatis baca opd_id jika ada (kita sudah perbarui ini sebelumnya)
-                        opd: a.opd,
-                        kader_id: a.kader_id || null,
-                        kader: a.kader,
-                        peran: a.peran,           // Backend pakai 'peran'
-                        penugasan: a.penugasan,
-                        detail: a.detail,         // Backend pakai 'detail'
-                        statusKeaktifan: a.statusKeaktifan
-                    }))
-                }])
-            });
-
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                setToast({ message: errData.message || `Server error: ${res.status}`, type: 'error' });
-                return;
-            }
-            const result = await res.json();
-            const errors = result.data?.errors ?? [];
-            const skipped = result.data?.skipped ?? result.data?.skippedNIK ?? [];
-            
-            if (!res.ok || errors.length > 0 || skipped.length > 0) {
-                // Ada error atau dilewati seutuhnya = error toast
-                let errorMsg = result.message || 'Gagal memproses data relawan';
+            const { data } = await apiClient.post(`${API_BASE}/bulk`, [{
+                nama_lengkap: formData.namaRelawan,
+                nik: formData.nik,
+                jenis_kelamin: formData.jenisKelamin,
+                alamat_ktp: formData.alamat,
+                no_hp: formData.no_hp,
+                kelurahan: formData.kelurahan,
+                assignments: formData.assignments.map(a => ({
+                    opd_id: a.opd_id || null,
+                    opd: a.opd,
+                    kader_id: a.kader_id || null,
+                    kader: a.kader,
+                    peran: a.peran,
+                    penugasan: a.penugasan,
+                    detail: a.detail,
+                    statusKeaktifan: a.statusKeaktifan
+                }))
+            }]);
+            const errors  = data?.data?.errors  ?? [];
+            const skipped = data?.data?.skipped ?? data?.data?.skippedNIK ?? [];
+            if (errors.length > 0 || skipped.length > 0) {
+                let errorMsg = data.message || 'Gagal memproses data relawan';
                 if (errors.length > 0) errorMsg = typeof errors[0] === 'string' ? errors[0] : JSON.stringify(errors[0]);
-                else if (skipped.length > 0) errorMsg = result.message || `Beberapa NIK sudah terdaftar dan dilewati`;
+                else if (skipped.length > 0) errorMsg = data.message || 'Beberapa NIK sudah terdaftar dan dilewati';
                 setToast({ message: errorMsg, type: 'error' });
             } else {
-                // Berhasil dimasukkan atau di-update
-                setToast({ message: result.message || 'Data berhasil diproses', type: 'success' });
+                setToast({ message: data.message || 'Data berhasil diproses', type: 'success' });
                 setIsModalOpen(false);
                 setFormData({
                     namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', no_hp: '',
                     kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
-                    assignments: [{
-                        id: Date.now().toString(), opd: '', opd_id: 0, kader: '',
+                    assignments: [{ id: Date.now().toString(), opd: '', opd_id: 0, kader: '',
                         kader_id: null, peran: '', penugasan: '', detail: '', statusKeaktifan: 'Aktif',
-                        nomorSK: '', skId: ''
-                    }]
+                        nomorSK: '', skId: '' }]
                 });
-                setKaderOptionsByIndex({});
-                fetchRelawan();
+                invalidateRelawan();
             }
-        } catch (err: any) {
-            setToast({ message: `Koneksi gagal: ${err?.message || 'unknown error'}`, type: 'error' });
+        } catch (e: any) {
+            setToast({ message: e.response?.data?.message || `Koneksi gagal: ${e.message}`, type: 'error' });
         } finally {
             setIsSaving(false);
         }
@@ -496,20 +337,15 @@ const DataRelawan: React.FC = () => {
 
     const handleExcelUploadConfirm = async (data: any[]) => {
         try {
-            const res = await apiFetch(`${API_BASE}/bulk`, {
-                method: 'POST',
-                body: JSON.stringify(data)
-            });
-            const result = await res.json();
-            
-            if (result.success) {
-                setToast({ message: result.message || 'Berhasil memproses Excel', type: 'success' });
-                fetchRelawan();
+            const { data: res } = await apiClient.post(`${API_BASE}/bulk`, data);
+            if (res.success) {
+                setToast({ message: res.message || 'Berhasil memproses Excel', type: 'success' });
+                invalidateRelawan();
             } else {
-                setToast({ message: result.message || 'Gagal import Excel', type: 'error' });
+                setToast({ message: res.message || 'Gagal import Excel', type: 'error' });
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } catch (e: any) {
+            setToast({ message: e.response?.data?.message || 'Tidak dapat terhubung ke server', type: 'error' });
         } finally {
             setIsUploadModalOpen(false);
         }
@@ -552,38 +388,20 @@ const DataRelawan: React.FC = () => {
             ...prev,
             assignments: prev.assignments.filter((_, i) => i !== index)
         }));
-        // Hapus kader options untuk index ini
-        setKaderOptionsByIndex(prev => {
-            const updated = { ...prev };
-            delete updated[index];
-            return updated;
-        });
+        // activeOpdId tetap, kaderOptionsByIndex dihitung otomatis dari useMemo
     };
 
     // ── Handler OPD berubah di assignment ──
     const handleAssignmentOpdChange = (index: number, namaOpd: string) => {
-        // Cari opd_id dari opdOptions
         const matched = opdOptions.find(o => o.label.toLowerCase() === namaOpd.toLowerCase());
         const opdId = matched ? Number(matched.value) : 0;
-
         setFormData(prev => {
             const newAssignments = [...prev.assignments];
-            newAssignments[index] = {
-                ...newAssignments[index],
-                opd: namaOpd,
-                opd_id: opdId,
-                kader: '', //  Reset kader saat OPD berubah
-                kader_id: null
-            };
+            newAssignments[index] = { ...newAssignments[index], opd: namaOpd, opd_id: opdId, kader: '', kader_id: null };
             return { ...prev, assignments: newAssignments };
         });
-
-        // Fetch kader sesuai OPD yang dipilih
-        if (opdId > 0) {
-            fetchKaderByOpdId(opdId, index);
-        } else {
-            setKaderOptionsByIndex(prev => ({ ...prev, [index]: [] }));
-        }
+        // Update activeOpdId — useKaderByOpd re-fetch otomatis jika cache miss
+        if (opdId > 0) setActiveOpdId(opdId);
     };
 
     const handleAssignmentChange = (index: number, field: string, value: string) => {
@@ -623,21 +441,12 @@ const DataRelawan: React.FC = () => {
     const handleDetailAssignmentOpdChange = (index: number, namaOpd: string) => {
         const matched = opdOptions.find(o => o.label.toLowerCase() === namaOpd.toLowerCase());
         const opdId = matched ? Number(matched.value) : 0;
-
         setDetailFormData(prev => {
             const newAssignments = [...prev.assignments];
-            newAssignments[index] = {
-                ...newAssignments[index],
-                opd: namaOpd,
-                opd_id: opdId,
-                kader: '',
-                kader_id: null
-            } as any;
+            newAssignments[index] = { ...newAssignments[index], opd: namaOpd, opd_id: opdId, kader: '', kader_id: null } as any;
             return { ...prev, assignments: newAssignments };
         });
-
-        if (opdId > 0) fetchKaderByOpdId(opdId, index);
-        else setKaderOptionsByIndex(prev => ({ ...prev, [index]: [] }));
+        if (opdId > 0) setActiveOpdId(opdId);
     };
 
     const handleDetailAssignmentKaderChange = (index: number, value: string) => {
@@ -658,51 +467,41 @@ const DataRelawan: React.FC = () => {
     };
 
     const handleSaveEdit = async () => {
-        if (!selectedRelawan) return;
-
-        if (!hasChanges) {
+        if (!selectedRelawan || !hasChanges) {
             setToast({ message: 'Tidak ada data yang diubah', type: 'error' });
             return;
         }
-
         setIsSavingEdit(true);
         try {
             const relawanId = (selectedRelawan as any).relawan_id;
-            const endpoint = isSuperAdmin
-                ? `/admin/relawan/${relawanId}`
-                : `/opd-admin/relawan/${relawanId}`;
-
-            const res = await apiFetch(endpoint, {
-                method: 'PUT',
-                body: JSON.stringify({
-                    nama_lengkap: detailFormData.namaRelawan,
-                    alamat_ktp: detailFormData.alamat,
-                    no_hp: detailFormData.no_hp,
-                    kelurahan: detailFormData.kelurahan,
-                    jenis_kelamin: detailFormData.jenisKelamin,
-                    assignments: detailFormData.assignments.map(a => ({
-                        penugasan_id: !String((a as any).id).startsWith('new-') && !isNaN(parseInt((a as any).id)) ? parseInt((a as any).id) : undefined,
-                        opd_id: (a as any).opd_id || null,
-                        opd: a.opd,
-                        kader_id: (a as any).kader_id || null,
-                        peran: a.peran,
-                        penugasan: a.penugasan,
-                        detail: a.detail,
-                        statusKeaktifan: a.statusKeaktifan
-                    }))
-                })
+            const endpoint = isSuperAdmin ? `/admin/relawan/${relawanId}` : `/opd-admin/relawan/${relawanId}`;
+            const { data } = await apiClient.put(endpoint, {
+                nama_lengkap: detailFormData.namaRelawan,
+                alamat_ktp: detailFormData.alamat,
+                no_hp: detailFormData.no_hp,
+                kelurahan: detailFormData.kelurahan,
+                jenis_kelamin: detailFormData.jenisKelamin,
+                assignments: detailFormData.assignments.map(a => ({
+                    penugasan_id: !String((a as any).id).startsWith('new-') && !isNaN(parseInt((a as any).id)) ? parseInt((a as any).id) : undefined,
+                    opd_id: (a as any).opd_id || null,
+                    opd: a.opd,
+                    kader_id: (a as any).kader_id || null,
+                    peran: a.peran,
+                    penugasan: a.penugasan,
+                    detail: a.detail,
+                    statusKeaktifan: a.statusKeaktifan
+                }))
             });
-            const result = await res.json();
-            if (result.success) {
-                setToast({ message: result.message, type: 'success' });
+            if (data.success) {
+                setToast({ message: data.message, type: 'success' });
                 setIsEditMode(false);
                 setIsDetailModalOpen(false);
-                fetchRelawan();
+                invalidateRelawan();
             } else {
-                setToast({ message: result.message || 'Gagal menyimpan perubahan', type: 'error' });
+                setToast({ message: data.message || 'Gagal menyimpan perubahan', type: 'error' });
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } catch (e: any) {
+            setToast({ message: e.response?.data?.message || 'Tidak dapat terhubung ke server', type: 'error' });
         } finally {
             setIsSavingEdit(false);
         }
@@ -735,26 +534,23 @@ const DataRelawan: React.FC = () => {
         if (!deleteConfirm) return;
         const { penugasanId, index } = deleteConfirm;
         setDeleteConfirm(null);
-
         setDeletingPenugasanId(penugasanId);
         try {
             const endpoint = isSuperAdmin
                 ? `/admin/relawan/penugasan/${penugasanId}`
                 : `/opd-admin/relawan/penugasan/${penugasanId}`;
-            const res = await apiFetch(endpoint, { method: 'DELETE' });
-            const result = await res.json();
-            if (result.success) {
-                //  FIX: Update detailFormData DAN selectedRelawan sekaligus
+            const { data } = await apiClient.delete(endpoint);
+            if (data.success) {
                 const updatedAssignments = detailFormData.assignments.filter((_, i) => i !== index);
                 setDetailFormData(prev => ({ ...prev, assignments: updatedAssignments }));
                 setSelectedRelawan(prev => prev ? { ...prev, assignments: updatedAssignments } : null);
-                fetchRelawan(); //  Refresh data background
+                invalidateRelawan();
                 setToast({ message: 'Penugasan berhasil dihapus', type: 'success' });
             } else {
-                setToast({ message: result.message || 'Gagal menghapus penugasan', type: 'error' });
+                setToast({ message: data.message || 'Gagal menghapus penugasan', type: 'error' });
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } catch (e: any) {
+            setToast({ message: e.response?.data?.message || 'Tidak dapat terhubung ke server', type: 'error' });
         } finally {
             setDeletingPenugasanId(null);
         }
@@ -1117,8 +913,8 @@ const DataRelawan: React.FC = () => {
                     </div>
 
                     <div className="flex justify-end pt-6">
-                        <Button type="submit" className="bg-green-600 hover:bg-green-700 text-white px-12">
-                            Simpan
+                        <Button type="submit" disabled={isSaving} className="bg-green-600 hover:bg-green-700 text-white px-12 disabled:opacity-50">
+                            {isSaving ? <Loader2 size={16} className="animate-spin" /> : 'Simpan'}
                         </Button>
                     </div>
                 </form>
