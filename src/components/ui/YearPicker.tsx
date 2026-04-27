@@ -147,9 +147,9 @@ const YearPicker: React.FC<YearPickerProps> = ({
                                 ${isDisabled
                                     ? 'text-gray-300 cursor-not-allowed'
                                     : isSelected
-                                        ? 'bg-green-500 text-white shadow-sm'
+                                        ? 'bg-blue-600 text-white shadow-sm'
                                         : isCurrent
-                                            ? 'bg-green-50 text-green-700 border border-green-200'
+                                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
                                             : 'hover:bg-gray-100 text-gray-700'
                                 }
                             `}
@@ -169,7 +169,7 @@ const YearPicker: React.FC<YearPickerProps> = ({
                 ref={triggerRef}
                 type="button"
                 onClick={openPopup}
-                className="w-full flex items-center justify-between gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 hover:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-500 transition-colors"
+                className="w-full flex items-center justify-between gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm text-gray-700 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
             >
                 <span className="flex items-center gap-2">
                     <CalendarDays size={14} className="text-gray-400 flex-shrink-0" />
