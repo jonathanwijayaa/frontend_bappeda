@@ -249,7 +249,11 @@ const DaftarKader: React.FC = () => {
             <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
             {/* Toggle status hanya untuk super_admin */}
             {isSuperAdmin && (
-                <Button variant="secondary" size="sm" onClick={() => handleToggleStatus(row)}>
+                <Button
+                    variant={row.is_active ? 'danger' : 'secondary'}
+                    size="sm"
+                    onClick={() => handleToggleStatus(row)}
+                >
                     {row.is_active ? 'Nonaktif' : 'Aktifkan'}
                 </Button>
             )}
@@ -285,7 +289,7 @@ const DaftarKader: React.FC = () => {
                     <h2 className="text-xl font-semibold text-gray-900">Daftar Kader</h2>
                     <Button variant="secondary" size="sm" onClick={handleExportPDF} disabled={isExporting}>
                         {isExporting ? <Loader2 size={16} className="animate-spin" /> : <FileDown size={16} />}
-                        {isExporting ? 'Mengekspor...' : 'Ekspor'}
+                        {isExporting ? 'Mengekspor...' : 'Ekspor PDF'}
                     </Button>
                 </div>
 

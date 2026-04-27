@@ -867,13 +867,13 @@ const DataRelawan: React.FC = () => {
                     <h2 className="text-xl font-semibold text-gray-900">Daftar Relawan</h2>
                     {!isLoadingRelawan && filteredRelawanData.length > 0 && (
                         <Button
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
                             onClick={handleExportPdf}
                             className="flex items-center gap-2"
                         >
                             <FileDown size={16} />
-                            Export PDF
+                            Ekspor PDF
                         </Button>
                     )}
                 </div>

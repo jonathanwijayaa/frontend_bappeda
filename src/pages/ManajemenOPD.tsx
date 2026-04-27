@@ -197,7 +197,7 @@ const ManajemenOPD: React.FC = () => {
         <>
             <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
             <Button
-                variant="secondary"
+                variant={row.is_active ? 'danger' : 'secondary'}
                 size="sm"
                 onClick={() => handleToggleStatus(row)}
             >
