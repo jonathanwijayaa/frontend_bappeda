@@ -44,7 +44,7 @@ const KomunitasSaya = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            <RelawanMenu title="Icon App" />
+            <RelawanMenu />
 
             <div className="px-4 py-5 space-y-4">
                 {/* Quick Stats */}
