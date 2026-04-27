@@ -377,7 +377,7 @@ const SaranHotline: React.FC = () => {
     if (isRelawan) {
         return (
             <div className="min-h-screen bg-gray-50">
-                <RelawanMenu title="Icon App" />
+                <RelawanMenu />
                 <div className="px-4 py-5 space-y-4">
                     <h1 className="text-2xl font-bold text-gray-800 text-center">Saran/Hotline</h1>
                     <Card className="shadow-md">
