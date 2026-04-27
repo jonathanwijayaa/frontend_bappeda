@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Modal from './Modal';
 import Button from './Button';
 import * as XLSX from 'xlsx';
@@ -22,34 +22,34 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
     title,
     errors = []
 }) => {
-    const [hasDownloadedDirty, setHasDownloadedDirty] = useState(false);
-
-    useEffect(() => {
-        if (isOpen) {
-            setHasDownloadedDirty(false);
-        }
-    }, [isOpen]);
-
     const cleanData = data.filter((_, idx) => !errors?.some(e => e.rowNumber === idx + 2));
     const dirtyDataList = data.filter((_, idx) => errors?.some(e => e.rowNumber === idx + 2));
     const hasDirtyData = dirtyDataList.length > 0;
 
-    const handleDownloadDirtyData = () => {
+    const downloadDirtyData = () => {
         const exportData = dirtyDataList.map((row) => {
             const originalIndex = data.findIndex(d => d === row);
             const rowError = errors.find(e => e.rowNumber === originalIndex + 2);
-            
             return {
                 ...row,
-                Keterangan_Error: rowError ? `Kolom kosong: ${rowError.emptyColumns.join(', ')}` : 'Error tidak diketahui'
+                Keterangan_Error: rowError
+                    ? `Kolom kosong: ${rowError.emptyColumns.join(', ')}`
+                    : 'Error tidak diketahui'
             };
         });
 
         const worksheet = XLSX.utils.json_to_sheet(exportData);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Data Kotor");
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Data Kotor');
         XLSX.writeFile(workbook, `Data_Kotor_${dataType}.xlsx`);
-        setHasDownloadedDirty(true);
+    };
+
+    /** Klik Simpan: download data kotor (jika ada) + simpan data bersih */
+    const handleConfirm = () => {
+        if (hasDirtyData) {
+            downloadDirtyData();
+        }
+        onConfirm();
     };
 
     const renderTableHeaders = () => {
@@ -160,8 +160,6 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
         });
     };
 
-    const isConfirmDisabled = hasDirtyData && !hasDownloadedDirty;
-
     return (
         <Modal
             isOpen={isOpen}
@@ -205,6 +203,11 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                             <h3 className="text-lg font-semibold text-red-700">
                                 Data Kotor ({dirtyDataList.length})
                             </h3>
+                            {hasDirtyData && (
+                                <span className="text-xs text-gray-400 italic">
+                                    File Excel akan otomatis terunduh saat simpan
+                                </span>
+                            )}
                         </div>
                         <div className={`border rounded-lg overflow-y-auto flex-1 bg-white ${hasDirtyData ? 'border-red-200' : 'border-gray-200'}`}>
                             <table className="min-w-full divide-y divide-gray-200">
@@ -234,25 +237,15 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                                 </tbody>
                             </table>
                         </div>
-                        {hasDirtyData && (
-                            <div className="pt-2 text-right">
-                                <button
-                                    type="button"
-                                    onClick={handleDownloadDirtyData}
-                                    className="text-blue-600 hover:text-blue-800 underline text-sm font-medium flex items-center justify-end w-full"
-                                >
-                                    Unduh {dirtyDataList.length} Data Kotor untuk Diperbaiki
-                                </button>
-                            </div>
-                        )}
                     </div>
                 </div>
 
                 {/* Info */}
-                <div className={`${hasDirtyData && !hasDownloadedDirty ? 'bg-amber-50 border-amber-200' : 'bg-blue-50 border-blue-200'} border rounded-lg p-4`}>
-                    <p className={`text-sm ${hasDirtyData && !hasDownloadedDirty ? 'text-amber-800' : 'text-blue-800'}`}>
-                        <span className="font-semibold">Informasi:</span> {hasDirtyData && !hasDownloadedDirty
-                            ? 'Anda harus mengunduh data kotor terlebih dahulu sebelum dapat mengkonfirmasi (menyimpan data bersih).'
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p className="text-sm text-blue-800">
+                        <span className="font-semibold">Informasi:</span>{' '}
+                        {hasDirtyData
+                            ? `Data bersih akan disimpan ke sistem dan file Excel berisi ${dirtyDataList.length} data kotor akan otomatis terunduh untuk diperbaiki.`
                             : 'Data bersih akan langsung ditambahkan ke sistem setelah Anda memberikan konfirmasi. Pastikan data sudah benar.'}
                     </p>
                 </div>
@@ -268,11 +261,15 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                     </Button>
                     <Button
                         type="button"
-                        onClick={onConfirm}
-                        disabled={isConfirmDisabled || cleanData.length === 0}
-                        className={`${isConfirmDisabled || cleanData.length === 0 ? 'bg-gray-400 cursor-not-allowed opacity-50' : 'bg-green-600 hover:bg-green-700'} text-white px-12 transition-colors`}
+                        onClick={handleConfirm}
+                        disabled={cleanData.length === 0}
+                        className={`${cleanData.length === 0 ? 'bg-gray-400 cursor-not-allowed opacity-50' : 'bg-green-600 hover:bg-green-700'} text-white px-12 transition-colors`}
                     >
-                        {cleanData.length === 0 ? 'Tidak Ada Data Bersih' : 'Simpan Data Bersih'}
+                        {cleanData.length === 0
+                            ? 'Tidak Ada Data Bersih'
+                            : hasDirtyData
+                                ? `Simpan & Unduh Data Kotor (${dirtyDataList.length})`
+                                : 'Simpan Data Bersih'}
                     </Button>
                 </div>
             </div>
@@ -281,4 +278,3 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
 };
 
 export default FileReviewModal;
-
