@@ -10,6 +10,7 @@ import UploadPDFModal from '../components/ui/UploadPDFModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
 import { exportToPDF } from '../utils/exportToPDF';
+import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { useAuth } from '../context/AuthContext';
 import { SKData, SKDetail, ErrorHint } from '../types';
 import { useSkList, useSkDetail, useSkPdf } from '../hooks/sk/useSkList';
@@ -101,7 +102,7 @@ const SuratKeputusan: React.FC = () => {
                 setIsUploadModalOpen(false);
             },
             onError: (e: any) => {
-                setToast({ message: e.message || 'Gagal mengunggah SK', type: 'error' });
+                setToast({ message: parseErrorMessage(e, 'Gagal mengunggah SK'), type: 'error' });
                 if (e.response?.data?.hint) setErrorHint(e.response.data.hint);
             },
         });
@@ -115,7 +116,7 @@ const SuratKeputusan: React.FC = () => {
                 setIsDetailModalOpen(false);
                 setSelectedSkId(0);
             },
-            onError: (e: any) => setToast({ message: e.message || 'Gagal menghapus SK', type: 'error' }),
+            onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal menghapus SK'), type: 'error' }),
         });
     };
 
@@ -191,7 +192,12 @@ const SuratKeputusan: React.FC = () => {
                     <div className="text-sm text-blue-800 flex-1">
                         <p className="font-semibold mb-2">📋 Panduan Upload Surat Keputusan:</p>
                         <ol className="list-decimal list-inside space-y-1 text-blue-700">
-                            <li>Pastikan <strong>OPD</strong> sudah terdaftar → <a href="/manajemen-opd" className="underline font-medium hover:text-blue-900">Manajemen OPD</a></li>
+                            <li>
+                                {isSuperAdmin
+                                    ? <>Pastikan <strong>OPD</strong> sudah terdaftar → <a href="/manajemen-opd" className="underline font-medium hover:text-blue-900">Manajemen OPD</a></>
+                                    : <>Pastikan <strong>OPD</strong> Anda sudah terdaftar dari BAPPEDA</>
+                                }
+                            </li>
                             <li>Pastikan <strong>Kader</strong> sudah terdaftar → <a href="/daftar-kader" className="underline font-medium hover:text-blue-900">Daftar Kader</a></li>
                             <li>Pastikan <strong>Relawan</strong> sudah terdaftar → <a href="/data-relawan" className="underline font-medium hover:text-blue-900">Data Relawan</a></li>
                             <li>Upload file PDF SK (maksimal 2MB)</li>

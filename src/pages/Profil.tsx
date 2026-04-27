@@ -7,6 +7,7 @@ import Toast, { ToastType } from '../components/ui/Toast';
 import { useAuth } from '../context/AuthContext';
 import { useProfileData } from '../hooks/profil/useProfileData';
 import { useUpdateProfil, useChangePassword } from '../hooks/profil/useProfilMutations';
+import { parseErrorMessage } from '../utils/parseErrorMessage';
 
 const Profil: React.FC = () => {
     const { user } = useAuth();
@@ -106,7 +107,7 @@ const Profil: React.FC = () => {
             setToast({ message: 'Profil berhasil diperbarui!', type: 'success' });
             setPasswordData({ passwordLama: '', passwordBaru: '', konfirmasiPassword: '' });
         } catch (e: any) {
-            setToast({ message: e.message || 'Gagal menyimpan perubahan', type: 'error' });
+            setToast({ message: parseErrorMessage(e, 'Gagal menyimpan perubahan'), type: 'error' });
         }
     };
 

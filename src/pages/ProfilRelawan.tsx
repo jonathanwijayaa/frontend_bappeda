@@ -5,6 +5,7 @@ import Button from '../components/ui/Button';
 import RelawanMenu from '../components/RelawanMenu';
 import Toast, { ToastType } from '../components/ui/Toast';
 import { apiFetch } from '../utils/api';
+import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { Loader2 } from 'lucide-react';
 
 interface ProfilData {
@@ -41,8 +42,8 @@ const ProfilRelawan = () => {
             } else {
                 setToast({ message: 'Gagal memuat profil', type: 'error' });
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } catch (e: any) {
+            setToast({ message: parseErrorMessage(e, 'Tidak dapat terhubung ke server'), type: 'error' });
         } finally {
             setIsLoading(false);
         }
@@ -81,8 +82,8 @@ const ProfilRelawan = () => {
             } else {
                 setToast({ message: result.message || 'Gagal mengirim pengajuan', type: 'error' });
             }
-        } catch {
-            setToast({ message: 'Tidak dapat terhubung ke server', type: 'error' });
+        } catch (e: any) {
+            setToast({ message: parseErrorMessage(e, 'Tidak dapat terhubung ke server'), type: 'error' });
         } finally {
             setIsSubmitting(false);
         }
