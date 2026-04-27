@@ -6,13 +6,14 @@ import Button from '../components/ui/Button';
 import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
 import Select from '../components/ui/Select';
+import YearPicker from '../components/ui/YearPicker';
 import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
 import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
-import { ChangeEvent } from 'react';
 import { HistoriRelawanData } from '../types/histori.types';
 import { AutoOption } from '../types/common.types';
+
 
 // ── Helper: kelompokkan baris flat dari API menjadi per-relawan ─
 const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
@@ -81,15 +82,11 @@ const HistoriRelawan: React.FC = () => {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [selectedRelawan, setSelectedRelawan] = useState<HistoriRelawanData | null>(null);
 
-    // ── Tahun options (2000 — tahun sekarang) ─────────────────────
+    // ── Tahun range ───────────────────────────────────────────────
     const currentYear = new Date().getFullYear();
-    const tahunOptions: AutoOption[] = Array.from(
-        { length: currentYear - 1999 },
-        (_, i) => {
-            const y = String(currentYear - i);
-            return { label: y, value: y };
-        }
-    );
+    const minYearGlobal = 2000;
+    // Jika tahun awal dipilih, tahun akhir minimal = tahun awal + 1
+    const minYearAkhir = filterTahunAwal ? Number(filterTahunAwal) + 1 : minYearGlobal;
 
     // ── Fetch data relawan ────────────────────────────────────────
     const fetchRelawan = useCallback(async () => {
@@ -169,11 +166,19 @@ const HistoriRelawan: React.FC = () => {
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
     // ── Handle filter change ──────────────────────────────────────
-    const handleFilterChange = (setter: React.Dispatch<React.SetStateAction<string>>) =>
-        (e: ChangeEvent<HTMLSelectElement>) => {
-            setter(e.target.value);
-            setCurrentPage(1);
-        };
+    const handleYearAwalChange = (year: string) => {
+        setFilterTahunAwal(year);
+        // Jika tahun akhir sudah dipilih dan <= tahun awal baru, reset
+        if (year && filterTahunAkhir && Number(filterTahunAkhir) <= Number(year)) {
+            setFilterTahunAkhir('');
+        }
+        setCurrentPage(1);
+    };
+
+    const handleYearAkhirChange = (year: string) => {
+        setFilterTahunAkhir(year);
+        setCurrentPage(1);
+    };
 
     const handleResetFilter = () => {
         setFilterOpd('');
@@ -247,7 +252,7 @@ const HistoriRelawan: React.FC = () => {
                             <label className="block text-xs font-medium text-gray-500 mb-1">Nama OPD</label>
                             <Select
                                 value={filterOpd}
-                                onChange={handleFilterChange(setFilterOpd)}
+                                onChange={(e) => { setFilterOpd(e.target.value); setCurrentPage(1); }}
                                 placeholder="Semua OPD"
                                 options={[
                                     { value: '', label: 'Semua OPD' },
@@ -262,7 +267,7 @@ const HistoriRelawan: React.FC = () => {
                             <label className="block text-xs font-medium text-gray-500 mb-1">Nama Kader</label>
                             <Select
                                 value={filterKader}
-                                onChange={handleFilterChange(setFilterKader)}
+                                onChange={(e) => { setFilterKader(e.target.value); setCurrentPage(1); }}
                                 placeholder="Semua Kader"
                                 options={[
                                     { value: '', label: 'Semua Kader' },
@@ -275,30 +280,24 @@ const HistoriRelawan: React.FC = () => {
                         {/* Filter Tahun Awal */}
                         <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Tahun Awal</label>
-                            <Select
+                            <YearPicker
                                 value={filterTahunAwal}
-                                onChange={handleFilterChange(setFilterTahunAwal)}
+                                onChange={handleYearAwalChange}
                                 placeholder="Tahun Awal"
-                                options={[
-                                    { value: '', label: 'Semua Tahun' },
-                                    ...tahunOptions,
-                                ]}
-                                className="w-full text-sm"
+                                minYear={minYearGlobal}
+                                maxYear={currentYear}
                             />
                         </div>
 
                         {/* Filter Tahun Akhir */}
                         <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Tahun Akhir</label>
-                            <Select
+                            <YearPicker
                                 value={filterTahunAkhir}
-                                onChange={handleFilterChange(setFilterTahunAkhir)}
+                                onChange={handleYearAkhirChange}
                                 placeholder="Tahun Akhir"
-                                options={[
-                                    { value: '', label: 'Semua Tahun' },
-                                    ...tahunOptions,
-                                ]}
-                                className="w-full text-sm"
+                                minYear={minYearAkhir}
+                                maxYear={currentYear}
                             />
                         </div>
                     </div>
