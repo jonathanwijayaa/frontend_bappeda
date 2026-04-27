@@ -78,9 +78,7 @@
                             alt="Logo Bappeda"
                             className="w-10 h-10 object-contain flex-shrink-0"
                         />
-                        <span className={"text-white font-bold text-xl font-bold"}>
-                            {title}
-                        </span>
+                        <span className="text-xl font-bold">{title}</span>
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                             className="p-2 hover:bg-green-700 rounded-lg transition-colors"
