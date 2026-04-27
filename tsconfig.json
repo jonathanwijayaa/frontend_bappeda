@@ -9,6 +9,7 @@
         ],
         "module": "ESNext",
         "skipLibCheck": true,
+        "ignoreDeprecations": "6.0",
         "baseUrl": ".",
         "allowJs": true,
         /* Bundler mode */
@@ -19,13 +20,18 @@
         "noEmit": true,
         "jsx": "react-jsx",
         /* Linting */
+        "strictNullChecks": true,
         "strict": true,
+        "paths": {
+            "@/helpers/*": ["src/helpers/*"]
+        },
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true
     },
     "include": [
-        "src"
+        "src",
+        "tests/**/*.ts"
     ],
     "references": [
         {
