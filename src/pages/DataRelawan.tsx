@@ -19,6 +19,7 @@ import { useOpdList } from '../hooks/opd/useOpdList';
 import { useKaderByOpd } from '../hooks/relawan/useKaderByOpd';
 import { useQueryClient } from '@tanstack/react-query';
 import apiClient from '../lib/axios';
+import { parseErrorMessage } from '../utils/parseErrorMessage';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -300,7 +301,7 @@ const DataRelawan: React.FC = () => {
                 setToast({ message: data.message || 'Gagal memproses pengajuan', type: 'error' });
             }
         } catch (e: any) {
-            setToast({ message: e.response?.data?.message || 'Tidak dapat terhubung ke server', type: 'error' });
+            setToast({ message: parseErrorMessage(e, 'Tidak dapat terhubung ke server'), type: 'error' });
         } finally {
             setIsReviewing(false);
         }
@@ -372,7 +373,7 @@ const DataRelawan: React.FC = () => {
                 invalidateRelawan();
             }
         } catch (e: any) {
-            setToast({ message: e.response?.data?.message || `Koneksi gagal: ${e.message}`, type: 'error' });
+            setToast({ message: parseErrorMessage(e, 'Gagal menyimpan data relawan'), type: 'error' });
         } finally {
             setIsSaving(false);
         }
@@ -388,7 +389,7 @@ const DataRelawan: React.FC = () => {
                 setToast({ message: res.message || 'Gagal import Excel', type: 'error' });
             }
         } catch (e: any) {
-            setToast({ message: e.response?.data?.message || 'Tidak dapat terhubung ke server', type: 'error' });
+            setToast({ message: parseErrorMessage(e, 'Gagal import data dari Excel'), type: 'error' });
         } finally {
             setIsUploadModalOpen(false);
         }
@@ -544,7 +545,7 @@ const DataRelawan: React.FC = () => {
                 setToast({ message: data.message || 'Gagal menyimpan perubahan', type: 'error' });
             }
         } catch (e: any) {
-            setToast({ message: e.response?.data?.message || 'Tidak dapat terhubung ke server', type: 'error' });
+            setToast({ message: parseErrorMessage(e, 'Gagal menyimpan perubahan'), type: 'error' });
         } finally {
             setIsSavingEdit(false);
         }
@@ -593,7 +594,7 @@ const DataRelawan: React.FC = () => {
                 setToast({ message: data.message || 'Gagal menghapus penugasan', type: 'error' });
             }
         } catch (e: any) {
-            setToast({ message: e.response?.data?.message || 'Tidak dapat terhubung ke server', type: 'error' });
+            setToast({ message: parseErrorMessage(e, 'Gagal menghapus penugasan'), type: 'error' });
         } finally {
             setDeletingPenugasanId(null);
         }

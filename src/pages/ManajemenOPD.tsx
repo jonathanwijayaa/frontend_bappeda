@@ -10,6 +10,7 @@ import UploadExcelModal from '../components/ui/UploadExcelModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
 import { exportToPDF } from '../utils/exportToPDF';
+import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { OPDData } from '../types';
 import { useOpdList } from '../hooks/opd/useOpdList';
 import {
@@ -116,7 +117,7 @@ const ManajemenOPD: React.FC = () => {
             { opd_id: selectedOPD.opd_id, is_active: !selectedOPD.is_active },
             {
                 onSuccess: (d) => setToast({ message: d.message, type: 'success' }),
-                onError:   (e: any) => setToast({ message: e.message || 'Gagal mengubah status', type: 'error' }),
+                onError:   (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal mengubah status'), type: 'error' }),
                 onSettled: () => { setIsConfirmModalOpen(false); setSelectedOPD(null); },
             }
         );
@@ -131,7 +132,7 @@ const ManajemenOPD: React.FC = () => {
                     setToast({ message: 'Data OPD berhasil diperbarui', type: 'success' });
                     setIsDetailModalOpen(false);
                 },
-                onError: (e: any) => setToast({ message: e.message || 'Gagal menyimpan perubahan', type: 'error' }),
+                onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal menyimpan perubahan'), type: 'error' }),
             }
         );
     };
@@ -145,7 +146,7 @@ const ManajemenOPD: React.FC = () => {
                 setIsModalOpen(false);
                 setFormData({ nama_opd: '', alamat: '', pic: '', nik_pic: '', kontak: '' });
             },
-            onError: (e: any) => setToast({ message: e.message || 'Gagal menambahkan OPD', type: 'error' }),
+            onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal menambahkan OPD'), type: 'error' }),
         });
     };
 
@@ -188,7 +189,7 @@ const ManajemenOPD: React.FC = () => {
                 setToast({ message: d.message, type: 'success' });
                 setIsUploadModalOpen(false);
             },
-            onError: (e: any) => setToast({ message: e.message || 'Gagal import Excel', type: 'error' }),
+            onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal import Excel dari Excel'), type: 'error' }),
         });
     };
 

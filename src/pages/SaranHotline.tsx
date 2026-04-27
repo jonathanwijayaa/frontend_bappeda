@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import { SaranData } from '../types';
 import { useSaranList } from '../hooks/saran/useSaranList';
 import { useCreateSaran, useRespondSaran } from '../hooks/saran/useSaranMutations';
+import { parseErrorMessage } from '../utils/parseErrorMessage';
 
 
 const SaranHotline: React.FC = () => {
@@ -68,7 +69,7 @@ const SaranHotline: React.FC = () => {
                     setToast({ message: 'Saran berhasil dikirim. Terima kasih!', type: 'success' });
                     setFormData({ namaLengkap: user?.name || '', noTelepon: '', saran: '' });
                 },
-                onError: (err: any) => setToast({ message: err.message || 'Gagal mengirim saran', type: 'error' }),
+                onError: (err: any) => setToast({ message: parseErrorMessage(err, 'Gagal mengirim saran'), type: 'error' }),
                 onSettled: () => setIsSubmitting(false),
             }
         );
@@ -98,7 +99,7 @@ const SaranHotline: React.FC = () => {
                     setToast({ message: d.message, type: 'success' });
                     setSelectedSaran(null);
                 },
-                onError: (err: any) => setToast({ message: err.message || 'Gagal memperbarui status', type: 'error' }),
+                onError: (err: any) => setToast({ message: parseErrorMessage(err, 'Gagal memperbarui status'), type: 'error' }),
                 onSettled: () => setIsResponding(false),
             }
         );
@@ -111,7 +112,7 @@ const SaranHotline: React.FC = () => {
             { saran_id: saran.saran_id, status: newStatus, catatan_admin: saran.catatan_admin || null },
             {
                 onSuccess: (d) => setToast({ message: d.message, type: 'success' }),
-                onError: (err: any) => setToast({ message: err.message || 'Gagal memperbarui status', type: 'error' }),
+                onError: (err: any) => setToast({ message: parseErrorMessage(err, 'Gagal memperbarui status'), type: 'error' }),
             }
         );
     };
