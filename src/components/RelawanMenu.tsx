@@ -1,12 +1,13 @@
     import { useState } from 'react';
     import { useNavigate } from 'react-router-dom';
     import { useAuth } from '../context/AuthContext';
+    import logoBappeda from '../assets/image/logo-bappeda.png';
 
     interface RelawanMenuProps {
         title?: string;
     }
 
-    const RelawanMenu = ({ title = 'Icon App' }: RelawanMenuProps) => {
+    const RelawanMenu = ({ title = 'BAPPEDA Yogyakarta' }: RelawanMenuProps) => {
         const [isMenuOpen, setIsMenuOpen] = useState(false);
         const navigate = useNavigate();
         const { logout } = useAuth();
@@ -72,7 +73,12 @@
                 {/* Mobile Header */}
                 <div className="bg-green-600 text-white px-4 py-4 shadow-md relative z-20">
                     <div className="flex items-center justify-between">
-                        <h1 className="text-xl font-bold">{title}</h1>
+                        <img
+                            src={logoBappeda}
+                            alt="Logo Bappeda"
+                            className="w-10 h-10 object-contain flex-shrink-0"
+                        />
+                        <span className="text-xl font-bold">{title}</span>
                         <button
                             onClick={() => setIsMenuOpen(!isMenuOpen)}
                             className="p-2 hover:bg-green-700 rounded-lg transition-colors"
