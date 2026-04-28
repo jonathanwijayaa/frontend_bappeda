@@ -69,11 +69,17 @@ const Sidebar: React.FC = () => {
             {/* Collapse/Expand Button */}
             <button
                 onClick={() => setIsCollapsed(!isCollapsed)}
-                className={`absolute top-6 z-10 text-white hover:bg-green-600 p-2 rounded-lg transition-all ${isCollapsed ? 'left-1/2 -translate-x-1/2' : 'right-2'
+                className={`absolute top-6 z-50 transition-all duration-300
+                    /* Shared Styles: white background makes it visible against the green and the body */
+                    bg-white text-green-700 shadow-md border border-gray-200 p-1.5 rounded-full hover:bg-gray-50
+                    
+                    ${isCollapsed 
+                        ? 'left-full -translate-x-1/2' // Centered exactly on the edge when collapsed
+                        : '-right-4' // Hanging halfway off the edge when expanded
                     }`}
                 title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
             >
-                {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+                {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
             </button>
 
             {/* Header */}
