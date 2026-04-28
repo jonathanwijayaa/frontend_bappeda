@@ -24,6 +24,7 @@ const Profil: React.FC = () => {
         passwordBaru: '',
         konfirmasiPassword: ''
     });
+    const [avatarFile, setAvatarFile] = useState<string | null | undefined>(undefined);
     const [avatarPreview, setAvatarPreview] = useState<string>(
         user?.avatar || 'https://ui-avatars.com/api/?name=User&background=gray&color=fff'
     );
@@ -37,7 +38,7 @@ const Profil: React.FC = () => {
                 no_hp:        profileData.no_hp        || '',
             });
             setAvatarPreview(
-                `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.nama_lengkap)}&background=${
+                profileData.foto_profil || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.nama_lengkap)}&background=${
                     profileData.role === 'super_admin' ? '10B981' : profileData.role === 'opd' ? '3B82F6' : '6B7280'
                 }&color=fff`
             );
@@ -58,16 +59,25 @@ const Profil: React.FC = () => {
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
+            if (file.size > 1024 * 1024) {
+                setToast({ message: 'Ukuran gambar maksimal 1MB', type: 'error' });
+                return;
+            }
             const reader = new FileReader();
-            reader.onloadend = () => setAvatarPreview(reader.result as string);
+            reader.onloadend = () => {
+                const base64 = reader.result as string;
+                setAvatarPreview(base64);
+                setAvatarFile(base64);
+            };
             reader.readAsDataURL(file);
         }
     };
 
     const handleDeleteAvatar = () => {
         setAvatarPreview(
-            user?.avatar || 'https://ui-avatars.com/api/?name=User&background=gray&color=fff'
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.nama_lengkap || 'User')}&background=gray&color=fff`
         );
+        setAvatarFile('');
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -94,6 +104,7 @@ const Profil: React.FC = () => {
             await updateProfil.mutateAsync({
                 nama_lengkap: formData.nama_lengkap.trim(),
                 no_hp:        formData.no_hp.trim() || null,
+                foto_profil:  avatarFile
             });
 
             // 2. Ganti password (opsional)

@@ -7,4 +7,5 @@ export interface ProfileData {
     no_hp: string | null;
     email: string | null;
     role: string;
+    foto_profil?: string | null;
 }
