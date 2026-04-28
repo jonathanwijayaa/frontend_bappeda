@@ -54,7 +54,6 @@ const Sidebar: React.FC = () => {
         { path: '/daftar-kader', icon: UserCircle, label: 'Daftar Kader' },
         { path: '/data-relawan', icon: Users, label: 'Data Relawan' },
         { path: '/surat-keputusan', icon: FileText, label: 'Surat Keputusan' },
-        { path: '/log-aktifitas', icon: Clock, label: 'Log/Aktifitas' },
         { path: '/statistik', icon: BarChart3, label: 'Statistik' },
         { path: '/dokumen', icon: FolderOpen, label: 'Dokumen' },
         { path: '/histori-relawan', icon: History, label: 'Histori Relawan' },

@@ -10,7 +10,7 @@ import { PROFIL_KEYS } from './useProfileData';
 export const useUpdateProfil = () => {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: (payload: { nama_lengkap: string; no_hp: string | null }) =>
+        mutationFn: (payload: { nama_lengkap: string; no_hp: string | null; foto_profil?: string | null }) =>
             apiClient.put('/profile/update', payload).then(r => {
                 if (!r.data.success) throw new Error(r.data.message);
                 return r.data;

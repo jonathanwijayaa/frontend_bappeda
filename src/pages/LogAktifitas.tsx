@@ -1,5 +1,7 @@
 // LogAktifitas.tsx
 import React, { useState, useMemo } from 'react';
+import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import { SearchInput } from '../components/ui/Input';
@@ -15,33 +17,40 @@ const LogAktifitas: React.FC = () => {
     // ── Server State ──────────────────────────────────────────
     const { data: logList = [], isLoading } = useLogList(200);
 
+
     // ── UI State ──────────────────────────────────────────────
-    const [searchTerm, setSearchTerm]       = useState('');
-    const [filterAction, setFilterAction]   = useState('');
-    const [filterTable, setFilterTable]     = useState('');
-    const [currentPage, setCurrentPage]     = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterAction, setFilterAction] = useState('');
+    const [filterTable, setFilterTable] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const itemsPerPage = 5;
+    const { isSuperAdmin } = useAuth();
+
+    // ── Validasi Role ─────────────────────────────────────────
+    if (!isSuperAdmin) {
+        return <Navigate to="/dashboard" replace />;
+    }
 
     // ── Filter ────────────────────────────────────────────────
     const filteredData = useMemo(() =>
         logList.filter(log => {
             const matchSearch =
                 (log.nama_pengguna || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (log.nik           || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (log.nik || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                 log.action_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 log.table_name.toLowerCase().includes(searchTerm.toLowerCase());
             const matchAction = filterAction ? log.action_type === filterAction : true;
-            const matchTable  = filterTable  ? log.table_name  === filterTable  : true;
+            const matchTable = filterTable ? log.table_name === filterTable : true;
             return matchSearch && matchAction && matchTable;
         }), [logList, searchTerm, filterAction, filterTable]);
 
-    const totalPages  = Math.ceil(filteredData.length / itemsPerPage);
-    const startIndex  = (currentPage - 1) * itemsPerPage;
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
     const uniqueActions = useMemo(() => [...new Set(logList.map(l => l.action_type))], [logList]);
-    const uniqueTables  = useMemo(() => [...new Set(logList.map(l => l.table_name))],  [logList]);
+    const uniqueTables = useMemo(() => [...new Set(logList.map(l => l.table_name))], [logList]);
 
     const columns = [
         {
@@ -52,17 +61,16 @@ const LogAktifitas: React.FC = () => {
                 </span>
             ),
         },
-        { header: 'PENGGUNA',  accessor: 'nama_pengguna' as keyof LogData },
-        { header: 'NIK',       accessor: 'nik'           as keyof LogData },
+        { header: 'PENGGUNA', accessor: 'nama_pengguna' as keyof LogData },
+        { header: 'NIK', accessor: 'nik' as keyof LogData },
         {
             header: 'AKSI',
             render: (row: LogData) => (
-                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                    row.action_type === 'INSERT' ? 'bg-green-100 text-green-700' :
-                    row.action_type === 'UPDATE' ? 'bg-blue-100 text-blue-700'  :
-                    row.action_type === 'DELETE' ? 'bg-red-100 text-red-700'    :
-                    'bg-gray-100 text-gray-700'
-                }`}>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${row.action_type === 'INSERT' ? 'bg-green-100 text-green-700' :
+                        row.action_type === 'UPDATE' ? 'bg-blue-100 text-blue-700' :
+                            row.action_type === 'DELETE' ? 'bg-red-100 text-red-700' :
+                                'bg-gray-100 text-gray-700'
+                    }`}>
                     {row.action_type}
                 </span>
             ),
