@@ -3,3 +3,6 @@ playwright-report
 test-results
 dist
 build
+src/**
+!src/tests/**
+!src/helpers/**

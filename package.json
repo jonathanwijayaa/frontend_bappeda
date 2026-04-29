@@ -13,8 +13,9 @@
     "test:e2e:ui": "playwright test --ui",
     "report": "playwright show-report",
     "clean": "rimraf test-results playwright-report",
-    "lint:fix": "eslint . --fix",
-    "prettier:write": "prettier --write ."
+    "id": "fixscripts",
+    "lint:fix": "eslint --fix",
+    "prettier:write": "prettier --write"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.99.2",
