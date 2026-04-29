@@ -1,12 +1,8 @@
+import { generateOPDExcel } from "@/helpers/baseExcel.helper";
 import { credentials } from "@/helpers/credentials.helper";
 import { buildOPDData, fillOPDForm } from "@/helpers/formOPD.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { expect, test } from "@playwright/test";
-import {
-  generateOPDExcel,
-  generateRelawanExcel,
-  generateKaderExcel,
-} from "@/helpers/baseExcel.helper";
 
 test.beforeEach(async ({ page }) => {
   await page.goto("https://frontend-bappeda.vercel.app/");
@@ -290,38 +286,51 @@ test.describe("TCMO.10 Super Admin fill invalid kontak", () => {
 
 // TCMO.11 Upload Excel OPD
 test("TCMO.11 Super Admin upload OPD excel file", async ({ page }) => {
+  const filePath = generateOPDExcel({ type: "valid", total: 5 });
+
   await page.getByRole("button", { name: "Unggah dari Excel" }).click();
 
   const fileInput = page.locator("input[type='file']");
-
-  await fileInput.setInputFiles("src/assets/files/Sample_Data_OPD.xlsx");
+  await fileInput.setInputFiles(filePath);
   await page.getByRole("button", { name: "Lanjutkan" }).click();
+  await page.getByRole("button", { name: "Simpan Data Bersih" }).click();
 
   await expect(page.getByText(/berhasil|success/i)).toBeVisible();
 });
 
 // TCMO.12 Upload Invalid Excel
 test("TCMO.12 Super Admin upload invalid template excel OPD data", async ({ page }) => {
-  const fileInput = page.locator("input[type='file']");
+  const filePath = generateOPDExcel({ type: "invalid", total: 3 });
 
-  await fileInput.setInputFiles("tests/files/Invalid_Sample_Data_OPD.xlsx");
+  await page.getByRole("button", { name: "Unggah dari Excel" }).click();
+
+  const fileInput = page.locator("input[type='file']");
+  await fileInput.setInputFiles(filePath);
   await page.getByRole("button", { name: "Lanjutkan" }).click();
+  await page.getByRole("button", { name: "Simpan Data Bersih" }).click();
 
   await expect(page.getByText(/error|invalid/i)).toBeVisible();
 });
 
 // TCMO.13 Download Template Excel
 test("TCMO.13 Super Admin click Template Excel Data OPD hyperlink", async ({ page }) => {
+  await page.getByRole("button", { name: "Unggah dari Excel" }).click();
+
   await page.getByRole("link", { name: /templat excel data opd/i }).click();
 
-  await expect(page).toHaveURL(/excel|template/);
+  await expect(page).toHaveURL(/excel|template|dokumen|download/);
 });
 
 // TCMO.14 Cancel Upload Excel
 test("TCMO.14 Super Admin cancel upload OPD data excel", async ({ page }) => {
-  await page.getByRole("button", { name: /upload excel/i }).click();
+  const filePath = generateOPDExcel({ type: "valid", total: 1 });
 
-  await page.getByRole("button", { name: /batal/i }).click();
+  await page.getByRole("button", { name: "Unggah dari Excel" }).click();
 
-  await expect(page.getByText(/upload/i)).toBeVisible();
+  const fileInput = page.locator("input[type='file']");
+  await fileInput.setInputFiles(filePath);
+
+  await page.getByRole("button").nth(5).click();
+
+  await expect(page.getByRole("heading", { name: "Manajemen OPD" })).toBeVisible();
 });

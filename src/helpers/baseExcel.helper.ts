@@ -3,7 +3,7 @@ import { buildKaderData } from "@/helpers/formKader.helper";
 import { buildRelawanData } from "@/helpers/formRelawan.helper";
 import * as fs from "fs";
 import * as path from "path";
-import * as XLSX from "xlsx";
+import XLSX from "xlsx";
 
 type GenerateOptions = {
   type?: "valid" | "invalid";
@@ -25,7 +25,7 @@ export function generateOPDExcel(options?: GenerateOptions) {
   const { type = "valid", total = 1 } = options || {};
   const outputDir = ensureOutputDir();
 
-  const templatePath = path.resolve("templates/Template_Data_OPD.xlsx");
+  const templatePath = path.resolve("src/assets/files/Template_Data_OPD.xlsx");
   const outputPath = path.join(outputDir, `OPD_${Date.now()}.xlsx`);
 
   const workbook = XLSX.readFile(templatePath);
@@ -59,7 +59,7 @@ export function generateKaderExcel(options?: GenerateOptions) {
   const { type = "valid", total = 1 } = options || {};
   const outputDir = ensureOutputDir();
 
-  const templatePath = path.resolve("templates/Template_Data_Kader.xlsx");
+  const templatePath = path.resolve("src/assets/files/Template_Data_Kader.xlsx");
   const outputPath = path.join(outputDir, `KADER_${Date.now()}.xlsx`);
 
   const workbook = XLSX.readFile(templatePath);
@@ -96,7 +96,7 @@ export function generateRelawanExcel(options?: GenerateOptions) {
   const { type = "valid", total = 1 } = options || {};
   const outputDir = ensureOutputDir();
 
-  const templatePath = path.resolve("templates/Template_Data_Relawan.xlsx");
+  const templatePath = path.resolve("src/assets/files/Template_Data_Relawan.xlsx");
   const outputPath = path.join(outputDir, `RELAWAN_${Date.now()}.xlsx`);
 
   const workbook = XLSX.readFile(templatePath);
