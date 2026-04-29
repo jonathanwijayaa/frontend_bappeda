@@ -12,7 +12,7 @@ export interface KaderData {
   OPD: string;
   "NAMA KADER": string;
   DESKRIPSI: string;
-  STATUS: string;
+  // STATUS: string;
   PIC: string;
   "NIK PIC": string;
   "NO HP": string;
@@ -29,7 +29,6 @@ export const buildKaderData = (): KaderData => ({
   OPD: faker.helpers.arrayElement(OPD_LIST),
   "NAMA KADER": `Kader ${faker.person.fullName()}`,
   DESKRIPSI: faker.lorem.sentences(2),
-  STATUS: "Aktif",
   PIC: faker.person.fullName(),
   "NIK PIC": faker.number
     .bigInt({ min: 1000000000000000n, max: 9999999999999999n })
@@ -42,7 +41,7 @@ export const buildKaderData = (): KaderData => ({
 export const fillKaderForm = async ({ data, page }: IFillKaderForm) => ({
   async fillAlamatPIC() {
     await page
-      .getByRole("textbox", { name: "Alamat penanggung jawab" })
+      .getByRole("textbox", { name: "Alamat sesuai KTP (opsional)" })
       .fill(data["ALAMAT PIC"]);
   },
   async fillAll() {
@@ -55,43 +54,40 @@ export const fillKaderForm = async ({ data, page }: IFillKaderForm) => ({
     await this.fillKelurahanPIC();
   },
   async fillDeskripsi() {
-    await page.getByRole("textbox", { name: "Deskripsi" }).fill(data.DESKRIPSI);
+    await page.getByRole("textbox", { name: "Deskripsi singkat (opsional)" }).fill(data.DESKRIPSI);
   },
   async fillKelurahanPIC() {
     await page
-      .getByRole("textbox", { name: "Kelurahan penanggung jawab" })
+      .getByRole("textbox", { name: "Kelurahan/Desa (opsional)" })
       .fill(data["KELURAHAN PIC"]);
   },
   async fillNamaKader() {
     await page
-      .getByRole("textbox", { name: "Nama Kader" })
+      .getByRole("textbox", { name: "Nama Kader atau komunitas" })
       .fill(data["NAMA KADER"]);
   },
   async fillNoHP() {
     await page
-      .getByRole("textbox", { name: "Nomor telepon / email" })
+      .getByRole("textbox", { name: "Nomor HP PIC (opsional)" })
       .fill(data["NO HP"]);
   },
   async fillPIC() {
     await page
-      .getByRole("textbox", { name: "Penanggung jawab" })
+      .getByRole("textbox", { name: "Nama Person in Charge (opsional)" })
       .fill(data.PIC);
   },
   async fillNIKPIC() {
     await page
-      .getByRole("textbox", { name: "digit NIK PIC" })
+      .getByRole("textbox", { name: "16 digit NIK PIC" })
       .fill(data["NIK PIC"]);
   },
+  async fillOPD() {
+    await page.getByRole("combobox", { name: "OPD" }).selectOption(data.OPD);
+  },
+  async submit() {
+    await page.getByRole("button", { name: "Simpan" }).click();
+  },
+  async cancel() {
+    await page.getByRole("button", { name: "Batal" }).click();
+  }
 });
-
-export const selectOPD = async ({ data, page }: IFillKaderForm) => {
-  await page.getByRole("combobox", { name: "OPD" }).selectOption(data.OPD);
-};
-
-export const selectStatus = async ({ data, page }: IFillKaderForm) => {
-  await page.getByRole("combobox", { name: "Status" }).selectOption(data.STATUS);
-};
-
-export const submitKaderForm = async ({ page }: IFillKaderForm) => {
-  await page.getByRole("button", { name: "Simpan" }).click();
-};
