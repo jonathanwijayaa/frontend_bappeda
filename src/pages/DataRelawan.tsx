@@ -172,10 +172,20 @@ const DataRelawan: React.FC = () => {
 
 
     const filteredRelawanData = useMemo(() => {
-        return relawanList.filter(relawan =>
-            relawan.namaLengkap.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            relawan.nik.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        const lowerSearch = searchTerm.toLowerCase();
+        return relawanList.filter(relawan => {
+            const matchNama = relawan.namaLengkap?.toLowerCase().includes(lowerSearch) || false;
+            const matchNik = relawan.nik?.toLowerCase().includes(lowerSearch) || false;
+            const matchAlamat = relawan.alamat?.toLowerCase().includes(lowerSearch) || false;
+            const matchKelurahan = relawan.kelurahan?.toLowerCase().includes(lowerSearch) || false;
+            
+            const matchAssignment = relawan.assignments?.some(a => 
+                a.opd?.toLowerCase().includes(lowerSearch) ||
+                a.kader?.toLowerCase().includes(lowerSearch)
+            ) || false;
+
+            return matchNama || matchNik || matchAlamat || matchKelurahan || matchAssignment;
+        });
     }, [relawanList, searchTerm]);
 
     // ── Export PDF seluruh data relawan yang difilter ──
