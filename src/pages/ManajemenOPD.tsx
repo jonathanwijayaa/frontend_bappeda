@@ -68,10 +68,16 @@ const ManajemenOPD: React.FC = () => {
     }, [selectedOPD, detailFormData]);
 
     // ── Filter & Pagination ────────────────────────────────────
-    const filteredData = useMemo(() =>
-        opdList.filter(opd =>
-            opd.nama_opd.toLowerCase().includes(searchTerm.toLowerCase())
-        ), [opdList, searchTerm]);
+    const filteredData = useMemo(() => {
+        const lowerSearch = searchTerm.toLowerCase();
+        return opdList.filter(opd =>
+            opd.nama_opd?.toLowerCase().includes(lowerSearch) ||
+            opd.alamat?.toLowerCase().includes(lowerSearch) ||
+            opd.pic?.toLowerCase().includes(lowerSearch) ||
+            opd.nik_pic?.toLowerCase().includes(lowerSearch) ||
+            opd.kontak?.toLowerCase().includes(lowerSearch)
+        );
+    }, [opdList, searchTerm]);
 
     const totalPages  = Math.ceil(filteredData.length / itemsPerPage);
     const startIndex  = (currentPage - 1) * itemsPerPage;

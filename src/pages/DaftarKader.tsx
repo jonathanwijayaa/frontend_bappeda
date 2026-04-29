@@ -82,11 +82,17 @@ const DaftarKader: React.FC = () => {
 
 
     // ── Filter & Pagination ────────────────────────────────────────
-    const filteredData = useMemo(() =>
-        kaderList.filter(k =>
-            k.nama_kader.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (k.nama_opd || '').toLowerCase().includes(searchTerm.toLowerCase())
-        ), [kaderList, searchTerm]);
+    const filteredData = useMemo(() => {
+        const lowerSearch = searchTerm.toLowerCase();
+        return kaderList.filter(k =>
+            k.nama_kader?.toLowerCase().includes(lowerSearch) ||
+            (k.nama_opd || '').toLowerCase().includes(lowerSearch) ||
+            (k.pic_nama || '').toLowerCase().includes(lowerSearch) ||
+            (k.pic_nik || '').toLowerCase().includes(lowerSearch) ||
+            (k.pic_no_hp || '').toLowerCase().includes(lowerSearch) ||
+            (k.deskripsi || '').toLowerCase().includes(lowerSearch)
+        );
+    }, [kaderList, searchTerm]);
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;

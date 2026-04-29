@@ -47,7 +47,7 @@ export const groupRelawanRows = (rows: any[]): RelawanData[] => {
                 peran: r.jabatan || '-',
                 detail: r.detail_jabatan || '-',
                 penugasan: r.penugasan || '-',
-                statusKeaktifan: r.status_keaktifan === 'Aktif' ? 'Aktif' : 'Nonaktif',
+                statusKeaktifan: r.status_penugasan === 'Aktif' ? 'Aktif' : 'Nonaktif',
                 nomorSK: r.nomor_sk || '',
                 skId: String(r.sk_id || ''),
             };
