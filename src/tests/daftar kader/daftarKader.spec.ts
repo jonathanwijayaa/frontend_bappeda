@@ -4,17 +4,11 @@ import { buildKaderData, fillKaderForm } from "@/helpers/formKader.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { expect, test } from "@playwright/test";
 
-/* ======================================
-   ROLE CONFIG
-====================================== */
 const roles = [
   { label: "Super Admin", creds: credentials.superAdmin },
   { label: "OPD", creds: credentials.opd },
 ] as const;
 
-/* ======================================
-   DAFTAR KADER
-====================================== */
 for (const { label, creds } of roles) {
   test.describe(`Daftar Kader - ${label}`, () => {
     test.beforeEach(async ({ page }) => {
