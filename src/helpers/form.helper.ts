@@ -47,7 +47,7 @@ export const fillOPDForm = async ({ data, page }: IFillOPDForm) => {
       await page.getByRole("textbox", { name: "Penanggung jawab" }).fill(data.pic);
     },
     async fillNIKPIC() {
-      await page.getByRole("textbox", { name: "NIK Penanggung jawab" }).fill(data.nikpic);
+      await page.getByRole("textbox", { name: "digit NIK PIC" }).fill(data.nikpic);
     },
   };
 };
