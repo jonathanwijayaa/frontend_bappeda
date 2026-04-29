@@ -12,6 +12,7 @@ import UploadExcelModal from '../components/ui/UploadExcelModal';
 import Pagination from '../components/ui/Pagination';
 import { exportToPDF } from '../utils/exportToPDF';
 import { useAuth } from '../context/AuthContext';
+import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { KaderData, AutoOption } from '../types';
 import { useKaderList } from '../hooks/kader/useKaderList';
 import { useOpdList } from '../hooks/opd/useOpdList';
@@ -146,7 +147,7 @@ const DaftarKader: React.FC = () => {
             { kader_id: selectedKader.kader_id, is_active: !selectedKader.is_active },
             {
                 onSuccess: (d) => setToast({ message: d.message, type: 'success' }),
-                onError:   (e: any) => setToast({ message: e.message || 'Gagal mengubah status', type: 'error' }),
+                onError:   (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal mengubah status'), type: 'error' }),
                 onSettled: () => { setIsConfirmModalOpen(false); setSelectedKader(null); },
             }
         );
@@ -177,7 +178,7 @@ const DaftarKader: React.FC = () => {
                 setIsModalOpen(false);
                 setFormData({ opd_name: '', opd_id: 0, nama_kader: '', deskripsi: '', nama_pic: '', nik_pic: '', alamat_pic: '', kelurahan_pic: '', no_hp_pic: '' });
             },
-            onError: (e: any) => setToast({ message: e.message || 'Gagal menambahkan kader', type: 'error' }),
+            onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal menambahkan kader'), type: 'error' }),
         });
     };
 
@@ -190,7 +191,7 @@ const DaftarKader: React.FC = () => {
                     setToast({ message: d.message || 'Data kader berhasil diperbarui', type: 'success' });
                     setIsDetailModalOpen(false);
                 },
-                onError: (e: any) => setToast({ message: e.message || 'Gagal memperbarui data', type: 'error' }),
+                onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal memperbarui data'), type: 'error' }),
             }
         );
     };
@@ -210,7 +211,7 @@ const DaftarKader: React.FC = () => {
                     setIsAssignPicModalOpen(false);
                     setAssignPicForm({ nik_pic: '', nama_pic: '', no_hp_pic: '', alamat_pic: '', kelurahan_pic: '' });
                 },
-                onError: (e: any) => setToast({ message: e.message || 'Gagal mengganti PIC', type: 'error' }),
+                onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal mengganti PIC'), type: 'error' }),
             }
         );
     };
@@ -244,7 +245,7 @@ const DaftarKader: React.FC = () => {
                 setToast({ message: d.message, type: 'success' });
                 setIsUploadModalOpen(false);
             },
-            onError: (e: any) => setToast({ message: e.message || 'Gagal import Excel', type: 'error' }),
+            onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal import Excel'), type: 'error' }),
         });
     };
 
