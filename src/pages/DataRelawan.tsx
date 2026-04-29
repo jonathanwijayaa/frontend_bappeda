@@ -298,10 +298,10 @@ const DataRelawan: React.FC = () => {
         if (!selectedPengajuan) return;
         setIsReviewing(true);
         try {
-            const { data } = await apiClient.post(
-                `/admin/relawan/pengajuan/${selectedPengajuan.pengajuan_id}/review`,
-                { status, catatan_verifikator: verificationNote }
-            );
+            const endpoint = isSuperAdmin
+                ? `/admin/relawan/pengajuan/${selectedPengajuan.pengajuan_id}/review`
+                : `/opd-admin/relawan/pengajuan/${selectedPengajuan.pengajuan_id}/review`;
+            const { data } = await apiClient.post(endpoint, { status, catatan_verifikator: verificationNote });
             if (data.success) {
                 setToast({ message: data.message, type: 'success' });
                 setIsReviewModalOpen(false);
