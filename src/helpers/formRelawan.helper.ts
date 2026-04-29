@@ -27,6 +27,7 @@ export interface RelawanData {
   JABATAN: string;
   "DETAIL JABATAN": string;
   PENUGASAN: string;
+  "STATUS KEAKTIFAN"?: string;
 }
 
 interface IFillRelawanForm {
@@ -56,6 +57,7 @@ export const buildRelawanData = (): RelawanData => {
     PENUGASAN: faker.helpers.arrayElement([
       "RT", "RW", "Kelurahan", "Membantu Ketua I", "Membantu Wakil I",
     ]),
+    "STATUS KEAKTIFAN": faker.helpers.arrayElement(["Aktif", "NonAktif"]),
   };
 };
 
@@ -75,6 +77,7 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
     await this.fillJabatan();
     await this.fillDetailJabatan();
     await this.fillPenugasan();
+    await this.fillStatusKeaktifan();
   },
   async fillDetailJabatan() {
     await page
@@ -122,6 +125,13 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
       .getByRole("combobox", { name: "Penugasan" })
       .selectOption(data.PENUGASAN);
   },
+  async fillStatusKeaktifan() {
+    if (data["STATUS KEAKTIFAN"]) {
+      await page
+        .getByRole("combobox", { name: "Status Keaktifan" })
+        .selectOption(data["STATUS KEAKTIFAN"]);
+    }
+  }
 });
 
 export const selectOPD = async ({ data, page }: IFillRelawanForm) => {
