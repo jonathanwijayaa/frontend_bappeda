@@ -35,7 +35,7 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}): Pro
         localStorage.removeItem('token');
         localStorage.removeItem('currentUser');
         localStorage.setItem('isAuthenticated', 'false');
-        window.location.href = '/login';
+        window.location.href = '/login?expired=true';
     }
 
     return response;
