@@ -8,7 +8,7 @@ export const credentials = {
     password: "rahasia123",
   },
   superAdmin: {
-    NIK: "1234567890123411",
-    password: "rahasia123",
+    NIK: "1234567890123422",
+    password: "1234567890123422",
   },
 };
