@@ -12,6 +12,8 @@ export interface HistoriAssignment {
     statusKeaktifan: string;
     nomorSK?: string;
     tahun?: number | string;
+    tahunMulai?: number | null;
+    tahunSelesai?: number | null;
 }
 
 export interface HistoriRelawanData {

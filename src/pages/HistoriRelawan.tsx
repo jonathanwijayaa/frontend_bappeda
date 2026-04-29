@@ -48,6 +48,8 @@ const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
                 statusKeaktifan: row.status_penugasan || 'Aktif',
                 nomorSK: row.nomor_sk_manual || '',
                 tahun: row.tahun || '',
+                tahunMulai: row.tanggal_terbit ? new Date(row.tanggal_terbit).getFullYear() : null,
+                tahunSelesai: row.batas_aktif ? new Date(row.batas_aktif).getFullYear() : null,
             });
         }
     });
@@ -149,11 +151,15 @@ const HistoriRelawan: React.FC = () => {
             const matchTahun = (() => {
                 if (!filterTahunAwal && !filterTahunAkhir) return true;
                 return relawan.assignments.some(a => {
-                    const tahun = a.tahun ? Number(a.tahun) : null;
-                    if (!tahun) return true;
+                    if (!a.tahunMulai && !a.tahunSelesai) return true;
+                    
                     const awal = filterTahunAwal ? Number(filterTahunAwal) : 0;
                     const akhir = filterTahunAkhir ? Number(filterTahunAkhir) : 9999;
-                    return tahun >= awal && tahun <= akhir;
+                    
+                    const skAwal = a.tahunMulai || 0;
+                    const skAkhir = a.tahunSelesai || 9999;
+
+                    return (skAkhir >= awal) && (skAwal <= akhir);
                 });
             })();
 
