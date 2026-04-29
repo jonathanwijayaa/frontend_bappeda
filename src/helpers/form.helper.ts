@@ -7,6 +7,7 @@ export interface OPDData {
   kontak: string;
   namaOPD: string;
   pic: string;
+  nikpic: string;
 }
 
 interface IFillOPDForm {
@@ -20,6 +21,7 @@ export const buildOPDData = (): OPDData => {
     kontak: `08${faker.number.int({ max: 9999999999, min: 1000000000 })}`,
     namaOPD: `OPD ${faker.company.name()}`,
     pic: faker.person.fullName(),
+    nikpic: `0000000000000${faker.number.int({ max: 999, min: 100 })}`,
   };
 };
 
@@ -42,6 +44,9 @@ export const fillOPDForm = async ({ data, page }: IFillOPDForm) => {
     },
     async fillPIC() {
       await page.getByRole("textbox", { name: "Penanggung jawab" }).fill(data.pic);
+    },
+    async fillNIKPIC() {
+      await page.getByRole("textbox", { name: "NIK Penanggung jawab" }).fill(data.nikpic);
     },
   };
 };
