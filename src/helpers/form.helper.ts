@@ -35,6 +35,7 @@ export const fillOPDForm = async ({ data, page }: IFillOPDForm) => {
       await this.fillAlamat();
       await this.fillPIC();
       await this.fillKontak();
+      await this.fillNIKPIC();
     },
     async fillKontak() {
       await page.getByRole("textbox", { name: "Nomor telepon / email" }).fill(data.kontak);
