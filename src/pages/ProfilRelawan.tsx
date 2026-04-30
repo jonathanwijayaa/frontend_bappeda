@@ -11,7 +11,6 @@ import { Loader2 } from 'lucide-react';
 interface ProfilData {
     nik: string;
     nama_lengkap: string;
-    email: string | null;
     no_hp: string | null;
     jenis_kelamin: string;
     alamat_ktp: string | null;
@@ -28,6 +27,9 @@ const ProfilRelawan = () => {
 
     const [updateForm, setUpdateForm] = useState({
         namaLengkap: '',
+        kelurahan: '',
+        noHp: '',
+        jenisKelamin: '',
         alamat: '',
         catatan: '',
     });
@@ -52,7 +54,7 @@ const ProfilRelawan = () => {
     useEffect(() => { fetchProfil(); }, [fetchProfil]);
 
     const handleOpenModal = () => {
-        setUpdateForm({ namaLengkap: '', alamat: '', catatan: '' });
+        setUpdateForm({ namaLengkap: '', kelurahan: '', noHp: '', jenisKelamin: '', alamat: '', catatan: '' });
         setIsModalOpen(true);
     };
 
@@ -60,8 +62,11 @@ const ProfilRelawan = () => {
         setIsSubmitting(true);
         try {
             const dataBaru: Record<string, string> = {};
-            if (updateForm.namaLengkap.trim()) dataBaru.nama_lengkap = updateForm.namaLengkap.trim();
-            if (updateForm.alamat.trim()) dataBaru.alamat_ktp = updateForm.alamat.trim();
+            if (updateForm.namaLengkap.trim())  dataBaru.nama_lengkap  = updateForm.namaLengkap.trim();
+            if (updateForm.alamat.trim())        dataBaru.alamat_ktp   = updateForm.alamat.trim();
+            if (updateForm.kelurahan.trim())     dataBaru.kelurahan    = updateForm.kelurahan.trim();
+            if (updateForm.noHp.trim())          dataBaru.no_hp        = updateForm.noHp.trim();
+            if (updateForm.jenisKelamin.trim())  dataBaru.jenis_kelamin = updateForm.jenisKelamin.trim();
 
             if (Object.keys(dataBaru).length === 0) {
                 setToast({ message: 'Minimal satu data harus diubah', type: 'error' });
@@ -108,7 +113,7 @@ const ProfilRelawan = () => {
                         <h2 className="text-lg font-semibold text-gray-800 mb-4">Informasi Pribadi</h2>
 
                         {isLoading ? (
-                            <div className="flex items-center justify-center py-8">
+                            <div className="flex items-center justify-center py-5">
                                 <Loader2 size={24} className="animate-spin text-gray-400" />
                             </div>
                         ) : (
@@ -120,7 +125,6 @@ const ProfilRelawan = () => {
                                     { label: 'Alamat KTP', value: profil?.alamat_ktp },
                                     { label: 'Kelurahan', value: profil?.kelurahan },
                                     { label: 'No. HP', value: profil?.no_hp },
-                                    { label: 'Email', value: profil?.email },
                                 ].map(item => (
                                     <div key={item.label}>
                                         <label className="block text-sm font-medium text-gray-500 mb-0.5">{item.label}</label>
@@ -173,6 +177,18 @@ const ProfilRelawan = () => {
                                 <p className="text-sm text-gray-500">Isi data yang ingin diubah. Kosongkan field yang tidak ingin diubah.</p>
 
                                 <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        NIK <span className="text-xs text-gray-400">(tidak dapat diubah)</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={profil?.nik || ''}
+                                        disabled
+                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-100 text-gray-500 text-sm cursor-not-allowed"
+                                    />
+                                </div>
+
+                                <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap Baru</label>
                                     <input
                                         type="text"
@@ -184,6 +200,19 @@ const ProfilRelawan = () => {
                                 </div>
 
                                 <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin Baru</label>
+                                    <select
+                                        value={updateForm.jenisKelamin}
+                                        onChange={(e) => setUpdateForm(p => ({ ...p, jenisKelamin: e.target.value }))}
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm bg-white"
+                                    >
+                                        <option value="">-- Tidak diubah ({profil?.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}) --</option>
+                                        <option value="L">Laki-laki</option>
+                                        <option value="P">Perempuan</option>
+                                    </select>
+                                </div>
+
+                                <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Alamat KTP Baru</label>
                                     <textarea
                                         value={updateForm.alamat}
@@ -191,6 +220,28 @@ const ProfilRelawan = () => {
                                         placeholder={profil?.alamat_ktp || 'Alamat KTP baru'}
                                         rows={3}
                                         className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 resize-none text-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Kelurahan Baru</label>
+                                    <input
+                                        type="text"
+                                        value={updateForm.kelurahan}
+                                        onChange={(e) => setUpdateForm(p => ({ ...p, kelurahan: e.target.value }))}
+                                        placeholder={profil?.kelurahan || 'Kelurahan baru'}
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">No. HP Baru</label>
+                                    <input
+                                        type="tel"
+                                        value={updateForm.noHp}
+                                        onChange={(e) => setUpdateForm(p => ({ ...p, noHp: e.target.value }))}
+                                        placeholder={profil?.no_hp || 'Contoh: 0812xxxxxxxx'}
+                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
                                     />
                                 </div>
 
