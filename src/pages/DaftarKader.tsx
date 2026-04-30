@@ -101,9 +101,11 @@ const DaftarKader: React.FC = () => {
 
     // ── Columns ────────────────────────────────────────────────────
     const columns = [
-        { header: 'NAMA KADER', accessor: 'nama_kader' as keyof KaderData },
+        { header: 'NAMA KADER', accessor: 'nama_kader' as keyof KaderData, width: '22%' },
         {
             header: 'STATUS',
+            width: '10%',
+            noTruncate: true,
             render: (row: KaderData) => (
                 <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${row.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                     {row.is_active ? 'Aktif' : 'Tidak Aktif'}
@@ -111,10 +113,11 @@ const DaftarKader: React.FC = () => {
             )
         },
         // Kolom OPD hanya tampil untuk super_admin (OPD sudah tahu OPD-nya sendiri)
-        ...(isSuperAdmin ? [{ header: 'OPD', accessor: 'nama_opd' as keyof KaderData }] : []),
-        { header: 'PIC', render: (row: KaderData) => <span>{row.pic_nama || '-'}</span> },
+        ...(isSuperAdmin ? [{ header: 'OPD', accessor: 'nama_opd' as keyof KaderData, width: '18%' }] : []),
+        { header: 'PIC', width: '15%', render: (row: KaderData) => <span>{row.pic_nama || '-'}</span> },
         {
             header: isOPD ? 'JUMLAH ANGGOTA' : 'DESKRIPSI',
+            width: '20%',
             render: (row: KaderData) => isOPD
                 ? <span>{row.jumlah_anggota ?? 0} orang</span>
                 : <span className="truncate max-w-[200px] block" title={row.deskripsi || ''}>{row.deskripsi || '-'}</span>
