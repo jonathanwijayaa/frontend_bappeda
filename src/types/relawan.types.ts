@@ -17,6 +17,7 @@ export interface Assignment {
 
 // ── RelawanData — dipakai di tabel DataRelawan ──────────────────
 export interface RelawanData {
+    relawan_id?: number;
     no_hp: string;
     user_id?: number;
     nik: string;

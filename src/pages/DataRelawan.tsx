@@ -145,17 +145,19 @@ const DataRelawan: React.FC = () => {
     // kaderOptionsByIndex — shared per opd_id via TanStack Query cache
     const kaderOptionsByIndex = useMemo<Record<number, AutoOption[]>>(() => {
         const result: Record<number, AutoOption[]> = {};
-        formData.assignments.forEach((a, i) => {
-            if (isOPD || (a.opd_id ?? 0) === activeOpdId) result[i] = kaderOptions;
+        const assignments = isEditMode ? detailFormData.assignments : formData.assignments;
+        assignments.forEach((a, i) => {
+            if (isOPD || ((a as any).opd_id ?? 0) === activeOpdId) result[i] = kaderOptions;
         });
         return result;
-    }, [kaderOptions, activeOpdId, isOPD, formData.assignments.length]);
+    }, [kaderOptions, activeOpdId, isOPD, formData.assignments, detailFormData.assignments, isEditMode]);
 
     const isLoadingKaderByIndex = useMemo<Record<number, boolean>>(() => {
         const result: Record<number, boolean> = {};
-        if (isKaderLoading) formData.assignments.forEach((_, i) => { result[i] = true; });
+        const assignments = isEditMode ? detailFormData.assignments : formData.assignments;
+        if (isKaderLoading) assignments.forEach((_, i) => { result[i] = true; });
         return result;
-    }, [isKaderLoading, formData.assignments.length]);
+    }, [isKaderLoading, formData.assignments, detailFormData.assignments, isEditMode]);
 
     // ── fetchKaderByOpdId — sekarang melalui TanStack Query (setActiveOpdId) ──
     const fetchKaderByOpdId = useCallback((opdId: number, _assignmentIndex: number) => {
@@ -271,6 +273,7 @@ const DataRelawan: React.FC = () => {
 
     const handleDetailClick = (relawan: RelawanData) => {
         setSelectedRelawan(relawan);
+        const assignments = Array.isArray(relawan.assignments) ? relawan.assignments : [];
         setDetailFormData({
             namaRelawan: relawan.namaLengkap || '',
             nik: relawan.nik || '',
@@ -281,9 +284,14 @@ const DataRelawan: React.FC = () => {
             jabatan: relawan.jabatan || '-',
             penugasan: relawan.penugasan || '-',
             jenisKelamin: (relawan.jenisKelamin as 'L' | 'P') || 'L',
-            //  FIXED: Jaga-jaga jika relawan.assignments null/undefined
-            assignments: Array.isArray(relawan.assignments) ? relawan.assignments : []
+            assignments: assignments
         });
+
+        // Set activeOpdId dari penugasan pertama jika ada, agar dropdown kader terisi
+        if (assignments.length > 0 && assignments[0].opd_id) {
+            setActiveOpdId(assignments[0].opd_id);
+        }
+
         setIsDetailModalOpen(true);
     };
 
