@@ -55,16 +55,19 @@ const LogAktifitas: React.FC = () => {
     const columns = [
         {
             header: 'WAKTU',
+            width: '18%',
             render: (row: LogData) => (
                 <span className="text-sm text-gray-600">
                     {new Date(row.timestamp).toLocaleString('id-ID')}
                 </span>
             ),
         },
-        { header: 'PENGGUNA', accessor: 'nama_pengguna' as keyof LogData },
-        { header: 'NIK', accessor: 'nik' as keyof LogData },
+        { header: 'PENGGUNA', accessor: 'nama_pengguna' as keyof LogData, width: '18%' },
+        { header: 'NIK', accessor: 'nik' as keyof LogData, width: '16%' },
         {
             header: 'AKSI',
+            width: '12%',
+            noTruncate: true,
             render: (row: LogData) => (
                 <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${row.action_type === 'INSERT' ? 'bg-green-100 text-green-700' :
                         row.action_type === 'UPDATE' ? 'bg-blue-100 text-blue-700' :
@@ -75,8 +78,8 @@ const LogAktifitas: React.FC = () => {
                 </span>
             ),
         },
-        { header: 'TABEL', accessor: 'table_name' as keyof LogData },
-        { header: 'IP ADDRESS', accessor: 'ip_address' as keyof LogData },
+        { header: 'TABEL', accessor: 'table_name' as keyof LogData, width: '18%' },
+        { header: 'IP ADDRESS', accessor: 'ip_address' as keyof LogData, width: '18%' },
     ];
 
     return (

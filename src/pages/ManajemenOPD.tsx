@@ -85,18 +85,20 @@ const ManajemenOPD: React.FC = () => {
 
     // ── Columns ────────────────────────────────────────────────
     const columns = [
-        { header: 'NAMA OPD', accessor: 'nama_opd' as keyof OPDData },
+        { header: 'NAMA OPD', accessor: 'nama_opd' as keyof OPDData, width: '22%' },
         {
             header: 'STATUS',
+            width: '10%',
+            noTruncate: true,
             render: (row: OPDData) => (
                 <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${row.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                     {row.is_active ? 'Aktif' : 'Tidak Aktif'}
                 </span>
             )
         },
-        { header: 'ALAMAT',  accessor: 'alamat'  as keyof OPDData },
-        { header: 'PIC',     accessor: 'pic'     as keyof OPDData },
-        { header: 'KONTAK',  accessor: 'kontak'  as keyof OPDData },
+        { header: 'ALAMAT',  accessor: 'alamat'  as keyof OPDData, width: '28%' },
+        { header: 'PIC',     accessor: 'pic'     as keyof OPDData, width: '15%' },
+        { header: 'KONTAK',  accessor: 'kontak'  as keyof OPDData, width: '15%' },
     ];
 
     // ── Handlers ──────────────────────────────────────────────
