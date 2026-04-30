@@ -18,11 +18,11 @@ import { parseErrorMessage } from '../utils/parseErrorMessage';
 const SaranHotline: React.FC = () => {
     const { user, isSuperAdmin } = useAuth();
     const isRelawan = user?.role === 'relawan';
-    const userNoHp  = (user as any)?.no_hp || '';
+    const userNoHp = (user as any)?.no_hp || '';
 
     // ── Server State (TanStack Query) ─────────────────────────
     const { data: saranList = [], isLoading } = useSaranList(isSuperAdmin);
-    const createSaran  = useCreateSaran();
+    const createSaran = useCreateSaran();
     const respondSaran = useRespondSaran();
 
     // ── UI State ──────────────────────────────────────────────
@@ -63,7 +63,7 @@ const SaranHotline: React.FC = () => {
         createSaran.mutate(
             {
                 subjek: `Dari: ${formData.namaLengkap} (${formData.noTelepon})`,
-                pesan:  formData.saran,
+                pesan: formData.saran,
             },
             {
                 onSuccess: () => {
@@ -91,8 +91,8 @@ const SaranHotline: React.FC = () => {
         setIsResponding(true);
         respondSaran.mutate(
             {
-                saran_id:      selectedSaran.saran_id,
-                status:        responForm.status,
+                saran_id: selectedSaran.saran_id,
+                status: responForm.status,
                 catatan_admin: responForm.catatan_admin || null,
             },
             {
@@ -136,11 +136,10 @@ const SaranHotline: React.FC = () => {
         {
             header: 'STATUS',
             render: (row: SaranData) => (
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                    row.status === 'Selesai'
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${row.status === 'Selesai'
                         ? 'bg-green-50 text-green-700 border-green-200'
                         : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                }`}>
+                    }`}>
                     {row.status === 'Selesai' ? '✓ Selesai' : ' Menunggu'}
                 </span>
             )
@@ -158,11 +157,10 @@ const SaranHotline: React.FC = () => {
             </button>
             <button
                 onClick={() => handleQuickToggle(row)}
-                className={`p-1.5 rounded-lg transition-colors ${
-                    row.status === 'Selesai'
+                className={`p-1.5 rounded-lg transition-colors ${row.status === 'Selesai'
                         ? 'text-gray-400 hover:bg-gray-200'
                         : 'text-green-600 hover:bg-green-100'
-                }`}
+                    }`}
                 title={row.status === 'Selesai' ? 'Batal Selesai' : 'Tandai Selesai'}
             >
                 <Check size={18} />
@@ -209,11 +207,10 @@ const SaranHotline: React.FC = () => {
                 disabled={isRelawan && !!userNoHp}
                 onChange={handleInputChange}
                 placeholder="No. Telepon"
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm ${
-                    isRelawan && !!userNoHp
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm ${isRelawan && !!userNoHp
                         ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed'
                         : 'border-gray-300'
-                }`}
+                    }`}
             />
             <textarea
                 name="saran"
@@ -264,7 +261,7 @@ const SaranHotline: React.FC = () => {
                                 <div className="text-sm text-gray-500">
                                     Menampilkan {startIndex + 1}-{Math.min(endIndex, saranList.length)} dari {saranList.length} Saran
                                 </div>
-                                <Pagination 
+                                <Pagination
                                     currentPage={currentPage}
                                     totalPages={totalPages}
                                     onPageChange={(page) => setCurrentPage(page)}
