@@ -109,15 +109,15 @@ const ProfilRelawan = () => {
 
                 {/* Profile Card */}
                 <Card className="shadow-md">
-                    <div className="p-5">
-                        <h2 className="text-lg font-semibold text-gray-800 mb-4">Informasi Pribadi</h2>
+                    <div className="p-2">
+                        <h2 className="text-lg font-semibold text-gray-800 mb-2">Informasi Pribadi</h2>
 
                         {isLoading ? (
                             <div className="flex items-center justify-center py-5">
                                 <Loader2 size={24} className="animate-spin text-gray-400" />
                             </div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="space-y-2">
                                 {[
                                     { label: 'Nama Lengkap', value: profil?.nama_lengkap },
                                     { label: 'NIK', value: profil?.nik },
