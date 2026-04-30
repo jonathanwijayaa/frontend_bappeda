@@ -1,5 +1,5 @@
 //SaranHotline.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Phone, MessageCircle, Clock, Check, Eye, Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import RelawanMenu from '../components/RelawanMenu';
@@ -12,6 +12,7 @@ import { useAuth } from '../context/AuthContext';
 import { SaranData } from '../types';
 import { useSaranList } from '../hooks/saran/useSaranList';
 import { useCreateSaran, useRespondSaran } from '../hooks/saran/useSaranMutations';
+import { useProfileData } from '../hooks/profil/useProfileData';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
 
 
@@ -22,6 +23,7 @@ const SaranHotline: React.FC = () => {
 
     // ── Server State (TanStack Query) ─────────────────────────
     const { data: saranList = [], isLoading } = useSaranList(isSuperAdmin);
+    const { data: profileData } = useProfileData();
     const createSaran = useCreateSaran();
     const respondSaran = useRespondSaran();
 
@@ -41,6 +43,16 @@ const SaranHotline: React.FC = () => {
     });
     const [currentPage, setCurrentPage] = useState<number>(1);
     const itemsPerPage = 5;
+
+    useEffect(() => {
+        const autoNama = user?.name || '';
+        const autoNoHp = profileData?.no_hp || userNoHp;
+        setFormData(prev => ({
+            ...prev,
+            namaLengkap: prev.namaLengkap || autoNama,
+            noTelepon: prev.noTelepon || autoNoHp,
+        }));
+    }, [user?.name, userNoHp, profileData?.no_hp]);
 
     // Pagination
     const totalPages = Math.ceil(saranList.length / itemsPerPage);
@@ -68,7 +80,11 @@ const SaranHotline: React.FC = () => {
             {
                 onSuccess: () => {
                     setToast({ message: 'Saran berhasil dikirim. Terima kasih!', type: 'success' });
-                    setFormData({ namaLengkap: user?.name || '', noTelepon: userNoHp, saran: '' });
+                    setFormData({
+                        namaLengkap: user?.name || '',
+                        noTelepon: profileData?.no_hp || userNoHp,
+                        saran: ''
+                    });
                 },
                 onError: (err: any) => setToast({ message: parseErrorMessage(err, 'Gagal mengirim saran'), type: 'error' }),
                 onSettled: () => setIsSubmitting(false),
