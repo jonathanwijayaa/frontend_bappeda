@@ -35,3 +35,16 @@ export const useDeleteSk = () => {
         onSuccess: () => qc.invalidateQueries({ queryKey: SK_KEYS.list() }),
     });
 };
+
+// ── Toggle status aktif/nonaktif SK ───────────────────────────
+export const useToggleSkStatus = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: ({ sk_id, is_active }: { sk_id: number; is_active: boolean }) =>
+            apiClient.patch(`/admin/sk/${sk_id}/status`, { is_active }).then(r => {
+                if (!r.data.success) throw new Error(r.data.message);
+                return r.data;
+            }),
+        onSuccess: () => qc.invalidateQueries({ queryKey: SK_KEYS.list() }),
+    });
+};

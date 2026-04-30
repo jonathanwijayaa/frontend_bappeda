@@ -1,6 +1,6 @@
 //SuratKeputusan.tsx
 import React, { useState, useMemo } from 'react';
-import { FileDown, Upload, Loader2, Eye, Trash2, AlertCircle, ExternalLink } from 'lucide-react';
+import { FileDown, Upload, Loader2, Eye, AlertCircle, ExternalLink } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { SearchInput } from '../components/ui/Input';
@@ -14,15 +14,15 @@ import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { useAuth } from '../context/AuthContext';
 import { SKData, SKDetail, ErrorHint } from '../types';
 import { useSkList, useSkDetail, useSkPdf } from '../hooks/sk/useSkList';
-import { useCreateSk, useDeleteSk } from '../hooks/sk/useSkMutations';
+import { useCreateSk, useToggleSkStatus } from '../hooks/sk/useSkMutations';
 
 const SuratKeputusan: React.FC = () => {
     const { isSuperAdmin, isOPD, user } = useAuth();
 
     // ── Server State ──────────────────────────────────────────
     const { data: skList = [], isLoading } = useSkList();
-    const createSk = useCreateSk();
-    const deleteSk = useDeleteSk();
+    const createSk      = useCreateSk();
+    const toggleSkStatus = useToggleSkStatus();
 
     // ── UI State ──────────────────────────────────────────────
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -35,6 +35,8 @@ const SuratKeputusan: React.FC = () => {
     const [isExporting, setIsExporting] = useState<boolean>(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const [errorHint, setErrorHint] = useState<ErrorHint | null>(null);
+    const [isConfirmSkOpen, setIsConfirmSkOpen] = useState<boolean>(false);
+    const [selectedSkForToggle, setSelectedSkForToggle] = useState<SKData | null>(null);
     const itemsPerPage = 5;
 
     // ── Lazy query — hanya aktif saat modal detail terbuka ────
@@ -108,16 +110,27 @@ const SuratKeputusan: React.FC = () => {
         });
     };
 
-    const handleDeleteSK = (sk_id: number) => {
-        if (!confirm('Apakah Anda yakin ingin menghapus SK ini?')) return;
-        deleteSk.mutate(sk_id, {
-            onSuccess: () => {
-                setToast({ message: 'SK berhasil dihapus', type: 'success' });
-                setIsDetailModalOpen(false);
-                setSelectedSkId(0);
-            },
-            onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal menghapus SK'), type: 'error' }),
-        });
+    const handleToggleSkStatus = (sk: SKData) => {
+        setSelectedSkForToggle(sk);
+        setIsConfirmSkOpen(true);
+    };
+
+    const handleConfirmToggleSk = () => {
+        if (!selectedSkForToggle) return;
+        const newActive = selectedSkForToggle.status === 'Aktif' ? false : true;
+        toggleSkStatus.mutate(
+            { sk_id: selectedSkForToggle.sk_id, is_active: newActive },
+            {
+                onSuccess: (d) => setToast({ message: d.message || 'Status SK berhasil diubah', type: 'success' }),
+                onError:   (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal mengubah status SK'), type: 'error' }),
+                onSettled: () => {
+                    setIsConfirmSkOpen(false);
+                    setSelectedSkForToggle(null);
+                    setIsDetailModalOpen(false);
+                    setSelectedSkId(0);
+                },
+            }
+        );
     };
 
     const handleExportPDF = async () => {
@@ -156,7 +169,7 @@ const SuratKeputusan: React.FC = () => {
         {
             header: 'STATUS',
             render: (row: SKData) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.status === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${row.status === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                     {row.status}
                 </span>
             )
@@ -176,8 +189,12 @@ const SuratKeputusan: React.FC = () => {
                 </Button>
             )}
             {isSuperAdmin && (
-                <Button variant="secondary" size="sm" onClick={() => handleDeleteSK(row.sk_id)}>
-                    <Trash2 size={14} />
+                <Button
+                    variant={row.status === 'Aktif' ? 'danger' : 'secondary'}
+                    size="sm"
+                    onClick={() => handleToggleSkStatus(row)}
+                >
+                    {row.status === 'Aktif' ? 'Nonaktif' : 'Aktifkan'}
                 </Button>
             )}
         </div>
@@ -354,12 +371,18 @@ const SuratKeputusan: React.FC = () => {
                             )}
                         </div>
 
-                        {isSuperAdmin && (
+                        {isSuperAdmin && selectedSK && (
                             <div className="flex justify-end gap-2 pt-4 border-t">
                                 <Button variant="outline" onClick={() => { setIsDetailModalOpen(false); setSelectedSkId(0); }}>Tutup</Button>
-                                <Button variant="secondary" onClick={() => handleDeleteSK(selectedSK.sk_id)} disabled={deleteSk.isPending}>
-                                    <Trash2 size={14} className="mr-2" />
-                                    Hapus SK
+                                <Button
+                                    variant={selectedSK.status === 'Aktif' ? 'danger' : 'secondary'}
+                                    onClick={() => handleToggleSkStatus(selectedSK)}
+                                    disabled={toggleSkStatus.isPending}
+                                >
+                                    {toggleSkStatus.isPending
+                                        ? <><Loader2 size={14} className="animate-spin mr-1" />Menyimpan...</>
+                                        : selectedSK.status === 'Aktif' ? 'Nonaktifkan SK' : 'Aktifkan SK'
+                                    }
                                 </Button>
                             </div>
                         )}
@@ -404,6 +427,44 @@ const SuratKeputusan: React.FC = () => {
                     name: (user as any)?.nama_opd,
                 }}
             />
+
+            {/* Confirmation Modal — Toggle Status SK */}
+            <Modal
+                isOpen={isConfirmSkOpen}
+                onClose={() => { setIsConfirmSkOpen(false); setSelectedSkForToggle(null); }}
+                title="Konfirmasi"
+                subtitle={selectedSkForToggle?.status === 'Aktif' ? 'Nonaktifkan SK ini?' : 'Aktifkan SK ini?'}
+                maxWidth="md"
+                showCloseButton={false}
+            >
+                {selectedSkForToggle && (
+                    <div className="space-y-6">
+                        <div className="text-center py-4">
+                            <p className="text-lg text-gray-700">
+                                Anda akan {selectedSkForToggle.status === 'Aktif' ? 'menonaktifkan' : 'mengaktifkan'}{' '}
+                                <span className="font-semibold">{selectedSkForToggle.nomor_sk}</span>
+                            </p>
+                        </div>
+                        <div className="flex justify-center gap-4 pt-6">
+                            <Button
+                                type="button"
+                                onClick={() => { setIsConfirmSkOpen(false); setSelectedSkForToggle(null); }}
+                                className="bg-gray-500 hover:bg-gray-600 text-white px-8"
+                            >
+                                Batal
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={handleConfirmToggleSk}
+                                disabled={toggleSkStatus.isPending}
+                                className="bg-red-600 hover:bg-red-700 text-white px-8"
+                            >
+                                {toggleSkStatus.isPending ? <Loader2 size={16} className="animate-spin" /> : 'Lanjutkan'}
+                            </Button>
+                        </div>
+                    </div>
+                )}
+            </Modal>
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
