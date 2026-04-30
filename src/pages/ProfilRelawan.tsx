@@ -133,20 +133,18 @@ const ProfilRelawan = () => {
                                 ))}
                             </div>
                         )}
-
-                        {/* Info pengajuan */}
-                        <div className="mt-5 p-3 bg-blue-50 border border-blue-100 rounded-lg">
-                            <p className="text-xs text-blue-700 leading-relaxed">
-                                <span className="font-semibold">️ Informasi:</span> Perubahan data hanya dapat dilakukan pada Informasi Pribadi dan memerlukan persetujuan dari Admin OPD atau Super Admin. Pengajuan yang dikirim akan berstatus <span className="font-semibold">Menunggu Review</span> hingga diproses.
-                            </p>
-                        </div>
-
                         <Button
                             onClick={handleOpenModal}
                             className="w-full mt-4 bg-green-600 text-white hover:bg-green-700 py-2.5 rounded-lg font-medium"
                         >
                             Ajukan Pembaruan Data
                         </Button>
+                        {/* Info pengajuan */}
+                        <div className="mt-5 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                            <p className="text-xs text-blue-700 leading-relaxed">
+                                <span className="font-semibold">️ Informasi:</span> Perubahan data hanya dapat dilakukan pada Informasi Pribadi dan memerlukan persetujuan dari Admin OPD atau Super Admin. Pengajuan yang dikirim akan berstatus <span className="font-semibold">Menunggu Review</span> hingga diproses.
+                            </p>
+                        </div>
                     </div>
                 </Card>
             </div>
