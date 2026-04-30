@@ -101,7 +101,7 @@ const DaftarKader: React.FC = () => {
 
     // ── Columns ────────────────────────────────────────────────────
     const columns = [
-        { header: 'NAMA KADER', accessor: 'nama_kader' as keyof KaderData, width: '22%' },
+        { header: 'NAMA KADER', accessor: 'nama_kader' as keyof KaderData, width: '18%' },
         {
             header: 'STATUS',
             width: '10%',
@@ -117,7 +117,7 @@ const DaftarKader: React.FC = () => {
         { header: 'PIC', width: '15%', render: (row: KaderData) => <span>{row.pic_nama || '-'}</span> },
         {
             header: isOPD ? 'JUMLAH ANGGOTA' : 'DESKRIPSI',
-            width: '20%',
+            width: '16%',
             render: (row: KaderData) => isOPD
                 ? <span>{row.jumlah_anggota ?? 0} orang</span>
                 : <span className="truncate max-w-[200px] block" title={row.deskripsi || ''}>{row.deskripsi || '-'}</span>
