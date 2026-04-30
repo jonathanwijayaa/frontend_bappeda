@@ -13,6 +13,7 @@ export const RELAWAN_KEYS = {
 
 /** Mapping baris API flat → RelawanData untuk tabel */
 const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
+    relawan_id: r.relawan_id,
     user_id: r.user_id,
     nik: r.nik,
     namaLengkap: r.nama_lengkap,
