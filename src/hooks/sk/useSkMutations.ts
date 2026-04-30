@@ -40,7 +40,7 @@ export const useDeleteSk = () => {
 export const useToggleSkStatus = () => {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({ sk_id, status }: { sk_id: number; status: 'Aktif' | 'Nonaktif' }) =>
+        mutationFn: ({ sk_id, status }: { sk_id: number; status: 'Aktif' | 'Tidak Aktif' }) =>
             apiClient.patch(`/admin/sk/${sk_id}/status`, { status }).then(r => {
                 if (!r.data.success) throw new Error(r.data.message);
                 return r.data;

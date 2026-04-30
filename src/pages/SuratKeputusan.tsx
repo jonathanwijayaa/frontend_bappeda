@@ -117,7 +117,7 @@ const SuratKeputusan: React.FC = () => {
 
     const handleConfirmToggleSk = () => {
         if (!selectedSkForToggle) return;
-        const newStatus: 'Aktif' | 'Nonaktif' = selectedSkForToggle.status === 'Aktif' ? 'Nonaktif' : 'Aktif';
+        const newStatus: 'Aktif' | 'Tidak Aktif' = selectedSkForToggle.status === 'Aktif' ? 'Tidak Aktif' : 'Aktif';
         toggleSkStatus.mutate(
             { sk_id: selectedSkForToggle.sk_id, status: newStatus },
             {
