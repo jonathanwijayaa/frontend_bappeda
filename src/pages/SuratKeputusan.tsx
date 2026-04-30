@@ -157,17 +157,20 @@ const SuratKeputusan: React.FC = () => {
     };
 
     const columns = [
-        { header: 'NOMOR SK', accessor: 'nomor_sk' as keyof SKData },
-        { header: 'JUDUL SK', accessor: 'judul_sk' as keyof SKData },
-        { header: 'OPD', accessor: 'nama_opd' as keyof SKData },
+        { header: 'NOMOR SK', accessor: 'nomor_sk' as keyof SKData, width: '16%' },
+        { header: 'JUDUL SK', accessor: 'judul_sk' as keyof SKData, width: '22%' },
+        { header: 'OPD', accessor: 'nama_opd' as keyof SKData, width: '18%' },
         {
             header: 'TANGGAL TERBIT',
+            width: '13%',
             render: (row: SKData) => (
                 <span>{row.tanggal_terbit ? new Date(row.tanggal_terbit).toLocaleDateString('id-ID') : '-'}</span>
             )
         },
         {
             header: 'STATUS',
+            width: '10%',
+            noTruncate: true,
             render: (row: SKData) => (
                 <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${row.status === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                     {row.status}
@@ -176,6 +179,7 @@ const SuratKeputusan: React.FC = () => {
         },
         {
             header: 'JUMLAH RELAWAN',
+            width: '11%',
             render: (row: SKData) => <span className="font-medium">{row.jumlah_relawan}</span>
         },
     ];
