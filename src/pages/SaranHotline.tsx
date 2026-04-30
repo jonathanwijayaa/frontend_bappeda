@@ -204,10 +204,10 @@ const SaranHotline: React.FC = () => {
                 type="tel"
                 name="noTelepon"
                 value={formData.noTelepon}
-                disabled={isRelawan && !!userNoHp}
+                disabled={!!userNoHp}
                 onChange={handleInputChange}
                 placeholder="No. Telepon"
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm ${isRelawan && !!userNoHp
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm ${!!userNoHp
                         ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed'
                         : 'border-gray-300'
                     }`}
