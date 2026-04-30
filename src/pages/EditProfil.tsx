@@ -9,7 +9,7 @@ const EditProfil: React.FC = () => {
     const [profileData, setProfileData] = useState({
         namaLengkap: user?.name || '',
         nik: '1234567890123456',
-        noTelepon: '081234567890',
+        noTelepon: (user as any)?.no_hp || '',
         jenisKelamin: user?.name === 'Amelia' ? 'Perempuan' : 'Laki-Laki'
     });
 
