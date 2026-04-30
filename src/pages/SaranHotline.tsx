@@ -18,6 +18,7 @@ import { parseErrorMessage } from '../utils/parseErrorMessage';
 const SaranHotline: React.FC = () => {
     const { user, isSuperAdmin } = useAuth();
     const isRelawan = user?.role === 'relawan';
+    const userNoHp  = (user as any)?.no_hp || '';
 
     // ── Server State (TanStack Query) ─────────────────────────
     const { data: saranList = [], isLoading } = useSaranList(isSuperAdmin);
@@ -27,7 +28,7 @@ const SaranHotline: React.FC = () => {
     // ── UI State ──────────────────────────────────────────────
     const [formData, setFormData] = useState({
         namaLengkap: user?.name || '',
-        noTelepon: '',
+        noTelepon: userNoHp,
         saran: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,7 +68,7 @@ const SaranHotline: React.FC = () => {
             {
                 onSuccess: () => {
                     setToast({ message: 'Saran berhasil dikirim. Terima kasih!', type: 'success' });
-                    setFormData({ namaLengkap: user?.name || '', noTelepon: '', saran: '' });
+                    setFormData({ namaLengkap: user?.name || '', noTelepon: userNoHp, saran: '' });
                 },
                 onError: (err: any) => setToast({ message: parseErrorMessage(err, 'Gagal mengirim saran'), type: 'error' }),
                 onSettled: () => setIsSubmitting(false),
@@ -205,9 +206,14 @@ const SaranHotline: React.FC = () => {
                 type="tel"
                 name="noTelepon"
                 value={formData.noTelepon}
+                disabled={isRelawan && !!userNoHp}
                 onChange={handleInputChange}
                 placeholder="No. Telepon"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm ${
+                    isRelawan && !!userNoHp
+                        ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed'
+                        : 'border-gray-300'
+                }`}
             />
             <textarea
                 name="saran"
