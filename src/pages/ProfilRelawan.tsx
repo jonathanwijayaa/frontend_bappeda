@@ -101,8 +101,8 @@ const ProfilRelawan = () => {
             <div className="px-4 py-5 space-y-3">
                 {/* Welcome Card */}
                 <Card className="shadow-md bg-gradient-to-r from-green-500 to-green-600">
-                    <div className="p-3 text-white">
-                        <h2 className="text-2xl font-bold mb-1">Selamat Datang!</h2>
+                    <div className="p-2 text-white">
+                        <h2 className="text-xl font-bold mb-1">Selamat Datang!</h2>
                         <p className="text-green-50">{isLoading ? '...' : (profil?.nama_lengkap || '-')}</p>
                     </div>
                 </Card>
