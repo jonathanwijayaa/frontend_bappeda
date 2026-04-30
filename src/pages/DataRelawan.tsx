@@ -1,5 +1,5 @@
 //DataRelawan.tsx
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Plus, Upload, Loader2, X, FileDown } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -16,7 +16,6 @@ import { useAuth } from '../context/AuthContext';
 import { useRelawanList, RELAWAN_KEYS } from '../hooks/relawan/useRelawanList';
 import { usePengajuanList, PENGAJUAN_KEYS } from '../hooks/relawan/usePengajuanList';
 import { useOpdList } from '../hooks/opd/useOpdList';
-import { useKaderByOpd } from '../hooks/relawan/useKaderByOpd';
 import { useQueryClient } from '@tanstack/react-query';
 import apiClient from '../lib/axios';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
@@ -40,13 +39,9 @@ const DataRelawan: React.FC = () => {
         [opdListData]
     );
 
-    // kaderOptionsByIndex — dihitung setelah formData dideklarasi (lihat bawah)
-    const [activeOpdId, setActiveOpdId] = useState<number>(0);
-    const { data: kaderOptions = [], isFetching: isKaderLoading } = useKaderByOpd(
-        activeOpdId,
-        !!isOPD,
-        activeOpdId > 0 || !!isOPD
-    );
+    // Cache kader per opd_id agar setiap row assignment bisa punya sumber data sendiri
+    const [kaderOptionsByOpdId, setKaderOptionsByOpdId] = useState<Record<number, AutoOption[]>>({});
+    const [loadingOpdIds, setLoadingOpdIds] = useState<Record<number, boolean>>({});
 
 
     const [isReviewing, setIsReviewing] = useState(false);
@@ -142,27 +137,66 @@ const DataRelawan: React.FC = () => {
         ]
     });
 
-    // kaderOptionsByIndex — shared per opd_id via TanStack Query cache
+    const fetchKaderOptionsForOpd = useCallback(async (opdId: number) => {
+        if (opdId <= 0) return;
+        if (kaderOptionsByOpdId[opdId]) return;
+        if (loadingOpdIds[opdId]) return;
+
+        setLoadingOpdIds(prev => ({ ...prev, [opdId]: true }));
+        try {
+            const endpoint = isOPD ? '/opd-admin/kader' : `/kader?opd_id=${opdId}`;
+            const { data } = await apiClient.get(endpoint);
+            const options: AutoOption[] = data?.success
+                ? (data.data as any[]).map((k) => ({
+                    label: k.nama_kader as string,
+                    value: String(k.kader_id),
+                }))
+                : [];
+            setKaderOptionsByOpdId(prev => ({ ...prev, [opdId]: options }));
+        } catch {
+            setKaderOptionsByOpdId(prev => ({ ...prev, [opdId]: [] }));
+        } finally {
+            setLoadingOpdIds(prev => ({ ...prev, [opdId]: false }));
+        }
+    }, [isOPD, kaderOptionsByOpdId, loadingOpdIds]);
+
+    // Prefetch kader untuk semua OPD yang muncul di assignment aktif (form/detail)
+    useEffect(() => {
+        const assignments = isEditMode ? detailFormData.assignments : formData.assignments;
+        const opdIds = Array.from(new Set(
+            assignments
+                .map(a => Number((a as any).opd_id || 0))
+                .filter(id => id > 0)
+        ));
+        opdIds.forEach((opdId) => { void fetchKaderOptionsForOpd(opdId); });
+    }, [isEditMode, detailFormData.assignments, formData.assignments, fetchKaderOptionsForOpd]);
+
+    // kaderOptionsByIndex — mapping row assignment -> options sesuai opd_id row tsb
     const kaderOptionsByIndex = useMemo<Record<number, AutoOption[]>>(() => {
         const result: Record<number, AutoOption[]> = {};
         const assignments = isEditMode ? detailFormData.assignments : formData.assignments;
         assignments.forEach((a, i) => {
-            if (isOPD || ((a as any).opd_id ?? 0) === activeOpdId) result[i] = kaderOptions;
+            const opdId = Number((a as any).opd_id || 0);
+            result[i] = opdId > 0 ? (kaderOptionsByOpdId[opdId] || []) : [];
         });
         return result;
-    }, [kaderOptions, activeOpdId, isOPD, formData.assignments, detailFormData.assignments, isEditMode]);
+    }, [kaderOptionsByOpdId, formData.assignments, detailFormData.assignments, isEditMode]);
 
     const isLoadingKaderByIndex = useMemo<Record<number, boolean>>(() => {
         const result: Record<number, boolean> = {};
         const assignments = isEditMode ? detailFormData.assignments : formData.assignments;
-        if (isKaderLoading) assignments.forEach((_, i) => { result[i] = true; });
+        assignments.forEach((a, i) => {
+            const opdId = Number((a as any).opd_id || 0);
+            result[i] = opdId > 0 ? !!loadingOpdIds[opdId] : false;
+        });
         return result;
-    }, [isKaderLoading, formData.assignments, detailFormData.assignments, isEditMode]);
+    }, [loadingOpdIds, formData.assignments, detailFormData.assignments, isEditMode]);
 
-    // ── fetchKaderByOpdId — sekarang melalui TanStack Query (setActiveOpdId) ──
+    // ── fetchKaderByOpdId — trigger fetch per-opd_id (per row) ──
     const fetchKaderByOpdId = useCallback((opdId: number, _assignmentIndex: number) => {
-        setActiveOpdId(opdId > 0 ? opdId : (isOPD ? ((user as any)?.opd_id ?? 0) : 0));
-    }, [isOPD, user]);
+        const normalizedOpdId = opdId > 0 ? opdId : (isOPD ? ((user as any)?.opd_id ?? 0) : 0);
+        if (normalizedOpdId > 0) void fetchKaderOptionsForOpd(normalizedOpdId);
+    }, [isOPD, user, fetchKaderOptionsForOpd]);
 
     // ── Invalidate cache setelah mutasi ──
     const invalidateRelawan = useCallback(() =>
@@ -287,10 +321,11 @@ const DataRelawan: React.FC = () => {
             assignments: assignments
         });
 
-        // Set activeOpdId dari penugasan pertama jika ada, agar dropdown kader terisi
-        if (assignments.length > 0 && assignments[0].opd_id) {
-            setActiveOpdId(assignments[0].opd_id);
-        }
+        // Prefetch kader untuk semua OPD milik relawan ini agar warning/opsi kader akurat per row
+        assignments.forEach((a: any) => {
+            const opdId = Number(a?.opd_id || 0);
+            if (opdId > 0) void fetchKaderOptionsForOpd(opdId);
+        });
 
         setIsDetailModalOpen(true);
     };
@@ -450,7 +485,7 @@ const DataRelawan: React.FC = () => {
             ...prev,
             assignments: prev.assignments.filter((_, i) => i !== index)
         }));
-        // activeOpdId tetap, kaderOptionsByIndex dihitung otomatis dari useMemo
+        // options kader per row dihitung otomatis dari cache per opd_id
     };
 
     // ── Handler OPD berubah di assignment ──
@@ -462,8 +497,7 @@ const DataRelawan: React.FC = () => {
             newAssignments[index] = { ...newAssignments[index], opd: namaOpd, opd_id: opdId, kader: '', kader_id: null };
             return { ...prev, assignments: newAssignments };
         });
-        // Update activeOpdId — useKaderByOpd re-fetch otomatis jika cache miss
-        if (opdId > 0) setActiveOpdId(opdId);
+        if (opdId > 0) void fetchKaderOptionsForOpd(opdId);
     };
 
     const handleAssignmentChange = (index: number, field: string, value: string) => {
@@ -508,14 +542,14 @@ const DataRelawan: React.FC = () => {
             newAssignments[index] = { ...newAssignments[index], opd: namaOpd, opd_id: opdId, kader: '', kader_id: null } as any;
             return { ...prev, assignments: newAssignments };
         });
-        if (opdId > 0) setActiveOpdId(opdId);
+        if (opdId > 0) void fetchKaderOptionsForOpd(opdId);
     };
 
     const handleDetailAssignmentKaderChange = (index: number, value: string) => {
-        const kaderId = value ? Number(value) : null;
         const options = kaderOptionsByIndex[index] || [];
-        const matched = options.find(o => o.value === value);
-        const kaderName = matched ? matched.label : '';
+        const matched = options.find(o => o.label.toLowerCase() === value.toLowerCase());
+        const kaderId = matched ? Number(matched.value) : null;
+        const kaderName = value;
 
         setDetailFormData(prev => {
             const newAssignments = [...prev.assignments];
