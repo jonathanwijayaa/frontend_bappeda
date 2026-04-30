@@ -85,7 +85,7 @@ const ManajemenOPD: React.FC = () => {
 
     // ── Columns ────────────────────────────────────────────────
     const columns = [
-        { header: 'NAMA OPD', accessor: 'nama_opd' as keyof OPDData, width: '22%' },
+        { header: 'NAMA OPD', accessor: 'nama_opd' as keyof OPDData, width: '18%' },
         {
             header: 'STATUS',
             width: '10%',
@@ -96,7 +96,7 @@ const ManajemenOPD: React.FC = () => {
                 </span>
             )
         },
-        { header: 'ALAMAT',  accessor: 'alamat'  as keyof OPDData, width: '28%' },
+        { header: 'ALAMAT',  accessor: 'alamat'  as keyof OPDData, width: '24%' },
         { header: 'PIC',     accessor: 'pic'     as keyof OPDData, width: '15%' },
         { header: 'KONTAK',  accessor: 'kontak'  as keyof OPDData, width: '15%' },
     ];
