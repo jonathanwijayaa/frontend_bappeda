@@ -203,12 +203,13 @@ const HistoriRelawan: React.FC = () => {
 
     // ── Table columns (mirip Data Relawan) ────────────────────────
     const columns = [
-        { header: 'NAMA', accessor: 'namaLengkap' as keyof HistoriRelawanData },
-        { header: 'NIK', accessor: 'nik' as keyof HistoriRelawanData },
-        { header: 'ALAMAT', accessor: 'alamat' as keyof HistoriRelawanData },
-        { header: 'KELURAHAN', accessor: 'kelurahan' as keyof HistoriRelawanData },
+        { header: 'NAMA', accessor: 'namaLengkap' as keyof HistoriRelawanData, width: '20%' },
+        { header: 'NIK', accessor: 'nik' as keyof HistoriRelawanData, width: '16%' },
+        { header: 'ALAMAT', accessor: 'alamat' as keyof HistoriRelawanData, width: '20%' },
+        { header: 'KELURAHAN', accessor: 'kelurahan' as keyof HistoriRelawanData, width: '14%' },
         {
             header: 'OPD',
+            width: '15%',
             render: (row: HistoriRelawanData) => (
                 <span className="text-sm text-gray-700">
                     {row.assignments.length > 0
@@ -219,6 +220,7 @@ const HistoriRelawan: React.FC = () => {
         },
         {
             header: 'KADER',
+            width: '15%',
             render: (row: HistoriRelawanData) => (
                 <span className="text-sm text-gray-700">
                     {row.assignments.length > 0

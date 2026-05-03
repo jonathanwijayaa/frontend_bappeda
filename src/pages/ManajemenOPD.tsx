@@ -85,18 +85,20 @@ const ManajemenOPD: React.FC = () => {
 
     // ── Columns ────────────────────────────────────────────────
     const columns = [
-        { header: 'NAMA OPD', accessor: 'nama_opd' as keyof OPDData },
+        { header: 'NAMA OPD', accessor: 'nama_opd' as keyof OPDData, width: '18%' },
         {
             header: 'STATUS',
+            width: '10%',
+            noTruncate: true,
             render: (row: OPDData) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${row.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${row.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                     {row.is_active ? 'Aktif' : 'Tidak Aktif'}
                 </span>
             )
         },
-        { header: 'ALAMAT',  accessor: 'alamat'  as keyof OPDData },
-        { header: 'PIC',     accessor: 'pic'     as keyof OPDData },
-        { header: 'KONTAK',  accessor: 'kontak'  as keyof OPDData },
+        { header: 'ALAMAT',  accessor: 'alamat'  as keyof OPDData, width: '24%' },
+        { header: 'PIC',     accessor: 'pic'     as keyof OPDData, width: '15%' },
+        { header: 'KONTAK',  accessor: 'kontak'  as keyof OPDData, width: '15%' },
     ];
 
     // ── Handlers ──────────────────────────────────────────────
@@ -130,7 +132,15 @@ const ManajemenOPD: React.FC = () => {
     };
 
     const handleDetailSave = () => {
-        if (!selectedOPD || !detailFormData.nama_opd) return;
+        if (!selectedOPD) return;
+        if (!detailFormData.nama_opd.trim()) {
+            setToast({ message: 'Nama OPD tidak boleh kosong', type: 'error' });
+            return;
+        }
+        if (detailFormData.nik_pic && !/^\d{16}$/.test(detailFormData.nik_pic)) {
+            setToast({ message: 'NIK PIC harus terdiri dari tepat 16 digit angka', type: 'error' });
+            return;
+        }
         updateOpd.mutate(
             { opd_id: selectedOPD.opd_id, payload: detailFormData },
             {
@@ -145,7 +155,14 @@ const ManajemenOPD: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.nama_opd) return;
+        if (!formData.nama_opd.trim()) {
+            setToast({ message: 'Nama OPD tidak boleh kosong', type: 'error' });
+            return;
+        }
+        if (formData.nik_pic && !/^\d{16}$/.test(formData.nik_pic)) {
+            setToast({ message: 'NIK PIC harus terdiri dari tepat 16 digit angka', type: 'error' });
+            return;
+        }
         createOpd.mutate(formData, {
             onSuccess: () => {
                 setToast({ message: 'OPD baru berhasil ditambahkan', type: 'success' });

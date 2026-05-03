@@ -9,6 +9,7 @@ interface User {
     avatar: string;
     opd_id?: number; 
     nama_opd?: string;
+    no_hp?: string;
 }
 
 interface AuthContextType {
@@ -99,7 +100,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                     roleDisplay: getRoleDisplay(data.user.role),
                     avatar: getAvatarUrl(data.user.nama, data.user.role),
                     opd_id: data.user.opd_id,
-                    nama_opd: data.user.nama_opd
+                    nama_opd: data.user.nama_opd,
+                    no_hp: data.user.no_hp
                 };
 
                 setUser(loggedInUser);

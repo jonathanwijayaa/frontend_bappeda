@@ -1,5 +1,5 @@
 //SaranHotline.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Phone, MessageCircle, Clock, Check, Eye, Loader2 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import RelawanMenu from '../components/RelawanMenu';
@@ -12,22 +12,25 @@ import { useAuth } from '../context/AuthContext';
 import { SaranData } from '../types';
 import { useSaranList } from '../hooks/saran/useSaranList';
 import { useCreateSaran, useRespondSaran } from '../hooks/saran/useSaranMutations';
+import { useProfileData } from '../hooks/profil/useProfileData';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
 
 
 const SaranHotline: React.FC = () => {
     const { user, isSuperAdmin } = useAuth();
     const isRelawan = user?.role === 'relawan';
+    const userNoHp = (user as any)?.no_hp || '';
 
     // ── Server State (TanStack Query) ─────────────────────────
     const { data: saranList = [], isLoading } = useSaranList(isSuperAdmin);
-    const createSaran  = useCreateSaran();
+    const { data: profileData } = useProfileData();
+    const createSaran = useCreateSaran();
     const respondSaran = useRespondSaran();
 
     // ── UI State ──────────────────────────────────────────────
     const [formData, setFormData] = useState({
         namaLengkap: user?.name || '',
-        noTelepon: '',
+        noTelepon: userNoHp,
         saran: ''
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,6 +43,16 @@ const SaranHotline: React.FC = () => {
     });
     const [currentPage, setCurrentPage] = useState<number>(1);
     const itemsPerPage = 5;
+
+    useEffect(() => {
+        const autoNama = user?.name || '';
+        const autoNoHp = profileData?.no_hp || userNoHp;
+        setFormData(prev => ({
+            ...prev,
+            namaLengkap: prev.namaLengkap || autoNama,
+            noTelepon: prev.noTelepon || autoNoHp,
+        }));
+    }, [user?.name, userNoHp, profileData?.no_hp]);
 
     // Pagination
     const totalPages = Math.ceil(saranList.length / itemsPerPage);
@@ -62,12 +75,16 @@ const SaranHotline: React.FC = () => {
         createSaran.mutate(
             {
                 subjek: `Dari: ${formData.namaLengkap} (${formData.noTelepon})`,
-                pesan:  formData.saran,
+                pesan: formData.saran,
             },
             {
                 onSuccess: () => {
                     setToast({ message: 'Saran berhasil dikirim. Terima kasih!', type: 'success' });
-                    setFormData({ namaLengkap: user?.name || '', noTelepon: '', saran: '' });
+                    setFormData({
+                        namaLengkap: user?.name || '',
+                        noTelepon: profileData?.no_hp || userNoHp,
+                        saran: ''
+                    });
                 },
                 onError: (err: any) => setToast({ message: parseErrorMessage(err, 'Gagal mengirim saran'), type: 'error' }),
                 onSettled: () => setIsSubmitting(false),
@@ -90,8 +107,8 @@ const SaranHotline: React.FC = () => {
         setIsResponding(true);
         respondSaran.mutate(
             {
-                saran_id:      selectedSaran.saran_id,
-                status:        responForm.status,
+                saran_id: selectedSaran.saran_id,
+                status: responForm.status,
                 catatan_admin: responForm.catatan_admin || null,
             },
             {
@@ -135,11 +152,10 @@ const SaranHotline: React.FC = () => {
         {
             header: 'STATUS',
             render: (row: SaranData) => (
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                    row.status === 'Selesai'
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${row.status === 'Selesai'
                         ? 'bg-green-50 text-green-700 border-green-200'
                         : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                }`}>
+                    }`}>
                     {row.status === 'Selesai' ? '✓ Selesai' : ' Menunggu'}
                 </span>
             )
@@ -157,11 +173,10 @@ const SaranHotline: React.FC = () => {
             </button>
             <button
                 onClick={() => handleQuickToggle(row)}
-                className={`p-1.5 rounded-lg transition-colors ${
-                    row.status === 'Selesai'
+                className={`p-1.5 rounded-lg transition-colors ${row.status === 'Selesai'
                         ? 'text-gray-400 hover:bg-gray-200'
                         : 'text-green-600 hover:bg-green-100'
-                }`}
+                    }`}
                 title={row.status === 'Selesai' ? 'Batal Selesai' : 'Tandai Selesai'}
             >
                 <Check size={18} />
@@ -205,9 +220,13 @@ const SaranHotline: React.FC = () => {
                 type="tel"
                 name="noTelepon"
                 value={formData.noTelepon}
+                disabled={!!userNoHp}
                 onChange={handleInputChange}
                 placeholder="No. Telepon"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm ${!!userNoHp
+                        ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed'
+                        : 'border-gray-300'
+                    }`}
             />
             <textarea
                 name="saran"
@@ -258,7 +277,7 @@ const SaranHotline: React.FC = () => {
                                 <div className="text-sm text-gray-500">
                                     Menampilkan {startIndex + 1}-{Math.min(endIndex, saranList.length)} dari {saranList.length} Saran
                                 </div>
-                                <Pagination 
+                                <Pagination
                                     currentPage={currentPage}
                                     totalPages={totalPages}
                                     onPageChange={(page) => setCurrentPage(page)}
