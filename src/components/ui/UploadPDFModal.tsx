@@ -141,9 +141,18 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
         );
     };
 
+    const isFormValid = Boolean(
+        file &&
+        metadata.nomorSK.trim() !== '' &&
+        metadata.judulSK.trim() !== '' &&
+        metadata.tanggalTerbit.trim() !== '' &&
+        metadata.batasAktif.trim() !== '' &&
+        metadata.opd_id.trim() !== ''
+    );
+
     const handleSubmit = async () => {
-        if (!file || !metadata.nomorSK) {
-            alert('File PDF dan Nomor SK wajib diisi');
+        if (!isFormValid || !file) {
+            alert('Semua field (File PDF, Nomor SK, Judul SK, Tanggal Terbit, Batas Aktif, OPD) wajib diisi.');
             return;
         }
         // Validasi ekstra: Super Admin tidak boleh upload kalau tidak pilih OPD yang valid
@@ -234,7 +243,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Judul SK
+                            Judul SK <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="text"
@@ -247,7 +256,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Tanggal Terbit
+                            Tanggal Terbit <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="date"
@@ -259,7 +268,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Batas Aktif
+                            Batas Aktif <span className="text-red-500">*</span>
                         </label>
                         <input
                             type="date"
@@ -350,7 +359,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                     <Button variant="outline" onClick={handleClose} disabled={isUploading}>
                         Batal
                     </Button>
-                    <Button variant="primary" onClick={handleSubmit} disabled={isUploading || !file}>
+                    <Button variant="primary" onClick={handleSubmit} disabled={isUploading || !isFormValid}>
                         {isUploading ? 'Mengunggah...' : 'Unggah SK'}
                     </Button>
                 </div>
