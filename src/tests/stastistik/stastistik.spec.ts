@@ -2,17 +2,11 @@ import { credentials } from "@/helpers/credentials.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { expect, test } from "@playwright/test";
 
-/* ======================================
-   ROLE CONFIG
-====================================== */
 const roles = [
   { label: "Super Admin", creds: credentials.superAdmin },
   { label: "OPD", creds: credentials.opd },
 ] as const;
 
-/* ======================================
-   STATISTIK
-====================================== */
 for (const { label, creds } of roles) {
   test.describe(`Statistik - ${label}`, () => {
     test.beforeEach(async ({ page }) => {
