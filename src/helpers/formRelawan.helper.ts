@@ -63,7 +63,7 @@ export const buildRelawanData = (): RelawanData => {
 
 export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
   async fillAlamat() {
-    await page.getByRole("textbox", { name: "Alamat" }).fill(data.ALAMAT);
+    await page.getByRole("textbox", { name: "Alamat sesuai KTP" }).fill(data.ALAMAT);
   },
   async fillAll() {
     await this.fillNamaLengkap();
@@ -81,7 +81,7 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
   },
   async fillDetailJabatan() {
     await page
-      .getByRole("textbox", { name: "Detail jabatan (RT/RW/II)" })
+      .getByRole("textbox", { name: "Detail jabatan (contoh: Anggota Umum Bidang X)" })
       .fill(data["DETAIL JABATAN"]);
   },
   async fillJabatan() {
