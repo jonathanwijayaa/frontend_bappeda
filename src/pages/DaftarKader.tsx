@@ -158,7 +158,10 @@ const DaftarKader: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.nama_kader) return;
+        if (!formData.nama_kader.trim() || !formData.deskripsi.trim() || !formData.nama_pic.trim() || !formData.nik_pic.trim() || !formData.alamat_pic.trim() || !formData.kelurahan_pic.trim() || !formData.no_hp_pic.trim()) {
+            setToast({ message: 'Semua field wajib diisi', type: 'error' });
+            return;
+        }
         if (formData.nama_kader.trim().length < 3) {
             setToast({ message: 'Nama Kader minimal 3 karakter', type: 'error' });
             return;
@@ -213,8 +216,8 @@ const DaftarKader: React.FC = () => {
 
     const handleDetailSave = async () => {
         if (!selectedKader) return;
-        if (!detailFormData.nama_kader.trim()) {
-            setToast({ message: 'Nama Kader tidak boleh kosong', type: 'error' });
+        if (!detailFormData.nama_kader.trim() || !detailFormData.deskripsi.trim()) {
+            setToast({ message: 'Semua field wajib diisi', type: 'error' });
             return;
         }
         if (detailFormData.nama_kader.trim().length < 3) {
@@ -243,8 +246,8 @@ const DaftarKader: React.FC = () => {
 
     const handleAssignPic = async () => {
         if (!selectedKader) return;
-        if (!assignPicForm.nik_pic || assignPicForm.nik_pic.length !== 16) {
-            setToast({ message: 'NIK PIC harus 16 digit', type: 'error' });
+        if (!assignPicForm.nik_pic || assignPicForm.nik_pic.length !== 16 || !assignPicForm.nama_pic.trim() || !assignPicForm.no_hp_pic.trim() || !assignPicForm.alamat_pic.trim() || !assignPicForm.kelurahan_pic.trim()) {
+            setToast({ message: 'Semua field wajib diisi dan NIK harus 16 digit', type: 'error' });
             return;
         }
         if (assignPicForm.nama_pic && assignPicForm.nama_pic.trim().length > 0) {
@@ -422,12 +425,12 @@ const DaftarKader: React.FC = () => {
 
                     {[
                         { label: 'Nama Kader',    name: 'nama_kader',    required: true,  placeholder: 'Nama Kader atau komunitas' },
-                        { label: 'Nama PIC',     name: 'nama_pic',      required: false, placeholder: 'Nama Person in Charge (opsional)' },
+                        { label: 'Nama PIC',     name: 'nama_pic',      required: true, placeholder: 'Nama Person in Charge' },
                         { label: 'NIK PIC',      name: 'nik_pic',       required: true,  placeholder: '16 digit NIK PIC', maxLength: 16 },
-                        { label: 'No. HP PIC',   name: 'no_hp_pic',     required: false, placeholder: 'Nomor HP PIC (opsional)' },
-                        { label: 'Alamat PIC',   name: 'alamat_pic',    required: false, placeholder: 'Alamat sesuai KTP (opsional)' },
-                        { label: 'Kelurahan PIC',name: 'kelurahan_pic', required: false, placeholder: 'Kelurahan/Desa (opsional)' },
-                        { label: 'Deskripsi',    name: 'deskripsi',     required: false, placeholder: 'Deskripsi singkat (opsional)' },
+                        { label: 'No. HP PIC',   name: 'no_hp_pic',     required: true, placeholder: 'Nomor HP PIC' },
+                        { label: 'Alamat PIC',   name: 'alamat_pic',    required: true, placeholder: 'Alamat sesuai KTP' },
+                        { label: 'Kelurahan PIC',name: 'kelurahan_pic', required: true, placeholder: 'Kelurahan/Desa' },
+                        { label: 'Deskripsi',    name: 'deskripsi',     required: true, placeholder: 'Deskripsi singkat' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">
@@ -542,10 +545,10 @@ const DaftarKader: React.FC = () => {
                 <div className="space-y-4">
                     {[
                         { label: 'NIK PIC Baru',    name: 'nik_pic',       required: true,  placeholder: '16 digit NIK', maxLength: 16 },
-                        { label: 'Nama PIC',        name: 'nama_pic',      required: false, placeholder: 'Nama (jika NIK belum terdaftar)' },
-                        { label: 'No. HP PIC',      name: 'no_hp_pic',     required: false, placeholder: 'Nomor HP (opsional)' },
-                        { label: 'Alamat PIC',      name: 'alamat_pic',    required: false, placeholder: 'Alamat KTP (opsional)' },
-                        { label: 'Kelurahan PIC',   name: 'kelurahan_pic', required: false, placeholder: 'Kelurahan (opsional)' },
+                        { label: 'Nama PIC',        name: 'nama_pic',      required: true, placeholder: 'Nama (jika NIK belum terdaftar)' },
+                        { label: 'No. HP PIC',      name: 'no_hp_pic',     required: true, placeholder: 'Nomor HP' },
+                        { label: 'Alamat PIC',      name: 'alamat_pic',    required: true, placeholder: 'Alamat KTP' },
+                        { label: 'Kelurahan PIC',   name: 'kelurahan_pic', required: true, placeholder: 'Kelurahan' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-sm font-medium text-gray-700">

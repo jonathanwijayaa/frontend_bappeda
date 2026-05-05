@@ -133,8 +133,8 @@ const ManajemenOPD: React.FC = () => {
 
     const handleDetailSave = () => {
         if (!selectedOPD) return;
-        if (!detailFormData.nama_opd.trim()) {
-            setToast({ message: 'Nama OPD tidak boleh kosong', type: 'error' });
+        if (!detailFormData.nama_opd.trim() || !detailFormData.alamat.trim() || !detailFormData.pic.trim() || !detailFormData.nik_pic.trim() || !detailFormData.kontak.trim()) {
+            setToast({ message: 'Semua field wajib diisi', type: 'error' });
             return;
         }
         if (detailFormData.nama_opd.trim().length < 3) {
@@ -199,8 +199,8 @@ const ManajemenOPD: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.nama_opd.trim()) {
-            setToast({ message: 'Nama OPD tidak boleh kosong', type: 'error' });
+        if (!formData.nama_opd.trim() || !formData.alamat.trim() || !formData.pic.trim() || !formData.nik_pic.trim() || !formData.kontak.trim()) {
+            setToast({ message: 'Semua field wajib diisi', type: 'error' });
             return;
         }
         if (formData.nama_opd.trim().length < 3) {
@@ -388,10 +388,10 @@ const ManajemenOPD: React.FC = () => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {[
                         { label: 'Nama OPD',  name: 'nama_opd', required: true, placeholder: 'Nama Dinas / OPD' },
-                        { label: 'Alamat',    name: 'alamat',   placeholder: 'Alamat OPD' },
-                        { label: 'PIC',       name: 'pic',      placeholder: 'Penanggung jawab' },
+                        { label: 'Alamat',    name: 'alamat',   required: true, placeholder: 'Alamat OPD' },
+                        { label: 'PIC',       name: 'pic',      required: true, placeholder: 'Penanggung jawab' },
                         { label: 'NIK PIC',   name: 'nik_pic',  required: true, placeholder: '16 digit NIK PIC', maxLength: 16 },
-                        { label: 'Kontak',    name: 'kontak',   placeholder: 'Nomor telepon / email' },
+                        { label: 'Kontak',    name: 'kontak',   required: true, placeholder: 'Nomor telepon / email' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">
@@ -424,10 +424,10 @@ const ManajemenOPD: React.FC = () => {
                     <div className="space-y-6">
                         {[
                             { label: 'Nama OPD', name: 'nama_opd', required: true },
-                            { label: 'Alamat',   name: 'alamat' },
-                            { label: 'PIC',      name: 'pic' },
+                            { label: 'Alamat',   name: 'alamat', required: true },
+                            { label: 'PIC',      name: 'pic', required: true },
                             { label: 'NIK PIC',  name: 'nik_pic', required: true, maxLength: 16 },
-                            { label: 'Kontak',   name: 'kontak' },
+                            { label: 'Kontak',   name: 'kontak', required: true },
                         ].map(field => (
                             <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                                 <label className="text-lg font-medium text-gray-900">
