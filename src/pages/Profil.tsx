@@ -135,14 +135,14 @@ const Profil: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* ── Layout utama: avatar kiri | form kanan ── */}
+
+            {/* ── Baris 1: Avatar (kiri) + Informasi Pribadi (kanan) — stretch sejajar ── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
 
-                {/* ── Kolom Kiri – Avatar (penuh setinggi kolom kanan) ── */}
+                {/* Kolom Kiri – Avatar, tinggi menyesuaikan form Informasi Pribadi */}
                 <div className="lg:col-span-1 flex flex-col">
                     <Card className="flex-1 flex flex-col">
                         <div className="flex flex-col items-center justify-start pt-4 space-y-4">
-                            {/* Foto profil */}
                             <div className="relative">
                                 <img
                                     src={avatarPreview}
@@ -150,8 +150,6 @@ const Profil: React.FC = () => {
                                     className="w-40 h-40 rounded-full object-cover ring-4 ring-green-100"
                                 />
                             </div>
-
-                            {/* Tombol Ganti / Hapus */}
                             <div className="flex gap-3">
                                 <label className="cursor-pointer">
                                     <input
@@ -178,10 +176,8 @@ const Profil: React.FC = () => {
                     </Card>
                 </div>
 
-                {/* ── Kolom Kanan – dua form terpisah ── */}
-                <div className="lg:col-span-2 flex flex-col gap-6">
-
-                    {/* Form 1 – Informasi Pribadi */}
+                {/* Kolom Kanan – Form Informasi Pribadi */}
+                <div className="lg:col-span-2">
                     <form onSubmit={handleProfileSubmit}>
                         <Card>
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Informasi Pribadi</h3>
@@ -245,8 +241,12 @@ const Profil: React.FC = () => {
                             </div>
                         </Card>
                     </form>
+                </div>
+            </div>
 
-                    {/* Form 2 – Ubah Password */}
+            {/* ── Baris 2: Form Ubah Password — sejajar kolom kanan saja (col-start-2) ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 lg:col-start-2">
                     <form onSubmit={handlePasswordSubmit}>
                         <Card>
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Ubah Password</h3>
@@ -309,7 +309,6 @@ const Profil: React.FC = () => {
                             </div>
                         </Card>
                     </form>
-
                 </div>
             </div>
 
