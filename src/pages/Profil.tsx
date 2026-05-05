@@ -82,6 +82,17 @@ const Profil: React.FC = () => {
 
     const handleProfileSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const hasProfileChanges = 
+            formData.nama_lengkap.trim() !== (profileData?.nama_lengkap || '') ||
+            (formData.no_hp.trim() || '') !== (profileData?.no_hp || '') ||
+            avatarFile !== undefined;
+
+        if (!hasProfileChanges) {
+            setToast({ message: 'Tidak ada data yang disimpan', type: 'error' });
+            return;
+        }
+
         try {
             await updateProfil.mutateAsync({
                 nama_lengkap: formData.nama_lengkap.trim(),
