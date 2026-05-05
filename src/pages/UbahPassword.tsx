@@ -221,7 +221,7 @@ const UbahPassword = () => {
                 {/* Info card */}
                 <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl">
                     <p className="text-xs text-blue-700 leading-relaxed">
-                        <span className="font-semibold">💡 Tips:</span> Gunakan kombinasi huruf dan angka agar password lebih aman. Jangan bagikan password kepada siapapun.
+                        <span className="font-semibold">Tips:</span> Gunakan kombinasi huruf dan angka agar password lebih aman. Jangan bagikan password kepada siapapun.
                     </p>
                 </div>
             </div>
