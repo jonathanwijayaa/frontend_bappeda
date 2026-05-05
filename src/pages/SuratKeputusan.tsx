@@ -157,9 +157,9 @@ const SuratKeputusan: React.FC = () => {
     };
 
     const columns = [
-        { header: 'NOMOR SK', accessor: 'nomor_sk' as keyof SKData, width: '16%' },
-        { header: 'JUDUL SK', accessor: 'judul_sk' as keyof SKData, width: '22%' },
-        { header: 'OPD', accessor: 'nama_opd' as keyof SKData, width: '18%' },
+        { header: 'NOMOR SK', accessor: 'nomor_sk' as keyof SKData, width: '14%' },
+        { header: 'JUDUL SK', accessor: 'judul_sk' as keyof SKData, width: '20%' },
+        { header: 'OPD', accessor: 'nama_opd' as keyof SKData, width: '16%' },
         {
             header: 'TANGGAL TERBIT',
             width: '13%',
@@ -179,7 +179,7 @@ const SuratKeputusan: React.FC = () => {
         },
         {
             header: 'JUMLAH RELAWAN',
-            width: '11%',
+            width: '8%',
             render: (row: SKData) => <span className="font-medium">{row.jumlah_relawan}</span>
         },
     ];
