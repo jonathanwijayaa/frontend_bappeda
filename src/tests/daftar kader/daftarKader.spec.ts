@@ -21,25 +21,25 @@ for (const { label, creds } of roles) {
       });
 
       await expect(page).toHaveURL(/dashboard/);
-      await page.getByRole("link", { name: /manajemen kader/i }).click();
+      await page.getByRole("link", { name: /daftar kader/i }).click();
     });
 
     // TCDK.1
-    test(`TCDK.1 ${label} access Manajemen Kader page`, async ({ page }) => {
-      await expect(page).toHaveURL(/manajemen-kader/);
+    test(`TCDK.1 ${label} access Daftar Kader page`, async ({ page }) => {
+      await expect(page).toHaveURL(/daftar-kader/);
     });
 
     // TCDK.2
     test(`TCDK.2 ${label} click Ajukan Kader Baru button`, async ({ page }) => {
-      await page.getByRole("button", { name: /ajukan kader baru/i }).click();
+      await page.getByRole("button", { name: "Tambah Kader Baru" }).click();
 
-      await expect(page.getByRole("heading", { name: /tambah data kader/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Tambah Kader Baru" })).toBeVisible();
     });
 
     // TCDK.3-5 Fill Form
     test.describe(`TCDK.3-5 ${label} Fill Form Add Kader`, () => {
       test.beforeEach(async ({ page }) => {
-        await page.getByRole("button", { name: /ajukan kader baru/i }).click();
+        await page.getByRole("button", { name: "Tambah Kader Baru" }).click();
       });
 
       // TCDK.3
@@ -48,22 +48,22 @@ for (const { label, creds } of roles) {
         const form = await fillKaderForm({ data: kaderData, page });
         await form.fillAll();
 
-        await expect(page.getByRole("textbox", { name: "Nama Kader atau komunitas" })).toHaveValue(
+        await expect(page.getByRole("textbox", { name: /Nama Kader/i })).toHaveValue(
           kaderData["NAMA KADER"],
         );
-        await expect(
-          page.getByRole("textbox", { name: "Nama Person in Charge (opsional)" }),
-        ).toHaveValue(kaderData.PIC);
-        await expect(page.getByRole("textbox", { name: "Nomor HP PIC (opsional)" })).toHaveValue(
+        await expect(page.getByRole("textbox", { name: /Nama Person in Charge/i })).toHaveValue(
+          kaderData.PIC,
+        );
+        await expect(page.getByRole("textbox", { name: /Nomor HP/i })).toHaveValue(
           kaderData["NO HP"],
         );
         await expect(page.getByRole("textbox", { name: "16 digit NIK PIC" })).toHaveValue(
           kaderData["NIK PIC"],
         );
-        await expect(
-          page.getByRole("textbox", { name: "Alamat sesuai KTP (opsional)" }),
-        ).toHaveValue(kaderData["ALAMAT PIC"]);
-        await expect(page.getByRole("textbox", { name: "Kelurahan/Desa (opsional)" })).toHaveValue(
+        await expect(page.getByRole("textbox", { name: /Alamat/i })).toHaveValue(
+          kaderData["ALAMAT PIC"],
+        );
+        await expect(page.getByRole("textbox", { name: /Kelurahan/i })).toHaveValue(
           kaderData["KELURAHAN PIC"],
         );
       });
@@ -85,14 +85,14 @@ for (const { label, creds } of roles) {
         await form.fillAll();
         await form.cancel();
 
-        await expect(page).toHaveURL(/manajemen-kader/);
+        await expect(page).toHaveURL(/daftar-kader/);
       });
     });
 
     // TCDK.6-9 Invalid Form — nested describe, beforeEach buka form cukup sekali
     test.describe(`TCDK.6-9 ${label} Fill Form Invalid`, () => {
       test.beforeEach(async ({ page }) => {
-        await page.getByRole("button", { name: /ajukan kader baru/i }).click();
+        await page.getByRole("button", { name: "Tambah Kader Baru" }).click();
       });
 
       // TCDK.6 Invalid Kader Name
@@ -148,7 +148,7 @@ for (const { label, creds } of roles) {
             await form.fillAll();
             await form.submit();
 
-            await expect(page).not.toHaveURL(/manajemen-kader/);
+            await expect(page).not.toHaveURL(/daftar-kader/);
             await expect(page.getByText(/pic|wajib|invalid/i)).toBeVisible();
           });
         }
@@ -228,7 +228,7 @@ for (const { label, creds } of roles) {
 
       await page.getByRole("button").nth(5).click();
 
-      await expect(page.getByRole("heading", { name: /manajemen kader/i })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /daftar kader/i })).toBeVisible();
     });
 
     // TCDK.14-21 Search Bar
@@ -300,7 +300,7 @@ for (const { label, creds } of roles) {
       test(`TCDK.25 ${label} cancel Nonaktif Kader`, async ({ page }) => {
         await page.getByRole("button", { name: /batal/i }).click();
 
-        await expect(page).toHaveURL(/manajemen-kader/);
+        await expect(page).toHaveURL(/daftar-kader/);
       });
     });
 

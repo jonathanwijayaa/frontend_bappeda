@@ -1,12 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { Page } from "@playwright/test";
 
-const OPD_LIST = [
-  "Dinas Kesehatan",
-  "Dinas Pendidikan",
-  "Dinas Perhubungan",
-  "Dinas Sosial",
-];
+const OPD_LIST = ["Dinas Kesehatan", "Dinas Pendidikan", "Dinas Perhubungan", "Dinas Sosial"];
 
 export interface KaderData {
   OPD: string;
@@ -30,9 +25,7 @@ export const buildKaderData = (): KaderData => ({
   "NAMA KADER": `Kader ${faker.person.fullName()}`,
   DESKRIPSI: faker.lorem.sentences(2),
   PIC: faker.person.fullName(),
-  "NIK PIC": faker.number
-    .bigInt({ min: 1000000000000000n, max: 9999999999999999n })
-    .toString(),
+  "NIK PIC": faker.number.bigInt({ min: 1000000000000000n, max: 9999999999999999n }).toString(),
   "NO HP": `08${faker.string.numeric(10)}`,
   "ALAMAT PIC": faker.location.streetAddress() + ", Yogyakarta",
   "KELURAHAN PIC": faker.location.city(),
@@ -40,11 +33,10 @@ export const buildKaderData = (): KaderData => ({
 
 export const fillKaderForm = async ({ data, page }: IFillKaderForm) => ({
   async fillAlamatPIC() {
-    await page
-      .getByRole("textbox", { name: "Alamat sesuai KTP (opsional)" })
-      .fill(data["ALAMAT PIC"]);
+    await page.getByRole("textbox", { name: /Alamat/i }).fill(data["ALAMAT PIC"]);
   },
   async fillAll() {
+    await this.fillOPD();
     await this.fillNamaKader();
     await this.fillDeskripsi();
     await this.fillPIC();
@@ -54,40 +46,31 @@ export const fillKaderForm = async ({ data, page }: IFillKaderForm) => ({
     await this.fillKelurahanPIC();
   },
   async fillDeskripsi() {
-    await page.getByRole("textbox", { name: "Deskripsi singkat (opsional)" }).fill(data.DESKRIPSI);
+    await page.getByRole("textbox", { name: /Deskripsi/i }).fill(data.DESKRIPSI);
   },
   async fillKelurahanPIC() {
-    await page
-      .getByRole("textbox", { name: "Kelurahan/Desa (opsional)" })
-      .fill(data["KELURAHAN PIC"]);
+    await page.getByRole("textbox", { name: /Kelurahan/i }).fill(data["KELURAHAN PIC"]);
   },
   async fillNamaKader() {
-    await page
-      .getByRole("textbox", { name: "Nama Kader atau komunitas" })
-      .fill(data["NAMA KADER"]);
+    await page.getByRole("textbox", { name: /Nama Kader/i }).fill(data["NAMA KADER"]);
   },
   async fillNoHP() {
-    await page
-      .getByRole("textbox", { name: "Nomor HP PIC (opsional)" })
-      .fill(data["NO HP"]);
+    await page.getByRole("textbox", { name: /Nomor HP/i }).fill(data["NO HP"]);
   },
   async fillPIC() {
-    await page
-      .getByRole("textbox", { name: "Nama Person in Charge (opsional)" })
-      .fill(data.PIC);
+    await page.getByRole("textbox", { name: /Nama Person in Charge/i }).fill(data.PIC);
   },
   async fillNIKPIC() {
-    await page
-      .getByRole("textbox", { name: "16 digit NIK PIC" })
-      .fill(data["NIK PIC"]);
+    await page.getByRole("textbox", { name: /16 digit NIK PIC/i }).fill(data["NIK PIC"]);
   },
   async fillOPD() {
-    await page.getByRole("combobox", { name: "OPD" }).selectOption(data.OPD);
+    await page.getByRole("textbox", { name: /Ketik nama OPD/i }).fill(data.OPD); // .selectOption ();
+    // await page.getByRole("textbox", { name: /Ketik nama OPD/i }).selectOption(data.OPD);
   },
   async submit() {
     await page.getByRole("button", { name: "Simpan" }).click();
   },
   async cancel() {
     await page.getByRole("button", { name: "Batal" }).click();
-  }
+  },
 });
