@@ -1,7 +1,11 @@
 import { faker } from "@faker-js/faker";
 import { Page } from "@playwright/test";
 
-const OPD_LIST = ["Dinas Kesehatan", "Dinas Pendidikan", "Dinas Perhubungan", "Dinas Sosial"];
+const OPD_LIST = 
+["Dinas Kesehatan", 
+  "Dinas Pendidikan", 
+  "Dinas Perhubungan", 
+  "Dinas Sosial"];
 
 export interface KaderData {
   OPD: string;
@@ -22,14 +26,21 @@ interface IFillKaderForm {
 
 export const buildKaderData = (): KaderData => ({
   OPD: faker.helpers.arrayElement(OPD_LIST),
-  "NAMA KADER": `Kader ${faker.person.fullName()}`,
+  "NAMA KADER": `Kader ${generateSafeName()}`,
   DESKRIPSI: faker.lorem.sentences(2),
-  PIC: faker.person.fullName(),
+  PIC: generateSafeName(),
   "NIK PIC": faker.number.bigInt({ min: 1000000000000000n, max: 9999999999999999n }).toString(),
   "NO HP": `08${faker.string.numeric(10)}`,
   "ALAMAT PIC": faker.location.streetAddress() + ", Yogyakarta",
   "KELURAHAN PIC": faker.location.city(),
 });
+
+function generateSafeName(): string {
+  const name = faker.person.fullName();
+
+  // Hapus semua karakter selain huruf dan spasi
+  return name.replace(/[^a-zA-Z\s]/g, "").trim();
+}
 
 export const fillKaderForm = async ({ data, page }: IFillKaderForm) => ({
   async fillAlamatPIC() {
