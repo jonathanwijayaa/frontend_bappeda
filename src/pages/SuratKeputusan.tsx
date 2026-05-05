@@ -157,12 +157,12 @@ const SuratKeputusan: React.FC = () => {
     };
 
     const columns = [
-        { header: 'NOMOR SK', accessor: 'nomor_sk' as keyof SKData, width: '14%' },
-        { header: 'JUDUL SK', accessor: 'judul_sk' as keyof SKData, width: '20%' },
-        { header: 'OPD', accessor: 'nama_opd' as keyof SKData, width: '16%' },
+        { header: 'NOMOR SK', accessor: 'nomor_sk' as keyof SKData, width: '12%' },
+        { header: 'JUDUL SK', accessor: 'judul_sk' as keyof SKData, width: '18%' },
+        { header: 'OPD', accessor: 'nama_opd' as keyof SKData, width: '14%' },
         {
             header: 'TANGGAL TERBIT',
-            width: '13%',
+            width: '12%',
             render: (row: SKData) => (
                 <span>{row.tanggal_terbit ? new Date(row.tanggal_terbit).toLocaleDateString('id-ID') : '-'}</span>
             )
