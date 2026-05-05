@@ -11,7 +11,6 @@ import LogAktifitas from './pages/LogAktifitas';
 import Statistik from './pages/Statistik';
 import Dokumen from './pages/Dokumen';
 import SaranHotline from './pages/SaranHotline';
-import EditProfil from './pages/EditProfil';
 import Profil from './pages/Profil';
 import ProfilRelawan from './pages/ProfilRelawan';
 import Riwayat from './pages/Riwayat';
@@ -158,13 +157,6 @@ function AppRoutes() {
             <Route path="/saran-hotline" element={
                 <ProtectedRoute>
                     <SaranHotlineWrapper />
-                </ProtectedRoute>
-            } />
-            <Route path="/edit-profil" element={
-                <ProtectedRoute>
-                    <Layout>
-                        <EditProfil />
-                    </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/komunitas-saya" element={
