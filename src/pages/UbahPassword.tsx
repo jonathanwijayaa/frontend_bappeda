@@ -54,10 +54,10 @@ const UbahPassword = () => {
             const result = await res.json();
 
             if (result.success) {
-                setToast({ message: result.message || 'Password berhasil diubah!', type: 'success' });
+                setToast({ message: result.message || 'Kata sandi berhasil diubah!', type: 'success' });
                 setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
             } else {
-                setToast({ message: result.message || 'Gagal mengubah password', type: 'error' });
+                setToast({ message: result.message || 'Gagal mengubah kata sandi', type: 'error' });
             }
         } catch (e: any) {
             setToast({ message: parseErrorMessage(e, 'Tidak dapat terhubung ke server'), type: 'error' });
@@ -71,14 +71,14 @@ const UbahPassword = () => {
             <RelawanMenu />
 
             <div className="px-4 py-6 max-w-md mx-auto">
-                <h1 className="text-2xl font-bold text-gray-800 mb-6">Ubah Password</h1>
+                <h1 className="text-xl font-bold text-gray-800 text-center">Ubah Kata Sandi</h1>
 
                 <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-md p-6 space-y-5">
 
                     {/* Old Password */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                            Password Lama
+                            Kata Sandi Lama
                             {form.oldPassword && (
                                 <CheckCircle2 size={15} className="inline ml-2 text-green-500" />
                             )}
@@ -89,7 +89,7 @@ const UbahPassword = () => {
                                 type={showOld ? 'text' : 'password'}
                                 value={form.oldPassword}
                                 onChange={(e) => setForm((p) => ({ ...p, oldPassword: e.target.value }))}
-                                placeholder="Masukkan password lama"
+                                placeholder="Masukkan kata sandi lama"
                                 className="flex-1 py-3 text-sm bg-transparent outline-none text-gray-800 placeholder-gray-400"
                                 autoComplete="current-password"
                             />
@@ -106,7 +106,7 @@ const UbahPassword = () => {
 
                     {/* New Password */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Password Baru</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Kata Sandi Baru</label>
                         <div className={`flex items-center border rounded-xl px-3 transition-colors ${
                             form.newPassword === ''
                                 ? 'border-gray-300'
@@ -119,7 +119,7 @@ const UbahPassword = () => {
                                 type={showNew ? 'text' : 'password'}
                                 value={form.newPassword}
                                 onChange={(e) => setForm((p) => ({ ...p, newPassword: e.target.value }))}
-                                placeholder="Masukkan password baru"
+                                placeholder="Masukkan kata sandi baru"
                                 className="flex-1 py-3 text-sm bg-transparent outline-none text-gray-800 placeholder-gray-400"
                                 autoComplete="new-password"
                             />
@@ -136,7 +136,7 @@ const UbahPassword = () => {
                         {/* Validation hints */}
                         {form.newPassword !== '' && !isNewPasswordValid && (
                             <p className="text-xs text-red-500 mt-1.5">
-                                Harap penuhi semua syarat password di bawah ini.
+                                Harap penuhi semua syarat kata sandi di bawah ini.
                             </p>
                         )}
 
@@ -161,7 +161,7 @@ const UbahPassword = () => {
 
                     {/* Confirm Password */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Konfirmasi Password Baru</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1.5">Konfirmasi Kata Sandi Baru</label>
                         <div className={`flex items-center border rounded-xl px-3 transition-colors ${
                             form.confirmPassword === ''
                                 ? 'border-gray-300'
@@ -174,7 +174,7 @@ const UbahPassword = () => {
                                 type={showConfirm ? 'text' : 'password'}
                                 value={form.confirmPassword}
                                 onChange={(e) => setForm((p) => ({ ...p, confirmPassword: e.target.value }))}
-                                placeholder="Ulangi password baru"
+                                placeholder="Ulangi kata sandi baru"
                                 className="flex-1 py-3 text-sm bg-transparent outline-none text-gray-800 placeholder-gray-400"
                                 autoComplete="new-password"
                             />
@@ -188,11 +188,11 @@ const UbahPassword = () => {
                             </button>
                         </div>
                         {form.confirmPassword !== '' && !passwordsMatch && (
-                            <p className="text-xs text-red-500 mt-1.5">Password tidak cocok.</p>
+                            <p className="text-xs text-red-500 mt-1.5">Kata Sandi tidak cocok.</p>
                         )}
                         {passwordsMatch && (
                             <p className="text-xs text-green-600 mt-1.5 flex items-center gap-1">
-                                <CheckCircle2 size={13} /> Password cocok
+                                <CheckCircle2 size={13} /> Kata sandi cocok
                             </p>
                         )}
                     </div>
@@ -213,7 +213,7 @@ const UbahPassword = () => {
                                 Menyimpan...
                             </>
                         ) : (
-                            'Ubah Password'
+                            'Ubah Kata Sandi'
                         )}
                     </button>
                 </form>
@@ -221,7 +221,7 @@ const UbahPassword = () => {
                 {/* Info card */}
                 <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl">
                     <p className="text-xs text-blue-700 leading-relaxed">
-                        <span className="font-semibold">Tips:</span> Gunakan kombinasi huruf dan angka agar password lebih aman. Jangan bagikan password kepada siapapun.
+                        <span className="font-semibold">Tips:</span> Gunakan kombinasi huruf dan angka agar kata sandi lebih aman. Jangan bagikan kata sandi kepada siapapun.
                     </p>
                 </div>
             </div>
