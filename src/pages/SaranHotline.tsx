@@ -398,7 +398,7 @@ const SaranHotline: React.FC = () => {
             <div className="min-h-screen bg-gray-50">
                 <RelawanMenu />
                 <div className="px-4 py-5 space-y-4">
-                    <h1 className="text-2xl font-bold text-gray-800 text-center">Saran/Hotline</h1>
+                    <h1 className="text-xl font-bold text-gray-800 text-center">Saran dan Hotline</h1>
                     <Card className="shadow-md">
                         <div className="p-4">
                             <h2 className="text-base font-bold text-gray-800 mb-4">Hotline BAPPEDA Kota Yogyakarta</h2>
