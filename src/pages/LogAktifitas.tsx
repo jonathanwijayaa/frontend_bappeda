@@ -17,8 +17,6 @@ const LogAktifitas: React.FC = () => {
     // ── Server State ──────────────────────────────────────────
     const { data: logList = [], isLoading } = useLogList(200);
 
-
-    // ── UI State ──────────────────────────────────────────────
     const [searchTerm, setSearchTerm] = useState('');
     const [filterAction, setFilterAction] = useState('');
     const [filterTable, setFilterTable] = useState('');
@@ -55,18 +53,18 @@ const LogAktifitas: React.FC = () => {
     const columns = [
         {
             header: 'WAKTU',
-            width: '18%',
+            width: '20%',
             render: (row: LogData) => (
                 <span className="text-sm text-gray-600">
                     {new Date(row.timestamp).toLocaleString('id-ID')}
                 </span>
             ),
         },
-        { header: 'PENGGUNA', accessor: 'nama_pengguna' as keyof LogData, width: '18%' },
-        { header: 'NIK', accessor: 'nik' as keyof LogData, width: '16%' },
+        { header: 'PENGGUNA', accessor: 'nama_pengguna' as keyof LogData, width: '20%' },
+        { header: 'NIK', accessor: 'nik' as keyof LogData, width: '18%' },
         {
             header: 'AKSI',
-            width: '12%',
+            width: '14%',
             noTruncate: true,
             render: (row: LogData) => (
                 <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${row.action_type === 'INSERT' ? 'bg-green-100 text-green-700' :
@@ -78,8 +76,7 @@ const LogAktifitas: React.FC = () => {
                 </span>
             ),
         },
-        { header: 'TABEL', accessor: 'table_name' as keyof LogData, width: '18%' },
-        { header: 'IP ADDRESS', accessor: 'ip_address' as keyof LogData, width: '18%' },
+        { header: 'TABEL', accessor: 'table_name' as keyof LogData, width: '20%' },
     ];
 
     return (
