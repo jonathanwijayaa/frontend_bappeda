@@ -14,8 +14,8 @@ const Profil: React.FC = () => {
 
     // ── Server State ──────────────────────────────────────────
     const { data: profileData, isLoading: isLoadingProfile } = useProfileData();
-    const updateProfil    = useUpdateProfil();
-    const changePassword  = useChangePassword();
+    const updateProfil   = useUpdateProfil();
+    const changePassword = useChangePassword();
 
     // ── UI State ──────────────────────────────────────────────
     const [formData, setFormData] = useState({ nama_lengkap: '', no_hp: '' });
@@ -80,45 +80,45 @@ const Profil: React.FC = () => {
         setAvatarFile('');
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleProfileSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Validasi password jika diisi
-        if (passwordData.passwordLama || passwordData.passwordBaru || passwordData.konfirmasiPassword) {
-            if (!passwordData.passwordLama || !passwordData.passwordBaru || !passwordData.konfirmasiPassword) {
-                setToast({ message: 'Mohon lengkapi semua field password', type: 'error' });
-                return;
-            }
-            if (passwordData.passwordBaru !== passwordData.konfirmasiPassword) {
-                setToast({ message: 'Password baru dan konfirmasi password tidak cocok', type: 'error' });
-                return;
-            }
-            if (passwordData.passwordBaru.length < 6) {
-                setToast({ message: 'Password baru minimal 6 karakter', type: 'error' });
-                return;
-            }
-        }
-
         try {
-            // 1. Update profil
             await updateProfil.mutateAsync({
                 nama_lengkap: formData.nama_lengkap.trim(),
                 no_hp:        formData.no_hp.trim() || null,
                 foto_profil:  avatarFile
             });
+            setToast({ message: 'Informasi pribadi berhasil diperbarui!', type: 'success' });
+        } catch (err: any) {
+            setToast({ message: parseErrorMessage(err, 'Gagal menyimpan perubahan'), type: 'error' });
+        }
+    };
 
-            // 2. Ganti password (opsional)
-            if (passwordData.passwordLama && passwordData.passwordBaru) {
-                await changePassword.mutateAsync({
-                    password_lama: passwordData.passwordLama,
-                    password_baru: passwordData.passwordBaru,
-                });
-            }
+    const handlePasswordSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
 
-            setToast({ message: 'Profil berhasil diperbarui!', type: 'success' });
+        if (!passwordData.passwordLama || !passwordData.passwordBaru || !passwordData.konfirmasiPassword) {
+            setToast({ message: 'Mohon lengkapi semua field password', type: 'error' });
+            return;
+        }
+        if (passwordData.passwordBaru !== passwordData.konfirmasiPassword) {
+            setToast({ message: 'Password baru dan konfirmasi password tidak cocok', type: 'error' });
+            return;
+        }
+        if (passwordData.passwordBaru.length < 6) {
+            setToast({ message: 'Password baru minimal 6 karakter', type: 'error' });
+            return;
+        }
+
+        try {
+            await changePassword.mutateAsync({
+                password_lama: passwordData.passwordLama,
+                password_baru: passwordData.passwordBaru,
+            });
+            setToast({ message: 'Password berhasil diperbarui!', type: 'success' });
             setPasswordData({ passwordLama: '', passwordBaru: '', konfirmasiPassword: '' });
-        } catch (e: any) {
-            setToast({ message: parseErrorMessage(e, 'Gagal menyimpan perubahan'), type: 'error' });
+        } catch (err: any) {
+            setToast({ message: parseErrorMessage(err, 'Gagal mengganti password'), type: 'error' });
         }
     };
 
@@ -135,133 +135,183 @@ const Profil: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* ── Layout utama: avatar kiri | form kanan ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
 
-                    {/* Bagian Kiri - Avatar */}
-                    <div className="lg:col-span-1">
+                {/* ── Kolom Kiri – Avatar (penuh setinggi kolom kanan) ── */}
+                <div className="lg:col-span-1 flex flex-col">
+                    <Card className="flex-1 flex flex-col">
+                        <div className="flex flex-col items-center justify-start pt-4 space-y-4">
+                            {/* Foto profil */}
+                            <div className="relative">
+                                <img
+                                    src={avatarPreview}
+                                    alt="Profile"
+                                    className="w-40 h-40 rounded-full object-cover ring-4 ring-green-100"
+                                />
+                            </div>
+
+                            {/* Tombol Ganti / Hapus */}
+                            <div className="flex gap-3">
+                                <label className="cursor-pointer">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleAvatarChange}
+                                        className="hidden"
+                                    />
+                                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                                        <Camera size={16} />
+                                        Ganti
+                                    </span>
+                                </label>
+                                <button
+                                    type="button"
+                                    onClick={handleDeleteAvatar}
+                                    className="inline-flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    <Trash2 size={16} />
+                                    Hapus
+                                </button>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* ── Kolom Kanan – dua form terpisah ── */}
+                <div className="lg:col-span-2 flex flex-col gap-6">
+
+                    {/* Form 1 – Informasi Pribadi */}
+                    <form onSubmit={handleProfileSubmit}>
                         <Card>
-                            <div className="flex flex-col items-center space-y-4">
-                                <div className="relative">
-                                    <img
-                                        src={avatarPreview}
-                                        alt="Profile"
-                                        className="w-40 h-40 rounded-full object-cover"
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Informasi Pribadi</h3>
+                            <div className="space-y-4">
+
+                                {/* Nama Lengkap */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Nama Lengkap
+                                    </label>
+                                    <input
+                                        type="text"
+                                        name="nama_lengkap"
+                                        value={formData.nama_lengkap}
+                                        onChange={handleProfileChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                     />
                                 </div>
-                                <div className="flex gap-3">
-                                    <label className="cursor-pointer">
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleAvatarChange}
-                                            className="hidden"
-                                        />
-                                        <span className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-                                            <Camera size={16} />
-                                            Ganti
-                                        </span>
+
+                                {/* NIK (read-only) */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        NIK
+                                        <span className="ml-2 text-xs text-gray-400 font-normal">(tidak dapat diubah)</span>
                                     </label>
+                                    <input
+                                        type="text"
+                                        value={profileData?.nik || ''}
+                                        disabled
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+                                    />
+                                </div>
+
+                                {/* No. Telepon */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        No. Telepon / HP
+                                    </label>
+                                    <input
+                                        type="tel"
+                                        name="no_hp"
+                                        value={formData.no_hp}
+                                        onChange={handleProfileChange}
+                                        placeholder="Contoh: 08123456789"
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    />
+                                </div>
+
+                                {/* Tombol Simpan Informasi Pribadi */}
+                                <div className="pt-2">
                                     <button
-                                        type="button"
-                                        onClick={handleDeleteAvatar}
-                                        className="inline-flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition-colors"
+                                        type="submit"
+                                        disabled={isSaving}
+                                        className="w-full inline-flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
                                     >
-                                        <Trash2 size={16} />
-                                        Hapus
+                                        {updateProfil.isPending ? (
+                                            <><Loader2 size={18} className="animate-spin" /> Menyimpan...</>
+                                        ) : 'Simpan Informasi Pribadi'}
                                     </button>
                                 </div>
                             </div>
                         </Card>
-                    </div>
+                    </form>
 
-                    {/* Bagian Kanan - Combined Form */}
-                    <div className="lg:col-span-2">
+                    {/* Form 2 – Ubah Password */}
+                    <form onSubmit={handlePasswordSubmit}>
                         <Card>
-                            <div className="space-y-8">
+                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Ubah Password</h3>
+                            <div className="space-y-4">
 
-                                {/* Informasi Pribadi */}
+                                {/* Password Saat Ini */}
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Informasi Pribadi</h3>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
-                                            <input
-                                                type="text"
-                                                name="nama_lengkap"
-                                                value={formData.nama_lengkap}
-                                                onChange={handleProfileChange}
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                NIK
-                                                <span className="ml-2 text-xs text-gray-400 font-normal">(tidak dapat diubah)</span>
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={profileData?.nik || ''}
-                                                disabled
-                                                className="w-full px-4 py-3 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">No. Telepon / HP</label>
-                                            <input
-                                                type="tel"
-                                                name="no_hp"
-                                                value={formData.no_hp}
-                                                onChange={handleProfileChange}
-                                                placeholder="Contoh: 08123456789"
-                                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                            />
-                                        </div>
-                                    </div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Password Saat Ini
+                                    </label>
+                                    <input
+                                        type="password"
+                                        name="passwordLama"
+                                        value={passwordData.passwordLama}
+                                        onChange={handlePasswordChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    />
                                 </div>
 
-                                <div className="border-t border-gray-200" />
-
-                                {/* Ubah Password */}
+                                {/* Password Baru */}
                                 <div>
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Ubah Password</h3>
-                                    <div className="space-y-4">
-                                        {[
-                                            { label: 'Password Saat Ini',        name: 'passwordLama' },
-                                            { label: 'Password Baru',             name: 'passwordBaru' },
-                                            { label: 'Konfirmasi Password Baru',  name: 'konfirmasiPassword' },
-                                        ].map(f => (
-                                            <div key={f.name}>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">{f.label}</label>
-                                                <input
-                                                    type="password"
-                                                    name={f.name}
-                                                    value={(passwordData as any)[f.name]}
-                                                    onChange={handlePasswordChange}
-                                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                                                />
-                                            </div>
-                                        ))}
-                                        <div className="pt-4">
-                                            <button
-                                                type="submit"
-                                                disabled={isSaving}
-                                                className="w-full inline-flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
-                                            >
-                                                {isSaving ? (
-                                                    <><Loader2 size={18} className="animate-spin" /> Menyimpan...</>
-                                                ) : 'Simpan'}
-                                            </button>
-                                        </div>
-                                    </div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Password Baru
+                                    </label>
+                                    <input
+                                        type="password"
+                                        name="passwordBaru"
+                                        value={passwordData.passwordBaru}
+                                        onChange={handlePasswordChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    />
                                 </div>
 
+                                {/* Konfirmasi Password Baru */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Konfirmasi Password Baru
+                                    </label>
+                                    <input
+                                        type="password"
+                                        name="konfirmasiPassword"
+                                        value={passwordData.konfirmasiPassword}
+                                        onChange={handlePasswordChange}
+                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    />
+                                </div>
+
+                                {/* Tombol Simpan Password */}
+                                <div className="pt-2">
+                                    <button
+                                        type="submit"
+                                        disabled={isSaving}
+                                        className="w-full inline-flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+                                    >
+                                        {changePassword.isPending ? (
+                                            <><Loader2 size={18} className="animate-spin" /> Menyimpan...</>
+                                        ) : 'Simpan Password'}
+                                    </button>
+                                </div>
                             </div>
                         </Card>
-                    </div>
+                    </form>
 
                 </div>
-            </form>
+            </div>
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
