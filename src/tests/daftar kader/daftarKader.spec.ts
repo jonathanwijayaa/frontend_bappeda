@@ -73,6 +73,7 @@ for (const { label, creds } of roles) {
         const kaderData = buildKaderData();
         const form = await fillKaderForm({ data: kaderData, page });
         await form.fillAll();
+        await page.waitForTimeout(10000);
         await form.submit();
 
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();
