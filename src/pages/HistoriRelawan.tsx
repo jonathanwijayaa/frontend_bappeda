@@ -86,9 +86,10 @@ const HistoriRelawan: React.FC = () => {
 
     // ── Tahun range ───────────────────────────────────────────────
     const currentYear = new Date().getFullYear();
+    const maxYearAkhir = currentYear + 10; // batas_aktif SK bisa di masa depan
     const minYearGlobal = 2000;
-    // Jika tahun awal dipilih, tahun akhir minimal = tahun awal + 1
-    const minYearAkhir = filterTahunAwal ? Number(filterTahunAwal) + 1 : minYearGlobal;
+    // Jika tahun awal dipilih, tahun akhir minimal = tahun awal
+    const minYearAkhir = filterTahunAwal ? Number(filterTahunAwal) : minYearGlobal;
 
     // ── Fetch data relawan ────────────────────────────────────────
     const fetchRelawan = useCallback(async () => {
@@ -147,11 +148,13 @@ const HistoriRelawan: React.FC = () => {
                 a => a.kader.toLowerCase() === filterKader.toLowerCase()
             );
 
-            // Filter Tahun — berdasarkan field tahun di assignment (jika ada)
+            // Filter Tahun — berdasarkan field tahun di assignment (dari SK tanggal_terbit & batas_aktif)
             const matchTahun = (() => {
                 if (!filterTahunAwal && !filterTahunAkhir) return true;
+                // Relawan harus punya minimal 1 assignment dengan data SK yang cocok
                 return relawan.assignments.some(a => {
-                    if (!a.tahunMulai && !a.tahunSelesai) return true;
+                    // Assignment tanpa data SK → tidak cocok dengan filter tahun
+                    if (!a.tahunMulai && !a.tahunSelesai) return false;
                     
                     const awal = filterTahunAwal ? Number(filterTahunAwal) : 0;
                     const akhir = filterTahunAkhir ? Number(filterTahunAkhir) : 9999;
@@ -159,6 +162,7 @@ const HistoriRelawan: React.FC = () => {
                     const skAwal = a.tahunMulai || 0;
                     const skAkhir = a.tahunSelesai || 9999;
 
+                    // Overlap check: rentang SK [skAwal, skAkhir] harus beririsan dengan filter [awal, akhir]
                     return (skAkhir >= awal) && (skAwal <= akhir);
                 });
             })();
@@ -174,8 +178,8 @@ const HistoriRelawan: React.FC = () => {
     // ── Handle filter change ──────────────────────────────────────
     const handleYearAwalChange = (year: string) => {
         setFilterTahunAwal(year);
-        // Jika tahun akhir sudah dipilih dan <= tahun awal baru, reset
-        if (year && filterTahunAkhir && Number(filterTahunAkhir) <= Number(year)) {
+        // Jika tahun akhir sudah dipilih dan < tahun awal baru, reset
+        if (year && filterTahunAkhir && Number(filterTahunAkhir) < Number(year)) {
             setFilterTahunAkhir('');
         }
         setCurrentPage(1);
@@ -305,7 +309,7 @@ const HistoriRelawan: React.FC = () => {
                                 onChange={handleYearAkhirChange}
                                 placeholder="Tahun Akhir"
                                 minYear={minYearAkhir}
-                                maxYear={currentYear}
+                                maxYear={maxYearAkhir}
                             />
                         </div>
                     </div>
