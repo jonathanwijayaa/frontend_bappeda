@@ -63,37 +63,35 @@ const Sidebar: React.FC = () => {
 
     return (
         <div
-            className={`bg-primary-green h-screen flex flex-col transition-all duration-300 relative sticky top-0 ${isCollapsed ? 'w-20' : 'w-64'
+            className={`bg-primary-green h-screen flex flex-col transition-all duration-300 sticky top-0 ${isCollapsed ? 'w-28' : 'w-64'
                 }`}
         >
-            {/* Collapse/Expand Button */}
-            <button
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className={`absolute top-6 z-50 transition-all duration-300
-                    /* Shared Styles: white background makes it visible against the green and the body */
-                    bg-white text-green-700 shadow-md border border-gray-200 p-1.5 rounded-full hover:bg-gray-50
-                    
-                    ${isCollapsed 
-                        ? 'left-full -translate-x-1/2' // Centered exactly on the edge when collapsed
-                        : '-right-4' // Hanging halfway off the edge when expanded
-                    }`}
-                title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-            >
-                {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-            </button>
-
-            {/* Header */}
-            <div className={`p-4 border-b border-green-600 flex items-center flex-shrink-0 h-[88px] gap-3 ${isCollapsed ? 'justify-center' : ''
-                }`}>
+            {/* Header - chevron terintegrasi di dalam, tidak floating */}
+            <div className={`border-b border-green-600 flex-shrink-0 h-[88px] transition-all duration-300 ${
+                isCollapsed
+                    ? 'flex items-center justify-center gap-2 px-3'
+                    : 'flex items-center gap-3 px-4'
+            }`}>
                 <img
                     src={logoBappeda}
                     alt="Logo Bappeda"
                     className="w-10 h-10 object-contain flex-shrink-0"
                 />
-                <span className={`text-white font-bold text-base whitespace-nowrap transition-all duration-300 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'
-                    }`}>
-                    Bappeda Yogyakarta
-                </span>
+
+                {/* Title 2 baris — hanya tampil saat expanded */}
+                <div className={`flex-1 min-w-0 transition-all duration-300 ${isCollapsed ? 'hidden' : 'block'}`}>
+                    <p className="text-white font-bold text-sm leading-tight">Bappeda</p>
+                    <p className="text-white font-bold text-sm leading-tight">Yogyakarta</p>
+                </div>
+
+                {/* Tombol chevron — di dalam header, tidak floating */}
+                <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+                    className="flex items-center justify-center flex-shrink-0 w-7 h-7 rounded-full text-white transition-colors hover:bg-green-700"
+                >
+                    {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                </button>
             </div>
 
             {/* Navigation Menu - Scrollable */}
