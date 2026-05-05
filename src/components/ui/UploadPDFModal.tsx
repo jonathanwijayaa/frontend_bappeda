@@ -151,8 +151,16 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
     );
 
     const handleSubmit = async () => {
-        if (!isFormValid || !file) {
-            alert('Semua field (File PDF, Nomor SK, Judul SK, Tanggal Terbit, Batas Aktif, OPD) wajib diisi.');
+        const missingFields = [];
+        if (!file) missingFields.push('File PDF');
+        if (metadata.nomorSK.trim() === '') missingFields.push('Nomor SK');
+        if (metadata.judulSK.trim() === '') missingFields.push('Judul SK');
+        if (metadata.tanggalTerbit.trim() === '') missingFields.push('Tanggal Terbit');
+        if (metadata.batasAktif.trim() === '') missingFields.push('Batas Aktif');
+        if (metadata.opd_id.trim() === '') missingFields.push('OPD');
+
+        if (missingFields.length > 0) {
+            alert(`Terdapat field yang masih kosong:\n- ${missingFields.join('\n- ')}\n\nHarap lengkapi semua field yang wajib diisi.`);
             return;
         }
         // Validasi ekstra: Super Admin tidak boleh upload kalau tidak pilih OPD yang valid
@@ -359,7 +367,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                     <Button variant="outline" onClick={handleClose} disabled={isUploading}>
                         Batal
                     </Button>
-                    <Button variant="primary" onClick={handleSubmit} disabled={isUploading || !isFormValid}>
+                    <Button variant="primary" onClick={handleSubmit} disabled={isUploading}>
                         {isUploading ? 'Mengunggah...' : 'Unggah SK'}
                     </Button>
                 </div>

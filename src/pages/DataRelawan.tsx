@@ -365,9 +365,9 @@ const DataRelawan: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        //  Validasi NIK & Nama SEKALI di root
-        if (!formData.namaRelawan || !formData.nik) {
-            setToast({ message: 'NIK dan Nama wajib diisi', type: 'error' });
+        //  Validasi semua data pribadi
+        if (!formData.namaRelawan.trim() || !formData.nik.trim() || !formData.alamat.trim() || !formData.no_hp.trim() || !formData.kelurahan.trim()) {
+            setToast({ message: 'Semua data pribadi wajib diisi', type: 'error' });
             return;
         }
         if (formData.namaRelawan.trim().length < 3) {
@@ -385,12 +385,12 @@ const DataRelawan: React.FC = () => {
             return;
         }
 
-        //  Validasi OPD, Kader, dan Jabatan pada assignment manual
+        //  Validasi OPD, Kader, Peran, Detail, Penugasan
         const hasInvalidAssignment = formData.assignments.some(
-            (a) => !a.opd || !a.kader || !a.peran
+            (a) => !a.opd || !a.kader || !a.peran || !a.penugasan || !a.detail
         );
         if (hasInvalidAssignment) {
-            setToast({ message: 'Instansi (OPD), Kader, dan Peran/Jabatan pada setiap penugasan wajib diisi.', type: 'error' });
+            setToast({ message: 'Semua kolom pada setiap penugasan wajib diisi.', type: 'error' });
             return;
         }
 
@@ -841,6 +841,7 @@ const DataRelawan: React.FC = () => {
                         onChange={(e) => onFieldChange(index, 'detail', e.target.value)}
                         placeholder="Detail jabatan (contoh: Anggota Umum Bidang X)"
                         disabled={isReadOnly}
+                        required
                         className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
                     />
                 </div>
@@ -854,6 +855,7 @@ const DataRelawan: React.FC = () => {
                         onChange={(e) => onFieldChange(index, 'penugasan', e.target.value)}
                         placeholder="Nama/detail penugasan"
                         disabled={isReadOnly}
+                        required
                         className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
                     />
                 </div>
@@ -984,9 +986,9 @@ const DataRelawan: React.FC = () => {
                     {[
                         { label: 'Nama Relawan', name: 'namaRelawan', required: true, placeholder: 'Nama Lengkap Relawan' },
                         { label: 'NIK', name: 'nik', required: true, placeholder: '16 digit NIK', maxLength: 16 },
-                        { label: 'Alamat KTP', name: 'alamat', placeholder: 'Alamat sesuai KTP' },
-                        { label: 'No. HP', name: 'no_hp', placeholder: 'Nomor HP' },
-                        { label: 'Kelurahan', name: 'kelurahan', placeholder: 'Kelurahan/Desa' },
+                        { label: 'Alamat KTP', name: 'alamat', required: true, placeholder: 'Alamat sesuai KTP' },
+                        { label: 'No. HP', name: 'no_hp', required: true, placeholder: 'Nomor HP' },
+                        { label: 'Kelurahan', name: 'kelurahan', required: true, placeholder: 'Kelurahan/Desa' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">
