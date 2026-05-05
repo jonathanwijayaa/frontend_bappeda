@@ -159,6 +159,32 @@ const DaftarKader: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.nama_kader) return;
+        if (formData.nama_kader.trim().length < 3) {
+            setToast({ message: 'Nama Kader minimal 3 karakter', type: 'error' });
+            return;
+        }
+        if (formData.nama_kader.trim().length > 100) {
+            setToast({ message: 'Nama Kader terlalu panjang (maks 100 karakter)', type: 'error' });
+            return;
+        }
+        if (!/^[a-zA-Z\s]+$/.test(formData.nama_kader)) {
+            setToast({ message: 'Nama Kader tidak boleh mengandung angka atau karakter spesial', type: 'error' });
+            return;
+        }
+        if (formData.nama_pic && formData.nama_pic.trim().length > 0) {
+            if (formData.nama_pic.trim().length < 3) {
+                setToast({ message: 'Nama PIC minimal 3 karakter', type: 'error' });
+                return;
+            }
+            if (formData.nama_pic.trim().length > 100) {
+                setToast({ message: 'Nama PIC terlalu panjang (maks 100 karakter)', type: 'error' });
+                return;
+            }
+            if (!/^[a-zA-Z\s]+$/.test(formData.nama_pic)) {
+                setToast({ message: 'Nama PIC tidak boleh mengandung angka atau karakter spesial', type: 'error' });
+                return;
+            }
+        }
         if (isSuperAdmin && !formData.opd_id) {
             setToast({ message: 'Pilih OPD yang valid dari daftar', type: 'error' });
             return;
@@ -187,6 +213,22 @@ const DaftarKader: React.FC = () => {
 
     const handleDetailSave = async () => {
         if (!selectedKader) return;
+        if (!detailFormData.nama_kader.trim()) {
+            setToast({ message: 'Nama Kader tidak boleh kosong', type: 'error' });
+            return;
+        }
+        if (detailFormData.nama_kader.trim().length < 3) {
+            setToast({ message: 'Nama Kader minimal 3 karakter', type: 'error' });
+            return;
+        }
+        if (detailFormData.nama_kader.trim().length > 100) {
+            setToast({ message: 'Nama Kader terlalu panjang (maks 100 karakter)', type: 'error' });
+            return;
+        }
+        if (!/^[a-zA-Z\s]+$/.test(detailFormData.nama_kader)) {
+            setToast({ message: 'Nama Kader tidak boleh mengandung angka atau karakter spesial', type: 'error' });
+            return;
+        }
         updateKader.mutate(
             { kader_id: selectedKader.kader_id, payload: { nama_kader: detailFormData.nama_kader, deskripsi: detailFormData.deskripsi || null } },
             {
@@ -204,6 +246,20 @@ const DaftarKader: React.FC = () => {
         if (!assignPicForm.nik_pic || assignPicForm.nik_pic.length !== 16) {
             setToast({ message: 'NIK PIC harus 16 digit', type: 'error' });
             return;
+        }
+        if (assignPicForm.nama_pic && assignPicForm.nama_pic.trim().length > 0) {
+            if (assignPicForm.nama_pic.trim().length < 3) {
+                setToast({ message: 'Nama PIC minimal 3 karakter', type: 'error' });
+                return;
+            }
+            if (assignPicForm.nama_pic.trim().length > 100) {
+                setToast({ message: 'Nama PIC terlalu panjang (maks 100 karakter)', type: 'error' });
+                return;
+            }
+            if (!/^[a-zA-Z\s]+$/.test(assignPicForm.nama_pic)) {
+                setToast({ message: 'Nama PIC tidak boleh mengandung angka atau karakter spesial', type: 'error' });
+                return;
+            }
         }
         // Re-use updateKader dengan endpoint assign-pic
         updateKader.mutate(
