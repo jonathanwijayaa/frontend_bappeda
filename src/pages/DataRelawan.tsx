@@ -370,6 +370,14 @@ const DataRelawan: React.FC = () => {
             setToast({ message: 'NIK dan Nama wajib diisi', type: 'error' });
             return;
         }
+        if (formData.namaRelawan.trim().length < 3) {
+            setToast({ message: 'Nama Lengkap minimal 3 karakter', type: 'error' });
+            return;
+        }
+        if (!/^[a-zA-Z\s]+$/.test(formData.namaRelawan)) {
+            setToast({ message: 'Nama Lengkap tidak boleh mengandung angka atau karakter spesial', type: 'error' });
+            return;
+        }
 
         //  Validasi minimal 1 assignment
         if (formData.assignments.length === 0) {
@@ -565,6 +573,14 @@ const DataRelawan: React.FC = () => {
     const handleSaveEdit = async () => {
         if (!selectedRelawan || !hasChanges) {
             setToast({ message: 'Tidak ada data yang diubah', type: 'error' });
+            return;
+        }
+        if (!detailFormData.namaRelawan.trim() || detailFormData.namaRelawan.trim().length < 3) {
+            setToast({ message: 'Nama Lengkap minimal 3 karakter', type: 'error' });
+            return;
+        }
+        if (!/^[a-zA-Z\s]+$/.test(detailFormData.namaRelawan)) {
+            setToast({ message: 'Nama Lengkap tidak boleh mengandung angka atau karakter spesial', type: 'error' });
             return;
         }
         setIsSavingEdit(true);
