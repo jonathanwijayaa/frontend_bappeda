@@ -48,7 +48,7 @@ const Statistik: React.FC = () => {
 
             {/* Kolom Kanan */}
             <div className="flex flex-col gap-6 flex-1">
-                <Card title="Demografi Kelurahan" collapsible>
+                <Card title="Jumlah Relawan Per Kelurahan" collapsible>
                     <HorizontalBarChart data={kelurahan} dataKey="value" xAxisKey="name" color="#E76F51" />
                 </Card>
 
