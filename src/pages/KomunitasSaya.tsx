@@ -13,7 +13,7 @@ interface PenugasanData {
     jabatan: string | null;
     detail_jabatan: string | null;
     status_keaktifan: string;
-    nomor_sk_manual: string | null;
+    nomor_sk: string | null;
 }
 
 const KomunitasSaya = () => {
@@ -95,11 +95,10 @@ const KomunitasSaya = () => {
                                                 </h3>
                                                 <p className="text-xs text-gray-500 mt-0.5">{p.nama_opd}</p>
                                             </div>
-                                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium flex-shrink-0 ${
-                                                p.status_keaktifan === 'Aktif'
+                                            <span className={`px-2.5 py-1 rounded-full text-xs font-medium flex-shrink-0 ${p.status_keaktifan === 'Aktif'
                                                     ? 'bg-green-100 text-green-700'
                                                     : 'bg-gray-100 text-gray-600'
-                                            }`}>
+                                                }`}>
                                                 {p.status_keaktifan}
                                             </span>
                                         </div>
@@ -116,10 +115,10 @@ const KomunitasSaya = () => {
                                                     <span className="text-gray-800">{p.detail_jabatan}</span>
                                                 </div>
                                             )}
-                                            {p.nomor_sk_manual && (
+                                            {p.nomor_sk && (
                                                 <div className="flex text-xs">
                                                     <span className="text-gray-500 w-24 flex-shrink-0">No. SK:</span>
-                                                    <span className="text-gray-800">{p.nomor_sk_manual}</span>
+                                                    <span className="text-gray-800">{p.nomor_sk}</span>
                                                 </div>
                                             )}
                                         </div>
