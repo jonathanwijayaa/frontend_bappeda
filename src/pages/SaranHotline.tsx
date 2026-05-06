@@ -126,8 +126,20 @@ const SaranHotline: React.FC = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.namaLengkap || !formData.noTelepon || !formData.saran) {
-            setToast({ message: 'Mohon lengkapi semua field', type: 'error' });
+        if (!formData.namaLengkap.trim()) {
+            setToast({ message: 'Nama lengkap wajib diisi', type: 'error' });
+            return;
+        }
+        if (!formData.noTelepon.trim()) {
+            setToast({ message: 'Nomor telepon wajib diisi', type: 'error' });
+            return;
+        }
+        if (!/^[0-9+\-\s]{10,13}$/.test(formData.noTelepon.trim())) {
+            setToast({ message: 'Nomor telepon tidak valid — harus 10–13 digit angka (contoh: 08123456789)', type: 'error' });
+            return;
+        }
+        if (!formData.saran.trim()) {
+            setToast({ message: 'Saran atau kendala tidak boleh kosong', type: 'error' });
             return;
         }
         setIsSubmitting(true);
