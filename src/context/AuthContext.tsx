@@ -1,6 +1,7 @@
 //AuthContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { apiFetch } from '../utils/api';
+import queryClient from '../lib/queryClient';
 
 interface User {
     name: string;
@@ -122,6 +123,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.removeItem('currentUser');
         localStorage.removeItem('token');
         localStorage.setItem('isAuthenticated', 'false');
+        // Bersihkan cache React Query agar data sesi sebelumnya tidak bocor
+        queryClient.clear();
     };
 
     const value: AuthContextType = {
