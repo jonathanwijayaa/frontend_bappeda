@@ -198,16 +198,16 @@ const ProfilRelawan = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin Baru</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
                                     <select
-                                        value={updateForm.jenisKelamin}
-                                        onChange={(e) => setUpdateForm(p => ({ ...p, jenisKelamin: e.target.value }))}
-                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm bg-white"
+                                        value={updateForm.jenisKelamin || profil?.jenis_kelamin || ''}
+                                        disabled
+                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
                                     >
-                                        <option value="">-- Tidak diubah ({profil?.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}) --</option>
                                         <option value="L">Laki-laki</option>
                                         <option value="P">Perempuan</option>
                                     </select>
+                                    <p className="text-xs text-gray-400 mt-1">Jenis kelamin tidak dapat diubah melalui pengajuan.</p>
                                 </div>
 
                                 <div>
