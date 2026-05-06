@@ -332,9 +332,10 @@ const SaranHotline: React.FC = () => {
                         <span className="ml-3 text-gray-500">Memuat saran masukan...</span>
                     </div>
                 ) : (
-                    <Card title="Kotak Masuk Saran & Kendala">
-                        {/* Search bar — sisi kanan, antara header dan tabel */}
-                        <div className="flex justify-end mb-4">
+                    <Card>
+                        {/* Header: judul kiri + search bar kanan — sejajar */}
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">Kotak Masuk Saran &amp; Kendala</h3>
                             <div className="relative w-72">
                                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                                 <input
