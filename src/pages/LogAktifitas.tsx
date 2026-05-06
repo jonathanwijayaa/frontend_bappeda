@@ -31,13 +31,37 @@ const formatValue = (val: any): string => {
     return String(val);
 };
 
-// Helper: render diff antara old dan new value
-const renderDiff = (oldVal: any, newVal: any) => {
-    if (!oldVal && !newVal) return <p className="text-sm text-gray-400 italic">Tidak ada detail perubahan data.</p>;
+// Helper: render diff berdasarkan action_type
+const renderDiff = (action: string, oldVal: any, newVal: any) => {
+    // 1. UI UNTUK AKSI INSERT (Hanya tampilkan data baru)
+    if (action === 'INSERT') {
+        const data = newVal || {};
+        const keys = Object.keys(data);
 
-    // Jika keduanya object, tampilkan field by field
-    if (typeof oldVal === 'object' && typeof newVal === 'object' && oldVal && newVal) {
+        if (keys.length === 0) return <p className="text-sm text-gray-400 italic">Tidak ada detail data.</p>;
+
+        return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {keys.map(key => (
+                    <div key={key} className="bg-green-50 p-3 rounded-lg border border-green-100">
+                        <p className="text-xs text-green-700 font-semibold mb-1 uppercase tracking-wide">{key}</p>
+                        <p className="text-sm text-gray-800 break-words whitespace-pre-wrap">
+                            {formatValue(data[key])}
+                        </p>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    // 2. UI UNTUK AKSI UPDATE (Tampilkan perbandingan)
+    if (action === 'UPDATE') {
+        if (typeof oldVal !== 'object' || typeof newVal !== 'object' || !oldVal || !newVal) {
+             return <p className="text-sm text-red-500 italic">Format data lama/baru tidak valid untuk perbandingan.</p>;
+        }
+
         const allKeys = Array.from(new Set([...Object.keys(oldVal || {}), ...Object.keys(newVal || {})]));
+        // Hanya ambil key yang nilainya benar-benar berubah
         const changedKeys = allKeys.filter(k => JSON.stringify((oldVal || {})[k]) !== JSON.stringify((newVal || {})[k]));
 
         if (changedKeys.length === 0) {
@@ -54,7 +78,7 @@ const renderDiff = (oldVal: any, newVal: any) => {
                         <div className="grid grid-cols-2 divide-x divide-gray-200">
                             <div className="p-3 bg-red-50">
                                 <p className="text-xs text-red-500 font-medium mb-1">Sebelum</p>
-                                <p className="text-sm text-gray-700 break-words whitespace-pre-wrap">
+                                <p className="text-sm text-gray-700 break-words whitespace-pre-wrap line-through">
                                     {formatValue((oldVal || {})[key])}
                                 </p>
                             </div>
@@ -71,23 +95,28 @@ const renderDiff = (oldVal: any, newVal: any) => {
         );
     }
 
-    // Jika bukan object (misal INSERT hanya punya new_value)
-    return (
-        <div className="space-y-3">
-            {newVal && (
-                <div className="rounded-lg border border-green-200 overflow-hidden">
-                    <div className="bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700">Data Baru</div>
-                    <pre className="p-3 text-xs text-gray-700 whitespace-pre-wrap break-words">{formatValue(newVal)}</pre>
-                </div>
-            )}
-            {oldVal && (
-                <div className="rounded-lg border border-red-200 overflow-hidden">
-                    <div className="bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700">Data Lama</div>
-                    <pre className="p-3 text-xs text-gray-700 whitespace-pre-wrap break-words">{formatValue(oldVal)}</pre>
-                </div>
-            )}
-        </div>
-    );
+    // 3. UI UNTUK AKSI DELETE (Opsional: Hanya tampilkan data lama yang dihapus)
+    if (action === 'DELETE') {
+        const data = oldVal || {};
+        const keys = Object.keys(data);
+        
+        if (keys.length === 0) return <p className="text-sm text-gray-400 italic">Tidak ada detail data.</p>;
+
+        return (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {keys.map(key => (
+                    <div key={key} className="bg-red-50 p-3 rounded-lg border border-red-100">
+                        <p className="text-xs text-red-700 font-semibold mb-1 uppercase tracking-wide">{key}</p>
+                        <p className="text-sm text-gray-800 break-words whitespace-pre-wrap">
+                            {formatValue(data[key])}
+                        </p>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    return null;
 };
 
 const LogAktifitas: React.FC = () => {
@@ -276,11 +305,16 @@ const LogAktifitas: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Detail Perubahan */}
-                                <div>
-                                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Detail Data yang Diubah</h3>
-                                    {renderDiff(selectedLog.old_value, selectedLog.new_value)}
-                                </div>
+                            {/* Detail Perubahan */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                                    {selectedLog.action_type === 'INSERT' ? 'Detail Data Baru' : 
+                                    selectedLog.action_type === 'UPDATE' ? 'Detail Data yang Diubah' : 
+                                    'Detail Data'}
+                                </h3>
+                                {/* Kirim action_type sebagai argumen pertama */}
+                                {renderDiff(selectedLog.action_type, selectedLog.old_value, selectedLog.new_value)}
+                            </div>
                             </div>
 
                             {/* Modal Footer */}
