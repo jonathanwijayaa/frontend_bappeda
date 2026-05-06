@@ -256,7 +256,7 @@ const HistoriRelawan: React.FC = () => {
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-1">
                         <History size={18} className="text-green-600" />
-                        <h3 className="font-semibold text-gray-800 text-sm">Filter Histori</h3>
+                        <h3 className="font-semibold text-gray-800 text-sm">Filter Riwayat</h3>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         {/* Filter OPD */}
@@ -340,21 +340,21 @@ const HistoriRelawan: React.FC = () => {
                 />
             </div>
 
-            {/* ── Tabel Histori ── */}
-            <Card title="Tabel Histori Data Relawan">
+            {/* ── Tabel Riwayat ── */}
+            <Card title="Tabel Riwayat Data Relawan">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-40">
                         <Loader2 size={28} className="animate-spin text-gray-400" />
-                        <span className="ml-3 text-gray-500">Memuat histori data relawan...</span>
+                        <span className="ml-3 text-gray-500">Memuat riwayat data relawan...</span>
                     </div>
                 ) : filteredData.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                         <History size={40} className="text-gray-300 mb-3" />
-                        <p className="text-gray-600 font-medium">Tidak ada data histori</p>
+                        <p className="text-gray-600 font-medium">Tidak ada data riwayat</p>
                         <p className="text-sm text-gray-400 mt-1">
                             {isActiveFilter
                                 ? 'Tidak ada relawan yang cocok dengan filter yang dipilih.'
-                                : 'Belum ada histori data relawan yang tercatat.'}
+                                : 'Belum ada riwayat data relawan yang tercatat.'}
                         </p>
                     </div>
                 ) : (
@@ -380,7 +380,7 @@ const HistoriRelawan: React.FC = () => {
             <Modal
                 isOpen={isDetailModalOpen}
                 onClose={() => { setIsDetailModalOpen(false); setSelectedRelawan(null); }}
-                title="Detail Histori Relawan"
+                title="Detail Riwayat Relawan"
                 subtitle="Informasi lengkap data relawan (hanya baca)"
                 maxWidth="2xl"
             >

@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Loader2 } from 'lucide-react';
+import { Eye, Loader2, X } from 'lucide-react';
 import Card from '../components/ui/Card';
 import { SearchInput } from '../components/ui/Input';
 import Select from '../components/ui/Select';
@@ -13,6 +13,83 @@ import { LogData } from '../types';
 import { useLogList } from '../hooks/log/useLogList';
 import { ChangeEvent } from 'react';
 
+// Label mapping untuk action_type ke bahasa Indonesia
+const ACTION_LABEL: Record<string, string> = {
+    INSERT: 'Tambah Data',
+    UPDATE: 'Ubah Data',
+};
+
+const ACTION_COLOR: Record<string, string> = {
+    INSERT: 'bg-green-100 text-green-700',
+    UPDATE: 'bg-blue-100 text-blue-700',
+};
+
+// Helper: format JSON value for display
+const formatValue = (val: any): string => {
+    if (val === null || val === undefined) return '-';
+    if (typeof val === 'object') return JSON.stringify(val, null, 2);
+    return String(val);
+};
+
+// Helper: render diff antara old dan new value
+const renderDiff = (oldVal: any, newVal: any) => {
+    if (!oldVal && !newVal) return <p className="text-sm text-gray-400 italic">Tidak ada detail perubahan data.</p>;
+
+    // Jika keduanya object, tampilkan field by field
+    if (typeof oldVal === 'object' && typeof newVal === 'object' && oldVal && newVal) {
+        const allKeys = Array.from(new Set([...Object.keys(oldVal || {}), ...Object.keys(newVal || {})]));
+        const changedKeys = allKeys.filter(k => JSON.stringify((oldVal || {})[k]) !== JSON.stringify((newVal || {})[k]));
+
+        if (changedKeys.length === 0) {
+            return <p className="text-sm text-gray-400 italic">Tidak ada perubahan nilai yang terdeteksi.</p>;
+        }
+
+        return (
+            <div className="space-y-3">
+                {changedKeys.map(key => (
+                    <div key={key} className="rounded-lg overflow-hidden border border-gray-200">
+                        <div className="bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                            {key}
+                        </div>
+                        <div className="grid grid-cols-2 divide-x divide-gray-200">
+                            <div className="p-3 bg-red-50">
+                                <p className="text-xs text-red-500 font-medium mb-1">Sebelum</p>
+                                <p className="text-sm text-gray-700 break-words whitespace-pre-wrap">
+                                    {formatValue((oldVal || {})[key])}
+                                </p>
+                            </div>
+                            <div className="p-3 bg-green-50">
+                                <p className="text-xs text-green-600 font-medium mb-1">Sesudah</p>
+                                <p className="text-sm text-gray-700 break-words whitespace-pre-wrap">
+                                    {formatValue((newVal || {})[key])}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    // Jika bukan object (misal INSERT hanya punya new_value)
+    return (
+        <div className="space-y-3">
+            {newVal && (
+                <div className="rounded-lg border border-green-200 overflow-hidden">
+                    <div className="bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700">Data Baru</div>
+                    <pre className="p-3 text-xs text-gray-700 whitespace-pre-wrap break-words">{formatValue(newVal)}</pre>
+                </div>
+            )}
+            {oldVal && (
+                <div className="rounded-lg border border-red-200 overflow-hidden">
+                    <div className="bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700">Data Lama</div>
+                    <pre className="p-3 text-xs text-gray-700 whitespace-pre-wrap break-words">{formatValue(oldVal)}</pre>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const LogAktifitas: React.FC = () => {
     // ── Server State ──────────────────────────────────────────
     const { data: logList = [], isLoading } = useLogList(200);
@@ -22,6 +99,7 @@ const LogAktifitas: React.FC = () => {
     const [filterTable, setFilterTable] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+    const [selectedLog, setSelectedLog] = useState<LogData | null>(null);
     const itemsPerPage = 5;
     const { isSuperAdmin } = useAuth();
 
@@ -37,6 +115,7 @@ const LogAktifitas: React.FC = () => {
                 (log.nama_pengguna || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (log.nik || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                 log.action_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (ACTION_LABEL[log.action_type] || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                 log.table_name.toLowerCase().includes(searchTerm.toLowerCase());
             const matchAction = filterAction ? log.action_type === filterAction : true;
             const matchTable = filterTable ? log.table_name === filterTable : true;
@@ -67,17 +146,23 @@ const LogAktifitas: React.FC = () => {
             width: '14%',
             noTruncate: true,
             render: (row: LogData) => (
-                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${row.action_type === 'INSERT' ? 'bg-green-100 text-green-700' :
-                        row.action_type === 'UPDATE' ? 'bg-blue-100 text-blue-700' :
-                            row.action_type === 'DELETE' ? 'bg-red-100 text-red-700' :
-                                'bg-gray-100 text-gray-700'
-                    }`}>
-                    {row.action_type}
+                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ACTION_COLOR[row.action_type] || 'bg-gray-100 text-gray-700'}`}>
+                    {ACTION_LABEL[row.action_type] || row.action_type}
                 </span>
             ),
         },
         { header: 'TABEL', accessor: 'table_name' as keyof LogData, width: '20%' },
     ];
+
+    const rowActions = (row: LogData) => (
+        <button
+            onClick={() => setSelectedLog(row)}
+            className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+            title="Lihat Detail Perubahan"
+        >
+            <Eye size={18} />
+        </button>
+    );
 
     return (
         <div className="space-y-6">
@@ -93,7 +178,7 @@ const LogAktifitas: React.FC = () => {
                     onChange={(e) => { setFilterAction(e.target.value); setCurrentPage(1); }}
                     options={[
                         { label: 'Semua Aksi', value: '' },
-                        ...uniqueActions.map(a => ({ label: a, value: a })),
+                        ...uniqueActions.map(a => ({ label: ACTION_LABEL[a] || a, value: a })),
                     ]}
                     className="w-44"
                 />
@@ -127,7 +212,7 @@ const LogAktifitas: React.FC = () => {
                         <p className="text-gray-600 font-medium">Tidak ada log yang sesuai filter</p>
                     </div>
                 ) : (
-                    <Table columns={columns} data={currentData} minRows={5} />
+                    <Table columns={columns} data={currentData} actions={rowActions} minRows={5} />
                 )}
 
                 {!isLoading && filteredData.length > 0 && (
@@ -143,6 +228,74 @@ const LogAktifitas: React.FC = () => {
                     </div>
                 )}
             </Card>
+
+            {/* Detail Modal */}
+            {selectedLog && (
+                <>
+                    <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSelectedLog(null)} />
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+                            {/* Modal Header */}
+                            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 flex-shrink-0">
+                                <div>
+                                    <h2 className="text-lg font-semibold text-gray-800">Detail Log Aktivitas</h2>
+                                    <p className="text-sm text-gray-500 mt-0.5">
+                                        {new Date(selectedLog.timestamp).toLocaleString('id-ID')} · {selectedLog.table_name}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedLog(null)}
+                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                                >
+                                    <X size={20} className="text-gray-500" />
+                                </button>
+                            </div>
+
+                            {/* Modal Body — scrollable */}
+                            <div className="overflow-y-auto flex-1 p-6 space-y-5">
+                                {/* Info Row */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-gray-50 rounded-lg p-3">
+                                        <p className="text-xs text-gray-500 mb-1">Pengguna</p>
+                                        <p className="text-sm font-medium text-gray-800">{selectedLog.nama_pengguna || '-'}</p>
+                                        {selectedLog.nik && <p className="text-xs text-gray-500">NIK: {selectedLog.nik}</p>}
+                                    </div>
+                                    <div className="bg-gray-50 rounded-lg p-3">
+                                        <p className="text-xs text-gray-500 mb-1">Jenis Aksi</p>
+                                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${ACTION_COLOR[selectedLog.action_type] || 'bg-gray-100 text-gray-700'}`}>
+                                            {ACTION_LABEL[selectedLog.action_type] || selectedLog.action_type}
+                                        </span>
+                                    </div>
+                                    <div className="bg-gray-50 rounded-lg p-3">
+                                        <p className="text-xs text-gray-500 mb-1">Tabel</p>
+                                        <p className="text-sm font-medium text-gray-800">{selectedLog.table_name}</p>
+                                    </div>
+                                    <div className="bg-gray-50 rounded-lg p-3">
+                                        <p className="text-xs text-gray-500 mb-1">ID Record</p>
+                                        <p className="text-sm font-medium text-gray-800">{selectedLog.record_id ?? '-'}</p>
+                                    </div>
+                                </div>
+
+                                {/* Detail Perubahan */}
+                                <div>
+                                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Detail Data yang Diubah</h3>
+                                    {renderDiff(selectedLog.old_value, selectedLog.new_value)}
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="px-6 py-4 border-t border-gray-200 flex-shrink-0 flex justify-end">
+                                <button
+                                    onClick={() => setSelectedLog(null)}
+                                    className="px-5 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    Tutup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
