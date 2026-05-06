@@ -92,6 +92,10 @@ const Profil: React.FC = () => {
             setToast({ message: 'Tidak ada data yang disimpan', type: 'error' });
             return;
         }
+        if (formData.no_hp.trim() && !/^[0-9+\-\s]{10,13}$/.test(formData.no_hp.trim())) {
+            setToast({ message: 'Nomor HP tidak valid — harus 10–13 digit angka (contoh: 08123456789)', type: 'error' });
+            return;
+        }
 
         try {
             await updateProfil.mutateAsync({
@@ -108,16 +112,24 @@ const Profil: React.FC = () => {
     const handlePasswordSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!passwordData.passwordLama || !passwordData.passwordBaru || !passwordData.konfirmasiPassword) {
-            setToast({ message: 'Mohon lengkapi semua field password', type: 'error' });
+        if (!passwordData.passwordLama) {
+            setToast({ message: 'Password saat ini wajib diisi', type: 'error' });
             return;
         }
-        if (passwordData.passwordBaru !== passwordData.konfirmasiPassword) {
-            setToast({ message: 'Password baru dan konfirmasi password tidak cocok', type: 'error' });
+        if (!passwordData.passwordBaru) {
+            setToast({ message: 'Password baru wajib diisi', type: 'error' });
+            return;
+        }
+        if (!passwordData.konfirmasiPassword) {
+            setToast({ message: 'Konfirmasi password wajib diisi', type: 'error' });
             return;
         }
         if (passwordData.passwordBaru.length < 6) {
-            setToast({ message: 'Password baru minimal 6 karakter', type: 'error' });
+            setToast({ message: 'Password baru terlalu pendek — minimal 6 karakter', type: 'error' });
+            return;
+        }
+        if (passwordData.passwordBaru !== passwordData.konfirmasiPassword) {
+            setToast({ message: 'Konfirmasi password tidak cocok dengan password baru', type: 'error' });
             return;
         }
 

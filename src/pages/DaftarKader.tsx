@@ -192,6 +192,14 @@ const DaftarKader: React.FC = () => {
             setToast({ message: 'Pilih OPD yang valid dari daftar', type: 'error' });
             return;
         }
+        if (formData.nik_pic && !/^\d{16}$/.test(formData.nik_pic)) {
+            setToast({ message: 'NIK PIC harus tepat 16 digit angka (tanpa huruf atau spasi)', type: 'error' });
+            return;
+        }
+        if (formData.no_hp_pic && !/^[0-9+\-\s]{10,13}$/.test(formData.no_hp_pic.trim())) {
+            setToast({ message: 'Nomor HP PIC tidak valid — harus 10–13 digit angka (contoh: 08123456789)', type: 'error' });
+            return;
+        }
 
         const body: any = {
             nama_kader:    formData.nama_kader,
@@ -246,8 +254,32 @@ const DaftarKader: React.FC = () => {
 
     const handleAssignPic = async () => {
         if (!selectedKader) return;
-        if (!assignPicForm.nik_pic || assignPicForm.nik_pic.length !== 16 || !assignPicForm.nama_pic.trim() || !assignPicForm.no_hp_pic.trim() || !assignPicForm.alamat_pic.trim() || !assignPicForm.kelurahan_pic.trim()) {
-            setToast({ message: 'Semua field wajib diisi dan NIK harus 16 digit', type: 'error' });
+        if (!assignPicForm.nik_pic.trim()) {
+            setToast({ message: 'NIK PIC wajib diisi', type: 'error' });
+            return;
+        }
+        if (!/^\d{16}$/.test(assignPicForm.nik_pic.trim())) {
+            setToast({ message: 'NIK PIC harus tepat 16 digit angka (tanpa huruf atau spasi)', type: 'error' });
+            return;
+        }
+        if (!assignPicForm.nama_pic.trim()) {
+            setToast({ message: 'Nama PIC wajib diisi', type: 'error' });
+            return;
+        }
+        if (!assignPicForm.no_hp_pic.trim()) {
+            setToast({ message: 'Nomor HP PIC wajib diisi', type: 'error' });
+            return;
+        }
+        if (!/^[0-9+\-\s]{10,13}$/.test(assignPicForm.no_hp_pic.trim())) {
+            setToast({ message: 'Nomor HP PIC tidak valid — harus 10–13 digit angka (contoh: 08123456789)', type: 'error' });
+            return;
+        }
+        if (!assignPicForm.alamat_pic.trim()) {
+            setToast({ message: 'Alamat PIC wajib diisi', type: 'error' });
+            return;
+        }
+        if (!assignPicForm.kelurahan_pic.trim()) {
+            setToast({ message: 'Kelurahan PIC wajib diisi', type: 'error' });
             return;
         }
         if (assignPicForm.nama_pic && assignPicForm.nama_pic.trim().length > 0) {
