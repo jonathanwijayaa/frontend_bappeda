@@ -1,6 +1,6 @@
 //SaranHotline.tsx
 import React, { useEffect, useState, useCallback } from 'react';
-import { Phone, MessageCircle, Clock, Check, Eye, Loader2, Edit2, Save, X, Search } from 'lucide-react';
+import { Phone, MessageCircle, Clock, Check, Eye, Loader2, Edit2, Save, X, Search, ExternalLink } from 'lucide-react';
 import Card from '../components/ui/Card';
 import RelawanMenu from '../components/RelawanMenu';
 import Table from '../components/ui/Table';
@@ -228,6 +228,15 @@ const SaranHotline: React.FC = () => {
         </>
     );
 
+    // Helper URL WhatsApp
+    const formatWhatsAppUrl = (waNumber: string) => {
+        let cleaned = waNumber.replace(/\D/g, '');
+        if (cleaned.startsWith('0')) {
+            cleaned = '62' + cleaned.substring(1);
+        }
+        return `https://api.whatsapp.com/send/?phone=${cleaned}&type=phone_number&app_absent=0`;
+    };
+
     // Contact info (dari API, bukan hardcoded)
     const contactInfo = (
         <div className="space-y-5">
@@ -242,7 +251,19 @@ const SaranHotline: React.FC = () => {
                     </div>
                     <div>
                         <p className="text-sm text-gray-600 mb-1">{item.label}</p>
-                        <p className="text-base font-semibold text-gray-800">{item.value}</p>
+                        {item.label === 'WhatsApp' ? (
+                            <a 
+                                href={formatWhatsAppUrl(item.value)} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="text-base font-semibold text-green-600 hover:text-green-700 hover:underline flex items-center gap-1 w-fit"
+                            >
+                                {item.value}
+                                <ExternalLink size={14} className="ml-1" />
+                            </a>
+                        ) : (
+                            <p className="text-base font-semibold text-gray-800">{item.value}</p>
+                        )}
                     </div>
                 </div>
             ))}
