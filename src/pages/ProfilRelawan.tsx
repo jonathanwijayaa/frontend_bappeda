@@ -6,6 +6,7 @@ import RelawanMenu from '../components/RelawanMenu';
 import Toast, { ToastType } from '../components/ui/Toast';
 import { apiFetch } from '../utils/api';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
+import { formatPhoneDisplay } from '../utils/formatPhone';
 import { Loader2 } from 'lucide-react';
 
 interface ProfilData {
@@ -65,7 +66,7 @@ const ProfilRelawan = () => {
             if (updateForm.namaLengkap.trim())  dataBaru.nama_lengkap  = updateForm.namaLengkap.trim();
             if (updateForm.alamat.trim())        dataBaru.alamat_ktp   = updateForm.alamat.trim();
             if (updateForm.kelurahan.trim())     dataBaru.kelurahan    = updateForm.kelurahan.trim();
-            if (updateForm.noHp.trim())          dataBaru.no_hp        = updateForm.noHp.trim();
+            if (updateForm.noHp.trim())          dataBaru.no_hp        = updateForm.noHp.trim().replace(/\D/g, '');
             if (updateForm.jenisKelamin.trim())  dataBaru.jenis_kelamin = updateForm.jenisKelamin.trim();
 
             if (Object.keys(dataBaru).length === 0) {
@@ -124,7 +125,7 @@ const ProfilRelawan = () => {
                                     { label: 'Jenis Kelamin', value: profil?.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan' },
                                     { label: 'Alamat KTP', value: profil?.alamat_ktp },
                                     { label: 'Kelurahan', value: profil?.kelurahan },
-                                    { label: 'No. HP', value: profil?.no_hp },
+                                    { label: 'No. HP', value: formatPhoneDisplay(profil?.no_hp) },
                                 ].map(item => (
                                     <div key={item.label}>
                                         <label className="block text-sm font-medium text-gray-500 mb-0.5">{item.label}</label>

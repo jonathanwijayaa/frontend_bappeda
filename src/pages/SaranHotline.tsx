@@ -15,7 +15,7 @@ import { useCreateSaran, useRespondSaran } from '../hooks/saran/useSaranMutation
 import { useProfileData } from '../hooks/profil/useProfileData';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
 import apiClient from '../lib/axios';
-
+import { formatPhoneDisplay } from '../utils/formatPhone';
 interface HotlineInfo {
     telepon: string;
     whatsapp: string;
@@ -144,7 +144,7 @@ const SaranHotline: React.FC = () => {
         }
         setIsSubmitting(true);
         createSaran.mutate(
-            { subjek: `Dari: ${formData.namaLengkap} (${formData.noTelepon})`, pesan: formData.saran },
+            { subjek: `Dari: ${formData.namaLengkap} (${formData.noTelepon.replace(/\D/g, '')})`, pesan: formData.saran },
             {
                 onSuccess: () => {
                     setToast({ message: 'Saran berhasil dikirim. Terima kasih!', type: 'success' });
@@ -187,7 +187,10 @@ const SaranHotline: React.FC = () => {
 
     const saranColumns = [
         { header: 'NAMA PENGIRIM', accessor: 'nama_lengkap' as keyof SaranData },
-        { header: 'NO. TELEPON', accessor: 'no_hp' as keyof SaranData },
+        { 
+            header: 'NO. TELEPON', 
+            render: (row: SaranData) => formatPhoneDisplay(row.no_hp) 
+        },
         {
             header: 'SARAN',
             render: (row: SaranData) => (
@@ -418,7 +421,7 @@ const SaranHotline: React.FC = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="bg-gray-50 p-3 rounded-lg">
                                     <p className="text-gray-500 text-xs mb-1">No. Telepon</p>
-                                    <div className="flex items-center gap-2"><Phone size={14} className="text-gray-400" /><p className="font-medium text-gray-800">{selectedSaran.no_hp || '-'}</p></div>
+                                    <div className="flex items-center gap-2"><Phone size={14} className="text-gray-400" /><p className="font-medium text-gray-800">{formatPhoneDisplay(selectedSaran.no_hp)}</p></div>
                                 </div>
                                 <div className="bg-gray-50 p-3 rounded-lg">
                                     <p className="text-gray-500 text-xs mb-1">Tanggal Dikirim</p>

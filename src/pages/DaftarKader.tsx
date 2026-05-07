@@ -13,6 +13,7 @@ import Pagination from '../components/ui/Pagination';
 import { exportToPDF } from '../utils/exportToPDF';
 import { useAuth } from '../context/AuthContext';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
+import { formatPhoneDisplay } from '../utils/formatPhone';
 import { KaderData, AutoOption } from '../types';
 import { useKaderList } from '../hooks/kader/useKaderList';
 import { useOpdList } from '../hooks/opd/useOpdList';
@@ -208,7 +209,7 @@ const DaftarKader: React.FC = () => {
             nik_pic:       formData.nik_pic       || null,
             alamat_pic:    formData.alamat_pic    || null,
             kelurahan_pic: formData.kelurahan_pic || null,
-            no_hp_pic:     formData.no_hp_pic     || null,
+            no_hp_pic:     formData.no_hp_pic.replace(/\D/g, '')     || null,
         };
         if (isSuperAdmin) body.opd_id = formData.opd_id;
 
@@ -298,7 +299,7 @@ const DaftarKader: React.FC = () => {
         }
         // Re-use updateKader dengan endpoint assign-pic
         updateKader.mutate(
-            { kader_id: selectedKader.kader_id, payload: assignPicForm as any },
+            { kader_id: selectedKader.kader_id, payload: { ...assignPicForm, no_hp_pic: assignPicForm.no_hp_pic.replace(/\D/g, '') } as any },
             {
                 onSuccess: (d) => {
                     setToast({ message: d.message, type: 'success' });
@@ -548,7 +549,7 @@ const DaftarKader: React.FC = () => {
                                 <span className="text-gray-500 font-medium">NIK PIC</span>
                                 <span className="col-span-2 text-gray-800">{selectedKader.pic_nik || '-'}</span>
                                 <span className="text-gray-500 font-medium">No. HP PIC</span>
-                                <span className="col-span-2 text-gray-800">{selectedKader.pic_no_hp || '-'}</span>
+                                <span className="col-span-2 text-gray-800">{formatPhoneDisplay(selectedKader.pic_no_hp)}</span>
                                 <span className="text-gray-500 font-medium">PIC Sejak</span>
                                 <span className="col-span-2 text-gray-800">
                                     {selectedKader.pic_tanggal_mulai
