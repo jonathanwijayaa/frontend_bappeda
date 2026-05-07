@@ -78,7 +78,7 @@ const renderDiff = (action: string, oldVal: any, newVal: any) => {
                         <div className="grid grid-cols-2 divide-x divide-gray-200">
                             <div className="p-3 bg-red-50">
                                 <p className="text-xs text-red-500 font-medium mb-1">Sebelum</p>
-                                <p className="text-sm text-gray-700 break-words whitespace-pre-wrap line-through">
+                                <p className="text-sm text-gray-700 break-words whitespace-pre-wrap">
                                     {formatValue((oldVal || {})[key])}
                                 </p>
                             </div>
@@ -117,6 +117,34 @@ const renderDiff = (action: string, oldVal: any, newVal: any) => {
     }
 
     return null;
+};
+
+// Helper: dapatkan nama deskriptif dari record
+const getRecordName = (log: LogData): string => {
+    if (!log) return '-';
+    // Gunakan new_value jika ada, jika tidak gunakan old_value (misal untuk DELETE)
+    const data = log.new_value || log.old_value || {};
+    
+    switch (log.table_name) {
+        case 'users':
+            return data.nama_lengkap || data.nik || String(log.record_id);
+        case 'opd':
+            return data.nama_opd || String(log.record_id);
+        case 'kader':
+            return data.nama_kader || String(log.record_id);
+        case 'relawan':
+            return data.nama_lengkap || String(log.record_id);
+        case 'surat_keputusan':
+            return data.judul_sk || data.nomor_sk || String(log.record_id);
+        case 'penugasan_relawan':
+            return data.penugasan || data.jabatan || String(log.record_id);
+        case 'saran_masukan':
+            return data.subjek || String(log.record_id);
+        case 'hotline_settings':
+            return 'Pengaturan Hotline';
+        default:
+            return String(log.record_id ?? '-');
+    }
 };
 
 const LogAktifitas: React.FC = () => {
@@ -300,8 +328,8 @@ const LogAktifitas: React.FC = () => {
                                         <p className="text-sm font-medium text-gray-800">{selectedLog.table_name}</p>
                                     </div>
                                     <div className="bg-gray-50 rounded-lg p-3">
-                                        <p className="text-xs text-gray-500 mb-1">ID Record</p>
-                                        <p className="text-sm font-medium text-gray-800">{selectedLog.record_id ?? '-'}</p>
+                                        <p className="text-xs text-gray-500 mb-1">Target Data</p>
+                                        <p className="text-sm font-medium text-gray-800">{getRecordName(selectedLog)} <span className="text-gray-500 font-normal text-xs">(ID: {selectedLog.record_id ?? '-'})</span></p>
                                     </div>
                                 </div>
 

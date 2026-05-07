@@ -8,7 +8,7 @@ interface User {
     role: 'super_admin' | 'opd' | 'relawan';
     roleDisplay: string;
     avatar: string;
-    opd_id?: number; 
+    opd_id?: number;
     nama_opd?: string;
     no_hp?: string;
 }
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                         // Decode payload JWT
                         const payload = JSON.parse(atob(token.split('.')[1]));
                         const expiry = payload.exp * 1000;
-                        
+
                         // Jika waktu sekarang melebihi waktu kedaluwarsa token
                         if (Date.now() >= expiry) {
                             logout();
@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
             // Cek setiap 1 menit (60000 ms)
             interval = setInterval(checkTokenExpiry, 60000);
-            
+
             // Cek juga saat pertama kali effect jalan
             checkTokenExpiry();
         }
