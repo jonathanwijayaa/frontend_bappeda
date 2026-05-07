@@ -56,6 +56,50 @@ const ManajemenOPD: React.FC = () => {
         kontak: ''
     });
 
+    const validateOpdForm = (payload: typeof formData): string | null => {
+        if (!payload.nama_opd.trim() || !payload.alamat.trim() || !payload.pic.trim() || !payload.nik_pic.trim() || !payload.kontak.trim()) {
+            return 'Semua field wajib diisi';
+        }
+        if (payload.nama_opd.trim().length < 3) {
+            return 'Nama OPD minimal 3 karakter';
+        }
+        if (payload.nama_opd.trim().length > 100) {
+            return 'Nama OPD terlalu panjang (maks 100 karakter)';
+        }
+        if (!/^[a-zA-Z\s]+$/.test(payload.nama_opd)) {
+            return 'Nama OPD tidak boleh mengandung angka atau karakter spesial';
+        }
+        if (payload.alamat && payload.alamat.trim().length > 0) {
+            if (payload.alamat.trim().length < 5) {
+                return 'Alamat OPD minimal 5 karakter';
+            }
+            if (payload.alamat.trim().length > 255) {
+                return 'Alamat OPD terlalu panjang (maks 255 karakter)';
+            }
+            if (/^\d+$/.test(payload.alamat.trim())) {
+                return 'Alamat OPD tidak boleh hanya berisi angka';
+            }
+            if (!/^[a-zA-Z0-9\s.,\-\/]+$/.test(payload.alamat.trim())) {
+                return 'Alamat OPD tidak boleh mengandung karakter spesial yang tidak valid';
+            }
+        }
+        if (payload.pic && payload.pic.trim().length > 0) {
+            if (payload.pic.trim().length < 3) {
+                return 'Nama PIC minimal 3 karakter';
+            }
+            if (payload.pic.trim().length > 100) {
+                return 'Nama PIC terlalu panjang (maks 100 karakter)';
+            }
+            if (!/^[a-zA-Z\s]+$/.test(payload.pic)) {
+                return 'Nama PIC tidak boleh mengandung angka atau karakter spesial';
+            }
+        }
+        if (payload.nik_pic && !/^\d{16}$/.test(payload.nik_pic)) {
+            return 'NIK PIC harus terdiri dari tepat 16 digit angka';
+        }
+        return null;
+    };
+
     const hasChanges = useMemo(() => {
         if (!selectedOPD) return false;
         return (
@@ -133,56 +177,9 @@ const ManajemenOPD: React.FC = () => {
 
     const handleDetailSave = () => {
         if (!selectedOPD) return;
-        if (!detailFormData.nama_opd.trim() || !detailFormData.alamat.trim() || !detailFormData.pic.trim() || !detailFormData.nik_pic.trim() || !detailFormData.kontak.trim()) {
-            setToast({ message: 'Semua field wajib diisi', type: 'error' });
-            return;
-        }
-        if (detailFormData.nama_opd.trim().length < 3) {
-            setToast({ message: 'Nama OPD minimal 3 karakter', type: 'error' });
-            return;
-        }
-        if (detailFormData.nama_opd.trim().length > 100) {
-            setToast({ message: 'Nama OPD terlalu panjang (maks 100 karakter)', type: 'error' });
-            return;
-        }
-        if (!/^[a-zA-Z\s]+$/.test(detailFormData.nama_opd)) {
-            setToast({ message: 'Nama OPD tidak boleh mengandung angka atau karakter spesial', type: 'error' });
-            return;
-        }
-        if (detailFormData.alamat && detailFormData.alamat.trim().length > 0) {
-            if (detailFormData.alamat.trim().length < 5) {
-                setToast({ message: 'Alamat OPD minimal 5 karakter', type: 'error' });
-                return;
-            }
-            if (detailFormData.alamat.trim().length > 255) {
-                setToast({ message: 'Alamat OPD terlalu panjang (maks 255 karakter)', type: 'error' });
-                return;
-            }
-            if (/^\d+$/.test(detailFormData.alamat.trim())) {
-                setToast({ message: 'Alamat OPD tidak boleh hanya berisi angka', type: 'error' });
-                return;
-            }
-            if (!/^[a-zA-Z0-9\s.,\-\/]+$/.test(detailFormData.alamat.trim())) {
-                setToast({ message: 'Alamat OPD tidak boleh mengandung karakter spesial yang tidak valid', type: 'error' });
-                return;
-            }
-        }
-        if (detailFormData.pic && detailFormData.pic.trim().length > 0) {
-            if (detailFormData.pic.trim().length < 3) {
-                setToast({ message: 'Nama PIC minimal 3 karakter', type: 'error' });
-                return;
-            }
-            if (detailFormData.pic.trim().length > 100) {
-                setToast({ message: 'Nama PIC terlalu panjang (maks 100 karakter)', type: 'error' });
-                return;
-            }
-            if (!/^[a-zA-Z\s]+$/.test(detailFormData.pic)) {
-                setToast({ message: 'Nama PIC tidak boleh mengandung angka atau karakter spesial', type: 'error' });
-                return;
-            }
-        }
-        if (detailFormData.nik_pic && !/^\d{16}$/.test(detailFormData.nik_pic)) {
-            setToast({ message: 'NIK PIC harus terdiri dari tepat 16 digit angka', type: 'error' });
+        const validationError = validateOpdForm(detailFormData);
+        if (validationError) {
+            setToast({ message: validationError, type: 'error' });
             return;
         }
         updateOpd.mutate(
@@ -199,56 +196,9 @@ const ManajemenOPD: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.nama_opd.trim() || !formData.alamat.trim() || !formData.pic.trim() || !formData.nik_pic.trim() || !formData.kontak.trim()) {
-            setToast({ message: 'Semua field wajib diisi', type: 'error' });
-            return;
-        }
-        if (formData.nama_opd.trim().length < 3) {
-            setToast({ message: 'Nama OPD minimal 3 karakter', type: 'error' });
-            return;
-        }
-        if (formData.nama_opd.trim().length > 100) {
-            setToast({ message: 'Nama OPD terlalu panjang (maks 100 karakter)', type: 'error' });
-            return;
-        }
-        if (!/^[a-zA-Z\s]+$/.test(formData.nama_opd)) {
-            setToast({ message: 'Nama OPD tidak boleh mengandung angka atau karakter spesial', type: 'error' });
-            return;
-        }
-        if (formData.alamat && formData.alamat.trim().length > 0) {
-            if (formData.alamat.trim().length < 5) {
-                setToast({ message: 'Alamat OPD minimal 5 karakter', type: 'error' });
-                return;
-            }
-            if (formData.alamat.trim().length > 255) {
-                setToast({ message: 'Alamat OPD terlalu panjang (maks 255 karakter)', type: 'error' });
-                return;
-            }
-            if (/^\d+$/.test(formData.alamat.trim())) {
-                setToast({ message: 'Alamat OPD tidak boleh hanya berisi angka', type: 'error' });
-                return;
-            }
-            if (!/^[a-zA-Z0-9\s.,\-\/]+$/.test(formData.alamat.trim())) {
-                setToast({ message: 'Alamat OPD tidak boleh mengandung karakter spesial yang tidak valid', type: 'error' });
-                return;
-            }
-        }
-        if (formData.pic && formData.pic.trim().length > 0) {
-            if (formData.pic.trim().length < 3) {
-                setToast({ message: 'Nama PIC minimal 3 karakter', type: 'error' });
-                return;
-            }
-            if (formData.pic.trim().length > 100) {
-                setToast({ message: 'Nama PIC terlalu panjang (maks 100 karakter)', type: 'error' });
-                return;
-            }
-            if (!/^[a-zA-Z\s]+$/.test(formData.pic)) {
-                setToast({ message: 'Nama PIC tidak boleh mengandung angka atau karakter spesial', type: 'error' });
-                return;
-            }
-        }
-        if (formData.nik_pic && !/^\d{16}$/.test(formData.nik_pic)) {
-            setToast({ message: 'NIK PIC harus terdiri dari tepat 16 digit angka', type: 'error' });
+        const validationError = validateOpdForm(formData);
+        if (validationError) {
+            setToast({ message: validationError, type: 'error' });
             return;
         }
         createOpd.mutate(formData, {

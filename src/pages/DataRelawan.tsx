@@ -69,6 +69,20 @@ const DataRelawan: React.FC = () => {
         label: string;
     } | null>(null);
 
+    const createEmptyAssignment = (prefix: 'new' | 'time' = 'time'): Assignment => ({
+        id: prefix === 'new' ? `new-${Date.now()}` : Date.now().toString(),
+        opd: isOPD ? ((user as any)?.nama_opd || '') : '',
+        opd_id: isOPD ? ((user as any)?.opd_id || 0) : 0,
+        kader: '',
+        kader_id: null,
+        peran: '',
+        penugasan: '',
+        detail: '',
+        statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
+        nomorSK: '',
+        skId: ''
+    });
+
 
     const [detailFormData, setDetailFormData] = useState({
         namaRelawan: '',
@@ -122,19 +136,7 @@ const DataRelawan: React.FC = () => {
         penugasan: '',
         detail_penugasan: '',
         assignments: [
-            {
-                id: Date.now().toString(),
-                opd: '',
-                opd_id: 0,
-                kader: '',
-                kader_id: null as number | null,
-                peran: '',
-                penugasan: '',
-                detail: '',
-                statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
-                nomorSK: '',
-                skId: ''
-            }
+            createEmptyAssignment()
         ]
     });
 
@@ -428,9 +430,7 @@ const DataRelawan: React.FC = () => {
                 setFormData({
                     namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', no_hp: '',
                     kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
-                    assignments: [{ id: Date.now().toString(), opd: '', opd_id: 0, kader: '',
-                        kader_id: null, peran: '', penugasan: '', detail: '', statusKeaktifan: 'Aktif',
-                        nomorSK: '', skId: '' }]
+                    assignments: [createEmptyAssignment()]
                 });
                 invalidateRelawan();
             }
@@ -467,19 +467,7 @@ const DataRelawan: React.FC = () => {
             ...prev,
             assignments: [
                 ...prev.assignments,
-                {
-                    id: Date.now().toString(),
-                    opd: isOPD ? ((user as any)?.nama_opd || '') : '',
-                    opd_id: isOPD ? ((user as any)?.opd_id || 0) : 0,
-                    kader: '',
-                    kader_id: null,
-                    peran: '',
-                    penugasan: '',
-                    detail: '',
-                    statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
-                    nomorSK: '',
-                    skId: ''
-                }
+                createEmptyAssignment()
             ]
         }));
 
@@ -674,19 +662,7 @@ const DataRelawan: React.FC = () => {
             ...prev,
             assignments: [
                 ...prev.assignments,
-                {
-                    id: `new-${Date.now()}`,
-                    opd: isOPD ? ((user as any)?.nama_opd || '') : '',
-                    opd_id: isOPD ? ((user as any)?.opd_id || 0) : 0,
-                    kader: '',
-                    kader_id: null,
-                    peran: '',
-                    penugasan: '',
-                    detail: '',
-                    statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
-                    nomorSK: '',
-                    skId: ''
-                } as any
+                createEmptyAssignment('new') as any
             ]
         }));
         // Auto-fetch kader jika OPD
