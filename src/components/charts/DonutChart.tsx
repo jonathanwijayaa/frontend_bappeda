@@ -26,7 +26,7 @@ const DonutChart: React.FC<DonutChartProps> = ({
      * Laki-laki → Slate Blue/Indigo #4A4E69
      * Perempuan → Coral/Rose       #F28482
      */
-    const GENDER_COLORS = ['#F28482','#4A4E69'];
+    const GENDER_COLORS = ['#F28482','#3B82F6'];
 
     const COLORS = colors || GENDER_COLORS;
 
