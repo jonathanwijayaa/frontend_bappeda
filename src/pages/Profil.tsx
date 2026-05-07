@@ -92,7 +92,9 @@ const Profil: React.FC = () => {
             setToast({ message: 'Tidak ada data yang disimpan', type: 'error' });
             return;
         }
-        if (formData.no_hp.trim() && !/^[0-9+\-\s]{10,13}$/.test(formData.no_hp.trim())) {
+        const cleanedNoHp = formData.no_hp.trim().replace(/\D/g, '');
+
+        if (cleanedNoHp && !/^[0-9]{10,13}$/.test(cleanedNoHp)) {
             setToast({ message: 'Nomor HP tidak valid — harus 10–13 digit angka (contoh: 08123456789)', type: 'error' });
             return;
         }
@@ -100,7 +102,7 @@ const Profil: React.FC = () => {
         try {
             await updateProfil.mutateAsync({
                 nama_lengkap: formData.nama_lengkap.trim(),
-                no_hp:        formData.no_hp.trim() || null,
+                no_hp:        cleanedNoHp || null,
                 foto_profil:  avatarFile
             });
             setToast({ message: 'Informasi pribadi berhasil diperbarui!', type: 'success' });

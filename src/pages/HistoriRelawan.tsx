@@ -13,7 +13,7 @@ import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { HistoriRelawanData } from '../types/histori.types';
 import { AutoOption } from '../types/common.types';
-
+import { formatPhoneDisplay } from '../utils/formatPhone';
 
 // ── Helper: kelompokkan baris flat dari API menjadi per-relawan ─
 const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
@@ -396,7 +396,7 @@ const HistoriRelawan: React.FC = () => {
                                 {renderFieldRow('NIK', selectedRelawan.nik)}
                                 {renderFieldRow('Jenis Kelamin', selectedRelawan.jenisKelamin === 'L' ? 'Laki-laki (L)' : 'Perempuan (P)')}
                                 {renderFieldRow('Alamat KTP', selectedRelawan.alamat)}
-                                {renderFieldRow('No. HP', selectedRelawan.no_hp)}
+                                {renderFieldRow('No. HP', formatPhoneDisplay(selectedRelawan.no_hp))}
                                 {renderFieldRow('Kelurahan', selectedRelawan.kelurahan)}
                             </div>
                         </div>
