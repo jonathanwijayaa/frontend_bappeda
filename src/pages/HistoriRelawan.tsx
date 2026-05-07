@@ -13,7 +13,7 @@ import { apiFetch } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { HistoriRelawanData } from '../types/histori.types';
 import { AutoOption } from '../types/common.types';
-
+import { formatPhoneDisplay } from '../utils/formatPhone';
 
 // ── Helper: kelompokkan baris flat dari API menjadi per-relawan ─
 const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
@@ -46,7 +46,7 @@ const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
                 detail: row.detail_jabatan || '',
                 penugasan: row.penugasan || '',
                 statusKeaktifan: row.status_penugasan || 'Aktif',
-                nomorSK: row.nomor_sk_manual || '',
+                nomorSK: row.nomor_sk || '',
                 tahun: row.tahun || '',
                 tahunMulai: row.tanggal_terbit ? new Date(row.tanggal_terbit).getFullYear() : null,
                 tahunSelesai: row.batas_aktif ? new Date(row.batas_aktif).getFullYear() : null,
@@ -86,9 +86,10 @@ const HistoriRelawan: React.FC = () => {
 
     // ── Tahun range ───────────────────────────────────────────────
     const currentYear = new Date().getFullYear();
+    const maxYearAkhir = currentYear + 10; // batas_aktif SK bisa di masa depan
     const minYearGlobal = 2000;
-    // Jika tahun awal dipilih, tahun akhir minimal = tahun awal + 1
-    const minYearAkhir = filterTahunAwal ? Number(filterTahunAwal) + 1 : minYearGlobal;
+    // Jika tahun awal dipilih, tahun akhir minimal = tahun awal
+    const minYearAkhir = filterTahunAwal ? Number(filterTahunAwal) : minYearGlobal;
 
     // ── Fetch data relawan ────────────────────────────────────────
     const fetchRelawan = useCallback(async () => {
@@ -147,18 +148,21 @@ const HistoriRelawan: React.FC = () => {
                 a => a.kader.toLowerCase() === filterKader.toLowerCase()
             );
 
-            // Filter Tahun — berdasarkan field tahun di assignment (jika ada)
+            // Filter Tahun — berdasarkan field tahun di assignment (dari SK tanggal_terbit & batas_aktif)
             const matchTahun = (() => {
                 if (!filterTahunAwal && !filterTahunAkhir) return true;
+                // Relawan harus punya minimal 1 assignment dengan data SK yang cocok
                 return relawan.assignments.some(a => {
-                    if (!a.tahunMulai && !a.tahunSelesai) return true;
-                    
+                    // Assignment tanpa data SK → tidak cocok dengan filter tahun
+                    if (!a.tahunMulai && !a.tahunSelesai) return false;
+
                     const awal = filterTahunAwal ? Number(filterTahunAwal) : 0;
                     const akhir = filterTahunAkhir ? Number(filterTahunAkhir) : 9999;
-                    
+
                     const skAwal = a.tahunMulai || 0;
                     const skAkhir = a.tahunSelesai || 9999;
 
+                    // Overlap check: rentang SK [skAwal, skAkhir] harus beririsan dengan filter [awal, akhir]
                     return (skAkhir >= awal) && (skAwal <= akhir);
                 });
             })();
@@ -174,8 +178,8 @@ const HistoriRelawan: React.FC = () => {
     // ── Handle filter change ──────────────────────────────────────
     const handleYearAwalChange = (year: string) => {
         setFilterTahunAwal(year);
-        // Jika tahun akhir sudah dipilih dan <= tahun awal baru, reset
-        if (year && filterTahunAkhir && Number(filterTahunAkhir) <= Number(year)) {
+        // Jika tahun akhir sudah dipilih dan < tahun awal baru, reset
+        if (year && filterTahunAkhir && Number(filterTahunAkhir) < Number(year)) {
             setFilterTahunAkhir('');
         }
         setCurrentPage(1);
@@ -252,7 +256,7 @@ const HistoriRelawan: React.FC = () => {
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-1">
                         <History size={18} className="text-green-600" />
-                        <h3 className="font-semibold text-gray-800 text-sm">Filter Histori</h3>
+                        <h3 className="font-semibold text-gray-800 text-sm">Filter Riwayat</h3>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         {/* Filter OPD */}
@@ -305,7 +309,7 @@ const HistoriRelawan: React.FC = () => {
                                 onChange={handleYearAkhirChange}
                                 placeholder="Tahun Akhir"
                                 minYear={minYearAkhir}
-                                maxYear={currentYear}
+                                maxYear={maxYearAkhir}
                             />
                         </div>
                     </div>
@@ -336,21 +340,21 @@ const HistoriRelawan: React.FC = () => {
                 />
             </div>
 
-            {/* ── Tabel Histori ── */}
-            <Card title="Tabel Histori Data Relawan">
+            {/* ── Tabel Riwayat ── */}
+            <Card title="Tabel Riwayat Data Relawan">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-40">
                         <Loader2 size={28} className="animate-spin text-gray-400" />
-                        <span className="ml-3 text-gray-500">Memuat histori data relawan...</span>
+                        <span className="ml-3 text-gray-500">Memuat riwayat data relawan...</span>
                     </div>
                 ) : filteredData.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-12 text-center">
                         <History size={40} className="text-gray-300 mb-3" />
-                        <p className="text-gray-600 font-medium">Tidak ada data histori</p>
+                        <p className="text-gray-600 font-medium">Tidak ada data riwayat</p>
                         <p className="text-sm text-gray-400 mt-1">
                             {isActiveFilter
                                 ? 'Tidak ada relawan yang cocok dengan filter yang dipilih.'
-                                : 'Belum ada histori data relawan yang tercatat.'}
+                                : 'Belum ada riwayat data relawan yang tercatat.'}
                         </p>
                     </div>
                 ) : (
@@ -376,7 +380,7 @@ const HistoriRelawan: React.FC = () => {
             <Modal
                 isOpen={isDetailModalOpen}
                 onClose={() => { setIsDetailModalOpen(false); setSelectedRelawan(null); }}
-                title="Detail Histori Relawan"
+                title="Detail Riwayat Relawan"
                 subtitle="Informasi lengkap data relawan (hanya baca)"
                 maxWidth="2xl"
             >
@@ -392,7 +396,7 @@ const HistoriRelawan: React.FC = () => {
                                 {renderFieldRow('NIK', selectedRelawan.nik)}
                                 {renderFieldRow('Jenis Kelamin', selectedRelawan.jenisKelamin === 'L' ? 'Laki-laki (L)' : 'Perempuan (P)')}
                                 {renderFieldRow('Alamat KTP', selectedRelawan.alamat)}
-                                {renderFieldRow('No. HP', selectedRelawan.no_hp)}
+                                {renderFieldRow('No. HP', formatPhoneDisplay(selectedRelawan.no_hp))}
                                 {renderFieldRow('Kelurahan', selectedRelawan.kelurahan)}
                             </div>
                         </div>
@@ -413,11 +417,10 @@ const HistoriRelawan: React.FC = () => {
                                                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
                                                     Penugasan #{index + 1}
                                                 </span>
-                                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                                    assignment.statusKeaktifan === 'Aktif'
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-gray-200 text-gray-600'
-                                                }`}>
+                                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${assignment.statusKeaktifan === 'Aktif'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-gray-200 text-gray-600'
+                                                    }`}>
                                                     {assignment.statusKeaktifan}
                                                 </span>
                                             </div>

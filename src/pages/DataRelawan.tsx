@@ -21,6 +21,7 @@ import apiClient from '../lib/axios';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { formatPhoneDisplay } from '../utils/formatPhone';
 
 
 const DataRelawan: React.FC = () => {
@@ -401,7 +402,7 @@ const DataRelawan: React.FC = () => {
                 nik: formData.nik,
                 jenis_kelamin: formData.jenisKelamin,
                 alamat_ktp: formData.alamat,
-                no_hp: formData.no_hp,
+                no_hp: formData.no_hp.replace(/\D/g, ''),
                 kelurahan: formData.kelurahan,
                 assignments: formData.assignments.map(a => ({
                     opd_id: a.opd_id || null,
@@ -590,7 +591,7 @@ const DataRelawan: React.FC = () => {
             const { data } = await apiClient.put(endpoint, {
                 nama_lengkap: detailFormData.namaRelawan,
                 alamat_ktp: detailFormData.alamat,
-                no_hp: detailFormData.no_hp,
+                no_hp: detailFormData.no_hp.replace(/\D/g, ''),
                 kelurahan: detailFormData.kelurahan,
                 jenis_kelamin: detailFormData.jenisKelamin,
                 assignments: detailFormData.assignments.map(a => ({
@@ -1091,7 +1092,7 @@ const DataRelawan: React.FC = () => {
                                 <label className="text-lg font-medium text-gray-900">{field.label}</label>
                                 <input
                                     type="text"
-                                    value={(detailFormData as any)[field.name]}
+                                    value={!isEditMode && field.name === 'no_hp' ? formatPhoneDisplay((detailFormData as any)[field.name]) : (detailFormData as any)[field.name]}
                                     readOnly={!isEditMode || field.name === 'nik' || field.name === 'jabatan'}
                                     onChange={(e) => setDetailFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
                                     className={`col-span-2 px-4 py-2 border rounded-lg focus:outline-none

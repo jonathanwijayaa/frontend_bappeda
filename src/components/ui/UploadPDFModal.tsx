@@ -90,7 +90,8 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
             return;
         }
 
-        apiFetch(`/admin/relawan/kader?opd_id=${opdId}`)
+        // Gunakan endpoint /admin/sk/kader-list yang bisa diakses oleh super_admin DAN opd
+        apiFetch(`/admin/sk/kader-list?opd_id=${opdId}`)
             .then(r => r.json())
             .then(result => {
                 if (result.success) {
@@ -141,14 +142,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
         );
     };
 
-    const isFormValid = Boolean(
-        file &&
-        metadata.nomorSK.trim() !== '' &&
-        metadata.judulSK.trim() !== '' &&
-        metadata.tanggalTerbit.trim() !== '' &&
-        metadata.batasAktif.trim() !== '' &&
-        metadata.opd_id.trim() !== ''
-    );
+
 
     const handleSubmit = async () => {
         const missingFields = [];
@@ -169,22 +163,13 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
             return;
         }
         // === VALIDASI: Pemilihan Kader ===
-        if (!isOPD) { // Hanya berlaku untuk Super Admin
-            if (isSelectAllKader) {
-                // Mode "Semua Kader", kita kosongkan metadata.kader_id agar API mengerti
-                setMetadata(prev => ({ ...prev, kader_ids: [] }));
-            } else {
-                if (selectedKaderIds.length === 0) {
-                    alert('Harap pilih minimal 1 Kader atau centang "Semua Kader".');
-                    return;
-                }
-                // Kirim array ID kader
-                setMetadata(prev => ({ ...prev, kader_ids: selectedKaderIds }));
-            }
+        if (!isSelectAllKader && selectedKaderIds.length === 0) {
+            alert('Harap pilih minimal 1 Kader atau centang "Semua Kader".');
+            return;
         }
         setIsUploading(true);
         try {
-            await onConfirm(file, {
+            await onConfirm(file!, {
                 ...metadata,
                 kader_ids: isSelectAllKader ? 'ALL' : selectedKaderIds
             });

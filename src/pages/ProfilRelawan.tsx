@@ -6,6 +6,7 @@ import RelawanMenu from '../components/RelawanMenu';
 import Toast, { ToastType } from '../components/ui/Toast';
 import { apiFetch } from '../utils/api';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
+import { formatPhoneDisplay } from '../utils/formatPhone';
 import { Loader2 } from 'lucide-react';
 
 interface ProfilData {
@@ -65,7 +66,7 @@ const ProfilRelawan = () => {
             if (updateForm.namaLengkap.trim())  dataBaru.nama_lengkap  = updateForm.namaLengkap.trim();
             if (updateForm.alamat.trim())        dataBaru.alamat_ktp   = updateForm.alamat.trim();
             if (updateForm.kelurahan.trim())     dataBaru.kelurahan    = updateForm.kelurahan.trim();
-            if (updateForm.noHp.trim())          dataBaru.no_hp        = updateForm.noHp.trim();
+            if (updateForm.noHp.trim())          dataBaru.no_hp        = updateForm.noHp.trim().replace(/\D/g, '');
             if (updateForm.jenisKelamin.trim())  dataBaru.jenis_kelamin = updateForm.jenisKelamin.trim();
 
             if (Object.keys(dataBaru).length === 0) {
@@ -124,7 +125,7 @@ const ProfilRelawan = () => {
                                     { label: 'Jenis Kelamin', value: profil?.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan' },
                                     { label: 'Alamat KTP', value: profil?.alamat_ktp },
                                     { label: 'Kelurahan', value: profil?.kelurahan },
-                                    { label: 'No. HP', value: profil?.no_hp },
+                                    { label: 'No. HP', value: formatPhoneDisplay(profil?.no_hp) },
                                 ].map(item => (
                                     <div key={item.label}>
                                         <label className="block text-sm font-medium text-gray-500 mb-0.5">{item.label}</label>
@@ -142,7 +143,7 @@ const ProfilRelawan = () => {
                         {/* Info pengajuan */}
                         <div className="mt-5 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                             <p className="text-xs text-blue-700 leading-relaxed">
-                                <span className="font-semibold">️ Informasi:</span> Perubahan data hanya dapat dilakukan pada Informasi Pribadi dan memerlukan persetujuan dari Admin OPD atau Super Admin. Pengajuan yang dikirim akan berstatus <span className="font-semibold">Menunggu Review</span> hingga diproses.
+                                <span className="font-semibold">Informasi:</span> Perubahan data hanya dapat dilakukan pada Informasi Pribadi dan memerlukan persetujuan dari Admin OPD atau Super Admin. Pengajuan yang dikirim akan berstatus <span className="font-semibold">Menunggu Review</span> hingga diproses.
                             </p>
                         </div>
                     </div>
@@ -168,7 +169,7 @@ const ProfilRelawan = () => {
                                 {/* Peringatan */}
                                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                                     <p className="text-xs text-yellow-800 leading-relaxed">
-                                        <span className="font-semibold">️ Perhatian:</span> Pengajuan ini hanya untuk perubahan <span className="font-semibold">Informasi Pribadi</span>. Data tidak akan langsung berubah — perubahan akan berlaku setelah disetujui oleh Admin.
+                                        <span className="font-semibold">Perhatian:</span> Pengajuan ini hanya untuk perubahan <span className="font-semibold">Informasi Pribadi</span>. Data tidak akan langsung berubah — perubahan akan berlaku setelah disetujui oleh Admin.
                                     </p>
                                 </div>
 
@@ -198,16 +199,16 @@ const ProfilRelawan = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin Baru</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
                                     <select
-                                        value={updateForm.jenisKelamin}
-                                        onChange={(e) => setUpdateForm(p => ({ ...p, jenisKelamin: e.target.value }))}
-                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm bg-white"
+                                        value={updateForm.jenisKelamin || profil?.jenis_kelamin || ''}
+                                        disabled
+                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
                                     >
-                                        <option value="">-- Tidak diubah ({profil?.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan'}) --</option>
                                         <option value="L">Laki-laki</option>
                                         <option value="P">Perempuan</option>
                                     </select>
+                                    <p className="text-xs text-gray-400 mt-1">Jenis kelamin tidak dapat diubah melalui pengajuan.</p>
                                 </div>
 
                                 <div>

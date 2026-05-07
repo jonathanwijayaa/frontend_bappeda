@@ -16,6 +16,7 @@ import ProfilRelawan from './pages/ProfilRelawan';
 import Riwayat from './pages/Riwayat';
 import KomunitasSaya from './pages/KomunitasSaya';
 import HistoriRelawan from './pages/HistoriRelawan';
+import UbahPassword from './pages/UbahPassword';
 import Login from './pages/Login';
 import { ReactNode } from 'react';
 
@@ -172,6 +173,11 @@ function AppRoutes() {
             <Route path="/riwayat" element={
                 <ProtectedRoute>
                     <Riwayat />
+                </ProtectedRoute>
+            } />
+            <Route path="/ubah-password" element={
+                <ProtectedRoute>
+                    <UbahPassword />
                 </ProtectedRoute>
             } />
             <Route path="/profil" element={

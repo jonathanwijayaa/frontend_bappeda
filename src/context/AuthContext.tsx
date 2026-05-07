@@ -1,13 +1,14 @@
 //AuthContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { apiFetch } from '../utils/api';
+import queryClient from '../lib/queryClient';
 
 interface User {
     name: string;
     role: 'super_admin' | 'opd' | 'relawan';
     roleDisplay: string;
     avatar: string;
-    opd_id?: number; 
+    opd_id?: number;
     nama_opd?: string;
     no_hp?: string;
 }
@@ -79,6 +80,44 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.setItem('isAuthenticated', isAuthenticated.toString());
     }, [isAuthenticated]);
 
+    // Pengecekan Token Expiry secara berkala
+    useEffect(() => {
+        let interval: NodeJS.Timeout;
+
+        if (isAuthenticated) {
+            const checkTokenExpiry = () => {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    try {
+                        // Decode payload JWT
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        const expiry = payload.exp * 1000;
+
+                        // Jika waktu sekarang melebihi waktu kedaluwarsa token
+                        if (Date.now() >= expiry) {
+                            logout();
+                            window.location.href = '/login?expired=true';
+                        }
+                    } catch (error) {
+                        console.error('Invalid token format');
+                        logout();
+                        window.location.href = '/login?expired=true';
+                    }
+                }
+            };
+
+            // Cek setiap 1 menit (60000 ms)
+            interval = setInterval(checkTokenExpiry, 60000);
+
+            // Cek juga saat pertama kali effect jalan
+            checkTokenExpiry();
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [isAuthenticated]);
+
     // Login via Backend API
     const login = async (nik: string, password: string): Promise<{ success: boolean; message?: string; role?: string }> => {
         try {
@@ -122,6 +161,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         localStorage.removeItem('currentUser');
         localStorage.removeItem('token');
         localStorage.setItem('isAuthenticated', 'false');
+        // Bersihkan cache React Query agar data sesi sebelumnya tidak bocor
+        queryClient.clear();
     };
 
     const value: AuthContextType = {

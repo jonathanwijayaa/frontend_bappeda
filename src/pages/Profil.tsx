@@ -82,10 +82,27 @@ const Profil: React.FC = () => {
 
     const handleProfileSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        const hasProfileChanges = 
+            formData.nama_lengkap.trim() !== (profileData?.nama_lengkap || '') ||
+            (formData.no_hp.trim() || '') !== (profileData?.no_hp || '') ||
+            avatarFile !== undefined;
+
+        if (!hasProfileChanges) {
+            setToast({ message: 'Tidak ada data yang disimpan', type: 'error' });
+            return;
+        }
+        const cleanedNoHp = formData.no_hp.trim().replace(/\D/g, '');
+
+        if (cleanedNoHp && !/^[0-9]{10,13}$/.test(cleanedNoHp)) {
+            setToast({ message: 'Nomor HP tidak valid — harus 10–13 digit angka (contoh: 08123456789)', type: 'error' });
+            return;
+        }
+
         try {
             await updateProfil.mutateAsync({
                 nama_lengkap: formData.nama_lengkap.trim(),
-                no_hp:        formData.no_hp.trim() || null,
+                no_hp:        cleanedNoHp || null,
                 foto_profil:  avatarFile
             });
             setToast({ message: 'Informasi pribadi berhasil diperbarui!', type: 'success' });
@@ -97,16 +114,24 @@ const Profil: React.FC = () => {
     const handlePasswordSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!passwordData.passwordLama || !passwordData.passwordBaru || !passwordData.konfirmasiPassword) {
-            setToast({ message: 'Mohon lengkapi semua field password', type: 'error' });
+        if (!passwordData.passwordLama) {
+            setToast({ message: 'Password saat ini wajib diisi', type: 'error' });
             return;
         }
-        if (passwordData.passwordBaru !== passwordData.konfirmasiPassword) {
-            setToast({ message: 'Password baru dan konfirmasi password tidak cocok', type: 'error' });
+        if (!passwordData.passwordBaru) {
+            setToast({ message: 'Password baru wajib diisi', type: 'error' });
+            return;
+        }
+        if (!passwordData.konfirmasiPassword) {
+            setToast({ message: 'Konfirmasi password wajib diisi', type: 'error' });
             return;
         }
         if (passwordData.passwordBaru.length < 6) {
-            setToast({ message: 'Password baru minimal 6 karakter', type: 'error' });
+            setToast({ message: 'Password baru terlalu pendek — minimal 6 karakter', type: 'error' });
+            return;
+        }
+        if (passwordData.passwordBaru !== passwordData.konfirmasiPassword) {
+            setToast({ message: 'Konfirmasi password tidak cocok dengan password baru', type: 'error' });
             return;
         }
 

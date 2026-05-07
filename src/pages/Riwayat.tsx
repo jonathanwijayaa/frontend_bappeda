@@ -81,12 +81,12 @@ const Riwayat = () => {
             <RelawanMenu />
 
             <div className="px-4 py-5">
-                <h1 className="text-2xl font-bold text-gray-800 text-center mb-5">Riwayat Pengajuan</h1>
+                <h1 className="text-xl font-bold text-gray-800 text-center mb-5">Riwayat Pengajuan</h1>
 
                 {/* Info banner */}
                 <div className="mb-5 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                     <p className="text-xs text-blue-700 leading-relaxed">
-                        <span className="font-semibold">ℹ️</span> Pengajuan perubahan data memerlukan persetujuan Admin.
+                        <span className="font-semibold"></span> Pengajuan perubahan data memerlukan persetujuan Admin.
                         Status: <span className="font-semibold text-yellow-700">Menunggu Review</span> →{' '}
                         <span className="font-semibold text-green-700">Diterima</span> atau{' '}
                         <span className="font-semibold text-red-600">Ditolak</span>.

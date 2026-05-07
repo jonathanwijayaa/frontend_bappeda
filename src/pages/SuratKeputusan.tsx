@@ -211,7 +211,7 @@ const SuratKeputusan: React.FC = () => {
                 <div className="flex items-start gap-3">
                     <div className="text-blue-600 mt-0.5"><AlertCircle size={20} /></div>
                     <div className="text-sm text-blue-800 flex-1">
-                        <p className="font-semibold mb-2">📋 Panduan Upload Surat Keputusan:</p>
+                        <p className="font-semibold mb-2">Panduan Upload Surat Keputusan:</p>
                         <ol className="list-decimal list-inside space-y-1 text-blue-700">
                             <li>
                                 {isSuperAdmin

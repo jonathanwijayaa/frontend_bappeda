@@ -27,6 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             '/dokumen': 'Dokumen',
             '/saran-hotline': 'Saran/Hotline',
             '/edit-profil': 'Edit Profil',
+            '/histori-relawan': 'Riwayat Relawan',
         };
         return titles[location.pathname] || 'Dashboard';
     };
@@ -43,6 +44,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             '/dokumen': 'Akses guidebook dan template Excel untuk mengelola data',
             '/saran-hotline': 'Kirim saran, masukan, atau laporan ke administrator',
             '/edit-profil': 'Ubah informasi pribadi dan pengaturan akun',
+            '/histori-relawan': 'Lihat riwayat data dan penugasan seluruh relawan',
         };
         return captions[location.pathname] || '';
     };
