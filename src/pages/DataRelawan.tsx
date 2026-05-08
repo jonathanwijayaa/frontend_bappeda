@@ -69,6 +69,20 @@ const DataRelawan: React.FC = () => {
         label: string;
     } | null>(null);
 
+    const createEmptyAssignment = (prefix: 'new' | 'time' = 'time'): Assignment => ({
+        id: prefix === 'new' ? `new-${Date.now()}` : Date.now().toString(),
+        opd: isOPD ? ((user as any)?.nama_opd || '') : '',
+        opd_id: isOPD ? ((user as any)?.opd_id || 0) : 0,
+        kader: '',
+        kader_id: null,
+        peran: '',
+        penugasan: '',
+        detail: '',
+        statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
+        nomorSK: '',
+        skId: ''
+    });
+
 
     const [detailFormData, setDetailFormData] = useState({
         namaRelawan: '',
@@ -121,21 +135,7 @@ const DataRelawan: React.FC = () => {
         jabatan: '',
         penugasan: '',
         detail_penugasan: '',
-        assignments: [
-            {
-                id: Date.now().toString(),
-                opd: '',
-                opd_id: 0,
-                kader: '',
-                kader_id: null as number | null,
-                peran: '',
-                penugasan: '',
-                detail: '',
-                statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
-                nomorSK: '',
-                skId: ''
-            }
-        ]
+        assignments: [] as Assignment[]
     });
 
     const fetchKaderOptionsForOpd = useCallback(async (opdId: number) => {
@@ -380,12 +380,8 @@ const DataRelawan: React.FC = () => {
             return;
         }
 
-        //  Validasi minimal 1 assignment
-        if (formData.assignments.length === 0) {
-            setToast({ message: 'Minimal 1 penugasan wajib diisi', type: 'error' });
-            return;
-        }
-
+        //  Validasi minimal 1 assignment (Dihapus karena penugasan sekarang opsional saat tambah relawan)
+        
         //  Validasi OPD, Kader, Peran, Detail, Penugasan
         const hasInvalidAssignment = formData.assignments.some(
             (a) => !a.opd || !a.kader || !a.peran || !a.penugasan || !a.detail
@@ -428,9 +424,7 @@ const DataRelawan: React.FC = () => {
                 setFormData({
                     namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', no_hp: '',
                     kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
-                    assignments: [{ id: Date.now().toString(), opd: '', opd_id: 0, kader: '',
-                        kader_id: null, peran: '', penugasan: '', detail: '', statusKeaktifan: 'Aktif',
-                        nomorSK: '', skId: '' }]
+                    assignments: []
                 });
                 invalidateRelawan();
             }
@@ -467,19 +461,7 @@ const DataRelawan: React.FC = () => {
             ...prev,
             assignments: [
                 ...prev.assignments,
-                {
-                    id: Date.now().toString(),
-                    opd: isOPD ? ((user as any)?.nama_opd || '') : '',
-                    opd_id: isOPD ? ((user as any)?.opd_id || 0) : 0,
-                    kader: '',
-                    kader_id: null,
-                    peran: '',
-                    penugasan: '',
-                    detail: '',
-                    statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
-                    nomorSK: '',
-                    skId: ''
-                }
+                createEmptyAssignment()
             ]
         }));
 
@@ -674,19 +656,7 @@ const DataRelawan: React.FC = () => {
             ...prev,
             assignments: [
                 ...prev.assignments,
-                {
-                    id: `new-${Date.now()}`,
-                    opd: isOPD ? ((user as any)?.nama_opd || '') : '',
-                    opd_id: isOPD ? ((user as any)?.opd_id || 0) : 0,
-                    kader: '',
-                    kader_id: null,
-                    peran: '',
-                    penugasan: '',
-                    detail: '',
-                    statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
-                    nomorSK: '',
-                    skId: ''
-                } as any
+                createEmptyAssignment('new') as any
             ]
         }));
         // Auto-fetch kader jika OPD
@@ -722,7 +692,7 @@ const DataRelawan: React.FC = () => {
 
         return (
             <div key={assignment.id} className="relative bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4 space-y-4">
-                {!isReadOnly && formData.assignments.length > 1 && (
+                {!isReadOnly && !handlers && (
                     <div className="flex justify-end -mt-2 -mr-2 mb-2">
                         <button
                             type="button"
@@ -899,7 +869,17 @@ const DataRelawan: React.FC = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div className="flex gap-3">
-                    <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+                    <Button variant="primary" onClick={() => {
+                        setFormData({
+                            namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', no_hp: '',
+                            kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
+                            assignments: []
+                        });
+                        if (isOPD && (user as any)?.opd_id) {
+                            fetchKaderByOpdId((user as any).opd_id, 0);
+                        }
+                        setIsModalOpen(true);
+                    }}>
                         <Plus size={18} />
                         Tambah Relawan
                     </Button>
