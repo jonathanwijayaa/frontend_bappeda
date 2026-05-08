@@ -875,7 +875,17 @@ const DataRelawan: React.FC = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div className="flex gap-3">
-                    <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+                    <Button variant="primary" onClick={() => {
+                        setFormData({
+                            namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', no_hp: '',
+                            kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
+                            assignments: [createEmptyAssignment()]
+                        });
+                        if (isOPD && (user as any)?.opd_id) {
+                            fetchKaderByOpdId((user as any).opd_id, 0);
+                        }
+                        setIsModalOpen(true);
+                    }}>
                         <Plus size={18} />
                         Tambah Relawan
                     </Button>
