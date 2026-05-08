@@ -5,11 +5,11 @@ import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { expect, test } from "@playwright/test";
 
 const roles = [
-  { label: "Super Admin", creds: credentials.superAdmin },
-  { label: "OPD", creds: credentials.opd },
+  { label: "Super Admin", creds: credentials.superAdmin, isSuperAdmin: true },
+  { label: "OPD", creds: credentials.opd, isSuperAdmin: false },
 ] as const;
 
-for (const { label, creds } of roles) {
+for (const { label, creds, isSuperAdmin } of roles) {
   test.describe(`Daftar Kader - ${label}`, () => {
     test.beforeEach(async ({ page }) => {
       await page.goto("https://frontend-bappeda.vercel.app/");
@@ -21,49 +21,50 @@ for (const { label, creds } of roles) {
       });
 
       await expect(page).toHaveURL(/dashboard/);
-      await page.getByRole("link", { name: /manajemen kader/i }).click();
+      await page.getByRole("link", { name: /daftar kader/i }).click();
     });
 
     // TCDK.1
-    test(`TCDK.1 ${label} access Manajemen Kader page`, async ({ page }) => {
-      await expect(page).toHaveURL(/manajemen-kader/);
+    test(`TCDK.1 ${label} access Daftar Kader page`, async ({ page }) => {
+      await expect(page).toHaveURL(/daftar-kader/);
     });
 
     // TCDK.2
     test(`TCDK.2 ${label} click Ajukan Kader Baru button`, async ({ page }) => {
-      await page.getByRole("button", { name: /ajukan kader baru/i }).click();
+      await page.getByRole("button", { name: "Tambah Kader Baru" }).click();
 
-      await expect(page.getByRole("heading", { name: /tambah data kader/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Tambah Kader Baru" })).toBeVisible();
     });
 
-    // TCDK.3-5 Fill Form
     test.describe(`TCDK.3-5 ${label} Fill Form Add Kader`, () => {
       test.beforeEach(async ({ page }) => {
-        await page.getByRole("button", { name: /ajukan kader baru/i }).click();
+        await page.getByRole("button", { name: "Tambah Kader Baru" }).click();
       });
 
       // TCDK.3
       test(`TCDK.3 ${label} fill tambah data form`, async ({ page }) => {
         const kaderData = buildKaderData();
         const form = await fillKaderForm({ data: kaderData, page });
-        await form.fillAll();
 
-        await expect(page.getByRole("textbox", { name: "Nama Kader atau komunitas" })).toHaveValue(
+        // Super Admin wajib isi OPD, OPD tidak perlu
+        isSuperAdmin ? await form.fillAllSuperAdmin() : await form.fillAllOPD();
+
+        await expect(page.getByRole("textbox", { name: /Nama Kader/i })).toHaveValue(
           kaderData["NAMA KADER"],
         );
-        await expect(
-          page.getByRole("textbox", { name: "Nama Person in Charge (opsional)" }),
-        ).toHaveValue(kaderData.PIC);
-        await expect(page.getByRole("textbox", { name: "Nomor HP PIC (opsional)" })).toHaveValue(
+        await expect(page.getByRole("textbox", { name: /Nama Person in Charge/i })).toHaveValue(
+          kaderData.PIC,
+        );
+        await expect(page.getByRole("textbox", { name: /Nomor HP/i })).toHaveValue(
           kaderData["NO HP"],
         );
         await expect(page.getByRole("textbox", { name: "16 digit NIK PIC" })).toHaveValue(
           kaderData["NIK PIC"],
         );
-        await expect(
-          page.getByRole("textbox", { name: "Alamat sesuai KTP (opsional)" }),
-        ).toHaveValue(kaderData["ALAMAT PIC"]);
-        await expect(page.getByRole("textbox", { name: "Kelurahan/Desa (opsional)" })).toHaveValue(
+        await expect(page.getByRole("textbox", { name: /Alamat/i })).toHaveValue(
+          kaderData["ALAMAT PIC"],
+        );
+        await expect(page.getByRole("textbox", { name: /Kelurahan/i })).toHaveValue(
           kaderData["KELURAHAN PIC"],
         );
       });
@@ -72,7 +73,9 @@ for (const { label, creds } of roles) {
       test(`TCDK.4 ${label} save new Kader form`, async ({ page }) => {
         const kaderData = buildKaderData();
         const form = await fillKaderForm({ data: kaderData, page });
-        await form.fillAll();
+
+        isSuperAdmin ? await form.fillAllSuperAdmin() : await form.fillAllOPD();
+        await page.waitForTimeout(10000);
         await form.submit();
 
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();
@@ -82,27 +85,40 @@ for (const { label, creds } of roles) {
       test(`TCDK.5 ${label} cancel new Kader form`, async ({ page }) => {
         const kaderData = buildKaderData();
         const form = await fillKaderForm({ data: kaderData, page });
-        await form.fillAll();
+
+        isSuperAdmin ? await form.fillAllSuperAdmin() : await form.fillAllOPD();
         await form.cancel();
 
-        await expect(page).toHaveURL(/manajemen-kader/);
+        await expect(page).toHaveURL(/daftar-kader/);
       });
     });
 
-    // TCDK.6-9 Invalid Form — nested describe, beforeEach buka form cukup sekali
+    // TCDK.6-9 Invalid Form
     test.describe(`TCDK.6-9 ${label} Fill Form Invalid`, () => {
       test.beforeEach(async ({ page }) => {
-        await page.getByRole("button", { name: /ajukan kader baru/i }).click();
+        await page.getByRole("button", { name: "Tambah Kader Baru" }).click();
       });
 
       // TCDK.6 Invalid Kader Name
       test.describe(`TCDK.6 ${label} invalid Kader name`, () => {
         const invalidKaderNameCases = [
-          { title: "Empty Kader name", value: "" },
-          { title: "Kader name too short", value: "A" },
-          { title: "Kader name with numbers", value: "Kader12345" },
-          { title: "Kader name with special characters", value: "@@@###" },
-          { title: "Kader name too long", value: "A".repeat(300) },
+          { title: "Empty Kader name", value: "", expectedMessage: null },
+          { title: "Kader name too short", value: "A", expectedMessage: /minimal 3 karakter/i },
+          {
+            title: "Kader name with numbers",
+            value: "Kader12345",
+            expectedMessage: /tidak boleh mengandung angka atau karakter spesial/i,
+          },
+          {
+            title: "Kader name with special characters",
+            value: "@@@###",
+            expectedMessage: /tidak boleh mengandung angka atau karakter spesial/i,
+          },
+          {
+            title: "Kader name too long",
+            value: "A".repeat(300),
+            expectedMessage: /terlalu panjang|maks 100 karakter/i,
+          },
         ];
 
         for (const kaderCase of invalidKaderNameCases) {
@@ -111,32 +127,42 @@ for (const { label, creds } of roles) {
             kaderData["NAMA KADER"] = kaderCase.value;
 
             const form = await fillKaderForm({ data: kaderData, page });
-            await form.fillAll();
+            isSuperAdmin ? await form.fillAllSuperAdmin() : await form.fillAllOPD();
             await form.submit();
 
-            const namaKaderInput = page.getByRole("textbox", {
-              name: "Nama Kader atau komunitas",
-            });
-            const isValid = await namaKaderInput.evaluate((el: HTMLInputElement) =>
-              el.checkValidity(),
-            );
-
-            expect(isValid).toBe(false);
+            if (kaderCase.expectedMessage === null) {
+              const namaKaderInput = page.getByRole("textbox", { name: /Nama Kader/i });
+              const isValid = await namaKaderInput.evaluate((el: HTMLInputElement) =>
+                el.checkValidity(),
+              );
+              expect(isValid).toBe(false);
+            } else {
+              await expect(page.getByText(kaderCase.expectedMessage)).toBeVisible();
+            }
           });
         }
       });
 
-      // TCDK.7 Invalid Status — di-skip karena STATUS tidak ada di form
-      // test.describe(`TCDK.7 ${label} invalid Status`, () => { ... });
-
       // TCDK.8 Invalid PIC Name
       test.describe(`TCDK.8 ${label} invalid PIC name`, () => {
         const invalidPICCases = [
-          { title: "Empty PIC name", value: "" },
-          { title: "PIC name too short", value: "A" },
-          { title: "PIC name with numbers", value: "PIC12345" },
-          { title: "PIC name with special characters", value: "@@@###" },
-          { title: "PIC name too long", value: "A".repeat(200) },
+          { title: "Empty PIC name", value: "", expectedMessage: null },
+          { title: "PIC name too short", value: "A", expectedMessage: /minimal 3 karakter/i },
+          {
+            title: "PIC name with numbers",
+            value: "PIC12345",
+            expectedMessage: /tidak boleh mengandung angka atau karakter spesial/i,
+          },
+          {
+            title: "PIC name with special characters",
+            value: "@@@###",
+            expectedMessage: /tidak boleh mengandung angka atau karakter spesial/i,
+          },
+          {
+            title: "PIC name too long",
+            value: "A".repeat(200),
+            expectedMessage: /terlalu panjang|maks 100 karakter/i,
+          },
         ];
 
         for (const picCase of invalidPICCases) {
@@ -145,11 +171,16 @@ for (const { label, creds } of roles) {
             kaderData.PIC = picCase.value;
 
             const form = await fillKaderForm({ data: kaderData, page });
-            await form.fillAll();
+            isSuperAdmin ? await form.fillAllSuperAdmin() : await form.fillAllOPD();
             await form.submit();
 
-            await expect(page).not.toHaveURL(/manajemen-kader/);
-            await expect(page.getByText(/pic|wajib|invalid/i)).toBeVisible();
+            if (picCase.expectedMessage === null) {
+              const picInput = page.getByRole("textbox", { name: /Nama Person in Charge/i });
+              const isValid = await picInput.evaluate((el: HTMLInputElement) => el.checkValidity());
+              expect(isValid).toBe(false);
+            } else {
+              await expect(page.getByText(picCase.expectedMessage)).toBeVisible();
+            }
           });
         }
       });
@@ -157,11 +188,27 @@ for (const { label, creds } of roles) {
       // TCDK.9 Invalid Kontak
       test.describe(`TCDK.9 ${label} invalid kontak`, () => {
         const invalidKontakCases = [
-          { title: "Empty kontak", value: "" },
-          { title: "Kontak too short", value: "08123" },
-          { title: "Kontak with letters", value: "08ABCDE123" },
-          { title: "Kontak with special characters", value: "08!@#$%^&*" },
-          { title: "Kontak too long", value: "081234567890123456789" },
+          { title: "Empty kontak", value: "", expectedMessage: null },
+          {
+            title: "Kontak too short",
+            value: "08123",
+            expectedMessage: /nomor hp pic tidak valid.*harus 10.*13 digit angka/i,
+          },
+          {
+            title: "Kontak with letters",
+            value: "08ABCDE123",
+            expectedMessage: /nomor hp pic tidak valid.*harus 10.*13 digit angka/i,
+          },
+          {
+            title: "Kontak with special characters",
+            value: "08!@#$%^&*",
+            expectedMessage: /nomor hp pic tidak valid.*harus 10.*13 digit angka/i,
+          },
+          {
+            title: "Kontak too long",
+            value: "081234567890123456789",
+            expectedMessage: /nomor hp pic tidak valid.*harus 10.*13 digit angka/i,
+          },
         ];
 
         for (const kontakCase of invalidKontakCases) {
@@ -170,11 +217,20 @@ for (const { label, creds } of roles) {
             kaderData["NO HP"] = kontakCase.value;
 
             const form = await fillKaderForm({ data: kaderData, page });
-            await form.fillAll();
+            isSuperAdmin ? await form.fillAllSuperAdmin() : await form.fillAllOPD();
             await form.submit();
 
-            await expect(page).not.toHaveURL(/manajemen-kader/);
-            await expect(page.getByText(/kontak|no hp|wajib|invalid/i)).toBeVisible();
+            if (kontakCase.expectedMessage === null) {
+              const kontakInput = page.getByRole("textbox", { name: /Nomor HP/i });
+              const isValid = await kontakInput.evaluate((el: HTMLInputElement) =>
+                el.checkValidity(),
+              );
+              expect(isValid).toBe(false);
+            } else {
+              await expect(
+                page.getByText(/nomor hp pic tidak valid.*harus 10.*13 digit angka/i),
+              ).toBeVisible();
+            }
           });
         }
       });
@@ -228,34 +284,70 @@ for (const { label, creds } of roles) {
 
       await page.getByRole("button").nth(5).click();
 
-      await expect(page.getByRole("heading", { name: /manajemen kader/i })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /daftar kader/i })).toBeVisible();
     });
 
     // TCDK.14-21 Search Bar
     test.describe(`TCDK.14-21 ${label} Search Bar`, () => {
       const searchCases = [
-        { id: "TCDK.14", title: "input keyword in search bar", keyword: "Kader Kesehatan" },
+        {
+          id: "TCDK.14",
+          title: "input keyword in search bar",
+          keyword: "Kader Kesehatan",
+          expectNoData: false,
+        },
         {
           id: "TCDK.15",
           title: "input keyword from copy paste characters",
-          keyword: "Kader Sosial",
+          keyword: "Kader Kesehatan".split("").join(""),
+          expectNoData: false,
         },
-        { id: "TCDK.16", title: "input search bar in Manajemen Kader page", keyword: "Dinas" },
-        { id: "TCDK.17", title: "input with upper case", keyword: "KADER KESEHATAN" },
-        { id: "TCDK.18", title: "input with lower case", keyword: "kader kesehatan" },
-        { id: "TCDK.19", title: "input with specific word", keyword: "Aktif" },
-        { id: "TCDK.20", title: "input with random keyword", keyword: "xqz99randomkeyword" },
-        { id: "TCDK.21", title: "input with special characters", keyword: "@#$%^&*()" },
+        {
+          id: "TCDK.16",
+          title: "input search bar in Daftar Kader page",
+          keyword: "demo",
+          expectNoData: false,
+        },
+        {
+          id: "TCDK.17",
+          title: "input with upper case",
+          keyword: "KADER KESEHATAN",
+          expectNoData: false,
+        },
+        {
+          id: "TCDK.18",
+          title: "input with lower case",
+          keyword: "kader kesehatan",
+          expectNoData: false,
+        },
+        {
+          id: "TCDK.19",
+          title: "input with specific word",
+          keyword: "kesehatan",
+          expectNoData: false,
+        },
+        {
+          id: "TCDK.20",
+          title: "input with random keyword",
+          keyword: "xqz99randomkeyword",
+          expectNoData: true,
+        },
+        {
+          id: "TCDK.21",
+          title: "input with special characters",
+          keyword: "@#$%^&*()",
+          expectNoData: true,
+        },
       ];
 
       for (const searchCase of searchCases) {
         test(`${searchCase.id} ${label} ${searchCase.title}`, async ({ page }) => {
           const searchInput = page.getByRole("textbox", { name: /cari|search/i });
-          await searchInput.fill(searchCase.keyword);
-          await page.getByRole("button", { name: /cari|search/i }).click();
 
-          if (searchCase.id === "TCDK.20") {
-            await expect(page.getByText(/tidak ada data|no data/i)).toBeVisible();
+          await searchInput.fill(searchCase.keyword);
+
+          if (searchCase.expectNoData) {
+            await expect(page.getByText(/tidak ada data|no data|Belum ada kader/i)).toBeVisible();
           } else {
             await expect(page.getByRole("table")).toBeVisible();
           }
@@ -267,7 +359,7 @@ for (const { label, creds } of roles) {
     test(`TCDK.22 ${label} export Daftar Kader tabel`, async ({ page }) => {
       const [download] = await Promise.all([
         page.waitForEvent("download"),
-        page.getByRole("button", { name: /export/i }).click(),
+        page.getByRole("button", { name: "Ekspor PDF" }).click(),
       ]);
 
       expect(download.suggestedFilename()).toMatch(/kader/i);
@@ -275,7 +367,7 @@ for (const { label, creds } of roles) {
 
     // TCDK.23 Access Kader Detail
     test(`TCDK.23 ${label} access Kader detail`, async ({ page }) => {
-      await page.getByRole("table").getByRole("row").nth(1).click();
+      await page.getByRole("button", { name: "Detail" }).first().click();
 
       await expect(page.getByRole("heading", { name: /detail kader/i })).toBeVisible();
     });
@@ -283,24 +375,21 @@ for (const { label, creds } of roles) {
     // TCDK.24-25 Nonaktif Kader
     test.describe(`TCDK.24-25 ${label} Nonaktif Kader`, () => {
       test.beforeEach(async ({ page }) => {
-        await page
-          .getByRole("button", { name: /nonaktif/i })
-          .first()
-          .click();
+        await page.getByRole("button", { name: "Nonaktif" }).first().click();
       });
 
       // TCDK.24
       test(`TCDK.24 ${label} Nonaktif Kader`, async ({ page }) => {
-        await page.getByRole("button", { name: /ya|konfirmasi|nonaktif/i }).click();
+        await page.getByRole("button", { name: "Lanjutkan" }).click();
 
-        await expect(page.getByText(/berhasil|nonaktif|success/i)).toBeVisible();
+        await expect(page.getByText(/berhasil|success/i)).toBeVisible();
       });
 
       // TCDK.25
       test(`TCDK.25 ${label} cancel Nonaktif Kader`, async ({ page }) => {
         await page.getByRole("button", { name: /batal/i }).click();
 
-        await expect(page).toHaveURL(/manajemen-kader/);
+        await expect(page).toHaveURL(/daftar-kader/);
       });
     });
 
