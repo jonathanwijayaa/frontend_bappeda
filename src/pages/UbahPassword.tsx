@@ -1,10 +1,10 @@
 // UbahPassword.tsx
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import RelawanMenu from '../components/RelawanMenu';
 import Toast, { ToastType } from '../components/ui/Toast';
 import { apiFetch } from '../utils/api';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
-import { Eye, EyeOff, CheckCircle2, Circle, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2, XCircle, Circle, Loader2 } from 'lucide-react';
 
 interface ValidationRule {
     label: string;
@@ -30,10 +30,62 @@ const UbahPassword = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
+    // State untuk validasi password lama secara real-time
+    const [oldPasswordStatus, setOldPasswordStatus] = useState<'idle' | 'checking' | 'valid' | 'invalid'>('idle');
+    const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    // Fungsi untuk memverifikasi password lama ke backend
+    const verifyOldPassword = useCallback(async (password: string) => {
+        if (!password.trim()) {
+            setOldPasswordStatus('idle');
+            return;
+        }
+
+        setOldPasswordStatus('checking');
+        try {
+            const res = await apiFetch('/relawan/verify-password', {
+                method: 'POST',
+                body: JSON.stringify({ password }),
+            });
+            const result = await res.json();
+
+            if (result.success && result.match) {
+                setOldPasswordStatus('valid');
+            } else {
+                setOldPasswordStatus('invalid');
+            }
+        } catch {
+            setOldPasswordStatus('invalid');
+        }
+    }, []);
+
+    // Debounce verifikasi password lama (700ms setelah user berhenti mengetik)
+    useEffect(() => {
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+
+        if (!form.oldPassword.trim()) {
+            setOldPasswordStatus('idle');
+            return;
+        }
+
+        setOldPasswordStatus('checking');
+        debounceTimerRef.current = setTimeout(() => {
+            verifyOldPassword(form.oldPassword);
+        }, 700);
+
+        return () => {
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+            }
+        };
+    }, [form.oldPassword, verifyOldPassword]);
+
     const isNewPasswordValid = validationRules.every((r) => r.test(form.newPassword));
     const passwordsMatch = form.newPassword === form.confirmPassword && form.confirmPassword !== '';
     const canSubmit =
-        form.oldPassword.trim() !== '' &&
+        oldPasswordStatus === 'valid' &&
         isNewPasswordValid &&
         passwordsMatch &&
         !isSubmitting;
@@ -56,6 +108,7 @@ const UbahPassword = () => {
             if (result.success) {
                 setToast({ message: result.message || 'Kata sandi berhasil diubah!', type: 'success' });
                 setForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
+                setOldPasswordStatus('idle');
             } else {
                 setToast({ message: result.message || 'Gagal mengubah kata sandi', type: 'error' });
             }
@@ -63,6 +116,20 @@ const UbahPassword = () => {
             setToast({ message: parseErrorMessage(e, 'Tidak dapat terhubung ke server'), type: 'error' });
         } finally {
             setIsSubmitting(false);
+        }
+    };
+
+    // Helper untuk menentukan border color berdasarkan status validasi password lama
+    const getOldPasswordBorderClass = () => {
+        switch (oldPasswordStatus) {
+            case 'valid':
+                return 'border-green-400 ring-1 ring-green-300';
+            case 'invalid':
+                return 'border-red-400 ring-1 ring-red-300';
+            case 'checking':
+                return 'border-yellow-400 ring-1 ring-yellow-300';
+            default:
+                return 'border-gray-300';
         }
     };
 
@@ -79,11 +146,17 @@ const UbahPassword = () => {
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">
                             Kata Sandi Lama
-                            {form.oldPassword && (
+                            {oldPasswordStatus === 'checking' && (
+                                <Loader2 size={15} className="inline ml-2 text-yellow-500 animate-spin" />
+                            )}
+                            {oldPasswordStatus === 'valid' && (
                                 <CheckCircle2 size={15} className="inline ml-2 text-green-500" />
                             )}
+                            {oldPasswordStatus === 'invalid' && (
+                                <XCircle size={15} className="inline ml-2 text-red-500" />
+                            )}
                         </label>
-                        <div className={`flex items-center border rounded-xl px-3 transition-colors ${form.oldPassword ? 'border-green-400 ring-1 ring-green-300' : 'border-gray-300'} focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-400`}>
+                        <div className={`flex items-center border rounded-xl px-3 transition-colors ${getOldPasswordBorderClass()} focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-400`}>
                             <input
                                 id="old-password"
                                 type={showOld ? 'text' : 'password'}
@@ -102,6 +175,9 @@ const UbahPassword = () => {
                                 {showOld ? <Eye size={18} /> : <EyeOff size={18} />}
                             </button>
                         </div>
+                        {oldPasswordStatus === 'invalid' && (
+                            <p className="text-xs text-red-500 mt-1.5">Kata sandi lama tidak sesuai.</p>
+                        )}
                     </div>
 
                     {/* New Password */}
