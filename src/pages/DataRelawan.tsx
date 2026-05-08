@@ -1189,9 +1189,18 @@ const DataRelawan: React.FC = () => {
 
                         {/* Menampilkan Data Baru yang diajukan jika ada */}
                         {selectedPengajuan.data_baru && (() => {
-                            const dataBaru = typeof selectedPengajuan.data_baru === 'string'
-                                ? JSON.parse(selectedPengajuan.data_baru)
-                                : selectedPengajuan.data_baru;
+                            let dataBaru: any = {};
+                            try {
+                                dataBaru = typeof selectedPengajuan.data_baru === 'string'
+                                    ? JSON.parse(selectedPengajuan.data_baru)
+                                    : selectedPengajuan.data_baru;
+                            } catch (e) {
+                                return (
+                                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2 mt-4">
+                                        <p className="text-sm font-medium text-red-800">Data perubahan tidak valid atau rusak.</p>
+                                    </div>
+                                );
+                            }
 
                             if (Object.keys(dataBaru).length === 0) return null;
 
