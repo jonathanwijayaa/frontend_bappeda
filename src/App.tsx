@@ -18,6 +18,7 @@ import KomunitasSaya from './pages/KomunitasSaya';
 import HistoriRelawan from './pages/HistoriRelawan';
 import UbahPassword from './pages/UbahPassword';
 import Login from './pages/Login';
+import Unauthorized from './pages/Unauthorized';
 import { ReactNode } from 'react';
 
 // Protected Route Component (Langsung ke Page Login kalau belum login)
@@ -28,12 +29,16 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: ReactNode, allow
         return <Navigate to="/login" replace />;
     }
 
-    if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-        // Redirect based on role if they try to access unauthorized route
-        if (user.role === 'relawan') {
-            return <Navigate to="/profil-relawan" replace />;
+    if (allowedRoles) {
+        if (!user) {
+            return <Navigate to="/login" replace />;
         }
-        return <Navigate to="/dashboard" replace />;
+        
+        const userRole = user.role.toLowerCase();
+        if (!allowedRoles.map(r => r.toLowerCase()).includes(userRole)) {
+            // Redirect to unauthorized page if they try to access a route they don't have permission for
+            return <Navigate to="/unauthorized" replace />;
+        }
     }
 
     return <>{children}</>;
@@ -45,7 +50,7 @@ const PublicRoute = ({ children }: { children: ReactNode }) => {
 
     if (isAuthenticated) {
         // Redirect relawan to their profile page
-        if (user?.role === 'relawan') {
+        if (user?.role?.toLowerCase() === 'relawan') {
             return <Navigate to="/profil-relawan" replace />;
         }
         return <Navigate to="/dashboard" replace />;
@@ -58,7 +63,7 @@ const PublicRoute = ({ children }: { children: ReactNode }) => {
 const RelawanRedirect = () => {
     const { user } = useAuth();
 
-    if (user?.role === 'relawan') {
+    if (user?.role?.toLowerCase() === 'relawan') {
         return <Navigate to="/profil-relawan" replace />;
     }
 
@@ -73,7 +78,7 @@ const RelawanRedirect = () => {
 const SaranHotlineWrapper = () => {
     const { user } = useAuth();
 
-    if (user?.role === 'relawan') {
+    if (user?.role?.toLowerCase() === 'relawan') {
         return <SaranHotline />;
     }
 
@@ -98,6 +103,11 @@ function AppRoutes() {
             <Route path="/" element={
                 <ProtectedRoute>
                     <RelawanRedirect />
+                </ProtectedRoute>
+            } />
+            <Route path="/unauthorized" element={
+                <ProtectedRoute>
+                    <Unauthorized />
                 </ProtectedRoute>
             } />
             <Route path="/dashboard" element={
