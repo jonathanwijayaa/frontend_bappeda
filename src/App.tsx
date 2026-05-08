@@ -18,14 +18,27 @@ import KomunitasSaya from './pages/KomunitasSaya';
 import HistoriRelawan from './pages/HistoriRelawan';
 import UbahPassword from './pages/UbahPassword';
 import Login from './pages/Login';
+import Unauthorized from './pages/Unauthorized';
 import { ReactNode } from 'react';
 
 // Protected Route Component (Langsung ke Page Login kalau belum login)
-const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-    const { isAuthenticated } = useAuth();
+const ProtectedRoute = ({ children, allowedRoles }: { children: ReactNode, allowedRoles?: string[] }) => {
+    const { isAuthenticated, user } = useAuth();
 
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
+    }
+
+    if (allowedRoles) {
+        if (!user) {
+            return <Navigate to="/login" replace />;
+        }
+        
+        const userRole = user.role.toLowerCase();
+        if (!allowedRoles.map(r => r.toLowerCase()).includes(userRole)) {
+            // Redirect to unauthorized page if they try to access a route they don't have permission for
+            return <Navigate to="/unauthorized" replace />;
+        }
     }
 
     return <>{children}</>;
@@ -37,7 +50,7 @@ const PublicRoute = ({ children }: { children: ReactNode }) => {
 
     if (isAuthenticated) {
         // Redirect relawan to their profile page
-        if (user?.role === 'relawan') {
+        if (user?.role?.toLowerCase() === 'relawan') {
             return <Navigate to="/profil-relawan" replace />;
         }
         return <Navigate to="/dashboard" replace />;
@@ -50,7 +63,7 @@ const PublicRoute = ({ children }: { children: ReactNode }) => {
 const RelawanRedirect = () => {
     const { user } = useAuth();
 
-    if (user?.role === 'relawan') {
+    if (user?.role?.toLowerCase() === 'relawan') {
         return <Navigate to="/profil-relawan" replace />;
     }
 
@@ -65,7 +78,7 @@ const RelawanRedirect = () => {
 const SaranHotlineWrapper = () => {
     const { user } = useAuth();
 
-    if (user?.role === 'relawan') {
+    if (user?.role?.toLowerCase() === 'relawan') {
         return <SaranHotline />;
     }
 
@@ -92,64 +105,69 @@ function AppRoutes() {
                     <RelawanRedirect />
                 </ProtectedRoute>
             } />
-            <Route path="/dashboard" element={
+            <Route path="/unauthorized" element={
                 <ProtectedRoute>
+                    <Unauthorized />
+                </ProtectedRoute>
+            } />
+            <Route path="/dashboard" element={
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <Dashboard />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/manajemen-opd" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin']}>
                     <Layout>
                         <ManajemenOPD />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/daftar-kader" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <DaftarKader />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/data-relawan" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <DataRelawan />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/surat-keputusan" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <SuratKeputusan />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/log-aktifitas" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin']}>
                     <Layout>
                         <LogAktifitas />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/statistik" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <Statistik />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/dokumen" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <Dokumen />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/histori-relawan" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <HistoriRelawan />
                     </Layout>
@@ -161,27 +179,27 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
             <Route path="/komunitas-saya" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['relawan']}>
                     <KomunitasSaya />
                 </ProtectedRoute>
             } />
             <Route path="/profil-relawan" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['relawan']}>
                     <ProfilRelawan />
                 </ProtectedRoute>
             } />
             <Route path="/riwayat" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['relawan']}>
                     <Riwayat />
                 </ProtectedRoute>
             } />
             <Route path="/ubah-password" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['relawan']}>
                     <UbahPassword />
                 </ProtectedRoute>
             } />
             <Route path="/profil" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <Profil />
                     </Layout>
