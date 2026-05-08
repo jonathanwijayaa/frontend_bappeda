@@ -7,9 +7,8 @@ import Table from '../components/ui/Table';
 import Modal from '../components/ui/Modal';
 import Select from '../components/ui/Select';
 import YearPicker from '../components/ui/YearPicker';
-import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
-import { apiFetch } from '../utils/api';
+import apiClient from '../lib/axios';
 import { useAuth } from '../context/AuthContext';
 import { HistoriRelawanData } from '../types/histori.types';
 import { AutoOption } from '../types/common.types';
@@ -95,8 +94,7 @@ const HistoriRelawan: React.FC = () => {
     const fetchRelawan = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await apiFetch(API_BASE);
-            const result = await res.json();
+            const { data: result } = await apiClient.get(API_BASE);
             if (result.success) {
                 setRelawanList(groupRelawanData(result.data));
             } else {
@@ -114,7 +112,7 @@ const HistoriRelawan: React.FC = () => {
         fetchRelawan();
 
         // Fetch OPD options
-        apiFetch('/opd').then(r => r.json()).then(result => {
+        apiClient.get('/opd').then(r => r.data).then(result => {
             if (result.success) {
                 setOpdOptions(result.data.map((o: any) => ({ label: o.nama_opd, value: o.nama_opd })));
             }
@@ -122,7 +120,7 @@ const HistoriRelawan: React.FC = () => {
 
         // Fetch Kader options — endpoint berbeda untuk OPD user vs Super Admin
         const kaderEndpoint = isOPD ? '/opd-admin/kader' : '/kader';
-        apiFetch(kaderEndpoint).then(r => r.json()).then(result => {
+        apiClient.get(kaderEndpoint).then(r => r.data).then(result => {
             if (result.success) {
                 setKaderOptions(result.data.map((k: any) => ({ label: k.nama_kader, value: k.nama_kader })));
             }

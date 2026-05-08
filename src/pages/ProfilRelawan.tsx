@@ -4,7 +4,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import RelawanMenu from '../components/RelawanMenu';
 import Toast, { ToastType } from '../components/ui/Toast';
-import { apiFetch } from '../utils/api';
+import apiClient from '../lib/axios';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { formatPhoneDisplay } from '../utils/formatPhone';
 import { Loader2 } from 'lucide-react';
@@ -38,8 +38,7 @@ const ProfilRelawan = () => {
     const fetchProfil = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await apiFetch('/relawan/profile');
-            const result = await res.json();
+            const { data: result } = await apiClient.get('/relawan/profile');
             if (result.success) {
                 setProfil(result.data);
             } else {
@@ -75,11 +74,10 @@ const ProfilRelawan = () => {
                 return;
             }
 
-            const res = await apiFetch('/relawan/profile/update', {
-                method: 'POST',
-                body: JSON.stringify({ data_baru: dataBaru, catatan: updateForm.catatan })
+            const { data: result } = await apiClient.post('/relawan/profile/update', { 
+                data_baru: dataBaru, 
+                catatan: updateForm.catatan 
             });
-            const result = await res.json();
 
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });

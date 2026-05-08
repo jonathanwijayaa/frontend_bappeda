@@ -3,7 +3,7 @@ import Modal from './Modal';
 import Button from './Button';
 import { Upload, X, FileText } from 'lucide-react';
 import AutocompleteInput from './AutocompleteInput';
-import { apiFetch } from '../../utils/api';
+import apiClient from '../../lib/axios';
 
 interface UploadPDFModalProps {
     isOpen: boolean;
@@ -67,8 +67,8 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
 
             // Ambil daftar OPD dari API HANYA jika yang login adalah Super Admin
             if (!isOPD) {
-                apiFetch('/opd')
-                    .then(r => r.json())
+                apiClient.get('/opd')
+                    .then(r => r.data)
                     .then(result => {
                         if (result.success) {
                             setOpdOptions(result.data.map((o: any) => ({
@@ -91,8 +91,8 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
         }
 
         // Gunakan endpoint /admin/sk/kader-list yang bisa diakses oleh super_admin DAN opd
-        apiFetch(`/admin/sk/kader-list?opd_id=${opdId}`)
-            .then(r => r.json())
+        apiClient.get(`/admin/sk/kader-list?opd_id=${opdId}`)
+            .then(r => r.data)
             .then(result => {
                 if (result.success) {
                     setKaderOptions(result.data);

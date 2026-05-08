@@ -1,6 +1,6 @@
 //AuthContext.tsx
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { apiFetch } from '../utils/api';
+import apiClient from '../lib/axios';
 import queryClient from '../lib/queryClient';
 
 interface User {
@@ -121,14 +121,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Login via Backend API
     const login = async (nik: string, password: string): Promise<{ success: boolean; message?: string; role?: string }> => {
         try {
-            const response = await apiFetch('/auth/login', {
-                method: 'POST',
-                body: JSON.stringify({ nik, password }),
-            });
+            const { data } = await apiClient.post('/auth/login', { nik, password });
 
-            const data = await response.json();
-
-            if (response.ok && data.token) {
+            if (data.token) {
                 // Simpan JWT token
                 localStorage.setItem('token', data.token);
 
@@ -146,12 +141,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 setUser(loggedInUser);
                 setIsAuthenticated(true);
                 return { success: true, role: loggedInUser.role };
-            } else {
                 return { success: false, message: data.message || 'Login gagal' };
             }
-        } catch (err) {
+        } catch (err: any) {
             console.error('Login error:', err);
-            return { success: false, message: 'Tidak dapat terhubung ke server. Pastikan backend berjalan.' };
+            const errorMessage = err.response?.data?.message || 'Tidak dapat terhubung ke server. Pastikan backend berjalan.';
+            return { success: false, message: errorMessage };
         }
     };
 
