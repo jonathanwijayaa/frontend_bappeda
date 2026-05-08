@@ -21,11 +21,19 @@ import Login from './pages/Login';
 import { ReactNode } from 'react';
 
 // Protected Route Component (Langsung ke Page Login kalau belum login)
-const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-    const { isAuthenticated } = useAuth();
+const ProtectedRoute = ({ children, allowedRoles }: { children: ReactNode, allowedRoles?: string[] }) => {
+    const { isAuthenticated, user } = useAuth();
 
     if (!isAuthenticated) {
         return <Navigate to="/login" replace />;
+    }
+
+    if (allowedRoles && user && !allowedRoles.includes(user.role)) {
+        // Redirect based on role if they try to access unauthorized route
+        if (user.role === 'relawan') {
+            return <Navigate to="/profil-relawan" replace />;
+        }
+        return <Navigate to="/dashboard" replace />;
     }
 
     return <>{children}</>;
@@ -93,63 +101,63 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
             <Route path="/dashboard" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <Dashboard />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/manajemen-opd" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin']}>
                     <Layout>
                         <ManajemenOPD />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/daftar-kader" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <DaftarKader />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/data-relawan" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <DataRelawan />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/surat-keputusan" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <SuratKeputusan />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/log-aktifitas" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin']}>
                     <Layout>
                         <LogAktifitas />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/statistik" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <Statistik />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/dokumen" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <Dokumen />
                     </Layout>
                 </ProtectedRoute>
             } />
             <Route path="/histori-relawan" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <HistoriRelawan />
                     </Layout>
@@ -161,27 +169,27 @@ function AppRoutes() {
                 </ProtectedRoute>
             } />
             <Route path="/komunitas-saya" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['relawan']}>
                     <KomunitasSaya />
                 </ProtectedRoute>
             } />
             <Route path="/profil-relawan" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['relawan']}>
                     <ProfilRelawan />
                 </ProtectedRoute>
             } />
             <Route path="/riwayat" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['relawan']}>
                     <Riwayat />
                 </ProtectedRoute>
             } />
             <Route path="/ubah-password" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['relawan']}>
                     <UbahPassword />
                 </ProtectedRoute>
             } />
             <Route path="/profil" element={
-                <ProtectedRoute>
+                <ProtectedRoute allowedRoles={['super_admin', 'opd']}>
                     <Layout>
                         <Profil />
                     </Layout>
