@@ -5,46 +5,61 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../lib/axios';
 import { SK_KEYS } from './useSkList';
+import { useAuth } from '../../context/AuthContext';
 
 // ── Upload SK baru (PDF + metadata) ──────────────────────────
 export const useCreateSk = () => {
     const qc = useQueryClient();
+    const { user } = useAuth();
+    const role = user?.role || 'super_admin';
+    const endpoint = role === 'opd' ? '/opd-admin/sk' : '/admin/sk';
+
     return useMutation({
         mutationFn: (formData: FormData) =>
             apiClient
-                .post('/admin/sk', formData, {
+                .post(endpoint, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' },
                 })
                 .then(r => {
                     if (!r.data.success) throw new Error(r.data.message);
                     return r.data;
                 }),
-        onSuccess: () => qc.invalidateQueries({ queryKey: SK_KEYS.list() }),
+        onSuccess: () => qc.invalidateQueries({ queryKey: SK_KEYS.list(role) }),
     });
 };
 
 // ── Hapus SK ──────────────────────────────────────────────────
 export const useDeleteSk = () => {
     const qc = useQueryClient();
+    const { user } = useAuth();
+    const role = user?.role || 'super_admin';
+
     return useMutation({
-        mutationFn: (sk_id: number) =>
-            apiClient.delete(`/admin/sk/${sk_id}`).then(r => {
+        mutationFn: (sk_id: number) => {
+            const endpoint = role === 'opd' ? `/opd-admin/sk/${sk_id}` : `/admin/sk/${sk_id}`;
+            return apiClient.delete(endpoint).then(r => {
                 if (!r.data.success) throw new Error(r.data.message);
                 return r.data;
-            }),
-        onSuccess: () => qc.invalidateQueries({ queryKey: SK_KEYS.list() }),
+            });
+        },
+        onSuccess: () => qc.invalidateQueries({ queryKey: SK_KEYS.list(role) }),
     });
 };
 
 // ── Toggle status aktif/nonaktif SK ───────────────────────────
 export const useToggleSkStatus = () => {
     const qc = useQueryClient();
+    const { user } = useAuth();
+    const role = user?.role || 'super_admin';
+
     return useMutation({
-        mutationFn: ({ sk_id, status }: { sk_id: number; status: 'Aktif' | 'Tidak Aktif' }) =>
-            apiClient.patch(`/admin/sk/${sk_id}/status`, { status }).then(r => {
+        mutationFn: ({ sk_id, status }: { sk_id: number; status: 'Aktif' | 'Tidak Aktif' }) => {
+            const endpoint = role === 'opd' ? `/opd-admin/sk/${sk_id}/status` : `/admin/sk/${sk_id}/status`;
+            return apiClient.patch(endpoint, { status }).then(r => {
                 if (!r.data.success) throw new Error(r.data.message);
                 return r.data;
-            }),
-        onSuccess: () => qc.invalidateQueries({ queryKey: SK_KEYS.list() }),
+            });
+        },
+        onSuccess: () => qc.invalidateQueries({ queryKey: SK_KEYS.list(role) }),
     });
 };
