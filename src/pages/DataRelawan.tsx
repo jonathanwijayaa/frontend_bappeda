@@ -135,9 +135,7 @@ const DataRelawan: React.FC = () => {
         jabatan: '',
         penugasan: '',
         detail_penugasan: '',
-        assignments: [
-            createEmptyAssignment()
-        ]
+        assignments: [] as Assignment[]
     });
 
     const fetchKaderOptionsForOpd = useCallback(async (opdId: number) => {
@@ -382,12 +380,8 @@ const DataRelawan: React.FC = () => {
             return;
         }
 
-        //  Validasi minimal 1 assignment
-        if (formData.assignments.length === 0) {
-            setToast({ message: 'Minimal 1 penugasan wajib diisi', type: 'error' });
-            return;
-        }
-
+        //  Validasi minimal 1 assignment (Dihapus karena penugasan sekarang opsional saat tambah relawan)
+        
         //  Validasi OPD, Kader, Peran, Detail, Penugasan
         const hasInvalidAssignment = formData.assignments.some(
             (a) => !a.opd || !a.kader || !a.peran || !a.penugasan || !a.detail
@@ -430,7 +424,7 @@ const DataRelawan: React.FC = () => {
                 setFormData({
                     namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', no_hp: '',
                     kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
-                    assignments: [createEmptyAssignment()]
+                    assignments: []
                 });
                 invalidateRelawan();
             }
@@ -698,7 +692,7 @@ const DataRelawan: React.FC = () => {
 
         return (
             <div key={assignment.id} className="relative bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4 space-y-4">
-                {!isReadOnly && formData.assignments.length > 1 && (
+                {!isReadOnly && !handlers && (
                     <div className="flex justify-end -mt-2 -mr-2 mb-2">
                         <button
                             type="button"
@@ -879,7 +873,7 @@ const DataRelawan: React.FC = () => {
                         setFormData({
                             namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', no_hp: '',
                             kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
-                            assignments: [createEmptyAssignment()]
+                            assignments: []
                         });
                         if (isOPD && (user as any)?.opd_id) {
                             fetchKaderByOpdId((user as any).opd_id, 0);
