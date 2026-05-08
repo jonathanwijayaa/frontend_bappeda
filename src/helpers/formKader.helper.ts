@@ -1,11 +1,14 @@
 import { faker } from "@faker-js/faker";
 import { Page } from "@playwright/test";
 
-const OPD_LIST = 
-["Dinas Kesehatan", 
-  "Dinas Pendidikan", 
-  "Dinas Perhubungan", 
-  "Dinas Sosial"];
+const OPD_LIST = [
+  "Dinas Kesehatan (Dinkes)",
+  // "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
+  "Dinas Perhubungan",
+  // "Dinas Pariwisata",
+  // "Dinas Pemberdayaan Perempuan, Perlindungan Anak,Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)",
+  "Satuan Polisi Pamong Praja (PP)",
+];
 
 export interface KaderData {
   OPD: string;
@@ -46,16 +49,25 @@ export const fillKaderForm = async ({ data, page }: IFillKaderForm) => ({
   async fillAlamatPIC() {
     await page.getByRole("textbox", { name: /Alamat/i }).fill(data["ALAMAT PIC"]);
   },
-  async fillAll() {
-    await this.fillOPD();
-    await this.fillNamaKader();
-    await this.fillDeskripsi();
-    await this.fillPIC();
-    await this.fillNIKPIC();
-    await this.fillNoHP();
-    await this.fillAlamatPIC();
-    await this.fillKelurahanPIC();
-  },
+  async fillAllOPD() {
+  await this.fillNamaKader();
+  await this.fillDeskripsi();
+  await this.fillPIC();
+  await this.fillNIKPIC();
+  await this.fillNoHP();
+  await this.fillAlamatPIC();
+  await this.fillKelurahanPIC();
+},
+async fillAllSuperAdmin() {
+  await this.fillOPD();
+  await this.fillNamaKader();
+  await this.fillDeskripsi();
+  await this.fillPIC();
+  await this.fillNIKPIC();
+  await this.fillNoHP();
+  await this.fillAlamatPIC();
+  await this.fillKelurahanPIC();
+},
   async fillDeskripsi() {
     await page.getByRole("textbox", { name: /Deskripsi/i }).fill(data.DESKRIPSI);
   },
@@ -75,8 +87,7 @@ export const fillKaderForm = async ({ data, page }: IFillKaderForm) => ({
     await page.getByRole("textbox", { name: /16 digit NIK PIC/i }).fill(data["NIK PIC"]);
   },
   async fillOPD() {
-    await page.getByRole("textbox", { name: /Ketik nama OPD/i }).fill(data.OPD); // .selectOption ();
-    // await page.getByRole("textbox", { name: /Ketik nama OPD/i }).selectOption(data.OPD);
+    await page.getByRole("textbox", { name: /Ketik nama OPD/i }).fill(data.OPD);
   },
   async submit() {
     await page.getByRole("button", { name: "Simpan" }).click();
