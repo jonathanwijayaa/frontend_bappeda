@@ -1,12 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { Page } from "@playwright/test";
 
-const OPD_LIST = [
-  "Dinas Kesehatan",
-  "Dinas Pendidikan",
-  "Dinas Perhubungan",
-  "Dinas Sosial",
-];
+const OPD_LIST = ["Dinas Kesehatan", "Dinas Pendidikan", "Dinas Perhubungan", "Dinas Sosial"];
 
 const KADER_MAP: Record<string, string[]> = {
   "Dinas Kesehatan": ["Kader Kesehatan A", "Kader Kesehatan A1"],
@@ -42,20 +37,28 @@ export const buildRelawanData = (): RelawanData => {
   return {
     "NAMA LENGKAP": faker.person.fullName(),
     "JENIS KELAMIN": faker.person.sex() === "male" ? "L" : "P",
-    NIK: faker.number
-      .bigInt({ min: 3201000000000000n, max: 3201999999999999n })
-      .toString(),
+    NIK: faker.number.bigInt({ min: 3201000000000000n, max: 3201999999999999n }).toString(),
     ALAMAT: faker.location.streetAddress() + ", Yogyakarta",
     "NO HP": `08${faker.string.numeric(10)}`,
     OPD: opd,
     KELURAHAN: faker.location.city(),
     KADER: kader,
     JABATAN: faker.helpers.arrayElement([
-      "Ketua", "Wakil", "Sekretaris", "Bendahara", "Seksi", "Anggota", "Lainnya",
+      "Ketua",
+      "Wakil",
+      "Sekretaris",
+      "Bendahara",
+      "Seksi",
+      "Anggota",
+      "Lainnya",
     ]),
     "DETAIL JABATAN": faker.helpers.arrayElement(["RT", "RW", "II"]),
     PENUGASAN: faker.helpers.arrayElement([
-      "RT", "RW", "Kelurahan", "Membantu Ketua I", "Membantu Wakil I",
+      "RT",
+      "RW",
+      "Kelurahan",
+      "Membantu Ketua I",
+      "Membantu Wakil I",
     ]),
     "STATUS KEAKTIFAN": faker.helpers.arrayElement(["Aktif", "NonAktif"]),
   };
@@ -71,6 +74,7 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
     await this.fillNIK();
     await this.fillAlamat();
     await this.fillNoHP();
+    await this.clickTambahDataPenugasan();
     await this.fillOPD();
     await this.fillKelurahan();
     await this.fillKader();
@@ -85,45 +89,34 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
       .fill(data["DETAIL JABATAN"]);
   },
   async fillJabatan() {
-    await page
-      .getByRole("combobox", { name: "Jabatan" })
-      .selectOption(data.JABATAN);
+    await page.getByRole("combobox", { name: "Jabatan" }).selectOption(data.JABATAN);
   },
   async fillJenisKelamin() {
-    await page
-      .getByRole("combobox", { name: "Jenis kelamin" })
-      .selectOption(data["JENIS KELAMIN"]);
+    await page.getByRole("combobox").selectOption(data["JENIS KELAMIN"]);
   },
   async fillKelurahan() {
-    await page
-      .getByRole("textbox", { name: "Kelurahan" })
-      .fill(data.KELURAHAN);
+    await page.getByRole("textbox", { name: "Kelurahan" }).fill(data.KELURAHAN);
   },
   async fillKader() {
-    await page
-      .getByRole("combobox", { name: "Kader" })
-      .selectOption(data.KADER);
+    await page.getByRole("combobox", { name: "Kader" }).selectOption(data.KADER);
   },
   async fillNamaLengkap() {
-    await page
-      .getByRole("textbox", { name: "Nama lengkap" })
-      .fill(data["NAMA LENGKAP"]);
+    await page.getByRole("textbox", { name: "Nama lengkap" }).fill(data["NAMA LENGKAP"]);
   },
   async fillNIK() {
     await page.getByRole("textbox", { name: "NIK" }).fill(data.NIK);
   },
   async fillNoHP() {
-    await page
-      .getByRole("textbox", { name: "Nomor telepon / email" })
-      .fill(data["NO HP"]);
+    await page.getByRole("textbox", { name: "Nomor HP" }).fill(data["NO HP"]);
   },
   async fillOPD() {
-    await page.getByRole("combobox", { name: "OPD" }).selectOption(data.OPD);
+    await page.getByRole("textbox", { name: /nama OPD/i }).selectOption(data.OPD);
   },
   async fillPenugasan() {
-    await page
-      .getByRole("combobox", { name: "Penugasan" })
-      .selectOption(data.PENUGASAN);
+    await page.getByRole("combobox", { name: "Penugasan" }).selectOption(data.PENUGASAN);
+  },
+  async clickTambahDataPenugasan() {
+    await page.getByRole("button", { name: "Tambah Data Penugasan" }).click();
   },
   async fillStatusKeaktifan() {
     if (data["STATUS KEAKTIFAN"]) {
@@ -131,7 +124,7 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
         .getByRole("combobox", { name: "Status Keaktifan" })
         .selectOption(data["STATUS KEAKTIFAN"]);
     }
-  }
+  },
 });
 
 export const selectOPD = async ({ data, page }: IFillRelawanForm) => {
@@ -139,13 +132,9 @@ export const selectOPD = async ({ data, page }: IFillRelawanForm) => {
 };
 
 export const selectKader = async ({ data, page }: IFillRelawanForm) => {
-  await page
-    .getByRole("combobox", { name: "Kader" })
-    .selectOption(data.KADER);
+  await page.getByRole("combobox", { name: "Kader" }).selectOption(data.KADER);
 };
 
 export const selectPenugasan = async ({ data, page }: IFillRelawanForm) => {
-  await page
-    .getByRole("combobox", { name: "Penugasan" })
-    .selectOption(data.PENUGASAN);
+  await page.getByRole("combobox", { name: "Penugasan" }).selectOption(data.PENUGASAN);
 };
