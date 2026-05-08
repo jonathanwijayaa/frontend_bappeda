@@ -141,6 +141,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 setUser(loggedInUser);
                 setIsAuthenticated(true);
                 return { success: true, role: loggedInUser.role };
+            } else {
                 return { success: false, message: data.message || 'Login gagal' };
             }
         } catch (err: any) {
