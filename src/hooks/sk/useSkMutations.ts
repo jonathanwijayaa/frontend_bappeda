@@ -12,7 +12,7 @@ export const useCreateSk = () => {
     const qc = useQueryClient();
     const { user } = useAuth();
     const role = user?.role || 'super_admin';
-    const endpoint = role === 'opd' ? '/opd-admin/sk' : '/admin/sk';
+    const endpoint = '/admin/sk';
 
     return useMutation({
         mutationFn: (formData: FormData) =>
@@ -36,7 +36,7 @@ export const useDeleteSk = () => {
 
     return useMutation({
         mutationFn: (sk_id: number) => {
-            const endpoint = role === 'opd' ? `/opd-admin/sk/${sk_id}` : `/admin/sk/${sk_id}`;
+            const endpoint = `/admin/sk/${sk_id}`;
             return apiClient.delete(endpoint).then(r => {
                 if (!r.data.success) throw new Error(r.data.message);
                 return r.data;
@@ -54,7 +54,7 @@ export const useToggleSkStatus = () => {
 
     return useMutation({
         mutationFn: ({ sk_id, status }: { sk_id: number; status: 'Aktif' | 'Tidak Aktif' }) => {
-            const endpoint = role === 'opd' ? `/opd-admin/sk/${sk_id}/status` : `/admin/sk/${sk_id}/status`;
+            const endpoint = `/admin/sk/${sk_id}/status`;
             return apiClient.patch(endpoint, { status }).then(r => {
                 if (!r.data.success) throw new Error(r.data.message);
                 return r.data;

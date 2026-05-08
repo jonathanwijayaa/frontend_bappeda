@@ -33,7 +33,7 @@ export const useSkList = () => {
 export const useSkDetail = (sk_id: number) => {
     const { user } = useAuth();
     const role = user?.role || 'super_admin';
-    const endpoint = role === 'opd' ? `/opd-admin/sk/${sk_id}` : `/admin/sk/${sk_id}`;
+    const endpoint = `/admin/sk/${sk_id}`;
 
     return useQuery({
         queryKey: SK_KEYS.detail(sk_id, role),
@@ -50,7 +50,7 @@ export const useSkDetail = (sk_id: number) => {
 export const useSkPdf = (sk_id: number) => {
     const { user } = useAuth();
     const role = user?.role || 'super_admin';
-    const endpoint = role === 'opd' ? `/opd-admin/sk/${sk_id}/pdf` : `/admin/sk/${sk_id}/pdf`;
+    const endpoint = `/admin/sk/${sk_id}/pdf`;
 
     return useQuery({
         queryKey: SK_KEYS.pdf(sk_id, role),
