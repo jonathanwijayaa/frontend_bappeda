@@ -48,7 +48,15 @@ const Riwayat = () => {
 
     const renderPerubahan = (item: PengajuanItem) => {
         if (!item.data_baru) return null;
-        const entries = Object.entries(item.data_baru);
+        let dataBaru: Record<string, any> = {};
+        try {
+            dataBaru = typeof item.data_baru === 'string'
+                ? JSON.parse(item.data_baru) : item.data_baru;
+        } catch (e) {
+            return <p className="text-sm text-red-500 mt-2">Data perubahan tidak dapat dibaca.</p>;
+        }
+        
+        const entries = Object.entries(dataBaru);
         if (entries.length === 0) return null;
         return (
             <div>
