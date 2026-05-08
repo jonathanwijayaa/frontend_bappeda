@@ -1,6 +1,6 @@
-import { test, expect } from "@playwright/test";
-import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { credentials } from "@/helpers/credentials.helper";
+import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { expect, test } from "@playwright/test";
 
 const dashboardUsers = [
   { role: "Super Admin", ...credentials.superAdmin },
@@ -24,7 +24,7 @@ test.describe("Dashboard Page", () => {
       await expect(page).toHaveURL(/dashboard/);
 
       // memastikan elemen dashboard muncul
-      await expect(page.getByText(/dashboard/i)).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
     });
   }
 
@@ -38,7 +38,7 @@ test.describe("Dashboard Page", () => {
 
     await expect(page).toHaveURL(/dashboard/);
 
-    const barChart = page.locator("canvas"); // biasanya chart.js pakai canvas
+    const barChart = page.locator(".p-6.h-full").first(); // biasanya chart.js pakai canvas
 
     await barChart.hover();
 
