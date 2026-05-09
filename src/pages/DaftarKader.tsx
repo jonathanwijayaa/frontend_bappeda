@@ -18,7 +18,7 @@ import { KaderData, AutoOption } from '../types';
 import { useKaderList } from '../hooks/kader/useKaderList';
 import { useOpdList } from '../hooks/opd/useOpdList';
 import { useCreateKader, useUpdateKader, useToggleKaderStatus, useBulkKader } from '../hooks/kader/useKaderMutations';
-
+import { toTitleCase } from '../utils/formatText';
 
 const DaftarKader: React.FC = () => {
     const { isSuperAdmin, isOPD } = useAuth();
@@ -175,6 +175,14 @@ const DaftarKader: React.FC = () => {
             setToast({ message: 'Nama Kader tidak boleh mengandung angka atau karakter spesial', type: 'error' });
             return;
         }
+
+        const normalizedNamaKader = formData.nama_kader.trim();
+        const isDuplicate = kaderList.some(k => k.nama_kader.toLowerCase() === normalizedNamaKader.toLowerCase());
+        if (isDuplicate) {
+            setToast({ message: 'Nama Kader sudah terdaftar', type: 'error' });
+            return;
+        }
+
         if (formData.nama_pic && formData.nama_pic.trim().length > 0) {
             if (formData.nama_pic.trim().length < 3) {
                 setToast({ message: 'Nama PIC minimal 3 karakter', type: 'error' });
@@ -203,7 +211,7 @@ const DaftarKader: React.FC = () => {
         }
 
         const body: any = {
-            nama_kader:    formData.nama_kader,
+            nama_kader:    toTitleCase(normalizedNamaKader),
             deskripsi:     formData.deskripsi     || null,
             nama_pic:      formData.nama_pic      || null,
             nik_pic:       formData.nik_pic       || null,
@@ -241,8 +249,19 @@ const DaftarKader: React.FC = () => {
             setToast({ message: 'Nama Kader tidak boleh mengandung angka atau karakter spesial', type: 'error' });
             return;
         }
+
+        const normalizedNamaKader = detailFormData.nama_kader.trim();
+        const isDuplicate = kaderList.some(k => 
+            k.kader_id !== selectedKader.kader_id && 
+            k.nama_kader.toLowerCase() === normalizedNamaKader.toLowerCase()
+        );
+        if (isDuplicate) {
+            setToast({ message: 'Nama Kader sudah terdaftar', type: 'error' });
+            return;
+        }
+
         updateKader.mutate(
-            { kader_id: selectedKader.kader_id, payload: { nama_kader: detailFormData.nama_kader, deskripsi: detailFormData.deskripsi || null } },
+            { kader_id: selectedKader.kader_id, payload: { nama_kader: toTitleCase(normalizedNamaKader), deskripsi: detailFormData.deskripsi || null } },
             {
                 onSuccess: (d) => {
                     setToast({ message: d.message || 'Data kader berhasil diperbarui', type: 'success' });

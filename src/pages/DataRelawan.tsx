@@ -22,7 +22,7 @@ import { parseErrorMessage } from '../utils/parseErrorMessage';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatPhoneDisplay } from '../utils/formatPhone';
-
+import { toTitleCase } from '../utils/formatText';
 
 const DataRelawan: React.FC = () => {
     const { isSuperAdmin, isOPD, user } = useAuth();
@@ -394,7 +394,7 @@ const DataRelawan: React.FC = () => {
         setIsSaving(true);
         try {
             const { data } = await apiClient.post(`${API_BASE}/bulk`, [{
-                nama_lengkap: formData.namaRelawan,
+                nama_lengkap: toTitleCase(formData.namaRelawan.trim()),
                 nik: formData.nik,
                 jenis_kelamin: formData.jenisKelamin,
                 alamat_ktp: formData.alamat,
@@ -571,7 +571,7 @@ const DataRelawan: React.FC = () => {
             const relawanId = (selectedRelawan as any).relawan_id;
             const endpoint = isSuperAdmin ? `/admin/relawan/${relawanId}` : `/opd-admin/relawan/${relawanId}`;
             const { data } = await apiClient.put(endpoint, {
-                nama_lengkap: detailFormData.namaRelawan,
+                nama_lengkap: toTitleCase(detailFormData.namaRelawan.trim()),
                 alamat_ktp: detailFormData.alamat,
                 no_hp: detailFormData.no_hp.replace(/\D/g, ''),
                 kelurahan: detailFormData.kelurahan,

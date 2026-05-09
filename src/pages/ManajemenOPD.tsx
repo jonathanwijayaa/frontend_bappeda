@@ -19,6 +19,7 @@ import {
     useToggleOpdStatus,
     useBulkOpd,
 } from '../hooks/opd/useOpdMutations';
+import { toTitleCase } from '../utils/formatText';
 
 const ManajemenOPD: React.FC = () => {
     // ── Server State (TanStack Query) ─────────────────────────
@@ -182,8 +183,20 @@ const ManajemenOPD: React.FC = () => {
             setToast({ message: validationError, type: 'error' });
             return;
         }
+
+        const normalizedNamaOpd = detailFormData.nama_opd.trim();
+        const isDuplicate = opdList.some(o => 
+            o.opd_id !== selectedOPD.opd_id && 
+            o.nama_opd.toLowerCase() === normalizedNamaOpd.toLowerCase()
+        );
+        if (isDuplicate) {
+            setToast({ message: 'Nama OPD sudah terdaftar', type: 'error' });
+            return;
+        }
+
+        const payload = { ...detailFormData, nama_opd: toTitleCase(normalizedNamaOpd) };
         updateOpd.mutate(
-            { opd_id: selectedOPD.opd_id, payload: detailFormData },
+            { opd_id: selectedOPD.opd_id, payload: payload },
             {
                 onSuccess: () => {
                     setToast({ message: 'Data OPD berhasil diperbarui', type: 'success' });
@@ -201,7 +214,16 @@ const ManajemenOPD: React.FC = () => {
             setToast({ message: validationError, type: 'error' });
             return;
         }
-        createOpd.mutate(formData, {
+
+        const normalizedNamaOpd = formData.nama_opd.trim();
+        const isDuplicate = opdList.some(o => o.nama_opd.toLowerCase() === normalizedNamaOpd.toLowerCase());
+        if (isDuplicate) {
+            setToast({ message: 'Nama OPD sudah terdaftar', type: 'error' });
+            return;
+        }
+
+        const payload = { ...formData, nama_opd: toTitleCase(normalizedNamaOpd) };
+        createOpd.mutate(payload, {
             onSuccess: () => {
                 setToast({ message: 'OPD baru berhasil ditambahkan', type: 'success' });
                 setIsModalOpen(false);

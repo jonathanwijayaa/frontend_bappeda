@@ -7,6 +7,7 @@ import Toast, { ToastType } from '../components/ui/Toast';
 import apiClient from '../lib/axios';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { formatPhoneDisplay } from '../utils/formatPhone';
+import { toTitleCase } from '../utils/formatText';
 import { Loader2 } from 'lucide-react';
 
 interface ProfilData {
@@ -62,7 +63,7 @@ const ProfilRelawan = () => {
         setIsSubmitting(true);
         try {
             const dataBaru: Record<string, string> = {};
-            if (updateForm.namaLengkap.trim())  dataBaru.nama_lengkap  = updateForm.namaLengkap.trim();
+            if (updateForm.namaLengkap.trim())  dataBaru.nama_lengkap  = toTitleCase(updateForm.namaLengkap.trim());
             if (updateForm.alamat.trim())        dataBaru.alamat_ktp   = updateForm.alamat.trim();
             if (updateForm.kelurahan.trim())     dataBaru.kelurahan    = updateForm.kelurahan.trim();
             if (updateForm.noHp.trim())          dataBaru.no_hp        = updateForm.noHp.trim().replace(/\D/g, '');
