@@ -17,8 +17,9 @@ const fetchOpdList = async (): Promise<OPDData[]> => {
     return data.data;
 };
 
-export const useOpdList = () =>
+export const useOpdList = (enabled: boolean = true) =>
     useQuery({
         queryKey: OPD_KEYS.list(),
         queryFn: fetchOpdList,
+        enabled,
     });
