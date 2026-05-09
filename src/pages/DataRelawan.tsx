@@ -636,9 +636,16 @@ const DataRelawan: React.FC = () => {
                 : `/opd-admin/relawan/penugasan/${penugasanId}`;
             const { data } = await apiClient.delete(endpoint);
             if (data.success) {
-                const updatedAssignments = detailFormData.assignments.filter((_, i) => i !== index);
-                setDetailFormData(prev => ({ ...prev, assignments: updatedAssignments }));
-                setSelectedRelawan(prev => prev ? { ...prev, assignments: updatedAssignments } : null);
+                setDetailFormData(prev => ({
+                    ...prev,
+                    assignments: prev.assignments.filter((_, i) => i !== index)
+                }));
+                setSelectedRelawan(prev => prev ? {
+                    ...prev,
+                    assignments: Array.isArray(prev.assignments) 
+                        ? prev.assignments.filter((_, i) => i !== index) 
+                        : []
+                } : null);
                 invalidateRelawan();
                 setToast({ message: 'Penugasan berhasil dihapus', type: 'success' });
             } else {
