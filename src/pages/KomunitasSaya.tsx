@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Card from '../components/ui/Card';
 import RelawanMenu from '../components/RelawanMenu';
 import Toast, { ToastType } from '../components/ui/Toast';
-import { apiFetch } from '../utils/api';
+import apiClient from '../lib/axios';
 import { Loader2 } from 'lucide-react';
 
 interface PenugasanData {
@@ -24,8 +24,7 @@ const KomunitasSaya = () => {
     const fetchPenugasan = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await apiFetch('/relawan/penugasan');
-            const result = await res.json();
+            const { data: result } = await apiClient.get('/relawan/penugasan');
             if (result.success) {
                 setPenugasanList(result.data);
             } else {
