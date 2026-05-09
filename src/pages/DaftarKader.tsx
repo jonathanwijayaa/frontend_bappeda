@@ -21,11 +21,11 @@ import { useCreateKader, useUpdateKader, useToggleKaderStatus, useBulkKader } fr
 import { toTitleCase } from '../utils/formatText';
 
 const DaftarKader: React.FC = () => {
-    const { isSuperAdmin, isOPD } = useAuth();
+    const { isSuperAdmin, isOPD, user } = useAuth();
 
     // ── Server State (TanStack Query) ─────────────────────────
     const { data: kaderList = [], isLoading } = useKaderList(!!isSuperAdmin);
-    const { data: opdListData = [] }           = useOpdList();
+    const { data: opdListData = [] }           = useOpdList(!!isSuperAdmin);
     const createKader  = useCreateKader(!!isSuperAdmin);
     const updateKader  = useUpdateKader(!!isSuperAdmin);
     const toggleStatus = useToggleKaderStatus(!!isSuperAdmin);
@@ -368,8 +368,8 @@ const DaftarKader: React.FC = () => {
     const actions = (row: KaderData) => (
         <>
             <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
-            {/* Toggle status untuk super_admin dan OPD */}
-            {(isSuperAdmin || isOPD) && (
+            {/* Toggle status untuk super_admin dan OPD yang memiliki kader tersebut */}
+            {(isSuperAdmin || (isOPD && row.opd_id === (user as any)?.opd_id)) && (
                 <Button
                     variant={row.is_active ? 'danger' : 'secondary'}
                     size="sm"
