@@ -32,7 +32,7 @@ const DataRelawan: React.FC = () => {
     // ── Server State (TanStack Query) ─────────────────────────────
     const { data: relawanList = [], isLoading: isLoadingRelawan } = useRelawanList(!!isSuperAdmin);
     const { data: pengajuanList = [], isLoading: isLoadingPengajuan } = usePengajuanList(!!isSuperAdmin);
-    const { data: opdListData = [] } = useOpdList();
+    const { data: opdListData = [] } = useOpdList(!!isSuperAdmin);
 
     // OPD options untuk autocomplete
     const opdOptions = useMemo<AutoOption[]>(
