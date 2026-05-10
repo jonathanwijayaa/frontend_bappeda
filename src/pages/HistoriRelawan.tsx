@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { HistoriRelawanData } from '../types/histori.types';
 import { AutoOption } from '../types/common.types';
 import { formatPhoneDisplay } from '../utils/formatPhone';
+import Toast, { ToastType } from '../components/ui/Toast';
 
 // ── Helper: kelompokkan baris flat dari API menjadi per-relawan ─
 const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
@@ -46,6 +47,8 @@ const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
                 penugasan: row.penugasan || '',
                 statusKeaktifan: row.status_penugasan || 'Aktif',
                 nomorSK: row.nomor_sk || '',
+                tanggalTerbit: row.tanggal_terbit || '',
+                batasAktif: row.batas_aktif || '',
                 tahun: row.tahun || '',
                 tahunMulai: row.tanggal_terbit ? new Date(row.tanggal_terbit).getFullYear() : null,
                 tahunSelesai: row.batas_aktif ? new Date(row.batas_aktif).getFullYear() : null,
@@ -430,6 +433,9 @@ const HistoriRelawan: React.FC = () => {
                                                 {renderFieldRow('Penugasan', assignment.penugasan)}
                                                 {assignment.tahun ? renderFieldRow('Tahun', String(assignment.tahun)) : null}
                                                 {assignment.nomorSK ? renderFieldRow('Nomor SK', assignment.nomorSK) : null}
+                                                {(assignment.tanggalTerbit || assignment.batasAktif) ? renderFieldRow('Periode SK',
+                                                    `${assignment.tanggalTerbit ? new Date(assignment.tanggalTerbit).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'} s/d ${assignment.batasAktif ? new Date(assignment.batasAktif).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}`
+                                                ) : null}
                                             </div>
                                         </div>
                                     ))}
