@@ -120,33 +120,39 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Info Section */}
-                <div className="lg:col-span-2">
-                    <Card title={isSuperAdmin ? "Info Tambahan:" : `Info Tambahan ${user?.nama_opd || ''}:`}>
-                        <div className="space-y-4">
-                            <table className="w-full">
+                <div className="lg:col-span-2 flex flex-col h-full">
+                    <Card 
+                        title={isSuperAdmin ? "Info Tambahan:" : `Info Tambahan ${user?.nama_opd || ''}:`} 
+                        // Tambahkan class h-full pada Card jika komponen Card Anda mendukung properti className
+                        className="h-full" 
+                    >
+                        {/* Wrapper Flexbox untuk menengahkan konten secara vertikal & horizontal */}
+                        <div className="flex items-center justify-center h-full min-h-[320px] w-full p-4">
+                            
+                            {/* w-full diganti jadi w-auto agar tabelnya rapat dan bisa di-center */}
+                            <table className="w-auto">
                                 <tbody className="text-lg">
                                     <tr className="border-b border-gray-100 last:border-0">
-                                        <td className="text-gray-600 py-3 whitespace-nowrap font-medium">Total Relawan Aktif</td>
-                                        <td className="font-bold py-3 px-2 w-4 text-center text-gray-400">:</td>
-                                        {/* KUNCI: Tambahkan w-full di sini agar sisa ruang kosong didorong ke kanan */}
-                                        <td className="font-extrabold py-3 text-left text-blue-600 text-xl w-full">
+                                        <td className="text-gray-600 py-4 pr-4 whitespace-nowrap font-medium">Total Relawan Aktif</td>
+                                        <td className="font-bold py-4 px-2 w-4 text-center text-gray-400">:</td>
+                                        <td className="font-extrabold py-4 pl-2 text-left text-blue-600 text-2xl">
                                             {dashboardData.ringkasan.total_relawan_aktif.toLocaleString('id-ID')}
                                         </td>
                                     </tr>
                                     
                                     <tr className="border-b border-gray-100 last:border-0">
-                                        <td className="text-gray-600 py-3 whitespace-nowrap font-medium">Total Kader</td>
-                                        <td className="font-bold py-3 px-2 w-4 text-center text-gray-400">:</td>
-                                        <td className="font-extrabold py-3 text-left text-emerald-600 text-xl w-full">
+                                        <td className="text-gray-600 py-4 pr-4 whitespace-nowrap font-medium">Total Kader</td>
+                                        <td className="font-bold py-4 px-2 w-4 text-center text-gray-400">:</td>
+                                        <td className="font-extrabold py-4 pl-2 text-left text-emerald-600 text-2xl">
                                             {dashboardData.ringkasan.total_kader}
                                         </td>
                                     </tr>
 
                                     {isSuperAdmin && (
                                         <tr className="border-b border-gray-100 last:border-0">
-                                            <td className="text-gray-600 py-3 whitespace-nowrap font-medium">Total OPD</td>
-                                            <td className="font-bold py-3 px-2 w-4 text-center text-gray-400">:</td>
-                                            <td className="font-extrabold py-3 text-left text-purple-600 text-xl w-full">
+                                            <td className="text-gray-600 py-4 pr-4 whitespace-nowrap font-medium">Total OPD</td>
+                                            <td className="font-bold py-4 px-2 w-4 text-center text-gray-400">:</td>
+                                            <td className="font-extrabold py-4 pl-2 text-left text-purple-600 text-2xl">
                                                 {dashboardData.ringkasan.total_opd}
                                             </td>
                                         </tr>
@@ -154,15 +160,16 @@ const Dashboard: React.FC = () => {
 
                                     {isSuperAdmin && (
                                         <tr className="border-b border-gray-100 last:border-0">
-                                            <td className="text-gray-600 py-3 whitespace-nowrap font-medium">Pengajuan Pending</td>
-                                            <td className="font-bold py-3 px-2 w-4 text-center text-gray-400">:</td>
-                                            <td className={`font-extrabold py-3 text-left text-xl w-full ${dashboardData.ringkasan.pengajuan_pending > 0 ? 'text-amber-500' : 'text-gray-500'}`}>
+                                            <td className="text-gray-600 py-4 pr-4 whitespace-nowrap font-medium">Pengajuan Pending</td>
+                                            <td className="font-bold py-4 px-2 w-4 text-center text-gray-400">:</td>
+                                            <td className={`font-extrabold py-4 pl-2 text-left text-2xl ${dashboardData.ringkasan.pengajuan_pending > 0 ? 'text-amber-500' : 'text-gray-500'}`}>
                                                 {dashboardData.ringkasan.pengajuan_pending}
                                             </td>
                                         </tr>
                                     )}
                                 </tbody>
                             </table>
+
                         </div>
                     </Card>
                 </div>
