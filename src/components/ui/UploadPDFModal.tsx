@@ -1,4 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 import Modal from './Modal';
 import Button from './Button';
 import { Upload, X, FileText } from 'lucide-react';
@@ -29,10 +30,12 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
 }) => {
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
-    // === STATE BARU: Pemilihan Kader ===
+    
+    // === STATE: Pemilihan Kader ===
     const [kaderOptions, setKaderOptions] = useState<{ kader_id: number; nama_kader: string }[]>([]);
     const [selectedKaderIds, setSelectedKaderIds] = useState<number[]>([]);
     const [isSelectAllKader, setIsSelectAllKader] = useState(true); // Default: Semua Kader
+    const isAllSelected = kaderOptions.length > 0 && selectedKaderIds.length === kaderOptions.length;
 
     // State untuk opsi OPD dari database (Hanya diambil jika user adalah Super Admin)
     const [opdOptions, setOpdOptions] = useState<AutoOption[]>([]);
@@ -45,8 +48,6 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
         opd_id: '',
         opd_name: '' // Tambahan state untuk menyimpan text nama OPD
     });
-
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Reset dan atur nilai awal saat modal terbuka
     useEffect(() => {
@@ -82,7 +83,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
         }
     }, [isOpen, isOPD, userOpdData]);
 
-    // === useEffect BARU: Fetch Kader berdasarkan OPD ===
+    // === useEffect: Fetch Kader berdasarkan OPD ===
     useEffect(() => {
         const opdId = metadata.opd_id;
         if (!opdId || !isOpen) {
@@ -101,20 +102,31 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
             .catch(() => console.error("Gagal mengambil daftar Kader"));
     }, [metadata.opd_id, isOpen]);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFile = e.target.files?.[0];
-        if (selectedFile) {
-            if (selectedFile.type !== 'application/pdf') {
-                alert('Hanya file PDF yang diperbolehkan');
-                return;
-            }
-            if (selectedFile.size > 2 * 1024 * 1024) {
+    // === Fitur Drag & Drop menggunakan react-dropzone ===
+    const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
+        if (rejectedFiles.length > 0) {
+            const isSizeError = rejectedFiles[0].errors.some((e: any) => e.code === 'file-too-large');
+            if (isSizeError) {
                 alert('Ukuran file maksimal 2MB');
-                return;
+            } else {
+                alert('Hanya file berformat PDF yang diperbolehkan');
             }
-            setFile(selectedFile);
+            return;
         }
-    };
+        if (acceptedFiles.length > 0) {
+            setFile(acceptedFiles[0]);
+        }
+    }, []);
+
+    const { getRootProps, getInputProps, isDragActive, isDragReject } = useDropzone({
+        onDrop,
+        accept: {
+            'application/pdf': ['.pdf']
+        },
+        maxFiles: 1,
+        multiple: false,
+        maxSize: 2 * 1024 * 1024 // Maksimal 2MB
+    });
 
     // Fungsi handle perubahan pada komponen Autocomplete
     const handleOpdChange = (val: string) => {
@@ -128,8 +140,13 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
 
     // === HANDLER: Toggle "Semua Kader" ===
     const handleSelectAllKader = () => {
-        setIsSelectAllKader(!isSelectAllKader);
-        setSelectedKaderIds([]); // Kosongkan pilihan spesifik
+        if (isAllSelected) {
+            // Jika sudah tercentang semua, kosongkan pilihan
+            setSelectedKaderIds([]);
+        } else {
+            // Jika belum tercentang semua, centang seluruh ID kader
+            setSelectedKaderIds(kaderOptions.map(k => k.kader_id));
+        }
     };
 
     // === HANDLER: Toggle satu Kader ===
@@ -141,8 +158,6 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                 : [...prev, kaderId]                // Tambah jika belum
         );
     };
-
-
 
     const handleSubmit = async () => {
         const missingFields = [];
@@ -186,18 +201,19 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
     return (
         <Modal isOpen={isOpen} onClose={handleClose} title={title} maxWidth="lg">
             <div className="space-y-4">
-                {/* File Upload Area */}
+                {/* Drag and Drop File Upload Area */}
                 <div
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-500 cursor-pointer transition-colors"
-                    onClick={() => fileInputRef.current?.click()}
+                    {...getRootProps()}
+                    className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all duration-200 ease-in-out
+                        ${isDragActive && !isDragReject
+                            ? 'border-blue-500 bg-blue-50'
+                            : isDragReject
+                                ? 'border-red-500 bg-red-50'
+                                : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+                        }`}
                 >
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept=".pdf"
-                        onChange={handleFileChange}
-                        className="hidden"
-                    />
+                    <input {...getInputProps()} />
+                    
                     {file ? (
                         <div className="flex items-center justify-center gap-2 text-green-600">
                             <FileText size={24} />
@@ -206,15 +222,32 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                             <button
                                 onClick={(e) => { e.stopPropagation(); setFile(null); }}
                                 className="ml-2 text-red-500 hover:text-red-700"
+                                title="Hapus file"
                             >
                                 <X size={16} />
                             </button>
                         </div>
                     ) : (
-                        <div className="text-gray-500">
-                            <Upload size={32} className="mx-auto mb-2" />
-                            <p className="text-sm">Klik untuk upload PDF</p>
-                            <p className="text-xs text-gray-400">Maksimal 2MB</p>
+                        <div className="flex flex-col items-center justify-center">
+                            <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4
+                                ${isDragActive && !isDragReject ? 'bg-blue-100' : isDragReject ? 'bg-red-100' : 'bg-gray-100'}`}>
+                                <Upload size={32} className={
+                                    isDragActive && !isDragReject ? 'text-blue-600' : isDragReject ? 'text-red-600' : 'text-gray-500'
+                                } />
+                            </div>
+                            <div className="space-y-1">
+                                {isDragActive ? (
+                                    isDragReject
+                                        ? <p className="text-red-600 font-medium text-sm">File harus berformat PDF (Maks 2MB)!</p>
+                                        : <p className="text-blue-600 font-medium text-sm">Lepaskan file di sini...</p>
+                                ) : (
+                                    <>
+                                        <p className="text-gray-700 font-medium text-sm">Tarik & lepas file PDF di sini</p>
+                                        <p className="text-gray-500 text-xs">atau klik untuk memilih file</p>
+                                        <p className="text-gray-400 text-xs mt-1">Format: .pdf • Maks: 2MB</p>
+                                    </>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -303,45 +336,58 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                     </div>
                 </div>
 
-                {/* === PEMILIHAN KADER (Muncul hanya jika OPD sudah dipilih) === */}
+                {/* === PEMILIHAN KADER === */}
                 {metadata.opd_id && (
                     <div className="col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Target Kader <span className="text-red-500">*</span>
-                        </label>
+                        <div className="flex items-center justify-between mb-2">
+                            <label className="block text-sm font-medium text-gray-700">
+                                Target Kader <span className="text-red-500">*</span>
+                            </label>
+                            
+                            {/* Checkbox Pilih Semua ditaruh sejajar dengan label */}
+                            {kaderOptions.length > 0 && (
+                                <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-800">
+                                    <input
+                                        type="checkbox"
+                                        checked={isAllSelected}
+                                        onChange={handleSelectAllKader}
+                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                                    />
+                                    Pilih Semua ({kaderOptions.length} kader)
+                                </label>
+                            )}
+                        </div>
 
                         {kaderOptions.length === 0 ? (
                             <p className="text-sm text-gray-400 italic">Tidak ada kader terdaftar di OPD ini.</p>
                         ) : (
-                            <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3">
-                                {/* Opsi: Semua Kader */}
-                                <label className="flex items-center gap-2 cursor-pointer p-1 rounded hover:bg-blue-50">
-                                    <input
-                                        type="checkbox"
-                                        checked={isSelectAllKader}
-                                        onChange={handleSelectAllKader}
-                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    />
-                                    <span className="text-sm font-semibold text-gray-700">
-                                        Semua Kader ({kaderOptions.length} kader)
-                                    </span>
-                                </label>
-
-                                <hr className="border-gray-200" />
-
-                                {/* Opsi: Per Kader */}
-                                {kaderOptions.map(kader => (
-                                    <label key={kader.kader_id} className="flex items-center gap-2 cursor-pointer p-1 rounded hover:bg-gray-50">
-                                        <input
-                                            type="checkbox"
-                                            checked={isSelectAllKader || selectedKaderIds.includes(kader.kader_id)}
-                                            disabled={isSelectAllKader}
-                                            onChange={() => handleToggleKader(kader.kader_id)}
-                                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                        />
-                                        <span className="text-sm text-gray-600">{kader.nama_kader}</span>
-                                    </label>
-                                ))}
+                            <div className="space-y-1 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                                {/* Render Opsi Per Kader */}
+                                {kaderOptions.map(kader => {
+                                    const isSelected = selectedKaderIds.includes(kader.kader_id);
+                                    
+                                    return (
+                                        <label 
+                                            key={kader.kader_id} 
+                                            // Highlight Biru & Hilangkan statis disabled
+                                            className={`flex items-center gap-3 cursor-pointer p-2 rounded-md transition-colors border ${
+                                                isSelected 
+                                                ? 'bg-blue-50 border-blue-200' 
+                                                : 'hover:bg-gray-50 border-transparent'
+                                            }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => handleToggleKader(kader.kader_id)}
+                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                                            />
+                                            <span className={`text-sm ${isSelected ? 'text-blue-800 font-medium' : 'text-gray-600'}`}>
+                                                {kader.nama_kader}
+                                            </span>
+                                        </label>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
