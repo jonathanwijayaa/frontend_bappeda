@@ -27,12 +27,12 @@ for (const { label, creds } of roles) {
       });
 
       await expect(page).toHaveURL(/dashboard/);
-      await page.getByRole("link", { name: /data relawan/i }).click();
+      await page.getByRole("link", { name: /relawan/i }).click();
     });
 
     // TCDR.1
     test(`TCDR.1 ${label} access Data Relawan page`, async ({ page }) => {
-      await expect(page).toHaveURL(/data-relawan/);
+      await expect(page).toHaveURL(/relawan/);
     });
 
     // TCDR.2
@@ -83,7 +83,7 @@ for (const { label, creds } of roles) {
 
         await page.getByRole("button", { name: /batal/i }).click();
 
-        await expect(page).toHaveURL(/data-relawan/);
+        await expect(page).toHaveURL(/relawan/);
       });
     });
 
@@ -428,7 +428,7 @@ for (const { label, creds } of roles) {
 
       await page.getByRole("button").nth(5).click();
 
-      await expect(page.getByRole("heading", { name: /data relawan/i })).toBeVisible();
+      await expect(page.getByRole("heading", { name: /relawan/i })).toBeVisible();
     });
 
     // TCDR.21-26 Search Bar
