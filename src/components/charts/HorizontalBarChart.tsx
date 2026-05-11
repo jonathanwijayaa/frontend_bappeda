@@ -80,7 +80,7 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
             <LabelList 
                 dataKey={dataKey} 
                 position="right" 
-                style={{ fill: color, fontWeight: 'bold', fontSize: '12px' }} 
+                style={{ fill: color, fontWeight: 'bold', fontSize: '16px' }} 
                 offset={10}
             />
         </Bar>

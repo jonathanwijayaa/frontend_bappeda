@@ -79,7 +79,7 @@ const BarChart: React.FC<BarChartProps> = ({
             <LabelList 
                 dataKey={dataKey} 
                 position="top" 
-                style={{ fill: '#4B5563', fontWeight: 'bold', fontSize: '13px' }} 
+                style={{ fill: '#4B5563', fontWeight: 'bold', fontSize: '16px' }} 
                 offset={10}
             />
         </Bar>
