@@ -446,7 +446,7 @@ for (const { label, creds } of roles) {
         test(`${searchCase.id} ${label} ${searchCase.title}`, async ({ page }) => {
           const searchInput = page.getByRole("textbox", { name: /cari|search/i });
           await searchInput.fill(searchCase.keyword);
-          await page.getByRole("button", { name: /cari|search/i }).click();
+          // await page.getByRole("button", { name: /cari|search/i }).click();
 
           if (["TCDR.25", "TCDR.26"].includes(searchCase.id)) {
             await expect(page.getByText(/tidak ada data|no data/i)).toBeVisible();
