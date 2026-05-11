@@ -59,7 +59,7 @@ for (const { label, creds } of roles) {
         );
         await expect(page.getByRole("textbox", { name: "NIK" })).toHaveValue(relawanData.NIK);
         await expect(page.getByRole("textbox", { name: "Alamat" })).toHaveValue(relawanData.ALAMAT);
-        await expect(page.getByRole("textbox", { name: "Nomor telepon / email" })).toHaveValue(
+        await expect(page.getByRole("textbox", { name: "Nomor HP" })).toHaveValue(
           relawanData["NO HP"],
         );
       });
@@ -72,7 +72,7 @@ for (const { label, creds } of roles) {
 
         await page.getByRole("button", { name: /simpan/i }).click();
 
-        await expect(page.getByText(/berhasil|success/i)).toBeVisible();
+        await expect(page.getByText(/berhasil|success|data baru ditambahkan./i)).toBeVisible();
       });
 
       // TCDR.5
@@ -96,11 +96,23 @@ for (const { label, creds } of roles) {
       // TCDR.6 Invalid Relawan Name
       test.describe(`TCDR.6 ${label} invalid Relawan name`, () => {
         const invalidNameCases = [
-          { title: "Empty name", value: "" },
-          { title: "Name too short", value: "A" },
-          { title: "Name with numbers", value: "Relawan12345" },
-          { title: "Name with special characters", value: "@@@###" },
-          { title: "Name too long", value: "A".repeat(300) },
+          { title: "Empty name", value: "", expectedMessage: null },
+          { title: "Name too short", value: "A", expectedMessage: /minimal 3 karakter/i },
+          {
+            title: "Name with numbers",
+            value: "Relawan12345",
+            expectedMessage: /tidak boleh mengandung angka atau karakter spesial/i,
+          },
+          {
+            title: "Name with special characters",
+            value: "@@@###",
+            expectedMessage: /tidak boleh mengandung angka atau karakter spesial/i,
+          },
+          {
+            title: "Name too long",
+            value: "A".repeat(300),
+            expectedMessage: /terlalu panjang|maks 100 karakter/i,
+          },
         ];
 
         for (const nameCase of invalidNameCases) {
@@ -110,13 +122,17 @@ for (const { label, creds } of roles) {
 
             const form = await fillRelawanForm({ data: relawanData, page });
             await form.fillAll();
-
             await page.getByRole("button", { name: /simpan/i }).click();
 
-            const namaInput = page.getByRole("textbox", { name: "Nama lengkap" });
-            const isValid = await namaInput.evaluate((el: HTMLInputElement) => el.checkValidity());
-
-            expect(isValid).toBe(false);
+            if (nameCase.expectedMessage === null) {
+              const namaInput = page.getByRole("textbox", { name: "Nama lengkap" });
+              const isValid = await namaInput.evaluate((el: HTMLInputElement) =>
+                el.checkValidity(),
+              );
+              expect(isValid).toBe(false);
+            } else {
+              await expect(page.getByText(nameCase.expectedMessage)).toBeVisible();
+            }
           });
         }
       });
@@ -124,11 +140,27 @@ for (const { label, creds } of roles) {
       // TCDR.7 Invalid NIK
       test.describe(`TCDR.7 ${label} invalid NIK`, () => {
         const invalidNIKCases = [
-          { title: "Empty NIK", value: "" },
-          { title: "NIK too short", value: "1234567890" },
-          { title: "NIK with letters", value: "320100ABCD123456" },
-          { title: "NIK with special characters", value: "3201@#$%^&123456" },
-          { title: "NIK too long", value: "32010000000000001" },
+          { title: "Empty NIK", value: "", expectedMessage: null },
+          {
+            title: "NIK too short",
+            value: "1234567890",
+            expectedMessage: /nik harus 16 digit angka/i,
+          },
+          {
+            title: "NIK with letters",
+            value: "320100ABCD123456",
+            expectedMessage: /nik harus 16 digit angka/i,
+          },
+          {
+            title: "NIK with special characters",
+            value: "3201@#$%^&123456",
+            expectedMessage: /nik harus 16 digit angka/i,
+          },
+          {
+            title: "NIK too long",
+            value: "32010000000000001",
+            expectedMessage: /nik harus 16 digit angka/i,
+          },
         ];
 
         for (const nikCase of invalidNIKCases) {
@@ -138,13 +170,15 @@ for (const { label, creds } of roles) {
 
             const form = await fillRelawanForm({ data: relawanData, page });
             await form.fillAll();
-
             await page.getByRole("button", { name: /simpan/i }).click();
 
-            const nikInput = page.getByRole("textbox", { name: "NIK" });
-            const isValid = await nikInput.evaluate((el: HTMLInputElement) => el.checkValidity());
-
-            expect(isValid).toBe(false);
+            if (nikCase.expectedMessage === null) {
+              const nikInput = page.getByRole("textbox", { name: "NIK" });
+              const isValid = await nikInput.evaluate((el: HTMLInputElement) => el.checkValidity());
+              expect(isValid).toBe(false);
+            } else {
+              await expect(page.getByText(nikCase.expectedMessage)).toBeVisible();
+            }
           });
         }
       });
@@ -152,11 +186,23 @@ for (const { label, creds } of roles) {
       // TCDR.8 Invalid Address
       test.describe(`TCDR.8 ${label} invalid Relawan address`, () => {
         const invalidAddressCases = [
-          { title: "Empty address", value: "" },
-          { title: "Address too short", value: "A" },
-          { title: "Address only numbers", value: "1234567890" },
-          { title: "Address with special characters", value: "@@@###$$$" },
-          { title: "Address too long", value: "A".repeat(300) },
+          { title: "Empty address", value: "", expectedMessage: null },
+          { title: "Address too short", value: "A", expectedMessage: /minimal 3 karakter/i },
+          {
+            title: "Address only numbers",
+            value: "1234567890",
+            expectedMessage: /alamat tidak valid|hanya angka/i,
+          },
+          {
+            title: "Address with special characters",
+            value: "@@@###$$$",
+            expectedMessage: /tidak boleh mengandung karakter spesial/i,
+          },
+          {
+            title: "Address too long",
+            value: "A".repeat(300),
+            expectedMessage: /terlalu panjang|maks \d+ karakter/i,
+          },
         ];
 
         for (const addressCase of invalidAddressCases) {
@@ -166,11 +212,17 @@ for (const { label, creds } of roles) {
 
             const form = await fillRelawanForm({ data: relawanData, page });
             await form.fillAll();
-
             await page.getByRole("button", { name: /simpan/i }).click();
 
-            await expect(page).not.toHaveURL(/data-relawan/);
-            await expect(page.getByText(/alamat|wajib|invalid/i)).toBeVisible();
+            if (addressCase.expectedMessage === null) {
+              const alamatInput = page.getByRole("textbox", { name: "Alamat sesuai KTP" });
+              const isValid = await alamatInput.evaluate((el: HTMLInputElement) =>
+                el.checkValidity(),
+              );
+              expect(isValid).toBe(false);
+            } else {
+              await expect(page.getByText(addressCase.expectedMessage)).toBeVisible();
+            }
           });
         }
       });
@@ -178,11 +230,27 @@ for (const { label, creds } of roles) {
       // TCDR.9 Invalid Phone Number
       test.describe(`TCDR.9 ${label} invalid phone number`, () => {
         const invalidPhoneCases = [
-          { title: "Empty phone number", value: "" },
-          { title: "Phone number too short", value: "08123" },
-          { title: "Phone number with letters", value: "08ABCDE123" },
-          { title: "Phone number with special characters", value: "08!@#$%^&*" },
-          { title: "Phone number too long", value: "081234567890123456789" },
+          { title: "Empty phone number", value: "", expectedMessage: null },
+          {
+            title: "Phone number too short",
+            value: "08123",
+            expectedMessage: /nomor hp tidak valid.*harus 10.*13 digit angka/i,
+          },
+          {
+            title: "Phone number with letters",
+            value: "08ABCDE123",
+            expectedMessage: /nomor hp tidak valid.*harus 10.*13 digit angka/i,
+          },
+          {
+            title: "Phone number with special characters",
+            value: "08!@#$%^&*",
+            expectedMessage: /nomor hp tidak valid.*harus 10.*13 digit angka/i,
+          },
+          {
+            title: "Phone number too long",
+            value: "081234567890123456789",
+            expectedMessage: /nomor hp tidak valid.*harus 10.*13 digit angka/i,
+          },
         ];
 
         for (const phoneCase of invalidPhoneCases) {
@@ -192,11 +260,19 @@ for (const { label, creds } of roles) {
 
             const form = await fillRelawanForm({ data: relawanData, page });
             await form.fillAll();
-
             await page.getByRole("button", { name: /simpan/i }).click();
 
-            await expect(page).not.toHaveURL(/data-relawan/);
-            await expect(page.getByText(/telepon|no hp|wajib|invalid/i)).toBeVisible();
+            if (phoneCase.expectedMessage === null) {
+              const phoneInput = page.getByRole("textbox", { name: "Nomor HP" });
+              const isValid = await phoneInput.evaluate((el: HTMLInputElement) =>
+                el.checkValidity(),
+              );
+              expect(isValid).toBe(false);
+            } else {
+              await expect(
+                page.getByText(/nomor hp tidak valid.*harus 10.*13 digit angka/i),
+              ).toBeVisible();
+            }
           });
         }
       });
@@ -214,7 +290,7 @@ for (const { label, creds } of roles) {
         const form = await fillRelawanForm({ data: relawanData, page });
         await form.fillAll();
 
-        await expect(page.getByRole("combobox", { name: "Penugasan" })).toHaveValue(
+        await expect(page.getByRole("textbox", { name: "Penugasan" })).toHaveValue(
           relawanData.PENUGASAN,
         );
       });
@@ -224,7 +300,7 @@ for (const { label, creds } of roles) {
         const relawanData = buildRelawanData();
         await selectOPD({ data: relawanData, page });
 
-        await expect(page.getByRole("combobox", { name: "OPD" })).toHaveValue(relawanData.OPD);
+        await expect(page.getByRole("textbox", { name: "OPD" })).toHaveValue(relawanData.OPD);
       });
 
       // TCDR.12
@@ -233,7 +309,7 @@ for (const { label, creds } of roles) {
         await selectOPD({ data: relawanData, page });
         await selectKader({ data: relawanData, page });
 
-        await expect(page.getByRole("combobox", { name: "Kader" })).toHaveValue(relawanData.KADER);
+        await expect(page.getByRole("textbox", { name: "Kader" })).toHaveValue(relawanData.KADER);
       });
 
       // TCDR.13
@@ -241,7 +317,7 @@ for (const { label, creds } of roles) {
         const relawanData = buildRelawanData();
         await selectPenugasan({ data: relawanData, page });
 
-        await expect(page.getByRole("combobox", { name: "Penugasan" })).toHaveValue(
+        await expect(page.getByRole("textbox", { name: "Penugasan" })).toHaveValue(
           relawanData.PENUGASAN,
         );
       });
@@ -277,7 +353,7 @@ for (const { label, creds } of roles) {
         const form = await fillRelawanForm({ data: relawanData, page });
         await form.fillStatusKeaktifan();
 
-        await expect(page.getByRole("combobox", { name: "Status Keaktifan" })).toHaveValue(
+        await expect(page.getByRole("textbox", { name: "Status Keaktifan" })).toHaveValue(
           relawanData["STATUS KEAKTIFAN"]!,
         );
       });
@@ -286,7 +362,7 @@ for (const { label, creds } of roles) {
       test(`TCDR.16 ${label} add more data penugasan`, async ({ page }) => {
         await page.getByRole("button", { name: /tambah penugasan/i }).click();
 
-        await expect(page.getByRole("combobox", { name: "OPD" }).nth(1)).toBeVisible();
+        await expect(page.getByRole("textbox", { name: "OPD" }).nth(1)).toBeVisible();
       });
     });
 
