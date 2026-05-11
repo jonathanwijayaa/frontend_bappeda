@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { CheckCircle, XCircle, X, AlertTriangle, Info } from 'lucide-react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
@@ -31,12 +31,23 @@ const CONFIG: Record<ToastType, {
 };
 
 /**
- * Toast notification — tidak hilang otomatis.
- * User harus menekan ✕ untuk menutup, agar notifikasi berhasil/gagal bisa terbaca.
+ * Toast notification — Muncul dan akan hilang otomatis setelah 5 detik.
+ * User juga bisa menekan ✕ untuk menutup secara manual.
  */
 const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
     const c = CONFIG[type] ?? CONFIG.error;
     const { Icon } = c;
+
+    // Tambahkan useEffect untuk auto-close setelah 5 detik (5000ms)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            onClose();
+        }, 5000);
+
+        // Cleanup function untuk menghapus timer jika komponen di-unmount
+        // (misal user klik silang manual sebelum 5 detik)
+        return () => clearTimeout(timer);
+    }, [onClose]);
 
     return (
         <div className="fixed top-4 right-4 z-50 animate-slide-in-right">

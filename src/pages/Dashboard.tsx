@@ -125,14 +125,14 @@ const Dashboard: React.FC = () => {
                         title={isSuperAdmin ? "Info Tambahan:" : `Info Tambahan ${user?.nama_opd || ''}:`} 
                         className="h-full" 
                     >
-                        <div className="flex items-start justify-center h-full min-h-[320px] w-full p-4 pt-8">
+                        <div className="flex items-start justify-center h-full min-h-[320px] w-full p-4 pt-2">
                             
                             <table className="w-auto">
                                 <tbody className="text-lg">
                                     <tr className="border-b border-gray-100 last:border-0">
                                         <td className="text-gray-600 py-4 pr-4 whitespace-nowrap font-medium">Total Relawan Aktif</td>
                                         <td className="font-bold py-4 px-2 w-4 text-center text-gray-400">:</td>
-                                        <td className="font-extrabold py-4 pl-2 text-left text-blue-600 text-2xl">
+                                        <td className="font-extrabold py-4 pl-2 text-left text-2xl">
                                             {dashboardData.ringkasan.total_relawan_aktif.toLocaleString('id-ID')}
                                         </td>
                                     </tr>
@@ -140,7 +140,7 @@ const Dashboard: React.FC = () => {
                                     <tr className="border-b border-gray-100 last:border-0">
                                         <td className="text-gray-600 py-4 pr-4 whitespace-nowrap font-medium">Total Kader</td>
                                         <td className="font-bold py-4 px-2 w-4 text-center text-gray-400">:</td>
-                                        <td className="font-extrabold py-4 pl-2 text-left text-emerald-600 text-2xl">
+                                        <td className="font-extrabold py-4 pl-2 text-left text-2xl">
                                             {dashboardData.ringkasan.total_kader}
                                         </td>
                                     </tr>
@@ -149,7 +149,7 @@ const Dashboard: React.FC = () => {
                                         <tr className="border-b border-gray-100 last:border-0">
                                             <td className="text-gray-600 py-4 pr-4 whitespace-nowrap font-medium">Total OPD</td>
                                             <td className="font-bold py-4 px-2 w-4 text-center text-gray-400">:</td>
-                                            <td className="font-extrabold py-4 pl-2 text-left text-purple-600 text-2xl">
+                                            <td className="font-extrabold py-4 pl-2 text-left text-2xl">
                                                 {dashboardData.ringkasan.total_opd}
                                             </td>
                                         </tr>

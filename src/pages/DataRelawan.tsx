@@ -34,32 +34,36 @@ const DataRelawan: React.FC = () => {
     const { data: pengajuanList = [], isLoading: isLoadingPengajuan } = usePengajuanList(!!isSuperAdmin);
     const { data: opdListData = [] } = useOpdList(!!isSuperAdmin);
 
-    // OPD options untuk autocomplete
     const opdOptions = useMemo<AutoOption[]>(
         () => opdListData.map(o => ({ label: o.nama_opd, value: String(o.opd_id) })),
         [opdListData]
     );
 
-    // Cache kader per opd_id agar setiap row assignment bisa punya sumber data sendiri
     const [kaderOptionsByOpdId, setKaderOptionsByOpdId] = useState<Record<number, AutoOption[]>>({});
     const [loadingOpdIds, setLoadingOpdIds] = useState<Record<number, boolean>>({});
 
-
     const [isReviewing, setIsReviewing] = useState(false);
-    const [isSaving, setIsSaving] = useState(false); // untuk loading tombol submit tambah relawan
+    const [isSaving, setIsSaving] = useState(false);
 
     const [searchTerm, setSearchTerm] = useState<string>('');
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
+    
     const [selectedRelawan, setSelectedRelawan] = useState<RelawanData | null>(null);
     const [selectedPengajuan, setSelectedPengajuan] = useState<PengajuanAPIData | null>(null);
     const [verificationNote, setVerificationNote] = useState<string>('');
     const [isDataChecked, setIsDataChecked] = useState<boolean>(false);
-    const [currentPage, setCurrentPage] = useState<number>(1);
+    
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+    
+    // ── STATE PAGINATION TERPISAH UNTUK 2 TABEL ──
+    const [currentPage, setCurrentPage] = useState<number>(1); // Untuk Tabel Relawan
+    const [currentPengajuanPage, setCurrentPengajuanPage] = useState<number>(1); // Untuk Tabel Pengajuan
     const itemsPerPage = 5;
+    const pengajuanItemsPerPage = 3;
+
     const [isEditMode, setIsEditMode] = useState<boolean>(false);
     const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
     const [deletingPenugasanId, setDeletingPenugasanId] = useState<number | null>(null);
@@ -83,24 +87,15 @@ const DataRelawan: React.FC = () => {
         skId: ''
     });
 
-
     const [detailFormData, setDetailFormData] = useState({
-        namaRelawan: '',
-        nik: '',
-        alamat: '',
-        no_hp: '',
-        kelurahan: '',
-        kader: '',
-        jabatan: '',
-        penugasan: '',
-        jenisKelamin: 'L' as 'L' | 'P',
+        namaRelawan: '', nik: '', alamat: '', no_hp: '', kelurahan: '',
+        kader: '', jabatan: '', penugasan: '', jenisKelamin: 'L' as 'L' | 'P',
         assignments: [] as Assignment[]
     });
 
     const hasChanges = useMemo(() => {
         if (!selectedRelawan) return false;
         const orig = selectedRelawan;
-        // Field-level comparison — tidak perlu JSON.stringify array
         if (
             detailFormData.namaRelawan !== orig.namaLengkap ||
             detailFormData.nik !== orig.nik ||
@@ -109,32 +104,19 @@ const DataRelawan: React.FC = () => {
             detailFormData.kelurahan !== orig.kelurahan ||
             detailFormData.jenisKelamin !== (orig.jenisKelamin || 'L')
         ) return true;
-        // Assignment length change
         const origAssign = orig.assignments ?? [];
         if (detailFormData.assignments.length !== origAssign.length) return true;
-        // Deep compare per field (cheaper than JSON.stringify karena exit-early)
         return detailFormData.assignments.some((a, i) => {
             const o = origAssign[i] as any;
             return !o ||
-                a.opd !== o.opd ||
-                a.kader !== o.kader ||
-                a.peran !== o.peran ||
-                a.penugasan !== o.penugasan ||
-                a.statusKeaktifan !== o.statusKeaktifan;
+                a.opd !== o.opd || a.kader !== o.kader || a.peran !== o.peran ||
+                a.penugasan !== o.penugasan || a.statusKeaktifan !== o.statusKeaktifan;
         });
     }, [selectedRelawan, detailFormData]);
 
     const [formData, setFormData] = useState({
-        namaRelawan: '',
-        nik: '',
-        jenisKelamin: 'L' as 'L' | 'P',
-        alamat: '',
-        no_hp: '',
-        kelurahan: '',
-        kader: '',
-        jabatan: '',
-        penugasan: '',
-        detail_penugasan: '',
+        namaRelawan: '', nik: '', jenisKelamin: 'L' as 'L' | 'P', alamat: '', no_hp: '',
+        kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
         assignments: [] as Assignment[]
     });
 
@@ -161,7 +143,6 @@ const DataRelawan: React.FC = () => {
         }
     }, [isOPD, kaderOptionsByOpdId, loadingOpdIds]);
 
-    // Prefetch kader untuk semua OPD yang muncul di assignment aktif (form/detail)
     useEffect(() => {
         const assignments = isEditMode ? detailFormData.assignments : formData.assignments;
         const opdIds = Array.from(new Set(
@@ -172,7 +153,6 @@ const DataRelawan: React.FC = () => {
         opdIds.forEach((opdId) => { void fetchKaderOptionsForOpd(opdId); });
     }, [isEditMode, detailFormData.assignments, formData.assignments, fetchKaderOptionsForOpd]);
 
-    // kaderOptionsByIndex — mapping row assignment -> options sesuai opd_id row tsb
     const kaderOptionsByIndex = useMemo<Record<number, AutoOption[]>>(() => {
         const result: Record<number, AutoOption[]> = {};
         const assignments = isEditMode ? detailFormData.assignments : formData.assignments;
@@ -193,21 +173,15 @@ const DataRelawan: React.FC = () => {
         return result;
     }, [loadingOpdIds, formData.assignments, detailFormData.assignments, isEditMode]);
 
-    // ── fetchKaderByOpdId — trigger fetch per-opd_id (per row) ──
     const fetchKaderByOpdId = useCallback((opdId: number, _assignmentIndex: number) => {
         const normalizedOpdId = opdId > 0 ? opdId : (isOPD ? ((user as any)?.opd_id ?? 0) : 0);
         if (normalizedOpdId > 0) void fetchKaderOptionsForOpd(normalizedOpdId);
     }, [isOPD, user, fetchKaderOptionsForOpd]);
 
-    // ── Invalidate cache setelah mutasi ──
-    const invalidateRelawan = useCallback(() =>
-        qc.invalidateQueries({ queryKey: RELAWAN_KEYS.all }),
-    [qc]);
-    const invalidatePengajuan = useCallback(() =>
-        qc.invalidateQueries({ queryKey: PENGAJUAN_KEYS.all }),
-    [qc]);
+    const invalidateRelawan = useCallback(() => qc.invalidateQueries({ queryKey: RELAWAN_KEYS.all }), [qc]);
+    const invalidatePengajuan = useCallback(() => qc.invalidateQueries({ queryKey: PENGAJUAN_KEYS.all }), [qc]);
 
-
+    // ── DATA RELAWAN (Tabel Bawah) ──
     const filteredRelawanData = useMemo(() => {
         const lowerSearch = searchTerm.toLowerCase();
         return relawanList.filter(relawan => {
@@ -215,17 +189,49 @@ const DataRelawan: React.FC = () => {
             const matchNik = relawan.nik?.toLowerCase().includes(lowerSearch) || false;
             const matchAlamat = relawan.alamat?.toLowerCase().includes(lowerSearch) || false;
             const matchKelurahan = relawan.kelurahan?.toLowerCase().includes(lowerSearch) || false;
-            
             const matchAssignment = relawan.assignments?.some(a => 
-                a.opd?.toLowerCase().includes(lowerSearch) ||
-                a.kader?.toLowerCase().includes(lowerSearch)
+                a.opd?.toLowerCase().includes(lowerSearch) || a.kader?.toLowerCase().includes(lowerSearch)
             ) || false;
 
             return matchNama || matchNik || matchAlamat || matchKelurahan || matchAssignment;
         });
     }, [relawanList, searchTerm]);
 
-    // ── Export PDF seluruh data relawan yang difilter ──
+    const totalPages = Math.ceil(filteredRelawanData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentRelawanData = filteredRelawanData.slice(startIndex, endIndex);
+
+    // ── DATA PENGAJUAN (Tabel Atas) dengan Sorting Prioritas Review ──
+    const pengajuanUIData = useMemo(() => {
+        // 1. Sort data pengajuan: "Menunggu Review" di atas, sisanya di bawah berdasarkan tanggal
+        const sortedData = [...pengajuanList].sort((a, b) => {
+            const weightA = a.status === 'Menunggu Review' ? 0 : 1;
+            const weightB = b.status === 'Menunggu Review' ? 0 : 1;
+
+            if (weightA !== weightB) {
+                return weightA - weightB;
+            }
+            // Jika status sama, urutkan tanggal terbaru
+            return new Date(b.tanggal_pengajuan).getTime() - new Date(a.tanggal_pengajuan).getTime();
+        });
+
+        // 2. Map ke UI format
+        return sortedData.map(p => ({
+            nik: p.nik,
+            namaLengkap: p.nama_lengkap,
+            tanggalPengajuan: new Date(p.tanggal_pengajuan).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }),
+            status: p.status,
+            _raw: p
+        }));
+    }, [pengajuanList]);
+
+    const totalPengajuanPages = Math.ceil(pengajuanUIData.length / pengajuanItemsPerPage);
+    const startPengajuanIndex = (currentPengajuanPage - 1) * pengajuanItemsPerPage;
+    const endPengajuanIndex = startPengajuanIndex + pengajuanItemsPerPage;
+    const currentPengajuanData = pengajuanUIData.slice(startPengajuanIndex, endPengajuanIndex);
+
+
     const handleExportPdf = useCallback(() => {
         const doc = new jsPDF({ orientation: 'landscape' });
         doc.setFontSize(14);
@@ -265,19 +271,6 @@ const DataRelawan: React.FC = () => {
         });
         doc.save(`data-relawan-${new Date().toISOString().slice(0,10)}.pdf`);
     }, [filteredRelawanData]);
-
-    const totalPages = Math.ceil(filteredRelawanData.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentRelawanData = filteredRelawanData.slice(startIndex, endIndex);
-
-    const pengajuanUIData = useMemo(() => pengajuanList.map(p => ({
-        nik: p.nik,
-        namaLengkap: p.nama_lengkap,
-        tanggalPengajuan: new Date(p.tanggal_pengajuan).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }),
-        status: p.status,
-        _raw: p
-    })), [pengajuanList]);
 
     const pengajuanColumns = [
         { header: 'NIK', accessor: 'nik' as const },
@@ -322,12 +315,10 @@ const DataRelawan: React.FC = () => {
             assignments: assignments
         });
 
-        // Prefetch kader untuk semua OPD milik relawan ini agar warning/opsi kader akurat per row
         assignments.forEach((a: any) => {
             const opdId = Number(a?.opd_id || 0);
             if (opdId > 0) void fetchKaderOptionsForOpd(opdId);
         });
-
         setIsDetailModalOpen(true);
     };
 
@@ -346,11 +337,15 @@ const DataRelawan: React.FC = () => {
                 ? `/admin/relawan/pengajuan/${selectedPengajuan.pengajuan_id}/review`
                 : `/opd-admin/relawan/pengajuan/${selectedPengajuan.pengajuan_id}/review`;
             const { data } = await apiClient.post(endpoint, { status, catatan_verifikator: verificationNote });
+            
             if (data.success) {
                 setToast({ message: data.message, type: 'success' });
                 setIsReviewModalOpen(false);
                 invalidatePengajuan();
                 if (status === 'Disetujui') invalidateRelawan();
+                
+                // RESET: Kembalikan halaman pengajuan ke 1 setelah melakukan aksi
+                setCurrentPengajuanPage(1);
             } else {
                 setToast({ message: data.message || 'Gagal memproses pengajuan', type: 'error' });
             }
@@ -361,12 +356,9 @@ const DataRelawan: React.FC = () => {
         }
     };
 
-    //  BENAR: Object tunggal untuk form manual
-    //  BENAR: Object tunggal untuk form manual
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        //  Validasi semua data pribadi
         if (!formData.namaRelawan.trim() || !formData.nik.trim() || !formData.alamat.trim() || !formData.no_hp.trim() || !formData.kelurahan.trim()) {
             setToast({ message: 'Semua data pribadi wajib diisi', type: 'error' });
             return;
@@ -384,9 +376,6 @@ const DataRelawan: React.FC = () => {
             return;
         }
 
-        //  Validasi minimal 1 assignment (Dihapus karena penugasan sekarang opsional saat tambah relawan)
-        
-        //  Validasi OPD, Kader, Peran, Detail, Penugasan
         const hasInvalidAssignment = formData.assignments.some(
             (a) => !a.opd || !a.kader || !a.peran || !a.penugasan || !a.detail
         );
@@ -431,6 +420,8 @@ const DataRelawan: React.FC = () => {
                     assignments: []
                 });
                 invalidateRelawan();
+                // RESET: Tabel relawan dikembalikan ke halaman 1 setelah add
+                setCurrentPage(1); 
             }
         } catch (e: any) {
             setToast({ message: parseErrorMessage(e, 'Gagal menyimpan data relawan'), type: 'error' });
@@ -445,6 +436,7 @@ const DataRelawan: React.FC = () => {
             if (res.success) {
                 setToast({ message: res.message || 'Berhasil memproses Excel', type: 'success' });
                 invalidateRelawan();
+                setCurrentPage(1); // Reset page setelah mass upload
             } else {
                 setToast({ message: res.message || 'Gagal import Excel', type: 'error' });
             }
@@ -455,12 +447,8 @@ const DataRelawan: React.FC = () => {
         }
     };
 
-    // Line ~360 - Pastikan include kader_id: null
-    // DataRelawan.tsx - Update handleAddAssignment (Line ~370)
-
     const handleAddAssignment = () => {
         const newIndex = formData.assignments.length;
-
         setFormData(prev => ({
             ...prev,
             assignments: [
@@ -468,8 +456,6 @@ const DataRelawan: React.FC = () => {
                 createEmptyAssignment()
             ]
         }));
-
-        //  FIXED: Auto-fetch kader untuk assignment baru jika OPD user
         if (isOPD && (user as any)?.opd_id) {
             fetchKaderByOpdId((user as any).opd_id, newIndex);
         }
@@ -480,10 +466,8 @@ const DataRelawan: React.FC = () => {
             ...prev,
             assignments: prev.assignments.filter((_, i) => i !== index)
         }));
-        // options kader per row dihitung otomatis dari cache per opd_id
     };
 
-    // ── Handler OPD berubah di assignment ──
     const handleAssignmentOpdChange = (index: number, namaOpd: string) => {
         const matched = opdOptions.find(o => o.label.toLowerCase() === namaOpd.toLowerCase());
         const opdId = matched ? Number(matched.value) : 0;
@@ -503,20 +487,13 @@ const DataRelawan: React.FC = () => {
         });
     };
 
-    //  TAMBAHKAN FUNCTION INI (baru setelah handleAssignmentChange)
     const handleAssignmentKaderChange = (index: number, namaKader: string) => {
-        // namaKader di sini adalah label teks dari AutocompleteInput
         const options = kaderOptionsByIndex[index] || [];
         const matched = options.find(o => o.label.toLowerCase() === namaKader.toLowerCase());
         const kaderId = matched ? Number(matched.value) : null;
-
         setFormData(prev => {
             const newAssignments = [...prev.assignments];
-            newAssignments[index] = {
-                ...newAssignments[index],
-                kader: namaKader,      // Simpan teks yang diketik/dipilih
-                kader_id: kaderId      // ID jika cocok
-            };
+            newAssignments[index] = { ...newAssignments[index], kader: namaKader, kader_id: kaderId };
             return { ...prev, assignments: newAssignments };
         });
     };
@@ -545,14 +522,9 @@ const DataRelawan: React.FC = () => {
         const matched = options.find(o => o.label.toLowerCase() === value.toLowerCase());
         const kaderId = matched ? Number(matched.value) : null;
         const kaderName = value;
-
         setDetailFormData(prev => {
             const newAssignments = [...prev.assignments];
-            newAssignments[index] = {
-                ...newAssignments[index],
-                kader: kaderName,
-                kader_id: kaderId
-            } as any;
+            newAssignments[index] = { ...newAssignments[index], kader: kaderName, kader_id: kaderId } as any;
             return { ...prev, assignments: newAssignments };
         });
     };
@@ -607,7 +579,6 @@ const DataRelawan: React.FC = () => {
     };
 
     const handleDeletePenugasan = async (penugasanId: number, index: number) => {
-        // Jika penugasan baru (belum tersimpan), langsung hapus dari state
         if (!penugasanId) {
             setDetailFormData(prev => ({
                 ...prev,
@@ -615,8 +586,6 @@ const DataRelawan: React.FC = () => {
             }));
             return;
         }
-
-        //  FIX: Tampilkan confirm dialog dengan info penugasan
         const assignment = detailFormData.assignments[index] as any;
         const label = [
             selectedRelawan?.namaLengkap,
@@ -628,7 +597,6 @@ const DataRelawan: React.FC = () => {
         setDeleteConfirm({ penugasanId, index, label });
     };
 
-    //  FIX: Fungsi eksekusi hapus setelah konfirmasi
     const handleConfirmDelete = async () => {
         if (!deleteConfirm) return;
         const { penugasanId, index } = deleteConfirm;
@@ -670,7 +638,6 @@ const DataRelawan: React.FC = () => {
                 createEmptyAssignment('new') as any
             ]
         }));
-        // Auto-fetch kader jika OPD
         if (isOPD && (user as any)?.opd_id) {
             const newIndex = detailFormData.assignments.length;
             fetchKaderByOpdId((user as any).opd_id, newIndex);
@@ -682,21 +649,16 @@ const DataRelawan: React.FC = () => {
         index: number,
         isReadOnly: boolean,
         context: 'form' | 'detail' = 'form',
-        // ← Tambah parameter baru
         handlers?: {
             onFieldChange?: (index: number, field: string, value: string) => void;
             onOpdChange?: (index: number, val: string) => void;
             onKaderChange?: (index: number, val: string) => void;
         }
     ) => {
-        // Kader options: jika form → pakai yang dinamis, jika detail → pakai semua kader
-        const currentKaderOptions = context === 'form'
-            ? (kaderOptionsByIndex[index] || [])
-            : [];
-
+        const currentKaderOptions = context === 'form' ? (kaderOptionsByIndex[index] || []) : [];
         const isKaderLoading = isLoadingKaderByIndex[index] || false;
-        //  FIXED: Untuk OPD user, OPD selalu dianggap selected (karena auto-filled)
         const hasOpdSelected = isOPD || assignment.opd_id > 0 || assignment.opd !== '';
+        
         const onFieldChange = handlers?.onFieldChange ?? handleAssignmentChange;
         const onOpdChange = handlers?.onOpdChange ?? handleAssignmentOpdChange;
         const onKaderChange = handlers?.onKaderChange ?? handleAssignmentKaderChange;
@@ -716,11 +678,9 @@ const DataRelawan: React.FC = () => {
                     </div>
                 )}
 
-                {/* OPD Field */}
                 <div className="grid grid-cols-3 gap-4 items-start">
                     <label className="text-lg font-medium text-gray-900 pt-2">OPD</label>
                     <div className="col-span-2">
-                        {/*  FIXED: Tambahkan (user as any) di value */}
                         {isOPD ? (
                             <input
                                 type="text"
@@ -738,14 +698,12 @@ const DataRelawan: React.FC = () => {
                                 disabled={isReadOnly}
                             />
                         )}
-                        {/* Indikator OPD valid (Hanya untuk Super Admin) */}
                         {!isReadOnly && !isOPD && assignment.opd_id > 0 && (
-                            <p className="mt-1 text-xs text-green-600 font-medium">✓ OPD ditemukan</p>
+                            <p className="mt-1 text-xs text-green-600 font-medium">OPD ditemukan</p>
                         )}
                     </div>
                 </div>
 
-                {/* Kader Field — dinamis berdasarkan OPD */}
                 <div className="grid grid-cols-3 gap-4 items-start">
                     <label className="text-lg font-medium text-gray-900 pt-2">Kader</label>
                     <div className="col-span-2">
@@ -757,24 +715,19 @@ const DataRelawan: React.FC = () => {
                                     options={currentKaderOptions}
                                     onChange={(val) => onKaderChange(index, val)}
                                     placeholder={
-                                        !hasOpdSelected
-                                            ? 'Pilih OPD terlebih dahulu...'
-                                            : isKaderLoading
-                                                ? 'Memuat kader...'
-                                                : currentKaderOptions.length === 0
-                                                    ? 'Tidak ada kader di OPD ini'
-                                                    : 'Cari nama Kader...'
+                                        !hasOpdSelected ? 'Pilih OPD terlebih dahulu...'
+                                        : isKaderLoading ? 'Memuat kader...'
+                                        : currentKaderOptions.length === 0 ? 'Tidak ada kader di OPD ini'
+                                        : 'Cari nama Kader...'
                                     }
                                     disabled={isReadOnly || !hasOpdSelected || isKaderLoading}
                                     warnIfNotFound={false}
                                 />
-                                {/* Info jumlah kader tersedia */}
                                 {!isReadOnly && hasOpdSelected && !isKaderLoading && currentKaderOptions.length > 0 && (
                                     <p className="mt-1 text-xs text-blue-500">
                                         {currentKaderOptions.length} kader tersedia di OPD ini
                                     </p>
                                 )}
-                                {/* Warning jika OPD tidak punya kader */}
                                 {!isReadOnly && hasOpdSelected && !isKaderLoading && currentKaderOptions.length === 0 && assignment.opd_id > 0 && (
                                     <p className="mt-1 text-xs text-yellow-600">
                                         ️ OPD ini belum memiliki kader
@@ -794,7 +747,6 @@ const DataRelawan: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Peran/Jabatan */}
                 <div className="grid grid-cols-3 gap-4 items-center">
                     <label className="text-lg font-medium text-gray-900">Peran/Jabatan</label>
                     <select
@@ -814,7 +766,6 @@ const DataRelawan: React.FC = () => {
                     </select>
                 </div>
 
-                {/* Detail Jabatan */}
                 <div className="grid grid-cols-3 gap-4 items-center">
                     <label className="text-lg font-medium text-gray-900">Detail Jabatan</label>
                     <input
@@ -828,7 +779,6 @@ const DataRelawan: React.FC = () => {
                     />
                 </div>
 
-                {/* Penugasan */}
                 <div className="grid grid-cols-3 gap-4 items-center">
                     <label className="text-lg font-medium text-gray-900">Penugasan</label>
                     <input
@@ -842,7 +792,6 @@ const DataRelawan: React.FC = () => {
                     />
                 </div>
 
-                {/* Status Keaktifan */}
                 <div className="grid grid-cols-3 gap-4 items-center mt-2">
                     <label className="text-lg font-medium text-gray-900">Status Keaktifan</label>
                     <div className="col-span-2 flex items-center gap-6">
@@ -899,6 +848,7 @@ const DataRelawan: React.FC = () => {
                         Unggah dari Excel
                     </Button>
                 </div>
+                {/* RESET: Kembalikan halaman relawan ke 1 saat pencarian */}
                 <SearchInput
                     value={searchTerm}
                     onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
@@ -906,7 +856,7 @@ const DataRelawan: React.FC = () => {
                 />
             </div>
 
-            {/* Pengajuan Perubahan Data */}
+            {/* TABEL 1: Pengajuan Perubahan Data */}
             <Card title="Pengajuan Perubahan Data">
                 {isLoadingPengajuan ? (
                     <div className="flex items-center justify-center h-32">
@@ -919,11 +869,25 @@ const DataRelawan: React.FC = () => {
                         <p className="text-sm text-gray-400 mt-1">Saat ini belum ada relawan yang mengajukan perubahan data.</p>
                     </div>
                 ) : (
-                    <Table columns={pengajuanColumns} data={pengajuanUIData} actions={pengajuanActions} minRows={3} />
+                    <>
+                        <Table columns={pengajuanColumns} data={currentPengajuanData} actions={pengajuanActions} minRows={3} />
+                        
+                        {/* Pagination Tabel Pengajuan */}
+                        <div className="mt-4 flex justify-between items-center">
+                            <div className="text-sm text-gray-500">
+                                Menampilkan {startPengajuanIndex + 1}-{Math.min(endPengajuanIndex, pengajuanUIData.length)} dari {pengajuanUIData.length} Pengajuan
+                            </div>
+                            <Pagination
+                                currentPage={currentPengajuanPage}
+                                totalPages={totalPengajuanPages}
+                                onPageChange={(page) => setCurrentPengajuanPage(page)}
+                            />
+                        </div>
+                    </>
                 )}
             </Card>
 
-            {/* Daftar Relawan */}
+            {/* TABEL 2: Daftar Relawan */}
             <Card>
                 <div className="mb-4 flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-gray-900">Daftar Relawan</h2>
@@ -958,6 +922,7 @@ const DataRelawan: React.FC = () => {
                     <Table columns={relawanColumns} data={currentRelawanData} actions={relawanActions} minRows={5} />
                 )}
 
+                {/* Pagination Tabel Relawan */}
                 {!isLoadingRelawan && filteredRelawanData.length > 0 && (
                     <div className="mt-4 flex justify-between items-center">
                         <div className="text-sm text-gray-500">
@@ -1022,7 +987,6 @@ const DataRelawan: React.FC = () => {
                         </select>
                     </div>
 
-                    {/* Daftar Penugasan */}
                     <div className="pt-4 border-t border-gray-200">
                         <h3 className="text-lg font-semibold text-gray-900 mb-4">Daftar Penugasan:</h3>
                         {formData.assignments.map((assignment, index) =>
@@ -1054,7 +1018,6 @@ const DataRelawan: React.FC = () => {
             >
                 {selectedRelawan && (
                     <div className="space-y-6">
-                        {/* Tombol Edit / Batal di pojok atas */}
                         <div className="flex justify-end">
                             {!isEditMode ? (
                                 <Button
@@ -1077,14 +1040,12 @@ const DataRelawan: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Field profil — editable saat isEditMode */}
                         {[
                             { label: 'Nama Relawan', name: 'namaRelawan' },
                             { label: 'NIK', name: 'nik' },
                             { label: 'Alamat KTP', name: 'alamat' },
                             { label: 'No. HP', name: 'no_hp' },
                             { label: 'Kelurahan', name: 'kelurahan' },
-                            { label: 'Jabatan', name: 'jabatan' },
                         ].map(field => (
                             <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                                 <label className="text-lg font-medium text-gray-900">{field.label}</label>
@@ -1115,7 +1076,6 @@ const DataRelawan: React.FC = () => {
                             </select>
                         </div>
 
-                        {/* Daftar Penugasan */}
                         <div className="pt-4 border-t border-gray-200">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Daftar Penugasan:</h3>
                             {Array.isArray(detailFormData.assignments) && detailFormData.assignments.length > 0 ? (
@@ -1124,7 +1084,6 @@ const DataRelawan: React.FC = () => {
                                     const isNewAssignment = isNaN(penugasanId) || String((assignment as any).id).startsWith('new-');
                                     return (
                                         <div key={(assignment as any).id} className="relative bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4 space-y-4">
-                                            {/* Tombol hapus penugasan — hanya di edit mode */}
                                             {isEditMode && (
                                                 <div className="flex justify-end -mt-2 -mr-2 mb-2">
                                                     <button
@@ -1134,17 +1093,12 @@ const DataRelawan: React.FC = () => {
                                                         className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors disabled:opacity-50"
                                                         title="Hapus Penugasan"
                                                     >
-                                                        {deletingPenugasanId === penugasanId
-                                                            ? <Loader2 size={18} className="animate-spin" />
-                                                            : <X size={18} />}
+                                                        {deletingPenugasanId === penugasanId ? <Loader2 size={18} className="animate-spin" /> : <X size={18} />}
                                                     </button>
                                                 </div>
                                             )}
                                             {renderAssignmentFields(
-                                                assignment,
-                                                index,
-                                                !isEditMode,
-                                                isEditMode ? 'form' : 'detail',
+                                                assignment, index, !isEditMode, isEditMode ? 'form' : 'detail',
                                                 isEditMode ? {
                                                     onFieldChange: handleDetailAssignmentChange,
                                                     onOpdChange: handleDetailAssignmentOpdChange,
@@ -1158,7 +1112,6 @@ const DataRelawan: React.FC = () => {
                                 <div className="text-center text-gray-500 italic py-4">Belum ada penugasan terdaftar.</div>
                             )}
 
-                            {/* Tombol tambah penugasan — hanya di edit mode */}
                             {isEditMode && (
                                 <div className="flex justify-center mt-2">
                                     <Button type="button" variant="primary" size="sm" onClick={handleAddDetailAssignment}>
@@ -1169,7 +1122,6 @@ const DataRelawan: React.FC = () => {
                             )}
                         </div>
 
-                        {/* Footer tombol Simpan — hanya di edit mode */}
                         {isEditMode && (
                             <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                                 <Button
@@ -1205,7 +1157,6 @@ const DataRelawan: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* Menampilkan Data Baru yang diajukan jika ada */}
                         {selectedPengajuan.data_baru && (() => {
                             let dataBaru: any = {};
                             try {
@@ -1242,7 +1193,6 @@ const DataRelawan: React.FC = () => {
                                 </div>
                             );
                         })()}
-
 
                         <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg">
                             <input type="checkbox" id="dataChecked" checked={isDataChecked} onChange={(e) => setIsDataChecked(e.target.checked)} className="w-4 h-4 text-blue-600" />
@@ -1284,6 +1234,7 @@ const DataRelawan: React.FC = () => {
                 templateName="Data Relawan"
                 dataType="relawan"
             />
+            
             {/* Modal Konfirmasi Hapus Penugasan */}
             {deleteConfirm && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
@@ -1295,17 +1246,10 @@ const DataRelawan: React.FC = () => {
                             Tindakan ini tidak dapat dibatalkan.
                         </p>
                         <div className="flex justify-end gap-3 pt-2">
-                            <Button
-                                variant="outline"
-                                onClick={() => setDeleteConfirm(null)}
-                                className="px-6"
-                            >
+                            <Button variant="outline" onClick={() => setDeleteConfirm(null)} className="px-6">
                                 Batal
                             </Button>
-                            <Button
-                                onClick={handleConfirmDelete}
-                                className="bg-red-600 hover:bg-red-700 text-white px-6"
-                            >
+                            <Button onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700 text-white px-6">
                                 Ya, Hapus
                             </Button>
                         </div>
