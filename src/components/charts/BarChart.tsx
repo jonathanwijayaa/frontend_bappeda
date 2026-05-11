@@ -12,6 +12,7 @@ interface BarChartProps {
     xAxisKey: string;
     color?: string;
     height?: number;
+    maxLabelLength?: number; // Tambahan untuk membatasi panjang teks
 }
 
 const BarChart: React.FC<BarChartProps> = ({
@@ -19,8 +20,17 @@ const BarChart: React.FC<BarChartProps> = ({
     dataKey,
     xAxisKey,
     color = '#3B82F6',
-    height = 400
+    height = 400,
+    maxLabelLength = 15 // Default dipotong setelah 15 karakter
 }) => {
+    // Fungsi untuk memotong teks
+    const formatTick = (value: string) => {
+        if (typeof value === 'string' && value.length > maxLabelLength) {
+            return `${value.substring(0, maxLabelLength)}...`;
+        }
+        return value;
+    };
+
     return (
         <ResponsiveContainer width="100%" height={height}>
             <RechartsBarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
@@ -31,6 +41,7 @@ const BarChart: React.FC<BarChartProps> = ({
                     textAnchor="end"
                     height={80}
                     tick={{ fontSize: 12 }}
+                    tickFormatter={formatTick} // Implementasi truncate di sini
                 />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip />
