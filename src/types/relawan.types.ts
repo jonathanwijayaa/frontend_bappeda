@@ -13,6 +13,8 @@ export interface Assignment {
     statusKeaktifan: 'Aktif' | 'Nonaktif';
     nomorSK: string;
     skId: string; // Reference to SK document
+    tanggalTerbit?: string; // Tanggal terbit SK
+    batasAktif?: string;    // Batas aktif SK
 }
 
 // ── RelawanData — dipakai di tabel DataRelawan ──────────────────
