@@ -120,39 +120,43 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Info Section */}
-                <div className='lg:col-span-2'>
+                <div className="lg:col-span-2">
                     <Card title={isSuperAdmin ? "Info Tambahan:" : `Info Tambahan ${user?.nama_opd || ''}:`}>
                         <div className="space-y-4">
                             <table className="w-full">
                                 <tbody className="text-lg">
-                                    <tr>
-                                        <td className="text-gray-700 py-2 whitespace-nowrap">Total Relawan Aktif</td>
-                                        <td className="font-bold py-2 px-3 w-2 text-left">:</td>
-                                        <td className="font-bold py-2 text-left">
+                                    <tr className="border-b border-gray-100 last:border-0">
+                                        <td className="text-gray-600 py-3 whitespace-nowrap font-medium">Total Relawan Aktif</td>
+                                        <td className="font-bold py-3 px-2 w-4 text-center text-gray-400">:</td>
+                                        {/* KUNCI: Tambahkan w-full di sini agar sisa ruang kosong didorong ke kanan */}
+                                        <td className="font-extrabold py-3 text-left text-blue-600 text-xl w-full">
                                             {dashboardData.ringkasan.total_relawan_aktif.toLocaleString('id-ID')}
                                         </td>
                                     </tr>
-                                    <tr>
-                                        <td className="text-gray-700 py-2 whitespace-nowrap">Total Kader</td>
-                                        <td className="font-bold py-2 px-3 w-2 text-left">:</td>
-                                        <td className="font-bold py-2 text-left">
+                                    
+                                    <tr className="border-b border-gray-100 last:border-0">
+                                        <td className="text-gray-600 py-3 whitespace-nowrap font-medium">Total Kader</td>
+                                        <td className="font-bold py-3 px-2 w-4 text-center text-gray-400">:</td>
+                                        <td className="font-extrabold py-3 text-left text-emerald-600 text-xl w-full">
                                             {dashboardData.ringkasan.total_kader}
                                         </td>
                                     </tr>
+
                                     {isSuperAdmin && (
-                                        <tr>
-                                            <td className="text-gray-700 py-2 whitespace-nowrap">Total OPD</td>
-                                            <td className="font-bold py-2 px-3 w-2 text-left">:</td>
-                                            <td className="font-bold py-2 text-left">
+                                        <tr className="border-b border-gray-100 last:border-0">
+                                            <td className="text-gray-600 py-3 whitespace-nowrap font-medium">Total OPD</td>
+                                            <td className="font-bold py-3 px-2 w-4 text-center text-gray-400">:</td>
+                                            <td className="font-extrabold py-3 text-left text-purple-600 text-xl w-full">
                                                 {dashboardData.ringkasan.total_opd}
                                             </td>
                                         </tr>
                                     )}
+
                                     {isSuperAdmin && (
-                                        <tr>
-                                            <td className="text-gray-700 py-2 whitespace-nowrap">Pengajuan Pending</td>
-                                            <td className="font-bold py-2 px-3 w-4 text-center">:</td>
-                                            <td className="font-bold py-2 text-left">
+                                        <tr className="border-b border-gray-100 last:border-0">
+                                            <td className="text-gray-600 py-3 whitespace-nowrap font-medium">Pengajuan Pending</td>
+                                            <td className="font-bold py-3 px-2 w-4 text-center text-gray-400">:</td>
+                                            <td className={`font-extrabold py-3 text-left text-xl w-full ${dashboardData.ringkasan.pengajuan_pending > 0 ? 'text-amber-500' : 'text-gray-500'}`}>
                                                 {dashboardData.ringkasan.pengajuan_pending}
                                             </td>
                                         </tr>
