@@ -58,6 +58,8 @@ const DataRelawan: React.FC = () => {
     const [verificationNote, setVerificationNote] = useState<string>('');
     const [isDataChecked, setIsDataChecked] = useState<boolean>(false);
     const [currentPage, setCurrentPage] = useState<number>(1);
+    const [currentPengajuanPage, setCurrentPengajuanPage] = useState<number>(1);
+    const pengajuanItemsPerPage = 5;
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const itemsPerPage = 5;
     const [isEditMode, setIsEditMode] = useState<boolean>(false);
@@ -271,13 +273,35 @@ const DataRelawan: React.FC = () => {
     const endIndex = startIndex + itemsPerPage;
     const currentRelawanData = filteredRelawanData.slice(startIndex, endIndex);
 
-    const pengajuanUIData = useMemo(() => pengajuanList.map(p => ({
-        nik: p.nik,
-        namaLengkap: p.nama_lengkap,
-        tanggalPengajuan: new Date(p.tanggal_pengajuan).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }),
-        status: p.status,
-        _raw: p
-    })), [pengajuanList]);
+    const pengajuanUIData = useMemo(() => {
+        // 1. Urutkan data terlebih dahulu
+        const sortedData = [...pengajuanList].sort((a, b) => {
+            // Berikan bobot: 0 untuk Menunggu Review (di atas), 1 untuk lainnya (di bawah)
+            const weightA = a.status === 'Menunggu Review' ? 0 : 1;
+            const weightB = b.status === 'Menunggu Review' ? 0 : 1;
+
+            if (weightA !== weightB) {
+                return weightA - weightB;
+            }
+            // (Opsional) Jika statusnya sama, urutkan berdasarkan tanggal terbaru
+            return new Date(b.tanggal_pengajuan).getTime() - new Date(a.tanggal_pengajuan).getTime();
+        });
+
+        // 2. Map ke format UI
+        return sortedData.map(p => ({
+            nik: p.nik,
+            namaLengkap: p.nama_lengkap,
+            tanggalPengajuan: new Date(p.tanggal_pengajuan).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }),
+            status: p.status,
+            _raw: p
+        }));
+    }, [pengajuanList]);
+
+    // 3. Hitung logika pagination untuk pengajuan
+    const totalPengajuanPages = Math.ceil(pengajuanUIData.length / pengajuanItemsPerPage);
+    const startPengajuanIndex = (currentPengajuanPage - 1) * pengajuanItemsPerPage;
+    const endPengajuanIndex = startPengajuanIndex + pengajuanItemsPerPage;
+    const currentPengajuanData = pengajuanUIData.slice(startPengajuanIndex, endPengajuanIndex);
 
     const pengajuanColumns = [
         { header: 'NIK', accessor: 'nik' as const },
@@ -454,9 +478,6 @@ const DataRelawan: React.FC = () => {
             setIsUploadModalOpen(false);
         }
     };
-
-    // Line ~360 - Pastikan include kader_id: null
-    // DataRelawan.tsx - Update handleAddAssignment (Line ~370)
 
     const handleAddAssignment = () => {
         const newIndex = formData.assignments.length;
@@ -919,7 +940,27 @@ const DataRelawan: React.FC = () => {
                         <p className="text-sm text-gray-400 mt-1">Saat ini belum ada relawan yang mengajukan perubahan data.</p>
                     </div>
                 ) : (
-                    <Table columns={pengajuanColumns} data={pengajuanUIData} actions={pengajuanActions} minRows={3} />
+                    <>
+                        {/* Gunakan currentPengajuanData di sini */}
+                        <Table 
+                            columns={pengajuanColumns} 
+                            data={currentPengajuanData} 
+                            actions={pengajuanActions} 
+                            minRows={5} 
+                        />
+                        
+                        {/* Komponen Pagination Pengajuan */}
+                        <div className="mt-4 flex justify-between items-center">
+                            <div className="text-sm text-gray-500">
+                                Menampilkan {startPengajuanIndex + 1}-{Math.min(endPengajuanIndex, pengajuanUIData.length)} dari {pengajuanUIData.length} Pengajuan
+                            </div>
+                            <Pagination
+                                currentPage={currentPengajuanPage}
+                                totalPages={totalPengajuanPages}
+                                onPageChange={(page) => setCurrentPengajuanPage(page)}
+                            />
+                        </div>
+                    </>
                 )}
             </Card>
 
