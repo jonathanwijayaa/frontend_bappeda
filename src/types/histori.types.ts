@@ -11,6 +11,8 @@ export interface HistoriAssignment {
     penugasan?: string;
     statusKeaktifan: string;
     nomorSK?: string;
+    tanggalTerbit?: string;
+    batasAktif?: string;
     tahun?: number | string;
     tahunMulai?: number | null;
     tahunSelesai?: number | null;
