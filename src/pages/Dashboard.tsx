@@ -125,7 +125,7 @@ const Dashboard: React.FC = () => {
                         title={isSuperAdmin ? "Info Tambahan:" : `Info Tambahan ${user?.nama_opd || ''}:`} 
                         className="h-full" 
                     >
-                        <div className="flex items-start justify-center h-full min-h-[320px] w-full p-2 pt-2">
+                        <div className="flex items-start justify-center h-full min-h-[320px] w-full p-4 pt-2">
                             
                             <table className="w-auto">
                                 <tbody className="text-lg">
