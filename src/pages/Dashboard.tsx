@@ -127,14 +127,14 @@ const Dashboard: React.FC = () => {
                                 <tbody className="text-lg">
                                     <tr>
                                         <td className="text-gray-700 py-2 whitespace-nowrap">Total Relawan Aktif</td>
-                                        <td className="font-bold py-2 px-3 w-4 text-center">:</td>
-                                        <td className="font-bold py-2 text-left text-blue-700">
+                                        <td className="font-bold py-2 px-3 w-2 text-left">:</td>
+                                        <td className="font-bold py-2 text-left">
                                             {dashboardData.ringkasan.total_relawan_aktif.toLocaleString('id-ID')}
                                         </td>
                                     </tr>
                                     <tr>
                                         <td className="text-gray-700 py-2 whitespace-nowrap">Total Kader</td>
-                                        <td className="font-bold py-2 px-3 w-4 text-center">:</td>
+                                        <td className="font-bold py-2 px-3 w-2 text-left">:</td>
                                         <td className="font-bold py-2 text-left">
                                             {dashboardData.ringkasan.total_kader}
                                         </td>
@@ -142,7 +142,7 @@ const Dashboard: React.FC = () => {
                                     {isSuperAdmin && (
                                         <tr>
                                             <td className="text-gray-700 py-2 whitespace-nowrap">Total OPD</td>
-                                            <td className="font-bold py-2 px-3 w-4 text-center">:</td>
+                                            <td className="font-bold py-2 px-3 w-2 text-left">:</td>
                                             <td className="font-bold py-2 text-left">
                                                 {dashboardData.ringkasan.total_opd}
                                             </td>
