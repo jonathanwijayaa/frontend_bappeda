@@ -123,13 +123,10 @@ const Dashboard: React.FC = () => {
                 <div className="lg:col-span-2 flex flex-col h-full">
                     <Card 
                         title={isSuperAdmin ? "Info Tambahan:" : `Info Tambahan ${user?.nama_opd || ''}:`} 
-                        // Tambahkan class h-full pada Card jika komponen Card Anda mendukung properti className
                         className="h-full" 
                     >
-                        {/* Wrapper Flexbox untuk menengahkan konten secara vertikal & horizontal */}
-                        <div className="flex items-center justify-center h-full min-h-[320px] w-full p-4">
+                        <div className="flex items-start justify-center h-full min-h-[320px] w-full p-4 pt-8">
                             
-                            {/* w-full diganti jadi w-auto agar tabelnya rapat dan bisa di-center */}
                             <table className="w-auto">
                                 <tbody className="text-lg">
                                     <tr className="border-b border-gray-100 last:border-0">
