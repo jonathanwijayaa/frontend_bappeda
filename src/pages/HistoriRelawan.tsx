@@ -269,7 +269,7 @@ const HistoriRelawan: React.FC = () => {
                                 onChange={(e) => { setFilterOpd(e.target.value); setCurrentPage(1); }}
                                 placeholder="Semua OPD"
                                 options={[
-                                    { value: '', label: 'Semua OPD' },
+                                    // { value: '', label: 'Semua OPD' },
                                     ...opdOptions,
                                 ]}
                                 className="w-full text-sm"
@@ -286,7 +286,7 @@ const HistoriRelawan: React.FC = () => {
                                 onChange={(e) => { setFilterKader(e.target.value); setCurrentPage(1); }}
                                 placeholder="Semua Kader"
                                 options={[
-                                    { value: '', label: 'Semua Kader' },
+                                    // { value: '', label: 'Semua Kader' },
                                     ...kaderOptions,
                                 ]}
                                 className="w-full text-sm"
