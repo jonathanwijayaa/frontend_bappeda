@@ -4,9 +4,10 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import RelawanMenu from '../components/RelawanMenu';
 import Toast, { ToastType } from '../components/ui/Toast';
-import { apiFetch } from '../utils/api';
+import apiClient from '../lib/axios';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { formatPhoneDisplay } from '../utils/formatPhone';
+import { toTitleCase } from '../utils/formatText';
 import { Loader2 } from 'lucide-react';
 
 interface ProfilData {
@@ -38,8 +39,7 @@ const ProfilRelawan = () => {
     const fetchProfil = useCallback(async () => {
         setIsLoading(true);
         try {
-            const res = await apiFetch('/relawan/profile');
-            const result = await res.json();
+            const { data: result } = await apiClient.get('/relawan/profile');
             if (result.success) {
                 setProfil(result.data);
             } else {
@@ -63,7 +63,7 @@ const ProfilRelawan = () => {
         setIsSubmitting(true);
         try {
             const dataBaru: Record<string, string> = {};
-            if (updateForm.namaLengkap.trim())  dataBaru.nama_lengkap  = updateForm.namaLengkap.trim();
+            if (updateForm.namaLengkap.trim())  dataBaru.nama_lengkap  = toTitleCase(updateForm.namaLengkap.trim());
             if (updateForm.alamat.trim())        dataBaru.alamat_ktp   = updateForm.alamat.trim();
             if (updateForm.kelurahan.trim())     dataBaru.kelurahan    = updateForm.kelurahan.trim();
             if (updateForm.noHp.trim())          dataBaru.no_hp        = updateForm.noHp.trim().replace(/\D/g, '');
@@ -75,11 +75,10 @@ const ProfilRelawan = () => {
                 return;
             }
 
-            const res = await apiFetch('/relawan/profile/update', {
-                method: 'POST',
-                body: JSON.stringify({ data_baru: dataBaru, catatan: updateForm.catatan })
+            const { data: result } = await apiClient.post('/relawan/profile/update', { 
+                data_baru: dataBaru, 
+                catatan: updateForm.catatan 
             });
-            const result = await res.json();
 
             if (result.success) {
                 setToast({ message: result.message, type: 'success' });

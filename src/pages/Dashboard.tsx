@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import Card from '../components/ui/Card';
 import BarChart from '../components/charts/BarChart';
 import { ChartDataItem } from '../types/dashboard.types';
-import { apiFetch } from '../utils/api';
+import apiClient from '../lib/axios';
 
 interface DashboardData {
     nama_opd?: string;
@@ -30,13 +30,7 @@ const Dashboard: React.FC = () => {
             try {
                 setIsLoading(true);
                 setError('');
-                const response = await apiFetch(url);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
+                const { data: result } = await apiClient.get(url);
                 
                 if (result.success && result.data) {
                     setDashboardData(result.data);

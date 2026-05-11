@@ -2,9 +2,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import RelawanMenu from '../components/RelawanMenu';
 import Toast, { ToastType } from '../components/ui/Toast';
-import { apiFetch } from '../utils/api';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { Eye, EyeOff, CheckCircle2, XCircle, Circle, Loader2 } from 'lucide-react';
+import apiClient from '../lib/axios';
 
 interface ValidationRule {
     label: string;
@@ -43,11 +43,7 @@ const UbahPassword = () => {
 
         setOldPasswordStatus('checking');
         try {
-            const res = await apiFetch('/relawan/verify-password', {
-                method: 'POST',
-                body: JSON.stringify({ password }),
-            });
-            const result = await res.json();
+            const { data: result } = await apiClient.post('/relawan/verify-password', { password });
 
             if (result.success && result.match) {
                 setOldPasswordStatus('valid');
@@ -96,14 +92,10 @@ const UbahPassword = () => {
 
         setIsSubmitting(true);
         try {
-            const res = await apiFetch('/relawan/change-password', {
-                method: 'POST',
-                body: JSON.stringify({
-                    old_password: form.oldPassword,
-                    new_password: form.newPassword,
-                }),
+            const { data: result } = await apiClient.post('/relawan/change-password', {
+                old_password: form.oldPassword,
+                new_password: form.newPassword,
             });
-            const result = await res.json();
 
             if (result.success) {
                 setToast({ message: result.message || 'Kata sandi berhasil diubah!', type: 'success' });
@@ -113,7 +105,7 @@ const UbahPassword = () => {
                 setToast({ message: result.message || 'Gagal mengubah kata sandi', type: 'error' });
             }
         } catch (e: any) {
-            setToast({ message: parseErrorMessage(e, 'Tidak dapat terhubung ke server'), type: 'error' });
+            setToast({ message: parseErrorMessage(e, 'Terjadi kesalahan sistem'), type: 'error' });
         } finally {
             setIsSubmitting(false);
         }
@@ -156,7 +148,7 @@ const UbahPassword = () => {
                                 <XCircle size={15} className="inline ml-2 text-red-500" />
                             )}
                         </label>
-                        <div className={`flex items-center border rounded-xl px-3 transition-colors ${getOldPasswordBorderClass()} focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-400`}>
+                        <div className={`flex items-center border rounded-xl px-3 transition-colors ${getOldPasswordBorderClass()} focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-400`}>
                             <input
                                 id="old-password"
                                 type={showOld ? 'text' : 'password'}
@@ -189,7 +181,7 @@ const UbahPassword = () => {
                                 : isNewPasswordValid
                                 ? 'border-green-400 ring-1 ring-green-300'
                                 : 'border-red-400 ring-1 ring-red-300'
-                        } focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-400`}>
+                        } focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-400`}>
                             <input
                                 id="new-password"
                                 type={showNew ? 'text' : 'password'}
@@ -244,7 +236,7 @@ const UbahPassword = () => {
                                 : passwordsMatch
                                 ? 'border-green-400 ring-1 ring-green-300'
                                 : 'border-red-400 ring-1 ring-red-300'
-                        } focus-within:border-green-500 focus-within:ring-1 focus-within:ring-green-400`}>
+                        } focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-400`}>
                             <input
                                 id="confirm-password"
                                 type={showConfirm ? 'text' : 'password'}

@@ -22,7 +22,7 @@ import { parseErrorMessage } from '../utils/parseErrorMessage';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatPhoneDisplay } from '../utils/formatPhone';
-
+import { toTitleCase } from '../utils/formatText';
 
 const DataRelawan: React.FC = () => {
     const { isSuperAdmin, isOPD, user } = useAuth();
@@ -32,7 +32,7 @@ const DataRelawan: React.FC = () => {
     // ── Server State (TanStack Query) ─────────────────────────────
     const { data: relawanList = [], isLoading: isLoadingRelawan } = useRelawanList(!!isSuperAdmin);
     const { data: pengajuanList = [], isLoading: isLoadingPengajuan } = usePengajuanList(!!isSuperAdmin);
-    const { data: opdListData = [] } = useOpdList();
+    const { data: opdListData = [] } = useOpdList(!!isSuperAdmin);
 
     // OPD options untuk autocomplete
     const opdOptions = useMemo<AutoOption[]>(
@@ -394,7 +394,7 @@ const DataRelawan: React.FC = () => {
         setIsSaving(true);
         try {
             const { data } = await apiClient.post(`${API_BASE}/bulk`, [{
-                nama_lengkap: formData.namaRelawan,
+                nama_lengkap: toTitleCase(formData.namaRelawan.trim()),
                 nik: formData.nik,
                 jenis_kelamin: formData.jenisKelamin,
                 alamat_ktp: formData.alamat,
@@ -571,7 +571,7 @@ const DataRelawan: React.FC = () => {
             const relawanId = (selectedRelawan as any).relawan_id;
             const endpoint = isSuperAdmin ? `/admin/relawan/${relawanId}` : `/opd-admin/relawan/${relawanId}`;
             const { data } = await apiClient.put(endpoint, {
-                nama_lengkap: detailFormData.namaRelawan,
+                nama_lengkap: toTitleCase(detailFormData.namaRelawan.trim()),
                 alamat_ktp: detailFormData.alamat,
                 no_hp: detailFormData.no_hp.replace(/\D/g, ''),
                 kelurahan: detailFormData.kelurahan,
@@ -636,9 +636,16 @@ const DataRelawan: React.FC = () => {
                 : `/opd-admin/relawan/penugasan/${penugasanId}`;
             const { data } = await apiClient.delete(endpoint);
             if (data.success) {
-                const updatedAssignments = detailFormData.assignments.filter((_, i) => i !== index);
-                setDetailFormData(prev => ({ ...prev, assignments: updatedAssignments }));
-                setSelectedRelawan(prev => prev ? { ...prev, assignments: updatedAssignments } : null);
+                setDetailFormData(prev => ({
+                    ...prev,
+                    assignments: prev.assignments.filter((_, i) => i !== index)
+                }));
+                setSelectedRelawan(prev => prev ? {
+                    ...prev,
+                    assignments: Array.isArray(prev.assignments) 
+                        ? prev.assignments.filter((_, i) => i !== index) 
+                        : []
+                } : null);
                 invalidateRelawan();
                 setToast({ message: 'Penugasan berhasil dihapus', type: 'success' });
             } else {

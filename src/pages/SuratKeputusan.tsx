@@ -69,6 +69,11 @@ const SuratKeputusan: React.FC = () => {
     const handlePDFUploadConfirm = async (file: File, metadata: any) => {
         setErrorHint(null);
 
+        if (!metadata.opd_id) {
+            setToast({ message: 'Gagal: OPD tidak boleh kosong.', type: 'error' });
+            return;
+        }
+
         if (file.size > 2 * 1024 * 1024) {
             setToast({ message: 'Ukuran file terlalu besar. Maksimal 2MB.', type: 'error' });
             return;
@@ -84,7 +89,7 @@ const SuratKeputusan: React.FC = () => {
         formData.append('judul_sk', metadata.judulSK);
         formData.append('tanggal_terbit', metadata.tanggalTerbit);
         formData.append('batas_aktif', metadata.batasAktif || '');
-        formData.append('opd_id', metadata.opd_id || '1');
+        formData.append('opd_id', metadata.opd_id);
         // Kirim kader_ids (bisa 'ALL' atau array angka)
         if (metadata.kader_ids) {
             formData.append('kader_ids',
