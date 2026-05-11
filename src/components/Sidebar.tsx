@@ -40,8 +40,8 @@ const Sidebar: React.FC = () => {
     const superAdminMenu: MenuItem[] = [
         { path: '/dashboard', icon: Home, label: 'Dashboard' },
         { path: '/manajemen-opd', icon: Building2, label: 'Manajemen OPD' },
-        { path: '/daftar-kader', icon: UserCircle, label: 'Daftar Kader' },
-        { path: '/data-relawan', icon: Users, label: 'Data Relawan' },
+        { path: '/daftar-kader', icon: UserCircle, label: 'Kader' },
+        { path: '/data-relawan', icon: Users, label: 'Relawan' },
         { path: '/surat-keputusan', icon: FileText, label: 'Surat Keputusan' },
         { path: '/log-aktifitas', icon: Clock, label: 'Log Aktivitas' },
         { path: '/statistik', icon: BarChart3, label: 'Statistik' },
@@ -51,8 +51,8 @@ const Sidebar: React.FC = () => {
 
     const opdMenu: MenuItem[] = [
         { path: '/dashboard', icon: Home, label: 'Dashboard' },
-        { path: '/daftar-kader', icon: UserCircle, label: 'Daftar Kader' },
-        { path: '/data-relawan', icon: Users, label: 'Data Relawan' },
+        { path: '/daftar-kader', icon: UserCircle, label: 'Kader' },
+        { path: '/data-relawan', icon: Users, label: 'Relawan' },
         { path: '/surat-keputusan', icon: FileText, label: 'Surat Keputusan' },
         { path: '/statistik', icon: BarChart3, label: 'Statistik' },
         { path: '/dokumen', icon: FolderOpen, label: 'Dokumen' },

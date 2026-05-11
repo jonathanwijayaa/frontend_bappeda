@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { HistoriRelawanData } from '../types/histori.types';
 import { AutoOption } from '../types/common.types';
 import { formatPhoneDisplay } from '../utils/formatPhone';
+import Toast, { ToastType } from '../components/ui/Toast';
 
 // ── Helper: kelompokkan baris flat dari API menjadi per-relawan ─
 const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
@@ -46,6 +47,8 @@ const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
                 penugasan: row.penugasan || '',
                 statusKeaktifan: row.status_penugasan || 'Aktif',
                 nomorSK: row.nomor_sk || '',
+                tanggalTerbit: row.tanggal_terbit || '',
+                batasAktif: row.batas_aktif || '',
                 tahun: row.tahun || '',
                 tahunMulai: row.tanggal_terbit ? new Date(row.tanggal_terbit).getFullYear() : null,
                 tahunSelesai: row.batas_aktif ? new Date(row.batas_aktif).getFullYear() : null,
@@ -258,19 +261,22 @@ const HistoriRelawan: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         {/* Filter OPD */}
-                        <div>
+                        {isSuperAdmin && (
+                            <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Nama OPD</label>
                             <Select
                                 value={filterOpd}
                                 onChange={(e) => { setFilterOpd(e.target.value); setCurrentPage(1); }}
                                 placeholder="Semua OPD"
                                 options={[
-                                    { value: '', label: 'Semua OPD' },
+                                    // { value: '', label: 'Semua OPD' },
                                     ...opdOptions,
                                 ]}
                                 className="w-full text-sm"
                             />
                         </div>
+                        )
+                            }
 
                         {/* Filter Kader */}
                         <div>
@@ -280,7 +286,7 @@ const HistoriRelawan: React.FC = () => {
                                 onChange={(e) => { setFilterKader(e.target.value); setCurrentPage(1); }}
                                 placeholder="Semua Kader"
                                 options={[
-                                    { value: '', label: 'Semua Kader' },
+                                    // { value: '', label: 'Semua Kader' },
                                     ...kaderOptions,
                                 ]}
                                 className="w-full text-sm"
@@ -315,12 +321,13 @@ const HistoriRelawan: React.FC = () => {
                     {/* Reset Filter */}
                     {isActiveFilter && (
                         <div className="flex justify-end">
-                            <button
+                            <Button
                                 onClick={handleResetFilter}
                                 className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
+                                variant='danger'
                             >
                                 ✕ Reset Filter
-                            </button>
+                            </Button>
                         </div>
                     )}
                 </div>
@@ -430,6 +437,16 @@ const HistoriRelawan: React.FC = () => {
                                                 {renderFieldRow('Penugasan', assignment.penugasan)}
                                                 {assignment.tahun ? renderFieldRow('Tahun', String(assignment.tahun)) : null}
                                                 {assignment.nomorSK ? renderFieldRow('Nomor SK', assignment.nomorSK) : null}
+                                                {assignment.nomorSK ? renderFieldRow('Tanggal Terbit',
+                                                    assignment.tanggalTerbit
+                                                        ? new Date(assignment.tanggalTerbit).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+                                                        : '-'
+                                                ) : null}
+                                                {assignment.nomorSK ? renderFieldRow('Batas Aktif',
+                                                    assignment.batasAktif
+                                                        ? new Date(assignment.batasAktif).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+                                                        : '-'
+                                                ) : null}
                                             </div>
                                         </div>
                                     ))}

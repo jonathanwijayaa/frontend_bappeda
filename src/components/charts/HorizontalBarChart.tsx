@@ -12,6 +12,7 @@ interface HorizontalBarChartProps {
     xAxisKey: string;
     color?: string;
     height?: number;
+    maxLabelLength?: number; // Tambahan untuk membatasi panjang teks
 }
 
 const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
@@ -19,8 +20,17 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
     dataKey,
     xAxisKey,
     color = '#F4A261', // Oranye Amber – Kader & OPD
-    height = 300
+    height = 300,
+    maxLabelLength = 15 // Default dipotong setelah 15 karakter
 }) => {
+    // Fungsi untuk memotong teks
+    const formatTick = (value: string) => {
+        if (typeof value === 'string' && value.length > maxLabelLength) {
+            return `${value.substring(0, maxLabelLength)}...`;
+        }
+        return value;
+    };
+
     return (
         <ResponsiveContainer width="100%" height={height}>
             <RechartsBarChart
@@ -34,7 +44,8 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
                     dataKey={xAxisKey}
                     type="category"
                     tick={{ fontSize: 12 }}
-                    width={100}
+                    width={110} // Sedikit dilebarkan agar teks tidak terlalu mepet
+                    tickFormatter={formatTick} // Implementasi truncate di sini
                 />
                 <Tooltip />
                 <Bar dataKey={dataKey} fill={color} radius={[0, 4, 4, 0]} />
