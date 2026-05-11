@@ -83,7 +83,7 @@
         return (
             <>
                 {/* Mobile Header */}
-                <div className="bg-green-600 text-white px-4 py-4 shadow-md relative sticky top-0 z-50">
+                <div className="bg-green-600 text-white px-4 py-4 shadow-md relative sticky top-0 z-45">
                     <div className="flex items-center justify-between">
                         <img
                             src={logoBappeda}
@@ -106,7 +106,7 @@
                 {/* Overlay */}
                 {isMenuOpen && (
                     <div
-                        className="fixed inset-0 bg-black/30 z-30"
+                        className="fixed inset-0 bg-black/30 z-60"
                         onClick={() => setIsMenuOpen(false)}
                     />
                 )}
