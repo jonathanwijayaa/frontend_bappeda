@@ -379,6 +379,10 @@ const DataRelawan: React.FC = () => {
             setToast({ message: 'Nama Lengkap tidak boleh mengandung angka atau karakter spesial', type: 'error' });
             return;
         }
+        if (!/^\d{16}$/.test(formData.nik)) {
+            setToast({ message: 'NIK harus terdiri dari tepat 16 digit angka', type: 'error' });
+            return;
+        }
 
         //  Validasi minimal 1 assignment (Dihapus karena penugasan sekarang opsional saat tambah relawan)
         
@@ -986,7 +990,14 @@ const DataRelawan: React.FC = () => {
                                 type="text"
                                 name={field.name}
                                 value={(formData as any)[field.name]}
-                                onChange={(e) => setFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                onChange={(e) => {
+                                    if (field.name === 'nik') {
+                                        const val = e.target.value.replace(/\D/g, '');
+                                        setFormData(prev => ({ ...prev, nik: val }));
+                                    } else {
+                                        setFormData(prev => ({ ...prev, [field.name]: e.target.value }));
+                                    }
+                                }}
                                 placeholder={field.placeholder}
                                 required={field.required}
                                 maxLength={(field as any).maxLength}

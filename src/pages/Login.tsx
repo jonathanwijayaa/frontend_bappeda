@@ -77,7 +77,8 @@ const Login = () => {
                                     id="nik"
                                     type="text"
                                     value={nik}
-                                    onChange={(e) => setNik(e.target.value)}
+                                    onChange={(e) => setNik(e.target.value.replace(/\D/g, ''))}
+                                    maxLength={16}
                                     placeholder=""
                                     className="bg-gray-100"
                                     disabled={isLoading}
