@@ -1046,7 +1046,6 @@ const DataRelawan: React.FC = () => {
                             { label: 'Alamat KTP', name: 'alamat' },
                             { label: 'No. HP', name: 'no_hp' },
                             { label: 'Kelurahan', name: 'kelurahan' },
-                            { label: 'Jabatan', name: 'jabatan' },
                         ].map(field => (
                             <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                                 <label className="text-lg font-medium text-gray-900">{field.label}</label>
