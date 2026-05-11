@@ -321,12 +321,13 @@ const HistoriRelawan: React.FC = () => {
                     {/* Reset Filter */}
                     {isActiveFilter && (
                         <div className="flex justify-end">
-                            <button
+                            <Button
                                 onClick={handleResetFilter}
                                 className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
+                                variant='danger'
                             >
                                 ✕ Reset Filter
-                            </button>
+                            </Button>
                         </div>
                     )}
                 </div>
