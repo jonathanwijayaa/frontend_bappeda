@@ -13,12 +13,8 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
-    - name: Install pnpm
-      run: npm install -g pnpm
-    - name: Approve pnpm builds
-      run: pnpm approve-builds
     - name: Install dependencies
-      run: pnpm install
+      run: npm install -g pnpm && pnpm install
     - name: Install Playwright Browsers
       run: pnpm exec playwright install --with-deps
     - name: Run Playwright tests
