@@ -151,5 +151,5 @@ export const selectKader = async ({ data, page }: IFillRelawanForm) => {
 };
 
 export const selectPenugasan = async ({ data, page }: IFillRelawanForm) => {
-  await page.getByRole("textbox", { name: "Nama/detail penugasan" }).selectOption(data.PENUGASAN);
+  await page.getByRole("textbox", { name: "Nama/detail penugasan" }).fill(data.PENUGASAN);
 };
