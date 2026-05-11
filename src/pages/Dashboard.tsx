@@ -100,9 +100,9 @@ const Dashboard: React.FC = () => {
                 <p className="text-sm italic text-gray-600">Data Ditampilkan secara real-time</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
                 {/* Chart Section */}
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-3">
                     <Card title={isSuperAdmin ? "Jumlah Relawan per OPD" : "Jumlah Relawan per Kader"}>
                         {chartData.length > 0 ? (
                             <BarChart
@@ -120,7 +120,7 @@ const Dashboard: React.FC = () => {
                 </div>
 
                 {/* Info Section */}
-                <div>
+                <div className='lg:col-span-2'>
                     <Card title={isSuperAdmin ? "Info Tambahan:" : `Info Tambahan ${user?.nama_opd || ''}:`}>
                         <div className="space-y-4">
                             <table className="w-full">
