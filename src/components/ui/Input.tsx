@@ -20,14 +20,14 @@ const Input: React.FC<InputProps> = ({
     return (
         <div className="relative">
             {icon && (
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
                     {icon}
                 </div>
             )}
             <input
                 type={inputType}
                 placeholder={placeholder}
-                className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  ${icon ? 'pl-10' : ''
+                className={`w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  ${icon ? 'pl-10' : ''
                     } ${showPasswordToggle ? 'pr-10' : ''} ${className}`}
                 {...props}
             />
@@ -57,7 +57,7 @@ export const SearchInput: React.FC<SearchInputProps> = ({
         <Input
             placeholder={placeholder}
             icon={<Search size={18} />}
-            className={`bg-[#f7f7f7] ${className}`}
+            className={`bg-[#ffffff] ${className}`}
             {...props}
         />
     );
