@@ -19,8 +19,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         const titles: PageTitles = {
             '/dashboard': 'Dashboard',
             '/manajemen-opd': 'Manajemen OPD',
-            '/daftar-kader': 'Daftar Kader',
-            '/data-relawan': 'Data Relawan',
+            '/daftar-kader': 'Kader',
+            '/data-relawan': 'Relawan',
             '/surat-keputusan': 'Surat Keputusan',
             '/log-aktifitas': 'Log / Aktifitas',
             '/statistik': 'Statistik',
