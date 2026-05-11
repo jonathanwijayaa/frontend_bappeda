@@ -50,7 +50,7 @@ const DonutChart: React.FC<DonutChartProps> = ({
                 fill="white" 
                 textAnchor="middle" 
                 dominantBaseline="central"
-                fontSize="12px"
+                fontSize="16px"
                 fontWeight="bold"
             >
                 {`${(percent * 100).toFixed(0)}%`}
