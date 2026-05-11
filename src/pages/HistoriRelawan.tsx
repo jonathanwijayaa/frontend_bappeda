@@ -261,7 +261,8 @@ const HistoriRelawan: React.FC = () => {
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         {/* Filter OPD */}
-                        <div>
+                        {isSuperAdmin && (
+                            <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Nama OPD</label>
                             <Select
                                 value={filterOpd}
@@ -274,6 +275,8 @@ const HistoriRelawan: React.FC = () => {
                                 className="w-full text-sm"
                             />
                         </div>
+                        )
+                            }
 
                         {/* Filter Kader */}
                         <div>
