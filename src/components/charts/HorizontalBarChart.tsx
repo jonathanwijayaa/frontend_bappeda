@@ -42,50 +42,50 @@ const HorizontalBarChart: React.FC<HorizontalBarChartProps> = ({
 
     return (
         <ResponsiveContainer width="100%" height={height}>
-            <RechartsBarChart
-                data={data}
-                layout="vertical"
-                margin={{ top: 5, right: 45, left: 20, bottom: 5 }} // Right margin ditambah untuk label angka
-            >
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" />
-                <XAxis type="number" hide /> {/* Sumbu X disembunyikan agar bersih seperti contoh gambar */}
-                <YAxis
-                    dataKey={xAxisKey}
-                    type="category"
-                    tick={{ fontSize: 12, fill: '#4B5563' }}
-                    width={100}
-                    tickFormatter={formatTick}
-                    axisLine={false}
-                    tickLine={false}
-                />
-                
-                {/* Tooltip dengan gaya yang sama seperti Donut Chart */}
-                <Tooltip 
-                    cursor={{ fill: 'transparent' }} // Menghilangkan highlight kotak saat hover
-                    contentStyle={{
-                        borderRadius: '8px',
-                        border: 'none',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                        fontSize: '12px'
-                    }}
-                />
+    <RechartsBarChart
+        data={data}
+        layout="vertical"
+        margin={{ top: 5, right: 50, left: 20, bottom: 20 }} // Tambah margin bawah untuk label XAxis
+    >
+        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" />
+        
+        {/* Sumbu X sekarang muncul kembali */}
+        <XAxis 
+            type="number" 
+            tick={{ fontSize: 11, fill: '#9CA3AF' }} 
+            axisLine={{ stroke: '#E5E7EB' }}
+        /> 
+        
+        <YAxis
+            dataKey={xAxisKey}
+            type="category"
+            tick={{ fontSize: 12, fill: '#4B5563' }}
+            width={100}
+            tickFormatter={formatTick}
+            axisLine={{ stroke: '#E5E7EB' }}
+            tickLine={false}
+        />
+        
+        <Tooltip 
+            cursor={{ fill: 'transparent' }}
+            contentStyle={{
+                borderRadius: '8px',
+                border: 'none',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                fontSize: '12px'
+            }}
+        />
 
-                <Bar 
-                    dataKey={dataKey} 
-                    fill={color} 
-                    radius={[0, 4, 4, 0]} 
-                    barSize={25}
-                >
-                    {/* Menampilkan label angka di ujung bar secara statis */}
-                    <LabelList 
-                        dataKey={dataKey} 
-                        position="right" 
-                        style={{ fill: color, fontWeight: 'bold', fontSize: '12px' }} 
-                        formatter={(value: number) => `${value}`}
-                    />
-                </Bar>
-            </RechartsBarChart>
-        </ResponsiveContainer>
+        <Bar dataKey={dataKey} fill={color} radius={[0, 4, 4, 0]} barSize={25}>
+            <LabelList 
+                dataKey={dataKey} 
+                position="right" 
+                style={{ fill: color, fontWeight: 'bold', fontSize: '12px' }} 
+                offset={10}
+            />
+        </Bar>
+    </RechartsBarChart>
+</ResponsiveContainer>
     );
 };
 
