@@ -436,8 +436,15 @@ const HistoriRelawan: React.FC = () => {
                                                 {renderFieldRow('Penugasan', assignment.penugasan)}
                                                 {assignment.tahun ? renderFieldRow('Tahun', String(assignment.tahun)) : null}
                                                 {assignment.nomorSK ? renderFieldRow('Nomor SK', assignment.nomorSK) : null}
-                                                {assignment.nomorSK ? renderFieldRow('Periode SK',
-                                                    `${assignment.tanggalTerbit ? new Date(assignment.tanggalTerbit).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'} s/d ${assignment.batasAktif ? new Date(assignment.batasAktif).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}`
+                                                {assignment.nomorSK ? renderFieldRow('Tanggal Terbit',
+                                                    assignment.tanggalTerbit
+                                                        ? new Date(assignment.tanggalTerbit).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+                                                        : '-'
+                                                ) : null}
+                                                {assignment.nomorSK ? renderFieldRow('Batas Aktif',
+                                                    assignment.batasAktif
+                                                        ? new Date(assignment.batasAktif).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
+                                                        : '-'
                                                 ) : null}
                                             </div>
                                         </div>

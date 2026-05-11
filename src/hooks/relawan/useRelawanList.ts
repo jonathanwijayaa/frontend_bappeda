@@ -51,6 +51,8 @@ export const groupRelawanRows = (rows: any[]): RelawanData[] => {
                 statusKeaktifan: r.status_penugasan === 'Aktif' ? 'Aktif' : 'Nonaktif',
                 nomorSK: r.nomor_sk || '',
                 skId: String(r.sk_id || ''),
+                tanggalTerbit: r.tanggal_terbit || '',
+                batasAktif: r.batas_aktif || '',
             };
             entry.assignments!.push(assignment);
         }
