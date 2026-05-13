@@ -144,22 +144,22 @@ for (const { label, creds } of roles) {
           {
             title: "NIK too short",
             value: "1234567890",
-            expectedMessage: /nik harus 16 digit angka/i,
+            expectedMessage: /NIK harus terdiri dari tepat 16 digit angka/i,
           },
           {
             title: "NIK with letters",
             value: "320100ABCD123456",
-            expectedMessage: /nik harus 16 digit angka/i,
+            expectedMessage: /NIK harus terdiri dari tepat 16 digit angka/i,
           },
           {
             title: "NIK with special characters",
             value: "3201@#$%^&123456",
-            expectedMessage: /nik harus 16 digit angka/i,
+            expectedMessage: /NIK harus terdiri dari tepat 16 digit angka/i,
           },
           {
             title: "NIK too long",
             value: "32010000000000001",
-            expectedMessage: /nik harus 16 digit angka/i,
+            expectedMessage: /NIK harus terdiri dari tepat 16 digit angka/i,
           },
         ];
 
