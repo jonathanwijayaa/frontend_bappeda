@@ -1,5 +1,4 @@
 // components/ui/YearPicker.tsx
-// Kalender picker hanya untuk tahun — popup via Portal agar tidak terclip oleh overflow:hidden parent
 import React, { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
@@ -82,7 +81,7 @@ const YearPicker: React.FC<YearPickerProps> = ({
         return () => document.removeEventListener('mousedown', handler);
     }, [open]);
 
-    // Reset halaman ketika minYear berubah (tahun akhir mengikuti tahun awal)
+    // Reset halaman ketika minYear berubah
     useEffect(() => {
         const newInitial = selectedYear
             ? Math.floor((Math.max(selectedYear, minYear) - minYear) / pageSize)
@@ -173,7 +172,8 @@ const YearPicker: React.FC<YearPickerProps> = ({
             >
                 <span className="flex items-center gap-2">
                     <CalendarDays size={14} className="text-gray-400 flex-shrink-0" />
-                    <span className={selectedYear ? 'font-medium' : 'text-gray-400'}>
+                    {/* Mengubah warna teks default (text-gray-900) untuk placeholder */}
+                    <span className={selectedYear ? 'font-medium text-gray-900' : 'text-gray-900'}>
                         {selectedYear ?? placeholder}
                     </span>
                 </span>

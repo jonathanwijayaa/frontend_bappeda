@@ -60,7 +60,7 @@
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                     </svg>
                 ),
-                label: 'Riwayat',
+                label: 'Riwayat Pengajuan',
                 onClick: () => {
                     setIsMenuOpen(false);
                     navigate('/riwayat');
@@ -83,7 +83,7 @@
         return (
             <>
                 {/* Mobile Header */}
-                <div className="bg-green-600 text-white px-4 py-4 shadow-md relative z-20">
+                <div className="bg-green-600 text-white px-4 py-4 shadow-md relative sticky top-0 z-30">
                     <div className="flex items-center justify-between">
                         <img
                             src={logoBappeda}
@@ -106,14 +106,14 @@
                 {/* Overlay */}
                 {isMenuOpen && (
                     <div
-                        className="fixed inset-0 bg-black/30 z-30"
+                        className="fixed inset-0 bg-black/30 z-40"
                         onClick={() => setIsMenuOpen(false)}
                     />
                 )}
 
                 {/* Slide-in Menu */}
                 <div
-                    className={`fixed top-0 right-0 h-full w-64 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-40 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'
+                    className={`fixed top-0 right-0 h-full w-64 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-50 ${isMenuOpen ? 'translate-x-0' : 'translate-x-full'
                         }`}
                 >
                     <div className="flex flex-col h-full">
