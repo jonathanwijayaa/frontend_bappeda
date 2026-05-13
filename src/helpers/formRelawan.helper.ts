@@ -2,6 +2,8 @@ import { faker } from "@faker-js/faker";
 import { Page } from "@playwright/test";
 
 const OPD_LIST = [
+  "Dinas Simulasi Yogyakarta",
+  "Dinas Uji Coba Yogyakarta",
   "Dinas Kesehatan (Dinkes)",
   "Dinas Perhubungan",
   "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
@@ -12,14 +14,40 @@ const OPD_LIST = [
 ];
 
 const KADER_MAP: Record<string, string[]> = {
-  "Dinas Kesehatan (Dinkes)": ["KADER KESEHATAN"],
-  "Dinas Perhubungan": ["Kader Perhubungan C", "Kader Perhubungan C1"],
-  "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)": ["PORDAM", "TAGANA", "IPSM"],
-  "Dinas Pariwisata": ["Kader Pariwisata 1", "Kader Pariwisata 2"],
-  "Dinas Kebudayaan": ["Kader Kebudayaan 1", "Kader Kebudayaan 2"],
-  "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)":
-    ["Kader Opd Ledner Group", "SIGRAK", "POSYANDU", "PKK"],
-  "Satuan Polisi Pamong Praja (PP)": ["SATLINMAS"],
+  "Dinas Simulasi Yogyakarta": [
+    "Kader Simulasi B",
+  ],
+  "Dinas Uji Coba Yogyakarta": [
+    "Kader Uji Coba A",
+  ],
+  "Dinas Kesehatan (Dinkes)": [
+    "KADER KESEHATAN",
+  ],
+  "Dinas Perhubungan": [
+    "Kader Perhubungan C",
+    "Kader Perhubungan C1",
+  ],
+  "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)": [
+    "PORDAM",
+    "TAGANA",
+    "IPSM",
+  ],
+  "Dinas Pariwisata": [
+    "Kader Pariwisata 1",
+    "Kader Pariwisata 2",
+  ],
+  "Dinas Kebudayaan": [
+    "Kader Kebudayaan 1",
+    "Kader Kebudayaan 2",
+  ],
+  "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)": [
+    "SIGRAK",
+    "POSYANDU",
+    "PKK",
+  ],
+  "Satuan Polisi Pamong Praja (PP)": [
+    "SATLINMAS",
+  ],
 };
 
 export interface RelawanData {
