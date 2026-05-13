@@ -27,7 +27,7 @@ for (const { label, creds } of roles) {
       });
 
       await expect(page).toHaveURL(/dashboard/);
-      await page.getByRole("link", { name: /relawan/i }).click();
+      await page.getByRole("link", { name: "Relawan", exact: true }).click();
     });
 
     // TCDR.1
