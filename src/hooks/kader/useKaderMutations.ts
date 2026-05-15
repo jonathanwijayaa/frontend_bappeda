@@ -43,11 +43,11 @@ export const useUpdateKader = (isSuperAdmin: boolean) => {
 export const useToggleKaderStatus = (isSuperAdmin: boolean) => {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({ kader_id, is_active }: { kader_id: number; is_active: boolean }) => {
+        mutationFn: ({ kader_id, status_keaktifan }: { kader_id: number; status_keaktifan: boolean }) => {
             const endpoint = isSuperAdmin
                 ? `/kader/${kader_id}/status`
                 : `/opd-admin/kader/${kader_id}/status`;
-            return apiClient.patch(endpoint, { is_active }).then(r => {
+            return apiClient.patch(endpoint, { status_keaktifan }).then(r => {
                 if (!r.data.success) throw new Error(r.data.message);
                 return r.data;
             });

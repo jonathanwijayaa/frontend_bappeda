@@ -36,8 +36,8 @@ export const useUpdateOpd = () => {
 export const useToggleOpdStatus = () => {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: ({ opd_id, is_active }: { opd_id: number; is_active: boolean }) =>
-            apiClient.patch(`/opd/${opd_id}/status`, { is_active }).then(r => {
+        mutationFn: ({ opd_id, status_keaktifan }: { opd_id: number; status_keaktifan: boolean }) =>
+            apiClient.patch(`/opd/${opd_id}/status`, { status_keaktifan }).then(r => {
                 if (!r.data.success) throw new Error(r.data.message);
                 return r.data;
             }),

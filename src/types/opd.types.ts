@@ -7,7 +7,7 @@ export interface OPDData {
     pic: string | null;
     nik_pic: string | null;
     kontak: string | null;
-    is_active: boolean;
+    status_keaktifan: boolean;
     created_at: string;
     updated_at: string;
 }

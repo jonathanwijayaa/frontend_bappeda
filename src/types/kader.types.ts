@@ -6,7 +6,7 @@ export interface KaderData {
     deskripsi: string | null;
     nama_opd: string;
     opd_id: number;
-    is_active: boolean;
+    status_keaktifan: boolean;
     created_at: string;
     updated_at: string;
     /** PIC — dari tabel pic_kader → relawan → users */

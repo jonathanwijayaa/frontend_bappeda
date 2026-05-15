@@ -10,7 +10,7 @@ export interface Assignment {
     peran: string;
     detail: string;
     penugasan?: string;
-    statusKeaktifan: 'Aktif' | 'Nonaktif';
+    status_keaktifan: 'Aktif' | 'Nonaktif';
     nomorSK: string;
     skId: string; // Reference to SK document
     tanggalTerbit?: string; // Tanggal terbit SK
@@ -40,7 +40,7 @@ export interface RelawanAPIData {
     nama_lengkap: string;
     email: string | null;
     no_hp: string | null;
-    is_active: boolean;
+    status_keaktifan: boolean;
     relawan_id: number;
     jenis_kelamin: string;
     alamat_ktp: string | null;
@@ -55,7 +55,7 @@ export interface RelawanAPIData {
 export interface PengajuanAPIData {
     pengajuan_id: number;
     jenis_perubahan: string;
-    status: string;
+    status_pengajuan: string;
     tanggal_pengajuan: string;
     catatan_relawan: string | null;
     nama_lengkap: string;
@@ -70,7 +70,7 @@ export interface PengajuanData {
     nik: string;
     namaLengkap: string;
     tanggalPengajuan: string;
-    status: string;
+    status_pengajuan: string;
     dataLama?: { [key: string]: string };
     dataBaru?: { [key: string]: string };
     catatanRelawan?: string;
