@@ -45,7 +45,7 @@ const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
                 peran: row.jabatan || '',
                 detail: row.detail_jabatan || '',
                 penugasan: row.penugasan || '',
-                statusKeaktifan: row.status_penugasan || 'Aktif',
+                status_keaktifan: row.status_penugasan || 'Aktif',
                 nomorSK: row.nomor_sk || '',
                 tanggalTerbit: row.tanggal_terbit || '',
                 batasAktif: row.batas_aktif || '',
@@ -422,11 +422,11 @@ const HistoriRelawan: React.FC = () => {
                                                 <span className="text-xs font-bold text-gray-500 uppercase tracking-wide">
                                                     Penugasan #{index + 1}
                                                 </span>
-                                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${assignment.statusKeaktifan === 'Aktif'
+                                                <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${assignment.status_keaktifan === 'Aktif'
                                                     ? 'bg-green-100 text-green-700'
                                                     : 'bg-gray-200 text-gray-600'
                                                     }`}>
-                                                    {assignment.statusKeaktifan}
+                                                    {assignment.status_keaktifan}
                                                 </span>
                                             </div>
                                             <div className="space-y-1">

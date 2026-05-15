@@ -82,7 +82,7 @@ const DataRelawan: React.FC = () => {
         peran: '',
         penugasan: '',
         detail: '',
-        statusKeaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
+        status_keaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
         nomorSK: '',
         skId: ''
     });
@@ -110,7 +110,7 @@ const DataRelawan: React.FC = () => {
             const o = origAssign[i] as any;
             return !o ||
                 a.opd !== o.opd || a.kader !== o.kader || a.peran !== o.peran ||
-                a.penugasan !== o.penugasan || a.statusKeaktifan !== o.statusKeaktifan;
+                a.penugasan !== o.penugasan || a.status_keaktifan !== o.status_keaktifan;
         });
     }, [selectedRelawan, detailFormData]);
 
@@ -206,8 +206,8 @@ const DataRelawan: React.FC = () => {
     const pengajuanUIData = useMemo(() => {
         // 1. Sort data pengajuan: "Menunggu Review" di atas, sisanya di bawah berdasarkan tanggal
         const sortedData = [...pengajuanList].sort((a, b) => {
-            const weightA = a.status === 'Menunggu Review' ? 0 : 1;
-            const weightB = b.status === 'Menunggu Review' ? 0 : 1;
+            const weightA = a.status_pengajuan === 'Menunggu Review' ? 0 : 1;
+            const weightB = b.status_pengajuan === 'Menunggu Review' ? 0 : 1;
 
             if (weightA !== weightB) {
                 return weightA - weightB;
@@ -221,7 +221,7 @@ const DataRelawan: React.FC = () => {
             nik: p.nik,
             namaLengkap: p.nama_lengkap,
             tanggalPengajuan: new Date(p.tanggal_pengajuan).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }),
-            status: p.status,
+            status_pengajuan: p.status_pengajuan,
             _raw: p
         }));
     }, [pengajuanList]);
@@ -279,13 +279,13 @@ const DataRelawan: React.FC = () => {
         {
             header: 'STATUS',
             render: (row: any) => {
-                const isDisetujui = row.status === 'Disetujui' || row.status === 'Diterima';
-                const isDitolak = row.status === 'Ditolak';
+                const isDisetujui = row.status_pengajuan === 'Disetujui' || row.status_pengajuan === 'Diterima';
+                const isDitolak = row.status_pengajuan === 'Ditolak';
                 const colorClass = isDisetujui ? 'bg-green-500' : isDitolak ? 'bg-red-500' : 'bg-yellow-400';
                 return (
                     <div className="flex items-center gap-2">
                         <span className={`w-3 h-3 ${colorClass} rounded-full`}></span>
-                        {row.status}
+                        {row.status_pengajuan}
                     </div>
                 );
             }
@@ -401,7 +401,7 @@ const DataRelawan: React.FC = () => {
                     peran: a.peran,
                     penugasan: a.penugasan,
                     detail: a.detail,
-                    statusKeaktifan: a.statusKeaktifan
+                    status_keaktifan: a.status_keaktifan
                 }))
             }]);
             const errors  = data?.data?.errors  ?? [];
@@ -560,7 +560,7 @@ const DataRelawan: React.FC = () => {
                     peran: a.peran,
                     penugasan: a.penugasan,
                     detail: a.detail,
-                    statusKeaktifan: a.statusKeaktifan
+                    status_keaktifan: a.status_keaktifan
                 }))
             });
             if (data.success) {
@@ -799,10 +799,10 @@ const DataRelawan: React.FC = () => {
                             <label key={status} className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="radio"
-                                    name={`statusKeaktifan-${index}`}
+                                    name={`status_keaktifan-${index}`}
                                     value={status}
-                                    checked={assignment.statusKeaktifan === status}
-                                    onChange={(e) => onFieldChange(index, 'statusKeaktifan', e.target.value)}
+                                    checked={assignment.status_keaktifan === status}
+                                    onChange={(e) => onFieldChange(index, 'status_keaktifan', e.target.value)}
                                     disabled={isReadOnly}
                                     className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
                                 />
@@ -816,7 +816,7 @@ const DataRelawan: React.FC = () => {
     };
 
     const pengajuanActions = (row: any) => (
-        row.status === 'Menunggu Review' ? (
+        row.status_pengajuan === 'Menunggu Review' ? (
             <Button variant="secondary" size="sm" onClick={() => handleReviewClick(row._raw)}>Review</Button>
         ) : null
     );
