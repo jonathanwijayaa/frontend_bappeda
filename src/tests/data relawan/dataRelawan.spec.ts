@@ -389,6 +389,7 @@ for (const { label, creds } of roles) {
       const fileInput = page.locator("input[type='file']");
       await fileInput.setInputFiles(filePath);
       await page.getByRole("button", { name: /lanjutkan/i }).click();
+      await expect(page.getByRole("heading", { name: "Data Kotor (0)" })).toBeVisible();
       await page.getByRole("button", { name: /simpan data bersih/i }).click();
 
       await expect(page.getByText(/berhasil|success|data baru ditambahkan/i)).toBeVisible();
@@ -401,18 +402,26 @@ for (const { label, creds } of roles) {
       await page.getByRole("button", { name: /unggah dari excel/i }).click();
 
       const fileInput = page.locator("input[type='file']");
+      const saveButton = page.getByRole("button", { name: /data/i });
       await fileInput.setInputFiles(filePath);
       await page.getByRole("button", { name: /lanjutkan/i }).click();
-      await page.getByRole("button", { name: /simpan data bersih/i }).click();
+      await page.waitForTimeout(5000);
+      if (await saveButton.isEnabled()) {
+        await saveButton.click();
+        await expect(page.getByText(/error|invalid/i)).toBeVisible();
+      }
 
-      await expect(page.getByText(/error|invalid/i)).toBeVisible();
+      await expect(saveButton).toBeDisabled();
+      await expect(
+        page.locator(".border.rounded-lg.overflow-y-auto.flex-1.bg-white.border-red-200"),
+      ).toBeVisible();
     });
 
     // TCDR.19 Download Template Excel
     test(`TCDR.19 ${label} click Templat Excel Relawan Kader hyperlink`, async ({ page }) => {
       await page.getByRole("button", { name: /unggah dari excel/i }).click();
 
-      await page.getByRole("link", { name: /templat excel relawan kader/i }).click();
+      await page.getByRole("link", { name: "Unduh Templat Excel Data" }).click();
 
       await expect(page).toHaveURL(/excel|template|dokumen|download/);
     });
@@ -426,32 +435,86 @@ for (const { label, creds } of roles) {
       const fileInput = page.locator("input[type='file']");
       await fileInput.setInputFiles(filePath);
 
-      await page.getByRole("button").nth(5).click();
+      await page.getByRole("button").filter({ hasText: /^$/ }).nth(2).click();
 
-      await expect(page.getByRole("heading", { name: /relawan/i })).toBeVisible();
+      await expect(page.getByRole("main")).toBeVisible();
+      await expect(
+        page
+          .locator("div")
+          .filter({ hasText: /^Unggah Data Relawan$/ })
+          .first(),
+      ).not.toBeVisible();
+      await expect(page.locator(".px-6.py-6")).not.toBeVisible();
     });
 
     // TCDR.21-26 Search Bar
     test.describe(`TCDR.21-26 ${label} Search Bar`, () => {
       const searchCases = [
-        { id: "TCDR.21", title: "input keyword in search bar", keyword: "Relawan Kesehatan" },
-        { id: "TCDR.22", title: "input with upper case", keyword: "RELAWAN KESEHATAN" },
-        { id: "TCDR.23", title: "input with lower case", keyword: "relawan kesehatan" },
-        { id: "TCDR.24", title: "input with specific word", keyword: "Dinas Sosial" },
-        { id: "TCDR.25", title: "input with random keyword", keyword: "xqz99randomkeyword" },
-        { id: "TCDR.26", title: "input with special characters", keyword: "@#$%^&*()" },
+        {
+          id: "TCDR.21",
+          title: "input keyword in search bar",
+          keyword: "Relawan Demo",
+          expectNoData: false,
+          expectedContent: /relawan demo/i,
+        },
+        {
+          id: "TCDR.22",
+          title: "input with upper case",
+          keyword: "RELAWAN DEMO",
+          expectNoData: false,
+          expectedContent: /relawan demo/i,
+        },
+        {
+          id: "TCDR.23",
+          title: "input with lower case",
+          keyword: "relawan demo",
+          expectNoData: false,
+          expectedContent: /relawan demo/i,
+        },
+        {
+          id: "TCDR.24",
+          title: "input with specific word (NIK)",
+          keyword: "0000000000000000",
+          expectNoData: false,
+          expectedContent: /0000000000000000/,
+        },
+        {
+          id: "TCDR.25",
+          title: "input with random keyword",
+          keyword: "xqz99randomkeyword",
+          expectNoData: true,
+          expectedContent: null,
+        },
+        {
+          id: "TCDR.26",
+          title: "input with special characters",
+          keyword: "@#$%^&*()",
+          expectNoData: true,
+          expectedContent: null,
+        },
       ];
 
       for (const searchCase of searchCases) {
         test(`${searchCase.id} ${label} ${searchCase.title}`, async ({ page }) => {
           const searchInput = page.getByRole("textbox", { name: /cari|search/i });
           await searchInput.fill(searchCase.keyword);
-          // await page.getByRole("button", { name: /cari|search/i }).click();
 
-          if (["TCDR.25", "TCDR.26"].includes(searchCase.id)) {
-            await expect(page.getByText(/tidak ada data|no data/i)).toBeVisible();
+          // Gunakan tabel Daftar Relawan secara spesifik — berdasarkan header kolom
+          const relawanTable = page
+            .getByRole("table")
+            .filter({ hasText: /nama.*nik.*alamat.*kelurahan/i });
+
+          if (searchCase.expectNoData) {
+            await expect(page.getByText(/Belum ada relawan/i)).toBeVisible();
           } else {
-            await expect(page.getByRole("table")).toBeVisible();
+            await expect(relawanTable).toBeVisible();
+
+            const matchingRows = relawanTable
+              .getByRole("row")
+              .filter({ hasText: searchCase.expectedContent! });
+
+            await expect(matchingRows.first()).toBeVisible();
+            expect(await matchingRows.count()).toBeGreaterThan(0);
           }
         });
       }
@@ -459,7 +522,7 @@ for (const { label, creds } of roles) {
 
     // TCDR.27 Access Relawan Detail
     test(`TCDR.27 ${label} access Relawan detail`, async ({ page }) => {
-      await page.getByRole("table").getByRole("row").nth(1).click();
+      await page.getByRole("button", { name: "Detail" }).first().click();
 
       await expect(page.getByRole("heading", { name: /detail relawan/i })).toBeVisible();
     });
@@ -467,7 +530,7 @@ for (const { label, creds } of roles) {
     // TCDR.28-31 Detail Page
     test.describe(`TCDR.28-31 ${label} Detail Relawan`, () => {
       test.beforeEach(async ({ page }) => {
-        await page.getByRole("table").getByRole("row").nth(1).click();
+        await page.getByRole("button", { name: "Detail" }).first().click();
         await expect(page.getByRole("heading", { name: /detail relawan/i })).toBeVisible();
       });
 
