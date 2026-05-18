@@ -136,8 +136,8 @@ const ManajemenOPD: React.FC = () => {
             width: '10%',
             noTruncate: true,
             render: (row: OPDData) => (
-                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${row.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                    {row.is_active ? 'Aktif' : 'Tidak Aktif'}
+                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${row.status_keaktifan ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {row.status_keaktifan ? 'Aktif' : 'Tidak Aktif'}
                 </span>
             )
         },
@@ -167,7 +167,7 @@ const ManajemenOPD: React.FC = () => {
     const handleConfirmToggleStatus = async () => {
         if (!selectedOPD) return;
         toggleStatus.mutate(
-            { opd_id: selectedOPD.opd_id, is_active: !selectedOPD.is_active },
+            { opd_id: selectedOPD.opd_id, status_keaktifan: !selectedOPD.status_keaktifan },
             {
                 onSuccess: (d) => setToast({ message: d.message, type: 'success' }),
                 onError:   (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal mengubah status'), type: 'error' }),
@@ -250,12 +250,12 @@ const ManajemenOPD: React.FC = () => {
                 title: 'Data Manajemen OPD',
                 columns: [
                     { header: 'NAMA OPD', dataKey: 'nama_opd' },
-                    { header: 'STATUS',   dataKey: 'is_active' },
+                    { header: 'STATUS',   dataKey: 'status_keaktifan' },
                     { header: 'ALAMAT',   dataKey: 'alamat' },
                     { header: 'PIC',      dataKey: 'pic' },
                     { header: 'KONTAK',   dataKey: 'kontak' }
                 ],
-                data: filteredData.map(opd => ({ ...opd, is_active: opd.is_active ? 'Aktif' : 'Tidak Aktif' })),
+                data: filteredData.map(opd => ({ ...opd, status_keaktifan: opd.status_keaktifan ? 'Aktif' : 'Tidak Aktif' })),
                 filename: `manajemen-opd-${new Date().toISOString().split('T')[0]}.pdf`
             });
             setToast({ message: 'Data berhasil diekspor ke PDF', type: 'success' });
@@ -280,11 +280,11 @@ const ManajemenOPD: React.FC = () => {
         <>
             <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
             <Button
-                variant={row.is_active ? 'danger' : 'secondary'}
+                variant={row.status_keaktifan ? 'danger' : 'secondary'}
                 size="sm"
                 onClick={() => handleToggleStatus(row)}
             >
-                {row.is_active ? 'Nonaktif' : 'Aktifkan'}
+                {row.status_keaktifan ? 'Nonaktif' : 'Aktifkan'}
             </Button>
         </>
     );
@@ -439,7 +439,7 @@ const ManajemenOPD: React.FC = () => {
                 isOpen={isConfirmModalOpen}
                 onClose={() => setIsConfirmModalOpen(false)}
                 title="Konfirmasi"
-                subtitle={selectedOPD?.is_active ? "Apakah Anda yakin ingin menonaktifkan OPD ini?" : "Apakah Anda yakin ingin mengaktifkan OPD ini?"}
+                subtitle={selectedOPD?.status_keaktifan ? "Apakah Anda yakin ingin menonaktifkan OPD ini?" : "Apakah Anda yakin ingin mengaktifkan OPD ini?"}
                 maxWidth="md"
                 showCloseButton={false}
             >
@@ -447,7 +447,7 @@ const ManajemenOPD: React.FC = () => {
                     <div className="space-y-6">
                         <div className="text-center py-4">
                             <p className="text-lg text-gray-700">
-                                Anda akan {selectedOPD.is_active ? 'menonaktifkan' : 'mengaktifkan'}{' '}
+                                Anda akan {selectedOPD.status_keaktifan ? 'menonaktifkan' : 'mengaktifkan'}{' '}
                                 <span className="font-semibold">{selectedOPD.nama_opd}</span>
                             </p>
                         </div>

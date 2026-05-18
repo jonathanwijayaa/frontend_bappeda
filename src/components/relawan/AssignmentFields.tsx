@@ -18,7 +18,7 @@ export interface AssignmentFieldsProps {
         peran: string;
         detail: string;
         penugasan: string;
-        statusKeaktifan: 'Aktif' | 'Nonaktif';
+        status_keaktifan: 'Aktif' | 'Nonaktif';
         nomorSK?: string;
         skId?: string;
     };
@@ -181,10 +181,10 @@ const AssignmentFields: React.FC<AssignmentFieldsProps> = memo(({
                         <label key={status} className="flex items-center gap-2 cursor-pointer">
                             <input
                                 type="radio"
-                                name={`statusKeaktifan-${index}`}
+                                name={`status_keaktifan-${index}`}
                                 value={status}
-                                checked={assignment.statusKeaktifan === status}
-                                onChange={(e) => onFieldChange(index, 'statusKeaktifan', e.target.value)}
+                                checked={assignment.status_keaktifan === status}
+                                onChange={(e) => onFieldChange(index, 'status_keaktifan', e.target.value)}
                                 disabled={isReadOnly}
                                 className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
                             />

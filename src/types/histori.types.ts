@@ -9,7 +9,7 @@ export interface HistoriAssignment {
     peran: string;
     detail: string;
     penugasan?: string;
-    statusKeaktifan: string;
+    status_keaktifan: string;
     nomorSK?: string;
     tanggalTerbit?: string;
     batasAktif?: string;

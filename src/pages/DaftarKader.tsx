@@ -108,8 +108,8 @@ const DaftarKader: React.FC = () => {
             width: '10%',
             noTruncate: true,
             render: (row: KaderData) => (
-                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${row.is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                    {row.is_active ? 'Aktif' : 'Tidak Aktif'}
+                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${row.status_keaktifan ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {row.status_keaktifan ? 'Aktif' : 'Tidak Aktif'}
                 </span>
             )
         },
@@ -148,7 +148,7 @@ const DaftarKader: React.FC = () => {
     const handleConfirmToggleStatus = async () => {
         if (!selectedKader) return;
         toggleStatus.mutate(
-            { kader_id: selectedKader.kader_id, is_active: !selectedKader.is_active },
+            { kader_id: selectedKader.kader_id, status_keaktifan: !selectedKader.status_keaktifan },
             {
                 onSuccess: (d) => setToast({ message: d.message, type: 'success' }),
                 onError:   (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal mengubah status'), type: 'error' }),
@@ -371,11 +371,11 @@ const DaftarKader: React.FC = () => {
             {/* Toggle status untuk super_admin dan OPD yang memiliki kader tersebut */}
             {(isSuperAdmin || (isOPD && row.opd_id === (user as any)?.opd_id)) && (
                 <Button
-                    variant={row.is_active ? 'danger' : 'secondary'}
+                    variant={row.status_keaktifan ? 'danger' : 'secondary'}
                     size="sm"
                     onClick={() => handleToggleStatus(row)}
                 >
-                    {row.is_active ? 'Nonaktif' : 'Aktifkan'}
+                    {row.status_keaktifan ? 'Nonaktif' : 'Aktifkan'}
                 </Button>
             )}
         </>
@@ -631,13 +631,13 @@ const DaftarKader: React.FC = () => {
             {/* Confirmation Modal — untuk super_admin dan OPD */}
             {(isSuperAdmin || isOPD) && (
                 <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Konfirmasi"
-                    subtitle={selectedKader?.is_active ? "Nonaktifkan kader ini?" : "Aktifkan kader ini?"}
+                    subtitle={selectedKader?.status_keaktifan ? "Nonaktifkan kader ini?" : "Aktifkan kader ini?"}
                     maxWidth="md" showCloseButton={false}>
                     {selectedKader && (
                         <div className="space-y-6">
                             <div className="text-center py-4">
                                 <p className="text-lg text-gray-700">
-                                    Anda akan {selectedKader.is_active ? 'menonaktifkan' : 'mengaktifkan'}{' '}
+                                    Anda akan {selectedKader.status_keaktifan ? 'menonaktifkan' : 'mengaktifkan'}{' '}
                                     <span className="font-semibold">{selectedKader.nama_kader}</span>
                                 </p>
                             </div>

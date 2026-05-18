@@ -6,7 +6,7 @@ export interface SKData {
     judul_sk: string | null;
     tanggal_terbit: string | null;
     batas_aktif: string | null;
-    status: string;
+    status_keaktifan: string;
     nama_opd: string;
     opd_id?: number;
     jumlah_relawan: number;

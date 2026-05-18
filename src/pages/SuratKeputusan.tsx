@@ -122,7 +122,7 @@ const SuratKeputusan: React.FC = () => {
 
     const handleConfirmToggleSk = () => {
         if (!selectedSkForToggle) return;
-        const newStatus: 'Aktif' | 'Tidak Aktif' = selectedSkForToggle.status === 'Aktif' ? 'Tidak Aktif' : 'Aktif';
+        const newStatus: 'Aktif' | 'Tidak Aktif' = selectedSkForToggle.status_keaktifan === 'Aktif' ? 'Tidak Aktif' : 'Aktif';
         toggleSkStatus.mutate(
             { sk_id: selectedSkForToggle.sk_id, status: newStatus },
             {
@@ -147,7 +147,7 @@ const SuratKeputusan: React.FC = () => {
                     { header: 'NOMOR SK', dataKey: 'nomor_sk' },
                     { header: 'JUDUL SK', dataKey: 'judul_sk' },
                     { header: 'OPD', dataKey: 'nama_opd' },
-                    { header: 'STATUS', dataKey: 'status' },
+                    { header: 'STATUS', dataKey: 'status_keaktifan' },
                     { header: 'JML RELAWAN', dataKey: 'jumlah_relawan' },
                 ],
                 data: filteredData,
@@ -177,8 +177,8 @@ const SuratKeputusan: React.FC = () => {
             width: '10%',
             noTruncate: true,
             render: (row: SKData) => (
-                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${row.status === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                    {row.status}
+                <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${row.status_keaktifan === 'Aktif' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {row.status_keaktifan}
                 </span>
             )
         },
@@ -199,11 +199,11 @@ const SuratKeputusan: React.FC = () => {
             )}
             {isSuperAdmin && (
                 <Button
-                    variant={row.status === 'Aktif' ? 'danger' : 'secondary'}
+                    variant={row.status_keaktifan === 'Aktif' ? 'danger' : 'secondary'}
                     size="sm"
                     onClick={() => handleToggleSkStatus(row)}
                 >
-                    {row.status === 'Aktif' ? 'Nonaktif' : 'Aktifkan'}
+                    {row.status_keaktifan === 'Aktif' ? 'Nonaktif' : 'Aktifkan'}
                 </Button>
             )}
         </div>
@@ -325,7 +325,7 @@ const SuratKeputusan: React.FC = () => {
                                 { label: 'OPD', value: selectedSK.nama_opd },
                                 { label: 'Tanggal Terbit', value: selectedSK.tanggal_terbit ? new Date(selectedSK.tanggal_terbit).toLocaleDateString('id-ID') : '-' },
                                 { label: 'Batas Aktif', value: selectedSK.batas_aktif ? new Date(selectedSK.batas_aktif).toLocaleDateString('id-ID') : '-' },
-                                { label: 'Status', value: selectedSK.status },
+                                { label: 'Status', value: selectedSK.status_keaktifan },
                             ].map(item => (
                                 <div key={item.label} className="grid grid-cols-3 gap-4 items-center border-b border-gray-100 pb-2">
                                     <span className="text-sm font-medium text-gray-600">{item.label}</span>
@@ -384,13 +384,13 @@ const SuratKeputusan: React.FC = () => {
                             <div className="flex justify-end gap-2 pt-4 border-t">
                                 <Button variant="outline" onClick={() => { setIsDetailModalOpen(false); setSelectedSkId(0); }}>Tutup</Button>
                                 <Button
-                                    variant={selectedSK.status === 'Aktif' ? 'danger' : 'secondary'}
+                                    variant={selectedSK.status_keaktifan === 'Aktif' ? 'danger' : 'secondary'}
                                     onClick={() => handleToggleSkStatus(selectedSK)}
                                     disabled={toggleSkStatus.isPending}
                                 >
                                     {toggleSkStatus.isPending
                                         ? <><Loader2 size={14} className="animate-spin mr-1" />Menyimpan...</>
-                                        : selectedSK.status === 'Aktif' ? 'Nonaktifkan SK' : 'Aktifkan SK'
+                                        : selectedSK.status_keaktifan === 'Aktif' ? 'Nonaktifkan SK' : 'Aktifkan SK'
                                     }
                                 </Button>
                             </div>
@@ -442,7 +442,7 @@ const SuratKeputusan: React.FC = () => {
                 isOpen={isConfirmSkOpen}
                 onClose={() => { setIsConfirmSkOpen(false); setSelectedSkForToggle(null); }}
                 title="Konfirmasi"
-                subtitle={selectedSkForToggle?.status === 'Aktif' ? 'Nonaktifkan SK ini?' : 'Aktifkan SK ini?'}
+                subtitle={selectedSkForToggle?.status_keaktifan === 'Aktif' ? 'Nonaktifkan SK ini?' : 'Aktifkan SK ini?'}
                 maxWidth="md"
                 showCloseButton={false}
             >
@@ -450,7 +450,7 @@ const SuratKeputusan: React.FC = () => {
                     <div className="space-y-6">
                         <div className="text-center py-4">
                             <p className="text-lg text-gray-700">
-                                Anda akan {selectedSkForToggle.status === 'Aktif' ? 'menonaktifkan' : 'mengaktifkan'}{' '}
+                                Anda akan {selectedSkForToggle.status_keaktifan === 'Aktif' ? 'menonaktifkan' : 'mengaktifkan'}{' '}
                                 <span className="font-semibold">{selectedSkForToggle.nomor_sk}</span>
                             </p>
                         </div>
