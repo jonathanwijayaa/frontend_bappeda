@@ -87,7 +87,10 @@ export const buildRelawanData = (): RelawanData => {
 
 export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
   async fillAlamat() {
-    await page.getByRole("textbox").nth(2).fill(data.ALAMAT);
+    if (await page.getByRole("textbox").nth(3).isVisible()) {
+      await page.getByRole("textbox").nth(3).clear();
+    }
+    await page.getByRole("textbox").nth(3).fill(data.ALAMAT);
   },
   async fillAll() {
     await this.fillNamaLengkap();
@@ -113,7 +116,7 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
     await page.getByRole("combobox").nth(1).selectOption(data.JABATAN);
   },
   async fillJenisKelamin() {
-    await page.getByRole("combobox").nth(0).selectOption(data["JENIS KELAMIN"]);
+    await page.getByRole("combobox").first().selectOption(data["JENIS KELAMIN"]);
   },
   async fillKelurahan() {
     await page.getByRole("textbox").nth(4).fill(data.KELURAHAN);
@@ -125,7 +128,7 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
     await page.getByRole("textbox").nth(1).fill(data["NAMA LENGKAP"]);
   },
   async fillNIK() {
-    await page.getByRole("textbox").nth(0).fill(data.NIK);
+    await page.getByRole("textbox").nth(2).fill(data.NIK);
   },
   async fillNoHP() {
     await page.getByRole("textbox").nth(3).fill(data["NO HP"]);
@@ -144,7 +147,7 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
       await page.locator(`input[type="radio"][value="${data["STATUS KEAKTIFAN"]}"]`).click();
     }
   },
-}); 
+});
 
 export const selectOPD = async ({ data, page }: IFillRelawanForm) => {
   await page.getByRole("textbox", { name: "Cari nama OPD..." }).fill(data.OPD);
