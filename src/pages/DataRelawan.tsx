@@ -82,7 +82,7 @@ const DataRelawan: React.FC = () => {
         peran: '',
         penugasan: '',
         detail: '',
-        status_keaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
+        status_keaktifan: 'Aktif' as 'Aktif' | 'Tidak Aktif',
         nomorSK: '',
         skId: ''
     });
