@@ -9,6 +9,7 @@ import {
   selectPenugasan,
 } from "@/helpers/formRelawan.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { ensurePengajuanExists } from "@/helpers/submitPengajuan.helper";
 import { expect, test } from "@playwright/test";
 
 const roles = [
@@ -582,16 +583,40 @@ for (const { label, creds } of roles) {
       });
     });
 
+    // Salin blok ini ke dataRelawan.spec.ts sebagai pengganti
+    // test.describe TCDR.32-35 yang lama.
+    //
+    // Tambahkan import di bagian atas file:
+    //   import { ensurePengajuanExists } from "@/helpers/submitPengajuan.helper";
+
     // TCDR.32-35 Tabel Pengajuan Perubahan Data
     test.describe(`TCDR.32-35 ${label} Pengajuan Perubahan Data`, () => {
-      test.beforeEach(async ({ page }) => {
+      // -----------------------------------------------------------
+      // SETUP
+      // `browser` fixture dibutuhkan untuk membuka isolated context
+      // relawan tanpa mengganggu session Super Admin/OPD di `page`.
+      // -----------------------------------------------------------
+      test.beforeEach(async ({ page, browser }) => {
+        // Pastikan sudah di halaman Data Relawan
+        await expect(page).toHaveURL(/relawan/);
+
+        // Jika belum ada pengajuan pending, buat dulu lewat akun relawan
+        await ensurePengajuanExists(page, browser);
+
+        // Verifikasi section Pengajuan Perubahan Data tampil
         await expect(page.getByRole("heading", { name: "Pengajuan Perubahan Data" })).toBeVisible();
         await expect(pengajuanTable(page)).toBeVisible();
+
+        // Klik Review pada baris pertama yang berstatus Menunggu
         await pengajuanTable(page)
-          .getByRole("button", { name: /review/i })
+          .getByRole("row")
+          .filter({ hasText: /menunggu|pending/i })
           .first()
+          .getByRole("button", { name: /review/i })
           .click();
-        await page.getByRole("checkbox", { name: "Saya telah memverifikasi" }).click();
+
+        // Centang checkbox konfirmasi verifikasi
+        await page.getByRole("checkbox", { name: /saya telah memverifikasi/i }).click();
       });
 
       // TCDR.32
