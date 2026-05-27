@@ -3,6 +3,7 @@ import { credentials } from "@/helpers/credentials.helper";
 import {
   buildRelawanData,
   fillRelawanForm,
+  pengajuanTable,
   selectKader,
   selectOPD,
   selectPenugasan,
@@ -584,22 +585,28 @@ for (const { label, creds } of roles) {
     // TCDR.32-35 Tabel Pengajuan Perubahan Data
     test.describe(`TCDR.32-35 ${label} Pengajuan Perubahan Data`, () => {
       test.beforeEach(async ({ page }) => {
-        await page.getByRole("tab", { name: /pengajuan perubahan/i }).click();
-        await expect(page.getByRole("table")).toBeVisible();
+        await expect(page.getByRole("heading", { name: "Pengajuan Perubahan Data" })).toBeVisible();
+        await expect(pengajuanTable(page)).toBeVisible();
+        await pengajuanTable(page)
+          .getByRole("button", { name: /review/i })
+          .first()
+          .click();
+        await page.getByRole("checkbox", { name: "Saya telah memverifikasi" }).click();
       });
 
       // TCDR.32
       test(`TCDR.32 ${label} access Relawan Review`, async ({ page }) => {
-        await expect(page.getByRole("table")).toBeVisible();
+        await expect(
+          page.getByRole("heading", { name: /review pengajuan perubahan data/i }),
+        ).toBeVisible();
       });
 
       // TCDR.33
       test(`TCDR.33 ${label} accept Pengajuan perubahan data`, async ({ page }) => {
         await page
-          .getByRole("button", { name: /terima|accept/i })
+          .getByRole("button", { name: /setuju|terima|accept/i })
           .first()
           .click();
-        await page.getByRole("button", { name: /ya|konfirmasi/i }).click();
 
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();
       });
@@ -610,7 +617,6 @@ for (const { label, creds } of roles) {
           .getByRole("button", { name: /tolak|decline/i })
           .first()
           .click();
-        await page.getByRole("button", { name: /ya|konfirmasi/i }).click();
 
         await expect(page.getByText(/berhasil|ditolak|success/i)).toBeVisible();
       });
@@ -625,8 +631,6 @@ for (const { label, creds } of roles) {
         await page
           .getByRole("textbox", { name: /catatan|notes/i })
           .fill("Catatan verifikasi dari " + label);
-
-        await page.getByRole("button", { name: /ya|konfirmasi/i }).click();
 
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();
       });

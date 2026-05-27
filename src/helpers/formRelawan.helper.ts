@@ -26,6 +26,24 @@ const KADER_MAP: Record<string, string[]> = {
   "Satuan Polisi Pamong Praja (PP)": ["SATLINMAS"],
 };
 
+// Tabel Pengajuan Perubahan Data
+export const pengajuanTable = (page: Page) =>
+  page
+    .getByRole("table")
+    .filter({ hasText: /nik.*nama lengkap.*tanggal pengajuan.*status.*aksi/i });
+
+// Tabel Daftar Relawan
+export const relawanTable = (page: Page) =>
+  page
+    .getByRole("table")
+    .filter({ hasText: /nama.*nik.*alamat.*kelurahan.*aksi/i });
+
+// Search bar Pengajuan Perubahan Data
+export const searchPengajuan = (page: Page) => page.getByPlaceholder(/cari pengajuan/i);
+
+// Search bar Daftar Relawan
+export const searchRelawan = (page: Page) => page.getByPlaceholder(/cari relawan/i);
+
 export interface RelawanData {
   "NAMA LENGKAP": string;
   "JENIS KELAMIN": string;
@@ -175,3 +193,5 @@ export const selectKader = async ({ data, page }: IFillRelawanForm) => {
 export const selectPenugasan = async ({ data, page }: IFillRelawanForm) => {
   await page.getByRole("textbox", { name: /nama\/detail penugasan/i }).fill(data.PENUGASAN);
 };
+
+
