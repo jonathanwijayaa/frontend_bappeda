@@ -7,7 +7,6 @@ import Toast, { ToastType } from '../components/ui/Toast';
 import apiClient from '../lib/axios';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { formatPhoneDisplay } from '../utils/formatPhone';
-import { toTitleCase } from '../utils/formatText';
 import { Loader2 } from 'lucide-react';
 
 interface ProfilData {
@@ -27,12 +26,11 @@ const ProfilRelawan = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
+    // State form hanya menyisakan data yang diizinkan untuk diubah
     const [updateForm, setUpdateForm] = useState({
-        namaLengkap: '',
+        alamat: '',
         kelurahan: '',
         noHp: '',
-        jenisKelamin: '',
-        alamat: '',
         catatan: '',
     });
 
@@ -55,7 +53,7 @@ const ProfilRelawan = () => {
     useEffect(() => { fetchProfil(); }, [fetchProfil]);
 
     const handleOpenModal = () => {
-        setUpdateForm({ namaLengkap: '', kelurahan: '', noHp: '', jenisKelamin: '', alamat: '', catatan: '' });
+        setUpdateForm({ alamat: '', kelurahan: '', noHp: '', catatan: '' });
         setIsModalOpen(true);
     };
 
@@ -63,14 +61,18 @@ const ProfilRelawan = () => {
         setIsSubmitting(true);
         try {
             const dataBaru: Record<string, string> = {};
-            if (updateForm.namaLengkap.trim())  dataBaru.nama_lengkap  = toTitleCase(updateForm.namaLengkap.trim());
-            if (updateForm.alamat.trim())        dataBaru.alamat_ktp   = updateForm.alamat.trim();
-            if (updateForm.kelurahan.trim())     dataBaru.kelurahan    = updateForm.kelurahan.trim();
-            if (updateForm.noHp.trim())          dataBaru.no_hp        = updateForm.noHp.trim().replace(/\D/g, '');
-            if (updateForm.jenisKelamin.trim())  dataBaru.jenis_kelamin = updateForm.jenisKelamin.trim();
+            if (updateForm.alamat.trim())    dataBaru.alamat_ktp = updateForm.alamat.trim();
+            if (updateForm.kelurahan.trim()) dataBaru.kelurahan  = updateForm.kelurahan.trim();
+            if (updateForm.noHp.trim())      dataBaru.no_hp      = updateForm.noHp.trim().replace(/\D/g, '');
 
             if (Object.keys(dataBaru).length === 0) {
                 setToast({ message: 'Minimal satu data harus diubah', type: 'error' });
+                setIsConfirmOpen(false);
+                return;
+            }
+
+            if (!updateForm.catatan.trim()) {
+                setToast({ message: 'Catatan / Alasan Perubahan wajib diisi', type: 'error' });
                 setIsConfirmOpen(false);
                 return;
             }
@@ -142,7 +144,7 @@ const ProfilRelawan = () => {
                         {/* Info pengajuan */}
                         <div className="mt-5 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                             <p className="text-xs text-blue-700 leading-relaxed">
-                                <span className="font-semibold">Informasi:</span> Perubahan data hanya dapat dilakukan pada Informasi Pribadi dan memerlukan persetujuan dari Admin OPD atau Super Admin. Pengajuan yang dikirim akan berstatus <span className="font-semibold">Menunggu Review</span> hingga diproses.
+                                <span className="font-semibold">Informasi:</span> Perubahan data hanya dapat dilakukan pada Informasi Pribadi tertentu (Alamat, Kelurahan, No. HP) dan memerlukan persetujuan dari Admin OPD atau Super Admin. Pengajuan yang dikirim akan berstatus <span className="font-semibold">Menunggu Review</span> hingga diproses.
                             </p>
                         </div>
                     </div>
@@ -168,54 +170,18 @@ const ProfilRelawan = () => {
                                 {/* Peringatan */}
                                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                                     <p className="text-xs text-yellow-800 leading-relaxed">
-                                        <span className="font-semibold">Perhatian:</span> Pengajuan ini hanya untuk perubahan <span className="font-semibold">Informasi Pribadi</span>. Data tidak akan langsung berubah — perubahan akan berlaku setelah disetujui oleh Admin.
+                                        <span className="font-semibold">Perhatian:</span> Pengajuan ini hanya untuk perubahan <span className="font-semibold">Informasi Kontak & Domisili</span>. Data tidak akan langsung berubah — perubahan akan berlaku setelah disetujui oleh Admin.
                                     </p>
                                 </div>
 
                                 <p className="text-sm text-gray-500">Isi data yang ingin diubah. Kosongkan field yang tidak ingin diubah.</p>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        NIK <span className="text-xs text-gray-400">(tidak dapat diubah)</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={profil?.nik || ''}
-                                        disabled
-                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-100 text-gray-500 text-sm cursor-not-allowed"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap Baru</label>
-                                    <input
-                                        type="text"
-                                        value={updateForm.namaLengkap}
-                                        onChange={(e) => setUpdateForm(p => ({ ...p, namaLengkap: e.target.value }))}
-                                        placeholder={profil?.nama_lengkap || 'Nama lengkap baru'}
-                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Jenis Kelamin</label>
-                                    <select
-                                        value={updateForm.jenisKelamin || profil?.jenis_kelamin || ''}
-                                        disabled
-                                        className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
-                                    >
-                                        <option value="L">Laki-laki</option>
-                                        <option value="P">Perempuan</option>
-                                    </select>
-                                    <p className="text-xs text-gray-400 mt-1">Jenis kelamin tidak dapat diubah melalui pengajuan.</p>
-                                </div>
-
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Alamat KTP Baru</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Alamat Baru</label>
                                     <textarea
                                         value={updateForm.alamat}
                                         onChange={(e) => setUpdateForm(p => ({ ...p, alamat: e.target.value }))}
-                                        placeholder={profil?.alamat_ktp || 'Alamat KTP baru'}
+                                        placeholder={profil?.alamat_ktp || 'Alamat tempat tinggal baru'}
                                         rows={3}
                                         className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 resize-none text-sm"
                                     />
