@@ -282,7 +282,7 @@ for (const { label, creds, isSuperAdmin } of roles) {
       const fileInput = page.locator("input[type='file']");
       await fileInput.setInputFiles(filePath);
 
-      await page.getByRole("button").nth(5).click();
+      await page.getByRole("button").filter({ hasText: /^$/ }).nth(2).click();
 
       await expect(page.getByRole("heading", { name: /daftar kader/i })).toBeVisible();
     });

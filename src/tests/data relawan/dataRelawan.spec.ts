@@ -81,7 +81,7 @@ for (const { label, creds } of roles) {
         const form = await fillRelawanForm({ data: relawanData, page });
         await form.fillAll();
 
-        await page.getByRole("button", { name: /batal/i }).click();
+        await page.getByRole("button").filter({ hasText: /^$/ }).nth(2).click();
 
         await expect(page).toHaveURL(/relawan/);
       });
@@ -552,7 +552,7 @@ for (const { label, creds } of roles) {
 
       // TCDR.29
       test(`TCDR.29 ${label} edit Relawan penugasan detail form`, async ({ page }) => {
-        await page.getByRole("button", { name: /edit penugasan/i }).click();
+        await page.getByRole("button", { name: /edit/i }).click();
 
         const relawanData = buildRelawanData();
         await selectOPD({ data: relawanData, page });
@@ -564,12 +564,10 @@ for (const { label, creds } of roles) {
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();
       });
 
+      // -------- TCDR.30 - TCDR.31 dihilangkan sementara untuk penyesuaian dengan perubahan form penugasan --------
       // TCDR.30
       test(`TCDR.30 ${label} delete penugasan on detail form`, async ({ page }) => {
-        await page
-          .getByRole("button", { name: /hapus penugasan/i })
-          .first()
-          .click();
+        await page.getByRole("button", { name: /hapus/i }).first().click();
         await page.getByRole("button", { name: /ya|konfirmasi/i }).click();
 
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();

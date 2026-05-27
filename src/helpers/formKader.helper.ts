@@ -2,11 +2,14 @@ import { faker } from "@faker-js/faker";
 import { Page } from "@playwright/test";
 
 const OPD_LIST = [
+  // "Dinas Simulasi Yogyakarta",
+  // "Dinas Uji Coba Yogyakarta",
   "Dinas Kesehatan (Dinkes)",
-  // "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
   "Dinas Perhubungan",
-  // "Dinas Pariwisata",
-  // "Dinas Pemberdayaan Perempuan, Perlindungan Anak,Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)",
+  "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
+  "Dinas Pariwisata",
+  "Dinas Kebudayaan",
+  "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)",
   "Satuan Polisi Pamong Praja (PP)",
 ];
 
@@ -50,24 +53,24 @@ export const fillKaderForm = async ({ data, page }: IFillKaderForm) => ({
     await page.getByRole("textbox", { name: /Alamat/i }).fill(data["ALAMAT PIC"]);
   },
   async fillAllOPD() {
-  await this.fillNamaKader();
-  await this.fillDeskripsi();
-  await this.fillPIC();
-  await this.fillNIKPIC();
-  await this.fillNoHP();
-  await this.fillAlamatPIC();
-  await this.fillKelurahanPIC();
-},
-async fillAllSuperAdmin() {
-  await this.fillOPD();
-  await this.fillNamaKader();
-  await this.fillDeskripsi();
-  await this.fillPIC();
-  await this.fillNIKPIC();
-  await this.fillNoHP();
-  await this.fillAlamatPIC();
-  await this.fillKelurahanPIC();
-},
+    await this.fillNamaKader();
+    await this.fillDeskripsi();
+    await this.fillPIC();
+    await this.fillNIKPIC();
+    await this.fillNoHP();
+    await this.fillAlamatPIC();
+    await this.fillKelurahanPIC();
+  },
+  async fillAllSuperAdmin() {
+    await this.fillOPD();
+    await this.fillNamaKader();
+    await this.fillDeskripsi();
+    await this.fillPIC();
+    await this.fillNIKPIC();
+    await this.fillNoHP();
+    await this.fillAlamatPIC();
+    await this.fillKelurahanPIC();
+  },
   async fillDeskripsi() {
     await page.getByRole("textbox", { name: /Deskripsi/i }).fill(data.DESKRIPSI);
   },
