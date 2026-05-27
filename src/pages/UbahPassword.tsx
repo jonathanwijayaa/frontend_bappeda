@@ -11,9 +11,14 @@ interface ValidationRule {
     test: (password: string) => boolean;
 }
 
+// ── PENGUATAN AUTENTIKASI: ATURAN VALIDASI BARU ──
 const validationRules: ValidationRule[] = [
     { label: 'Minimal 8 karakter', test: (p) => p.length >= 8 },
     { label: 'Mengandung angka', test: (p) => /\d/.test(p) },
+    { 
+        label: 'Minimal 1 karakter spesial (contoh: !, @, #, $, %, ^, *, _, +)', 
+        test: (p) => /[^A-Za-z0-9]/.test(p) 
+    },
 ];
 
 const UbahPassword = () => {
@@ -68,7 +73,7 @@ const UbahPassword = () => {
 
         setOldPasswordStatus('checking');
         debounceTimerRef.current = setTimeout(() => {
-            verifyOldPassword(form.oldPassword);
+            void verifyOldPassword(form.oldPassword);
         }, 700);
 
         return () => {
@@ -130,7 +135,7 @@ const UbahPassword = () => {
             <RelawanMenu />
 
             <div className="px-4 py-6 max-w-md mx-auto">
-                <h1 className="text-xl font-bold text-gray-800 text-center">Ubah Kata Sandi</h1>
+                <h1 className="text-xl font-bold text-gray-800 text-center mb-4">Ubah Kata Sandi</h1>
 
                 <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-md p-6 space-y-5">
 
@@ -289,7 +294,7 @@ const UbahPassword = () => {
                 {/* Info card */}
                 <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-xl">
                     <p className="text-xs text-blue-700 leading-relaxed">
-                        <span className="font-semibold">Tips:</span> Gunakan kombinasi huruf dan angka agar kata sandi lebih aman. Jangan bagikan kata sandi kepada siapapun.
+                        <span className="font-semibold">Tips:</span> Gunakan kombinasi huruf, angka, dan karakter spesial (!@#$%^&*()_+) agar kata sandi lebih tangguh dan aman dari ancaman peretasan.
                     </p>
                 </div>
             </div>

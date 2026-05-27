@@ -18,7 +18,7 @@ export interface AssignmentFieldsProps {
         peran: string;
         detail: string;
         penugasan: string;
-        status_keaktifan: 'Aktif' | 'Nonaktif';
+        status_keaktifan: 'Aktif' | 'Tidak Aktif';
         nomorSK?: string;
         skId?: string;
     };
@@ -177,18 +177,21 @@ const AssignmentFields: React.FC<AssignmentFieldsProps> = memo(({
             <div className="grid grid-cols-3 gap-4 items-center">
                 <label className="text-lg font-medium text-gray-900">Status Keaktifan</label>
                 <div className="col-span-2 flex items-center gap-6">
-                    {(['Aktif', 'Nonaktif'] as const).map(status => (
-                        <label key={status} className="flex items-center gap-2 cursor-pointer">
+                    {[
+                        { label: 'Aktif', value: 'Aktif' },
+                        { label: 'Nonaktif', value: 'Tidak Aktif' },
+                    ].map(status => (
+                        <label key={status.value} className="flex items-center gap-2 cursor-pointer">
                             <input
                                 type="radio"
                                 name={`status_keaktifan-${index}`}
-                                value={status}
-                                checked={assignment.status_keaktifan === status}
+                                value={status.value}
+                                checked={assignment.status_keaktifan === status.value}
                                 onChange={(e) => onFieldChange(index, 'status_keaktifan', e.target.value)}
                                 disabled={isReadOnly}
                                 className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
                             />
-                            <span className="text-gray-700">{status}</span>
+                            <span className="text-gray-700">{status.label}</span>
                         </label>
                     ))}
                 </div>

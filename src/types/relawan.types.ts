@@ -10,7 +10,7 @@ export interface Assignment {
     peran: string;
     detail: string;
     penugasan?: string;
-    status_keaktifan: 'Aktif' | 'Nonaktif';
+    status_keaktifan: 'Aktif' | 'Tidak Aktif';
     nomorSK: string;
     skId: string; // Reference to SK document
     tanggalTerbit?: string; // Tanggal terbit SK
@@ -29,6 +29,7 @@ export interface RelawanData {
     kader: string;
     jabatan: string;
     penugasan: string;
+    status_keaktifan: string;
     jenisKelamin?: string;
     assignments?: Assignment[];
 }
