@@ -583,12 +583,6 @@ for (const { label, creds } of roles) {
       });
     });
 
-    // Salin blok ini ke dataRelawan.spec.ts sebagai pengganti
-    // test.describe TCDR.32-35 yang lama.
-    //
-    // Tambahkan import di bagian atas file:
-    //   import { ensurePengajuanExists } from "@/helpers/submitPengajuan.helper";
-
     // TCDR.32-35 Tabel Pengajuan Perubahan Data
     test.describe(`TCDR.32-35 ${label} Pengajuan Perubahan Data`, () => {
       // -----------------------------------------------------------
