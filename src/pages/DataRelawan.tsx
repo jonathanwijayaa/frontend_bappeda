@@ -45,7 +45,10 @@ const DataRelawan: React.FC = () => {
     const [isReviewing, setIsReviewing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    const [searchTerm, setSearchTerm] = useState<string>('');
+    // ── STATE PENCARIAN TERPISAH ──
+    const [searchTerm, setSearchTerm] = useState<string>(''); // Pencarian Daftar Relawan (Bawah)
+    const [searchPengajuan, setSearchPengajuan] = useState<string>(''); // Pencarian Pengajuan (Atas)
+
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
@@ -82,10 +85,14 @@ const DataRelawan: React.FC = () => {
         peran: '',
         penugasan: '',
         detail: '',
-        status_keaktifan: 'Aktif' as 'Aktif' | 'Nonaktif',
+        status_keaktifan: 'Aktif' as 'Aktif' | 'Tidak Aktif',
         nomorSK: '',
         skId: ''
     });
+
+    const normalizeStatusKeaktifan = useCallback((status?: string) => {
+        return status === 'Aktif' ? 'Aktif' : 'Tidak Aktif';
+    }, []);
 
     const [detailFormData, setDetailFormData] = useState({
         namaRelawan: '', nik: '', alamat: '', no_hp: '', kelurahan: '',
@@ -181,7 +188,7 @@ const DataRelawan: React.FC = () => {
     const invalidateRelawan = useCallback(() => qc.invalidateQueries({ queryKey: RELAWAN_KEYS.all }), [qc]);
     const invalidatePengajuan = useCallback(() => qc.invalidateQueries({ queryKey: PENGAJUAN_KEYS.all }), [qc]);
 
-    // ── DATA RELAWAN (Tabel Bawah) ──
+    // ── FILTER DATA RELAWAN (Tabel Bawah) ──
     const filteredRelawanData = useMemo(() => {
         const lowerSearch = searchTerm.toLowerCase();
         return relawanList.filter(relawan => {
@@ -202,21 +209,28 @@ const DataRelawan: React.FC = () => {
     const endIndex = startIndex + itemsPerPage;
     const currentRelawanData = filteredRelawanData.slice(startIndex, endIndex);
 
-    // ── DATA PENGAJUAN (Tabel Atas) dengan Sorting Prioritas Review ──
+    // ── FILTER & SORT DATA PENGAJUAN (Tabel Atas) ──
     const pengajuanUIData = useMemo(() => {
-        // 1. Sort data pengajuan: "Menunggu Review" di atas, sisanya di bawah berdasarkan tanggal
-        const sortedData = [...pengajuanList].sort((a, b) => {
+        const lowerSearch = searchPengajuan.toLowerCase();
+        
+        // Filter berdasarkan search text khusus pengajuan
+        const filtered = pengajuanList.filter(p => 
+            p.nik?.toLowerCase().includes(lowerSearch) || 
+            p.nama_lengkap?.toLowerCase().includes(lowerSearch) ||
+            p.jenis_perubahan?.toLowerCase().includes(lowerSearch)
+        );
+
+        // Sort data pengajuan: "Menunggu Review" di atas, sisanya di bawah berdasarkan tanggal terbaru
+        const sortedData = [...filtered].sort((a, b) => {
             const weightA = a.status_pengajuan === 'Menunggu Review' ? 0 : 1;
             const weightB = b.status_pengajuan === 'Menunggu Review' ? 0 : 1;
 
             if (weightA !== weightB) {
                 return weightA - weightB;
             }
-            // Jika status sama, urutkan tanggal terbaru
             return new Date(b.tanggal_pengajuan).getTime() - new Date(a.tanggal_pengajuan).getTime();
         });
 
-        // 2. Map ke UI format
         return sortedData.map(p => ({
             nik: p.nik,
             namaLengkap: p.nama_lengkap,
@@ -224,7 +238,7 @@ const DataRelawan: React.FC = () => {
             status_pengajuan: p.status_pengajuan,
             _raw: p
         }));
-    }, [pengajuanList]);
+    }, [pengajuanList, searchPengajuan]);
 
     const totalPengajuanPages = Math.ceil(pengajuanUIData.length / pengajuanItemsPerPage);
     const startPengajuanIndex = (currentPengajuanPage - 1) * pengajuanItemsPerPage;
@@ -344,7 +358,6 @@ const DataRelawan: React.FC = () => {
                 invalidatePengajuan();
                 if (status === 'Disetujui') invalidateRelawan();
                 
-                // RESET: Kembalikan halaman pengajuan ke 1 setelah melakukan aksi
                 setCurrentPengajuanPage(1);
             } else {
                 setToast({ message: data.message || 'Gagal memproses pengajuan', type: 'error' });
@@ -420,7 +433,6 @@ const DataRelawan: React.FC = () => {
                     assignments: []
                 });
                 invalidateRelawan();
-                // RESET: Tabel relawan dikembalikan ke halaman 1 setelah add
                 setCurrentPage(1); 
             }
         } catch (e: any) {
@@ -436,7 +448,7 @@ const DataRelawan: React.FC = () => {
             if (res.success) {
                 setToast({ message: res.message || 'Berhasil memproses Excel', type: 'success' });
                 invalidateRelawan();
-                setCurrentPage(1); // Reset page setelah mass upload
+                setCurrentPage(1);
             } else {
                 setToast({ message: res.message || 'Gagal import Excel', type: 'error' });
             }
@@ -658,6 +670,7 @@ const DataRelawan: React.FC = () => {
         const currentKaderOptions = context === 'form' ? (kaderOptionsByIndex[index] || []) : [];
         const isKaderLoading = isLoadingKaderByIndex[index] || false;
         const hasOpdSelected = isOPD || assignment.opd_id > 0 || assignment.opd !== '';
+        const currentStatusKeaktifan = normalizeStatusKeaktifan(assignment.status_keaktifan);
         
         const onFieldChange = handlers?.onFieldChange ?? handleAssignmentChange;
         const onOpdChange = handlers?.onOpdChange ?? handleAssignmentOpdChange;
@@ -730,7 +743,7 @@ const DataRelawan: React.FC = () => {
                                 )}
                                 {!isReadOnly && hasOpdSelected && !isKaderLoading && currentKaderOptions.length === 0 && assignment.opd_id > 0 && (
                                     <p className="mt-1 text-xs text-yellow-600">
-                                        ️ OPD ini belum memiliki kader
+                                        OPD ini belum memiliki kader
                                     </p>
                                 )}
                             </>
@@ -795,18 +808,21 @@ const DataRelawan: React.FC = () => {
                 <div className="grid grid-cols-3 gap-4 items-center mt-2">
                     <label className="text-lg font-medium text-gray-900">Status Keaktifan</label>
                     <div className="col-span-2 flex items-center gap-6">
-                        {['Aktif', 'Nonaktif'].map(status => (
-                            <label key={status} className="flex items-center gap-2 cursor-pointer">
+                        {[
+                            { label: 'Aktif', value: 'Aktif' },
+                            { label: 'Nonaktif', value: 'Tidak Aktif' },
+                        ].map(status => (
+                            <label key={status.value} className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="radio"
                                     name={`status_keaktifan-${index}`}
-                                    value={status}
-                                    checked={assignment.status_keaktifan === status}
-                                    onChange={(e) => onFieldChange(index, 'status_keaktifan', e.target.value)}
+                                    value={status.value}
+                                    checked={currentStatusKeaktifan === status.value}
+                                    onChange={(e) => onFieldChange(index, 'status_keaktifan', normalizeStatusKeaktifan(e.target.value))}
                                     disabled={isReadOnly}
                                     className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
                                 />
-                                <span className="text-gray-700">{status}</span>
+                                <span className="text-gray-700">{status.label}</span>
                             </label>
                         ))}
                     </div>
@@ -827,6 +843,7 @@ const DataRelawan: React.FC = () => {
 
     return (
         <div className="space-y-6">
+            {/* GLOBAL ACTIONS (Tombol Atas Tetap Di Sini) */}
             <div className="flex justify-between items-center">
                 <div className="flex gap-3">
                     <Button variant="primary" onClick={() => {
@@ -848,16 +865,21 @@ const DataRelawan: React.FC = () => {
                         Unggah dari Excel
                     </Button>
                 </div>
-                {/* RESET: Kembalikan halaman relawan ke 1 saat pencarian */}
-                <SearchInput
-                    value={searchTerm}
-                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                    className="w-64"
-                />
             </div>
-
             {/* TABEL 1: Pengajuan Perubahan Data */}
-            <Card title="Pengajuan Perubahan Data">
+            <Card>
+                <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <h2 className="text-xl font-semibold text-gray-900">Pengajuan Perubahan Data</h2>
+                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                        <SearchInput
+                            value={searchPengajuan}
+                            onChange={(e) => { setSearchPengajuan(e.target.value); setCurrentPengajuanPage(1); }}
+                            placeholder="Cari pengajuan..."
+                            className="w-64"
+                        />
+                    </div>
+                </div>
+
                 {isLoadingPengajuan ? (
                     <div className="flex items-center justify-center h-32">
                         <Loader2 size={24} className="animate-spin text-gray-400" />
@@ -889,19 +911,28 @@ const DataRelawan: React.FC = () => {
 
             {/* TABEL 2: Daftar Relawan */}
             <Card>
-                <div className="mb-4 flex justify-between items-center">
+                {/* Menggabungkan Judul, Search bar, dan Tombol Ekspor PDF dalam 1 Baris Sejajar */}
+                <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <h2 className="text-xl font-semibold text-gray-900">Daftar Relawan</h2>
-                    {!isLoadingRelawan && filteredRelawanData.length > 0 && (
-                        <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={handleExportPdf}
-                            className="flex items-center gap-2"
-                        >
-                            <FileDown size={16} />
-                            Ekspor PDF
-                        </Button>
-                    )}
+                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                        <SearchInput
+                            value={searchTerm}
+                            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                            placeholder="Cari relawan..."
+                            className="w-64"
+                        />
+                        {!isLoadingRelawan && filteredRelawanData.length > 0 && (
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={handleExportPdf}
+                                className="flex items-center gap-2"
+                            >
+                                <FileDown size={16} />
+                                Ekspor PDF
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 {isLoadingRelawan ? (
@@ -937,6 +968,7 @@ const DataRelawan: React.FC = () => {
                 )}
             </Card>
 
+            {/* Modal-modal (Tambah, Detail, Review, Upload) tetap di bawah */}
             {/* Modal Tambah Relawan */}
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Tambah Relawan Baru" subtitle="Isi data relawan yang ingin ditambahkan" maxWidth="2xl">
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -1046,21 +1078,26 @@ const DataRelawan: React.FC = () => {
                             { label: 'Alamat KTP', name: 'alamat' },
                             { label: 'No. HP', name: 'no_hp' },
                             { label: 'Kelurahan', name: 'kelurahan' },
-                        ].map(field => (
-                            <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
-                                <label className="text-lg font-medium text-gray-900">{field.label}</label>
-                                <input
-                                    type="text"
-                                    value={!isEditMode && field.name === 'no_hp' ? formatPhoneDisplay((detailFormData as any)[field.name]) : (detailFormData as any)[field.name]}
-                                    readOnly={!isEditMode || field.name === 'nik' || field.name === 'jabatan'}
-                                    onChange={(e) => setDetailFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
-                                    className={`col-span-2 px-4 py-2 border rounded-lg focus:outline-none
-                                        ${isEditMode && field.name !== 'nik' && field.name !== 'jabatan'
-                                            ? 'border-blue-300 focus:ring-2 focus:ring-blue-500 bg-white'
-                                            : 'border-gray-300 bg-gray-50'}`}
-                                />
-                            </div>
-                        ))}
+                        ].map(field => {
+                            const isFieldEditable = isEditMode && field.name !== 'nik' && field.name !== 'jabatan';
+                            
+                            return (
+                                <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
+                                    <label className="text-lg font-medium text-gray-900">{field.label}</label>
+                                    <input
+                                        type="text"
+                                        value={!isEditMode && field.name === 'no_hp' ? formatPhoneDisplay((detailFormData as any)[field.name]) : (detailFormData as any)[field.name]}
+                                        readOnly={!isFieldEditable}
+                                        onChange={(e) => setDetailFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
+                                        className={`col-span-2 px-4 py-2 border rounded-lg focus:outline-none transition-all
+                                            ${isFieldEditable
+                                                ? 'border-blue-300 focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 font-medium'
+                                                : 'border-gray-200 bg-gray-50 text-gray-400 italic font-normal cursor-not-allowed'
+                                            }`}
+                                    />
+                                </div>
+                            );
+                        })}
 
                         <div className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">Jenis Kelamin</label>
@@ -1068,8 +1105,11 @@ const DataRelawan: React.FC = () => {
                                 value={detailFormData.jenisKelamin}
                                 disabled={!isEditMode}
                                 onChange={(e) => setDetailFormData(prev => ({ ...prev, jenisKelamin: e.target.value as 'L' | 'P' }))}
-                                className={`col-span-2 px-4 py-2 border rounded-lg focus:outline-none
-                                    ${isEditMode ? 'border-blue-300 bg-white' : 'bg-gray-50 border-gray-300 text-gray-500 cursor-not-allowed'}`}
+                                className={`col-span-2 px-4 py-2 border rounded-lg focus:outline-none transition-all
+                                    ${isEditMode 
+                                        ? 'border-blue-300 bg-white text-gray-900 font-medium' 
+                                        : 'border-gray-200 bg-gray-50 text-gray-400 italic font-normal cursor-not-allowed'
+                                    }`}
                             >
                                 <option value="L">Laki-laki (L)</option>
                                 <option value="P">Perempuan (P)</option>
@@ -1237,7 +1277,7 @@ const DataRelawan: React.FC = () => {
             
             {/* Modal Konfirmasi Hapus Penugasan */}
             {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-9999">
                     <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4 space-y-4">
                         <h3 className="text-lg font-semibold text-gray-900">Hapus Penugasan?</h3>
                         <p className="text-sm text-gray-600">

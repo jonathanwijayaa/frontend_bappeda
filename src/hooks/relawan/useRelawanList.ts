@@ -23,6 +23,7 @@ const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
     kader: r.nama_kader || '-',
     jabatan: r.penugasan || '-',
     penugasan: r.nama_opd || '-',
+    status_keaktifan: r.status_keaktifan ? 'Aktif' : 'Tidak Aktif',
     jenisKelamin: r.jenis_kelamin || 'L',
     assignments: [],
 });
@@ -48,7 +49,7 @@ export const groupRelawanRows = (rows: any[]): RelawanData[] => {
                 peran: r.jabatan || '-',
                 detail: r.detail_jabatan || '-',
                 penugasan: r.penugasan || '-',
-                statusKeaktifan: r.status_penugasan === 'Aktif' ? 'Aktif' : 'Nonaktif',
+                status_keaktifan: r.status_keaktifan === 'Aktif' ? 'Aktif' : 'Tidak Aktif',
                 nomorSK: r.nomor_sk || '',
                 skId: String(r.sk_id || ''),
                 tanggalTerbit: r.tanggal_terbit || '',
