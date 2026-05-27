@@ -866,17 +866,18 @@ const DataRelawan: React.FC = () => {
                     </Button>
                 </div>
             </div>
-
             {/* TABEL 1: Pengajuan Perubahan Data */}
-            <Card title="Pengajuan Perubahan Data">
-                {/* Header Actions untuk Card Pengajuan */}
-                <div className="mb-4 flex justify-end">
-                    <SearchInput
-                        value={searchPengajuan}
-                        onChange={(e) => { setSearchPengajuan(e.target.value); setCurrentPengajuanPage(1); }}
-                        placeholder="Cari pengajuan..."
-                        className="w-64"
-                    />
+            <Card>
+                <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <h2 className="text-xl font-semibold text-gray-900">Pengajuan Perubahan Data</h2>
+                    <div className="flex items-center gap-3 self-end sm:self-auto">
+                        <SearchInput
+                            value={searchPengajuan}
+                            onChange={(e) => { setSearchPengajuan(e.target.value); setCurrentPengajuanPage(1); }}
+                            placeholder="Cari pengajuan..."
+                            className="w-64"
+                        />
+                    </div>
                 </div>
 
                 {isLoadingPengajuan ? (
