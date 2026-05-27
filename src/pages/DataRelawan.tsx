@@ -87,6 +87,10 @@ const DataRelawan: React.FC = () => {
         skId: ''
     });
 
+    const normalizeStatusKeaktifan = useCallback((status?: string) => {
+        return status === 'Aktif' ? 'Aktif' : 'Tidak Aktif';
+    }, []);
+
     const [detailFormData, setDetailFormData] = useState({
         namaRelawan: '', nik: '', alamat: '', no_hp: '', kelurahan: '',
         kader: '', jabatan: '', penugasan: '', jenisKelamin: 'L' as 'L' | 'P',
@@ -658,6 +662,7 @@ const DataRelawan: React.FC = () => {
         const currentKaderOptions = context === 'form' ? (kaderOptionsByIndex[index] || []) : [];
         const isKaderLoading = isLoadingKaderByIndex[index] || false;
         const hasOpdSelected = isOPD || assignment.opd_id > 0 || assignment.opd !== '';
+        const currentStatusKeaktifan = normalizeStatusKeaktifan(assignment.status_keaktifan);
         
         const onFieldChange = handlers?.onFieldChange ?? handleAssignmentChange;
         const onOpdChange = handlers?.onOpdChange ?? handleAssignmentOpdChange;
@@ -795,18 +800,21 @@ const DataRelawan: React.FC = () => {
                 <div className="grid grid-cols-3 gap-4 items-center mt-2">
                     <label className="text-lg font-medium text-gray-900">Status Keaktifan</label>
                     <div className="col-span-2 flex items-center gap-6">
-                        {['Aktif', 'Nonaktif'].map(status => (
-                            <label key={status} className="flex items-center gap-2 cursor-pointer">
+                        {[
+                            { label: 'Aktif', value: 'Aktif' },
+                            { label: 'Nonaktif', value: 'Tidak Aktif' },
+                        ].map(status => (
+                            <label key={status.value} className="flex items-center gap-2 cursor-pointer">
                                 <input
                                     type="radio"
                                     name={`status_keaktifan-${index}`}
-                                    value={status}
-                                    checked={assignment.status_keaktifan === status}
-                                    onChange={(e) => onFieldChange(index, 'status_keaktifan', e.target.value)}
+                                    value={status.value}
+                                    checked={currentStatusKeaktifan === status.value}
+                                    onChange={(e) => onFieldChange(index, 'status_keaktifan', normalizeStatusKeaktifan(e.target.value))}
                                     disabled={isReadOnly}
                                     className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
                                 />
-                                <span className="text-gray-700">{status}</span>
+                                <span className="text-gray-700">{status.label}</span>
                             </label>
                         ))}
                     </div>
@@ -1237,7 +1245,7 @@ const DataRelawan: React.FC = () => {
             
             {/* Modal Konfirmasi Hapus Penugasan */}
             {deleteConfirm && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-9999">
                     <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4 space-y-4">
                         <h3 className="text-lg font-semibold text-gray-900">Hapus Penugasan?</h3>
                         <p className="text-sm text-gray-600">
