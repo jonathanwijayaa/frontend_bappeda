@@ -188,6 +188,24 @@ const DataRelawan: React.FC = () => {
     const invalidateRelawan = useCallback(() => qc.invalidateQueries({ queryKey: RELAWAN_KEYS.all }), [qc]);
     const invalidatePengajuan = useCallback(() => qc.invalidateQueries({ queryKey: PENGAJUAN_KEYS.all }), [qc]);
 
+    const buildBulkIssueMessage = useCallback((res: any, fallback: string) => {
+        const issues: string[] = [
+            ...(Array.isArray(res?.data?.errors) ? res.data.errors : []),
+            ...(Array.isArray(res?.data?.skipped) ? res.data.skipped : []),
+            ...(Array.isArray(res?.data?.skippedNIK) ? res.data.skippedNIK : []),
+        ].filter(Boolean).map((x: any) => (typeof x === 'string' ? x : JSON.stringify(x)));
+
+        const baseMessage = (res?.message && !/^\d+\s+peringatan\.?$/i.test(String(res.message).trim()))
+            ? res.message
+            : fallback;
+
+        if (issues.length === 0) return baseMessage;
+
+        const preview = issues.slice(0, 3).map((m) => `- ${m}`).join('\n');
+        const more = issues.length > 3 ? `\n(+${issues.length - 3} masalah lain)` : '';
+        return `${baseMessage}\n${preview}${more}`;
+    }, []);
+
     // ── FILTER DATA RELAWAN (Tabel Bawah) ──
     const filteredRelawanData = useMemo(() => {
         const lowerSearch = searchTerm.toLowerCase();
@@ -445,15 +463,28 @@ const DataRelawan: React.FC = () => {
     const handleExcelUploadConfirm = async (data: any[]) => {
         try {
             const { data: res } = await apiClient.post(`${API_BASE}/bulk`, data);
+            const issueMessage = buildBulkIssueMessage(res, 'Gagal import Excel');
+            const issuesCount = [
+                ...(Array.isArray(res?.data?.errors) ? res.data.errors : []),
+                ...(Array.isArray(res?.data?.skipped) ? res.data.skipped : []),
+                ...(Array.isArray(res?.data?.skippedNIK) ? res.data.skippedNIK : []),
+            ].length;
+
             if (res.success) {
-                setToast({ message: res.message || 'Berhasil memproses Excel', type: 'success' });
+                setToast({
+                    message: issuesCount > 0 ? issueMessage : (res.message || 'Berhasil memproses Excel'),
+                    type: issuesCount > 0 ? 'warning' : 'success'
+                });
                 invalidateRelawan();
                 setCurrentPage(1);
             } else {
-                setToast({ message: res.message || 'Gagal import Excel', type: 'error' });
+                setToast({ message: issueMessage, type: 'error' });
             }
         } catch (e: any) {
-            setToast({ message: parseErrorMessage(e, 'Gagal import data dari Excel'), type: 'error' });
+            const fallbackMessage = parseErrorMessage(e, 'Gagal import data dari Excel');
+            const responseData = e?.response?.data;
+            const detailedMessage = buildBulkIssueMessage(responseData, fallbackMessage);
+            setToast({ message: detailedMessage, type: 'error' });
         } finally {
             setIsUploadModalOpen(false);
         }
@@ -1273,6 +1304,7 @@ const DataRelawan: React.FC = () => {
                 title="Unggah Data Relawan"
                 templateName="Data Relawan"
                 dataType="relawan"
+                isOpdUser={isOPD}
             />
             
             {/* Modal Konfirmasi Hapus Penugasan */}

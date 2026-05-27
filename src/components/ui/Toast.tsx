@@ -52,13 +52,13 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
     return (
         <div className="fixed top-4 right-4 z-50 animate-slide-in-right">
             <div className={`${c.bg} ${c.border} border-l-4 rounded-lg shadow-xl p-4 flex items-start gap-3 min-w-[320px] max-w-sm`}>
-                <div className={`${c.icon} mt-0.5 flex-shrink-0`}>
+                <div className={`${c.icon} mt-0.5 shrink-0`}>
                     <Icon size={22} />
                 </div>
-                <p className={`${c.text} flex-1 font-medium text-sm leading-relaxed`}>{message}</p>
+                <p className={`${c.text} flex-1 font-medium text-sm leading-relaxed whitespace-pre-line`}>{message}</p>
                 <button
                     onClick={onClose}
-                    className={`${c.text} hover:opacity-60 transition-opacity flex-shrink-0 mt-0.5`}
+                    className={`${c.text} hover:opacity-60 transition-opacity shrink-0 mt-0.5`}
                     aria-label="Tutup notifikasi"
                     title="Tutup"
                 >

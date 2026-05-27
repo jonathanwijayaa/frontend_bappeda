@@ -15,6 +15,7 @@ interface UploadExcelModalProps {
     title: string;
     templateName: string;
     dataType: 'opd' | 'kader' | 'relawan';
+    isOpdUser?: boolean;
 }
 
 // ── Mapping: field wajib sesuai nama kolom AKTUAL di template Excel ──
@@ -57,13 +58,28 @@ const REQUIRED_FIELDS_CHECK: Record<string, { keys: string[], label: string }[]>
     ],
 };
 
+const getRequiredFields = (dataType: 'opd' | 'kader' | 'relawan', isOpdUser: boolean) => {
+    if (dataType === 'relawan' && isOpdUser) {
+        return REQUIRED_FIELDS.relawan.filter((f) => f !== 'opd');
+    }
+    return REQUIRED_FIELDS[dataType];
+};
+
+const getRequiredFieldChecks = (dataType: 'opd' | 'kader' | 'relawan', isOpdUser: boolean) => {
+    if (dataType === 'relawan' && isOpdUser) {
+        return REQUIRED_FIELDS_CHECK.relawan.filter((f) => f.label !== 'OPD/Instansi');
+    }
+    return REQUIRED_FIELDS_CHECK[dataType];
+};
+
 const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
     isOpen,
     onClose,
     onConfirm,
     title,
     templateName,
-    dataType
+    dataType,
+    isOpdUser = false,
 }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [error, setError] = useState<string>('');
@@ -99,7 +115,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
             k.toLowerCase().replace(/[^a-z0-9]/g, '')
         );
 
-        const requiredFields = REQUIRED_FIELDS[dataType]; // sudah ternormalisasi
+        const requiredFields = getRequiredFields(dataType, isOpdUser); // sudah ternormalisasi
         const missingFields = requiredFields.filter(f => !normalizedKeys.includes(f));
 
         if (missingFields.length > 0) {
@@ -110,7 +126,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
         }
 
         const rowErrors: { rowNumber: number; emptyColumns: string[] }[] = [];
-        const fieldsToCheck = REQUIRED_FIELDS_CHECK[dataType];
+        const fieldsToCheck = getRequiredFieldChecks(dataType, isOpdUser);
 
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
@@ -243,7 +259,9 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                             <p>
                                 {dataType === 'kader'
                                     ? 'Pastikan data OPD sudah di-upload terlebih dahulu. Nama OPD di kolom "OPD" harus persis sama dengan yang ada di sistem.'
-                                    : 'Pastikan data OPD dan Kader sudah di-upload terlebih dahulu. Nama OPD dan Kader harus persis sama dengan yang ada di sistem.'
+                                    : isOpdUser
+                                        ? 'Pastikan data Kader di instansi Anda sudah di-upload terlebih dahulu. Nama Kader harus persis sama dengan yang ada di sistem.'
+                                        : 'Pastikan data OPD dan Kader sudah di-upload terlebih dahulu. Nama OPD dan Kader harus persis sama dengan yang ada di sistem.'
                                 }
                             </p>
                         </div>
