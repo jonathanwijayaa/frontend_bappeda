@@ -42,9 +42,16 @@ export async function submitPengajuanPerubahan(
     // 3. Isi minimal satu field yang berubah agar form valid
     const newAlamat = data?.alamat ?? `${faker.location.streetAddress()}, Yogyakarta`;
     const newNoHP = data?.noHP ?? `08${faker.string.numeric(10)}`;
+    const newAlasan = faker.lorem.sentence();
 
     const alamatInput = relawanPage.getByRole("textbox", { name: /alamat/i });
     const noHPInput = relawanPage.getByRole("textbox", { name: /nomor hp/i });
+    const alasanInput = relawanPage.getByRole("textbox", { name: "Tuliskan alasan mengapa data" });
+
+    if (await alasanInput.isVisible()) {
+      await alasanInput.clear();
+      await alasanInput.fill(newAlasan);
+    }
 
     if (await alamatInput.isVisible()) {
       await alamatInput.clear();
@@ -59,9 +66,20 @@ export async function submitPengajuanPerubahan(
     // 4. Submit
     await relawanPage.getByRole("button", { name: "Ajukan", exact: true }).click();
 
-    // 5. Tunggu konfirmasi sukses (maks 10 detik)
+    // 5. Submit Konfirmasi
+    await relawanPage.getByRole("button", { name: "Ya, Ajukan" }).click();
+
+    // 6. Tunggu konfirmasi sukses (maks 10 detik)
     await relawanPage
       .getByText(/berhasil|pengajuan.*dikirim|success/i)
+      .or(
+        relawanPage.getByRole("alert").filter({ hasText: /berhasil|pengajuan.*dikirim|success/i }),
+      )
+      .or(
+        relawanPage.getByText(
+          "Pengajuan perubahan data berhasil dikirim dan sedang menunggu review Admin.",
+        ),
+      )
       .waitFor({ timeout: 10_000 });
   } finally {
     await relawanContext.close();
