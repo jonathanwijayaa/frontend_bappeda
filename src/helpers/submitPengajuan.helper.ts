@@ -1,7 +1,7 @@
-import { faker } from "@faker-js/faker";
-import type { Browser, Page } from "@playwright/test";
 import { credentials } from "@/helpers/credentials.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { faker } from "@faker-js/faker";
+import type { Browser, Page } from "@playwright/test";
 
 export interface PengajuanPerubahanData {
   alamat?: string;
@@ -36,12 +36,11 @@ export async function submitPengajuanPerubahan(
 
     // 2. Buka form pengajuan perubahan data
     await relawanPage
-      .getByRole("button", { name: /ajukan perubahan|edit profil|ubah data/i })
+      .getByRole("button", { name: /ajukan pembaruan|edit profil|ubah data/i })
       .click();
 
     // 3. Isi minimal satu field yang berubah agar form valid
-    const newAlamat =
-      data?.alamat ?? `${faker.location.streetAddress()}, Yogyakarta`;
+    const newAlamat = data?.alamat ?? `${faker.location.streetAddress()}, Yogyakarta`;
     const newNoHP = data?.noHP ?? `08${faker.string.numeric(10)}`;
 
     const alamatInput = relawanPage.getByRole("textbox", { name: /alamat/i });
@@ -58,9 +57,7 @@ export async function submitPengajuanPerubahan(
     }
 
     // 4. Submit
-    await relawanPage
-      .getByRole("button", { name: /simpan|ajukan|kirim/i })
-      .click();
+    await relawanPage.getByRole("button", { name: "Ajukan", exact: true }).click();
 
     // 5. Tunggu konfirmasi sukses (maks 10 detik)
     await relawanPage
@@ -81,10 +78,7 @@ export async function submitPengajuanPerubahan(
  * @param page    - Page Super Admin / OPD yang sudah login & berada di /relawan
  * @param browser - Playwright Browser instance untuk membuka context relawan
  */
-export async function ensurePengajuanExists(
-  page: Page,
-  browser: Browser,
-): Promise<void> {
+export async function ensurePengajuanExists(page: Page, browser: Browser): Promise<void> {
   await page.reload();
   await page.waitForLoadState("networkidle");
 
