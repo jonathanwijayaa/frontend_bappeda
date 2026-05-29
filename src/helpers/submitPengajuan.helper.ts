@@ -71,10 +71,8 @@ export async function submitPengajuanPerubahan(
 
     // 6. Tunggu konfirmasi sukses (maks 10 detik)
     await relawanPage
-      .getByText(/berhasil|pengajuan.*dikirim|success/i)
-      .or(
-        relawanPage.getByRole("alert").filter({ hasText: /berhasil|pengajuan.*dikirim|success/i }),
-      )
+      .getByText(/berhasil.*dikirim|success/i)
+      .or(relawanPage.getByRole("alert").filter({ hasText: /berhasil.*dikirim|success/i }))
       .or(
         relawanPage.getByText(
           "Pengajuan perubahan data berhasil dikirim dan sedang menunggu review Admin.",

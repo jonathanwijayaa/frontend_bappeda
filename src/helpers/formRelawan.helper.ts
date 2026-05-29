@@ -34,9 +34,7 @@ export const pengajuanTable = (page: Page) =>
 
 // Tabel Daftar Relawan
 export const relawanTable = (page: Page) =>
-  page
-    .getByRole("table")
-    .filter({ hasText: /nama.*nik.*alamat.*kelurahan.*aksi/i });
+  page.getByRole("table").filter({ hasText: /nama.*nik.*alamat.*kelurahan.*aksi/i });
 
 // Search bar Pengajuan Perubahan Data
 export const searchPengajuan = (page: Page) => page.getByPlaceholder(/cari pengajuan/i);
@@ -144,7 +142,10 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
       .fill(data.KELURAHAN);
   },
   async fillKader() {
-    await page.getByRole("textbox", { name: /memuat kader/i }).fill(data.KADER);
+    await page
+      .getByRole("textbox", { name: /memuat kader/i })
+      .or(page.getByRole("textbox", { name: "Cari nama Kader..." }))
+      .fill(data.KADER);
   },
   async fillNamaLengkap() {
     await page
@@ -166,6 +167,10 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
   },
   async fillOPD() {
     await page.getByRole("textbox", { name: /cari nama opd/i }).fill(data.OPD);
+    if (await page.getByRole("listitem").isVisible()) {
+      await page.getByRole("listitem").click();
+      return;
+    }
   },
   async fillPenugasan() {
     await page.getByRole("textbox", { name: /nama\/detail penugasan/i }).fill(data.PENUGASAN);
@@ -184,14 +189,19 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
 
 export const selectOPD = async ({ data, page }: IFillRelawanForm) => {
   await page.getByRole("textbox", { name: /cari nama opd/i }).fill(data.OPD);
+  if (await page.getByRole("listitem", { name: data.OPD }).isVisible()) {
+    await page.getByRole("listitem", { name: data.OPD }).click();
+    return;
+  }
 };
 
 export const selectKader = async ({ data, page }: IFillRelawanForm) => {
-  await page.getByRole("textbox", { name: /memuat kader/i }).fill(data.KADER);
+  await page
+    .getByRole("textbox", { name: /memuat kader/i })
+    .or(page.getByRole("textbox", { name: "Cari nama Kader..." }))
+    .fill(data.KADER);
 };
 
 export const selectPenugasan = async ({ data, page }: IFillRelawanForm) => {
   await page.getByRole("textbox", { name: /nama\/detail penugasan/i }).fill(data.PENUGASAN);
 };
-
-

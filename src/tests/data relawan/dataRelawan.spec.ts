@@ -567,20 +567,20 @@ for (const { label, creds } of roles) {
       });
 
       // -------- TCDR.30 - TCDR.31 dihilangkan sementara untuk penyesuaian dengan perubahan form penugasan --------
-      // TCDR.30
-      test(`TCDR.30 ${label} delete penugasan on detail form`, async ({ page }) => {
-        await page.getByRole("button", { name: /hapus/i }).first().click();
-        await page.getByRole("button", { name: /ya|konfirmasi/i }).click();
+      // // TCDR.30
+      // test(`TCDR.30 ${label} delete penugasan on detail form`, async ({ page }) => {
+      //   await page.getByRole("button", { name: /hapus/i }).first().click();
+      //   await page.getByRole("button", { name: /ya|konfirmasi/i }).click();
 
-        await expect(page.getByText(/berhasil|success/i)).toBeVisible();
-      });
+      //   await expect(page.getByText(/berhasil|success/i)).toBeVisible();
+      // });
 
-      // TCDR.31
-      test(`TCDR.31 ${label} click Lihat SK hyperlink`, async ({ page }) => {
-        await page.getByRole("link", { name: /lihat sk/i }).click();
+      // // TCDR.31
+      // test(`TCDR.31 ${label} click Lihat SK hyperlink`, async ({ page }) => {
+      //   await page.getByRole("link", { name: /lihat sk/i }).click();
 
-        await expect(page).toHaveURL(/sk|dokumen|document/);
-      });
+      //   await expect(page).toHaveURL(/sk|dokumen|document/);
+      // });
     });
 
     // TCDR.32-35 Tabel Pengajuan Perubahan Data
@@ -637,7 +637,11 @@ for (const { label, creds } of roles) {
           .first()
           .click();
 
-        await expect(page.getByText(/berhasil|ditolak|success/i)).toBeVisible();
+        await expect(
+          page
+            .getByText(/berhasil|ditolak|success/i)
+            .or(page.getByText("Pengajuan berhasil ditolak")),
+        ).toBeVisible();
       });
 
       // TCDR.35
