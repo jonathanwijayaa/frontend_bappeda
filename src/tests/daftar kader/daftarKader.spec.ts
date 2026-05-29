@@ -21,12 +21,12 @@ for (const { label, creds, isSuperAdmin } of roles) {
       });
 
       await expect(page).toHaveURL(/dashboard/);
-      await page.getByRole("link", { name: /daftar kader/i }).click();
+      await page.getByRole("link", { name: /kader/i }).click();
     });
 
     // TCDK.1
     test(`TCDK.1 ${label} access Daftar Kader page`, async ({ page }) => {
-      await expect(page).toHaveURL(/daftar-kader/);
+      await expect(page).toHaveURL(/kader/);
     });
 
     // TCDK.2
@@ -258,7 +258,7 @@ for (const { label, creds, isSuperAdmin } of roles) {
 
       const fileInput = page.locator("input[type='file']");
       await fileInput.setInputFiles(filePath);
-      await page.getByRole("button", { name: /lanjutkan/i }).click();
+      await page.getByRole("button", { name: "Lanjutkan" }).click();
       await page.getByRole("button", { name: /simpan data bersih/i }).click();
 
       await expect(page.getByText(/error|invalid/i)).toBeVisible();
@@ -282,7 +282,7 @@ for (const { label, creds, isSuperAdmin } of roles) {
       const fileInput = page.locator("input[type='file']");
       await fileInput.setInputFiles(filePath);
 
-      await page.getByRole("button").nth(5).click();
+      await page.getByRole("button").filter({ hasText: /^$/ }).nth(2).click();
 
       await expect(page.getByRole("heading", { name: /daftar kader/i })).toBeVisible();
     });

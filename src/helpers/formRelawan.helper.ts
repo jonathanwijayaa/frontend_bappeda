@@ -2,8 +2,8 @@ import { faker } from "@faker-js/faker";
 import { Page } from "@playwright/test";
 
 const OPD_LIST = [
-  "Dinas Simulasi Yogyakarta",
-  "Dinas Uji Coba Yogyakarta",
+  // "Dinas Simulasi Yogyakarta",
+  // "Dinas Uji Coba Yogyakarta",
   "Dinas Kesehatan (Dinkes)",
   "Dinas Perhubungan",
   "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
@@ -14,8 +14,8 @@ const OPD_LIST = [
 ];
 
 const KADER_MAP: Record<string, string[]> = {
-  "Dinas Simulasi Yogyakarta": ["Kader Simulasi B"],
-  "Dinas Uji Coba Yogyakarta": ["Kader Uji Coba A"],
+  // "Dinas Simulasi Yogyakarta": ["Kader Simulasi B"],
+  // "Dinas Uji Coba Yogyakarta": ["Kader Uji Coba A"],
   "Dinas Kesehatan (Dinkes)": ["KADER KESEHATAN"],
   "Dinas Perhubungan": ["Kader Perhubungan C", "Kader Perhubungan C1"],
   "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)": ["PORDAM", "TAGANA", "IPSM"],
@@ -25,6 +25,22 @@ const KADER_MAP: Record<string, string[]> = {
     ["SIGRAK", "POSYANDU", "PKK"],
   "Satuan Polisi Pamong Praja (PP)": ["SATLINMAS"],
 };
+
+// Tabel Pengajuan Perubahan Data
+export const pengajuanTable = (page: Page) =>
+  page
+    .getByRole("table")
+    .filter({ hasText: /nik.*nama lengkap.*tanggal pengajuan.*status.*aksi/i });
+
+// Tabel Daftar Relawan
+export const relawanTable = (page: Page) =>
+  page.getByRole("table").filter({ hasText: /nama.*nik.*alamat.*kelurahan.*aksi/i });
+
+// Search bar Pengajuan Perubahan Data
+export const searchPengajuan = (page: Page) => page.getByPlaceholder(/cari pengajuan/i);
+
+// Search bar Daftar Relawan
+export const searchRelawan = (page: Page) => page.getByPlaceholder(/cari relawan/i);
 
 export interface RelawanData {
   "NAMA LENGKAP": string;
@@ -87,7 +103,10 @@ export const buildRelawanData = (): RelawanData => {
 
 export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
   async fillAlamat() {
-    await page.getByRole("textbox").nth(2).fill(data.ALAMAT);
+    await page
+      .getByRole("textbox", { name: /alamat sesuai ktp/i })
+      .or(page.getByRole("textbox").nth(4))
+      .fill(data.ALAMAT);
   },
   async fillAll() {
     await this.fillNamaLengkap();
@@ -106,54 +125,83 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
   },
   async fillDetailJabatan() {
     await page
-      .getByRole("textbox", { name: "Detail jabatan (contoh: Anggota Umum Bidang X)" })
+      .getByRole("textbox", { name: /detail jabatan/i })
+      .or(page.getByRole("textbox", { name: "Detail jabatan (contoh: Anggota Umum Bidang X)" }))
       .fill(data["DETAIL JABATAN"]);
   },
   async fillJabatan() {
     await page.getByRole("combobox").nth(1).selectOption(data.JABATAN);
   },
   async fillJenisKelamin() {
-    await page.getByRole("combobox").nth(0).selectOption(data["JENIS KELAMIN"]);
+    await page.getByRole("combobox").first().selectOption(data["JENIS KELAMIN"]);
   },
   async fillKelurahan() {
-    await page.getByRole("textbox").nth(4).fill(data.KELURAHAN);
+    await page
+      .getByRole("textbox", { name: /kelurahan/i })
+      .or(page.getByRole("textbox").nth(6))
+      .fill(data.KELURAHAN);
   },
   async fillKader() {
-    await page.getByRole("textbox", { name: /Kader/i }).fill(data.KADER);
+    await page
+      .getByRole("textbox", { name: /memuat kader/i })
+      .or(page.getByRole("textbox", { name: "Cari nama Kader..." }))
+      .fill(data.KADER);
   },
   async fillNamaLengkap() {
-    await page.getByRole("textbox").nth(1).fill(data["NAMA LENGKAP"]);
+    await page
+      .getByRole("textbox", { name: /nama lengkap relawan/i })
+      .or(page.getByRole("textbox").nth(2))
+      .fill(data["NAMA LENGKAP"]);
   },
   async fillNIK() {
-    await page.getByRole("textbox").nth(0).fill(data.NIK);
+    await page
+      .getByRole("textbox", { name: /^nik$/i })
+      .or(page.getByRole("textbox").nth(3))
+      .fill(data.NIK);
   },
   async fillNoHP() {
-    await page.getByRole("textbox").nth(3).fill(data["NO HP"]);
+    await page
+      .getByRole("textbox", { name: /nomor hp/i })
+      .or(page.getByRole("textbox").nth(5))
+      .fill(data["NO HP"]);
   },
   async fillOPD() {
-    await page.getByRole("textbox", { name: "Cari nama OPD..." }).fill(data.OPD);
+    await page.getByRole("textbox", { name: /cari nama opd/i }).fill(data.OPD);
+    if (await page.getByRole("listitem").isVisible()) {
+      await page.getByRole("listitem").click();
+      return;
+    }
   },
   async fillPenugasan() {
-    await page.getByRole("textbox", { name: "Nama/detail penugasan" }).fill(data.PENUGASAN);
+    await page.getByRole("textbox", { name: /nama\/detail penugasan/i }).fill(data.PENUGASAN);
   },
   async clickTambahDataPenugasan() {
     await page.getByRole("button", { name: "Tambah Data Penugasan" }).click();
   },
   async fillStatusKeaktifan() {
-    if (data["STATUS KEAKTIFAN"]) {
-      await page.locator(`input[type="radio"][value="${data["STATUS KEAKTIFAN"]}"]`).click();
+    if (data["STATUS KEAKTIFAN"] === "Nonaktif") {
+      await page.getByRole("radio", { name: "Nonaktif" }).click();
+    } else {
+      await page.getByRole("radio", { name: "Aktif", exact: true }).click();
     }
   },
-}); 
+});
 
 export const selectOPD = async ({ data, page }: IFillRelawanForm) => {
-  await page.getByRole("textbox", { name: "Cari nama OPD..." }).fill(data.OPD);
+  await page.getByRole("textbox", { name: /cari nama opd/i }).fill(data.OPD);
+  if (await page.getByRole("listitem", { name: data.OPD }).isVisible()) {
+    await page.getByRole("listitem", { name: data.OPD }).click();
+    return;
+  }
 };
 
 export const selectKader = async ({ data, page }: IFillRelawanForm) => {
-  await page.getByRole("textbox", { name: /Kader/i }).fill(data.KADER);
+  await page
+    .getByRole("textbox", { name: /memuat kader/i })
+    .or(page.getByRole("textbox", { name: "Cari nama Kader..." }))
+    .fill(data.KADER);
 };
 
 export const selectPenugasan = async ({ data, page }: IFillRelawanForm) => {
-  await page.getByRole("textbox", { name: "Nama/detail penugasan" }).fill(data.PENUGASAN);
+  await page.getByRole("textbox", { name: /nama\/detail penugasan/i }).fill(data.PENUGASAN);
 };
