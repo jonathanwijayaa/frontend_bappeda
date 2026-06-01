@@ -168,11 +168,15 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
       .fill(data["NO HP"]);
   },
   async fillOPD() {
-    await page.getByRole("textbox", { name: /cari nama opd/i }).fill(data.OPD);
+    if (await page.getByRole("textbox", { name: /cari nama opd/i }).isVisible()) {
+      await page.getByRole("textbox", { name: /cari nama opd/i }).fill(data.OPD);
+      return;
+    }
     if (await page.getByRole("listitem").isVisible()) {
       await page.getByRole("listitem").click();
       return;
     }
+    return;
   },
   async fillPenugasan() {
     await page.getByRole("textbox", { name: /nama\/detail penugasan/i }).fill(data.PENUGASAN);

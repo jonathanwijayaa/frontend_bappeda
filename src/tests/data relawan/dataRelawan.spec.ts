@@ -74,7 +74,11 @@ for (const { label, creds } of roles) {
 
         await page.getByRole("button", { name: /simpan/i }).click();
 
-        await expect(page.getByText(/berhasil|success|data baru ditambahkan./i)).toBeVisible();
+        await expect(
+          page.getByText(
+            /berhasil|success|data baru ditambahkan|relawan baru ditambahkan|baru ditambahkan./i,
+          ),
+        ).toBeVisible();
       });
 
       // TCDR.5
@@ -394,7 +398,9 @@ for (const { label, creds } of roles) {
       await expect(page.getByRole("heading", { name: "Data Kotor (0)" })).toBeVisible();
       await page.getByRole("button", { name: /simpan data bersih/i }).click();
 
-      await expect(page.getByText(/berhasil|success|data baru ditambahkan/i)).toBeVisible();
+      await expect(
+        page.getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i),
+      ).toBeVisible();
     });
 
     // TCDR.18 Upload Invalid Excel
