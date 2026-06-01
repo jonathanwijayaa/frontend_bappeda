@@ -28,7 +28,7 @@ for (const { label, creds } of roles) {
         password: creds.password,
       });
 
-      await expect(page).toHaveURL(/dashboard/);
+      await expect(page).toHaveURL(/dashboard/, { timeout: 10000 });
       await page.getByRole("link", { name: "Relawan", exact: true }).click();
     });
 

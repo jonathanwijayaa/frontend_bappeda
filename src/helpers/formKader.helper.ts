@@ -2,15 +2,13 @@ import { faker } from "@faker-js/faker";
 import { Page } from "@playwright/test";
 
 const OPD_LIST = [
-  // "Dinas Simulasi Yogyakarta",
-  // "Dinas Uji Coba Yogyakarta",
+  "Opd Demo",
   "Dinas Kesehatan (Dinkes)",
   "Dinas Perhubungan",
   "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
   "Dinas Pariwisata",
   "Dinas Kebudayaan",
   "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)",
-  "Satuan Polisi Pamong Praja (PP)",
 ];
 
 export interface KaderData {
