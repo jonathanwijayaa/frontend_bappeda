@@ -24,7 +24,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatPhoneDisplay } from '../utils/formatPhone';
 import { toTitleCase } from '../utils/formatText';
-import { REGEX_PATTERNS } from 'src/utils/regex';
+import { REGEX_PATTERNS } from '../utils/regex';
 
 const DataRelawan: React.FC = () => {
     const { isSuperAdmin, isOPD, user } = useAuth();
