@@ -125,31 +125,34 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                 globalError: `Format file tidak sesuai template. Kolom inti tidak terdeteksi: ${missingFields.join(', ')}. Pastikan menggunakan template yang tersedia.`
             };
         }
-        const nikTracker: Record<string, number> = {}; // Format: { [nik]: rowNumber }
+
         const rowErrors: { rowNumber: number; errorMessages: string[] }[] = [];
         const fieldsToCheck = getRequiredFieldChecks(dataType, isOpdUser);
+
+        // Tracker Duplikasi NIK
+        const nikTracker: Record<string, number> = {}; 
 
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
             const currentErrors: string[] = [];
+            const rowNumber = i + 2; 
             
             const getVal = (possibleKeys: string[]) => {
                 const key = Object.keys(row).find(k => possibleKeys.includes(k.toLowerCase().replace(/[^a-z0-9]/g, '')));
                 return key ? String(row[key]).trim() : '';
             };
 
-            // 1. Jalankan Validasi Kolom Kosong Terlebih Dahulu
             fieldsToCheck.forEach(field => {
                 const value = getVal(field.keys);
                 if (!value) {
                     currentErrors.push(`${field.label} Kosong`);
                 } else {
-                    // 2. Jika isi data ada, jalankan Aturan Validasi Konten Spesifik
                     if (dataType === 'relawan') {
                         if (field.label === 'Nama Lengkap') {
                             if (value.length < 3) currentErrors.push('Nama Lengkap minimal 3 karakter');
                             else if (!REGEX_PATTERNS.NAMA_RELAWAN.test(value)) currentErrors.push('Nama Lengkap mengandung karakter ilegal');
                         }
+                        
                         if (field.label === 'Jenis Kelamin') {
                             const jkUpper = value.toUpperCase();
                             const validJK = ['L', 'P', 'LAKI-LAKI', 'PEREMPUAN'];
@@ -157,15 +160,15 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                                 currentErrors.push('Jenis Kelamin harus Laki-Laki, Perempuan, L, atau P');
                             }
                         }
+                        
                         if (field.label === 'NIK') {
                             if (!REGEX_PATTERNS.NIK.test(value)) {
                                 currentErrors.push('NIK harus terdiri dari tepat 16 digit angka');
                             } else {
-                                const rowNumber = i + 2;
                                 if (nikTracker[value]) {
                                     currentErrors.push(`NIK Duplikat (Sama dengan Baris ${nikTracker[value]})`);
                                 } else {
-                                    nikTracker[value] = rowNumber; // Simpan baris pertama kali NIK ini ditemukan
+                                    nikTracker[value] = rowNumber;
                                 }
                             }
                         }
@@ -175,10 +178,20 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                             else if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(value)) currentErrors.push('Alamat tidak boleh angka saja');
                             else if (!REGEX_PATTERNS.ALAMAT_VALID.test(value)) currentErrors.push('Alamat mengandung karakter terlarang');
                         }
+                        
+                        // ── LOGIKA BARU NO HP RELAWAN ──
                         if (field.label === 'No HP') {
-                            if (REGEX_PATTERNS.HAS_LETTERS.test(value)) currentErrors.push('No HP tidak boleh mengandung huruf');
-                            else if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(value)) currentErrors.push('No HP mengandung karakter spesial ilegal');
-                            else if (!REGEX_PATTERNS.NO_HP.test(value)) currentErrors.push('Format No HP salah (wajib diawali 08/+628 dengan total 9-13 digit)');
+                            const cleanPhone = value.replace(/[\s-]/g, ''); // Hanya untuk dites ke REGEX
+
+                            if (REGEX_PATTERNS.HAS_LETTERS.test(value)) {
+                                currentErrors.push('No HP tidak boleh mengandung huruf');
+                            } else if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(value)) {
+                                currentErrors.push('No HP mengandung karakter spesial ilegal');
+                            } else if (!REGEX_PATTERNS.NO_HP.test(cleanPhone)) {
+                                const digitCount = value.replace(/\D/g, '').length;
+                                if (digitCount < 9 || digitCount > 13) currentErrors.push('Format No HP salah (total harus 9-13 digit)');
+                                else currentErrors.push('Format No HP salah (wajib diawali 08 atau +628)');
+                            }
                         }
                     }
 
@@ -189,8 +202,16 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                         if (field.label === 'PIC' && !REGEX_PATTERNS.NAMA_RELAWAN.test(value)) {
                             currentErrors.push('Nama PIC mengandung karakter ilegal');
                         }
-                        if (field.label === 'NIK PIC' && !REGEX_PATTERNS.NIK.test(value)) {
-                            currentErrors.push('NIK PIC harus tepat 16 digit angka');
+                        if (field.label === 'NIK PIC') {
+                            if (!REGEX_PATTERNS.NIK.test(value)) {
+                                currentErrors.push('NIK PIC harus tepat 16 digit angka');
+                            } else {
+                                if (nikTracker[value]) {
+                                    currentErrors.push(`NIK PIC Duplikat (Sama dengan Baris ${nikTracker[value]})`);
+                                } else {
+                                    nikTracker[value] = rowNumber;
+                                }
+                            }
                         }
                         if (field.label === 'Alamat PIC') {
                             if (value.length < 10) currentErrors.push('Alamat PIC terlalu pendek (min 10)');
@@ -198,10 +219,18 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                             else if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(value)) currentErrors.push('Alamat PIC tidak boleh angka saja');
                             else if (!REGEX_PATTERNS.ALAMAT_VALID.test(value)) currentErrors.push('Alamat PIC mengandung karakter terlarang');
                         }
+                        
+                        // ── LOGIKA BARU NO HP KADER ──
                         if (field.label === 'No HP') {
-                            if (REGEX_PATTERNS.HAS_LETTERS.test(value)) currentErrors.push('No HP PIC tidak boleh mengandung huruf');
-                            else if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(value)) currentErrors.push('No HP PIC mengandung karakter spesial ilegal');
-                            else if (!REGEX_PATTERNS.NO_HP.test(value)) currentErrors.push('Format No HP PIC salah (wajib 08xx / +628xx)');
+                            const cleanPhone = value.replace(/[\s-]/g, '');
+
+                            if (REGEX_PATTERNS.HAS_LETTERS.test(value)) {
+                                currentErrors.push('No HP PIC tidak boleh mengandung huruf');
+                            } else if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(value)) {
+                                currentErrors.push('No HP PIC mengandung karakter spesial ilegal');
+                            } else if (!REGEX_PATTERNS.NO_HP.test(cleanPhone)) {
+                                currentErrors.push('Format No HP PIC salah (wajib diawali 08 / +628 dengan total 9-13 digit)');
+                            }
                         }
                     }
 
@@ -212,13 +241,29 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                         if (field.label === 'PIC' && !REGEX_PATTERNS.NAMA_RELAWAN.test(value)) {
                             currentErrors.push('Nama PIC OPD mengandung karakter ilegal');
                         }
-                        if (field.label === 'NIK PIC' && !REGEX_PATTERNS.NIK.test(value)) {
-                            currentErrors.push('NIK PIC OPD harus tepat 16 digit angka');
+                        if (field.label === 'NIK PIC') {
+                            if (!REGEX_PATTERNS.NIK.test(value)) {
+                                currentErrors.push('NIK PIC OPD harus tepat 16 digit angka');
+                            } else {
+                                if (nikTracker[value]) {
+                                    currentErrors.push(`NIK PIC OPD Duplikat (Sama dengan Baris ${nikTracker[value]})`);
+                                } else {
+                                    nikTracker[value] = rowNumber;
+                                }
+                            }
                         }
+                        
+                        // ── LOGIKA BARU KONTAK OPD ──
                         if (field.label === 'Kontak') {
-                            if (REGEX_PATTERNS.HAS_LETTERS.test(value)) currentErrors.push('Kontak OPD tidak boleh mengandung huruf');
-                            else if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(value)) currentErrors.push('Kontak OPD mengandung karakter spesial ilegal');
-                            else if (!REGEX_PATTERNS.NO_HP.test(value)) currentErrors.push('Format Kontak OPD salah (wajib 08xx / +628xx)');
+                            const cleanPhone = value.replace(/[\s-]/g, '');
+
+                            if (REGEX_PATTERNS.HAS_LETTERS.test(value)) {
+                                currentErrors.push('Kontak OPD tidak boleh mengandung huruf');
+                            } else if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(value)) {
+                                currentErrors.push('Kontak OPD mengandung karakter spesial ilegal');
+                            } else if (!REGEX_PATTERNS.NO_HP.test(cleanPhone)) {
+                                currentErrors.push('Format Kontak OPD salah (wajib diawali 08 / +628 dengan total 9-13 digit)');
+                            }
                         }
                     }
                 }
@@ -226,7 +271,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
 
             if (currentErrors.length > 0) {
                 rowErrors.push({
-                    rowNumber: i + 2, 
+                    rowNumber: rowNumber, 
                     errorMessages: currentErrors
                 });
             }

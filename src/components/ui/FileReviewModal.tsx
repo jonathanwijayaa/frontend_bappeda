@@ -225,7 +225,16 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                                             <tr key={idx} className="hover:bg-red-50 border-b">
                                                 <td className="px-4 py-3 text-sm text-gray-900 text-center font-medium bg-red-50 border-r">{err.rowNumber}</td>
                                                 <td className="px-6 py-3 text-sm text-red-600 font-medium whitespace-pre-wrap">
-                                                    {err.errorMessages.join(', ')}
+                                                    {/* ── DI SINI PERUBAHAN MENJADI BULLET POINTS ── */}
+                                                    {err.errorMessages.length === 1 ? (
+                                                        <p>{err.errorMessages[0]}</p>
+                                                    ) : (
+                                                        <ul className="list-disc pl-5 space-y-1">
+                                                            {err.errorMessages.map((msg, msgIdx) => (
+                                                                <li key={msgIdx}>{msg}</li>
+                                                            ))}
+                                                        </ul>
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))
