@@ -15,6 +15,8 @@ import { useAuth } from '../context/AuthContext';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { formatPhoneDisplay } from '../utils/formatPhone';
 import { KaderData, AutoOption } from '../types';
+import { REGEX_PATTERNS } from '../utils/regex';
+import { dummyKelurahan, dummyKemantren } from '../types/wilayah.types';
 import { useKaderList } from '../hooks/kader/useKaderList';
 import { useOpdList } from '../hooks/opd/useOpdList';
 import { useCreateKader, useUpdateKader, useToggleKaderStatus, useBulkKader } from '../hooks/kader/useKaderMutations';
@@ -51,6 +53,7 @@ const DaftarKader: React.FC = () => {
         nama_pic: '',
         nik_pic: '',
         alamat_pic: '',
+        kemantren_pic: '',
         kelurahan_pic: '',
         no_hp_pic: ''
     });
@@ -74,6 +77,12 @@ const DaftarKader: React.FC = () => {
         [opdListData]
     );
 
+    const kemantrenOptions = useMemo<AutoOption[]>(
+        () => dummyKemantren.map(item => ({ label: item.nama_kemantren, value: item.id })),
+        []
+    );
+
+
     const hasChanges = useMemo(() => {
         if (!selectedKader) return false;
         return (
@@ -81,7 +90,6 @@ const DaftarKader: React.FC = () => {
             detailFormData.deskripsi  !== (selectedKader.deskripsi  || '')
         );
     }, [selectedKader, detailFormData]);
-
 
     // ── Filter & Pagination ────────────────────────────────────────
     const filteredData = useMemo(() => {
@@ -99,7 +107,17 @@ const DaftarKader: React.FC = () => {
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+    const kelurahanOptionsForForm = useMemo<AutoOption[]>(() => {
+    const matchedKemantren = dummyKemantren.find(
+        item => item.nama_kemantren.toLowerCase() === formData.kemantren_pic.trim().toLowerCase()
+    );
 
+    if (!matchedKemantren) return [];
+
+    return dummyKelurahan
+        .filter(item => item.id_kemantren === matchedKemantren.id)
+        .map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
+}, [formData.kemantren_pic]);
     // ── Columns ────────────────────────────────────────────────────
     const columns = [
         { header: 'NAMA KADER', accessor: 'nama_kader' as keyof KaderData, width: '18%' },
@@ -113,7 +131,6 @@ const DaftarKader: React.FC = () => {
                 </span>
             )
         },
-        // Kolom OPD hanya tampil untuk super_admin (OPD sudah tahu OPD-nya sendiri)
         ...(isSuperAdmin ? [{ header: 'OPD', accessor: 'nama_opd' as keyof KaderData, width: '18%' }] : []),
         { header: 'PIC', width: '15%', render: (row: KaderData) => <span>{row.pic_nama || '-'}</span> },
         {
@@ -157,68 +174,115 @@ const DaftarKader: React.FC = () => {
         );
     };
 
-    // Validasi dan simpan kader baru beserta data PIC awal.
+    // Validasi dan simpan kader baru beserta data PIC awal (SUDAH DIPERBARUI)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.nama_kader.trim() || !formData.deskripsi.trim() || !formData.nama_pic.trim() || !formData.nik_pic.trim() || !formData.alamat_pic.trim() || !formData.kelurahan_pic.trim() || !formData.no_hp_pic.trim()) {
+
+        // A. Validasi Isian Kosong
+        if (!formData.nama_kader.trim() || !formData.deskripsi.trim() || !formData.nama_pic.trim() || !formData.nik_pic.trim() || !formData.alamat_pic.trim() || !formData.kemantren_pic.trim() || !formData.kelurahan_pic.trim() || !formData.no_hp_pic.trim()) {
             setToast({ message: 'Semua field wajib diisi', type: 'error' });
             return;
         }
-        if (formData.nama_kader.trim().length < 3) {
+
+        // B. Validasi Nama Kader
+        const normalizedNamaKader = formData.nama_kader.trim();
+        if (normalizedNamaKader.length < 3) {
             setToast({ message: 'Nama Kader minimal 3 karakter', type: 'error' });
             return;
         }
-        if (formData.nama_kader.trim().length > 100) {
+        if (normalizedNamaKader.length > 100) {
             setToast({ message: 'Nama Kader terlalu panjang (maks 100 karakter)', type: 'error' });
             return;
         }
-        if (!/^[a-zA-Z\s]+$/.test(formData.nama_kader)) {
-            setToast({ message: 'Nama Kader tidak boleh mengandung angka atau karakter spesial', type: 'error' });
+        if (!REGEX_PATTERNS.NAMA_RELAWAN.test(normalizedNamaKader)) {
+            setToast({ message: "Nama Kader tidak boleh mengandung angka atau karakter spesial selain (, . ' -)", type: 'error' });
             return;
         }
 
-        const normalizedNamaKader = formData.nama_kader.trim();
+        // C. Cek Duplikasi Nama Kader
         const isDuplicate = kaderList.some(k => k.nama_kader.toLowerCase() === normalizedNamaKader.toLowerCase());
         if (isDuplicate) {
             setToast({ message: 'Nama Kader sudah terdaftar', type: 'error' });
             return;
         }
 
-        if (formData.nama_pic && formData.nama_pic.trim().length > 0) {
-            if (formData.nama_pic.trim().length < 3) {
-                setToast({ message: 'Nama PIC minimal 3 karakter', type: 'error' });
-                return;
-            }
-            if (formData.nama_pic.trim().length > 100) {
-                setToast({ message: 'Nama PIC terlalu panjang (maks 100 karakter)', type: 'error' });
-                return;
-            }
-            if (!/^[a-zA-Z\s]+$/.test(formData.nama_pic)) {
-                setToast({ message: 'Nama PIC tidak boleh mengandung angka atau karakter spesial', type: 'error' });
-                return;
-            }
-        }
+        // D. Validasi OPD (Khusus Super Admin)
         if (isSuperAdmin && !formData.opd_id) {
             setToast({ message: 'Pilih OPD yang valid dari daftar', type: 'error' });
             return;
         }
-        if (formData.nik_pic && !/^\d{16}$/.test(formData.nik_pic)) {
+
+        // E. Validasi Nama PIC
+        const namaPicTrimmed = formData.nama_pic.trim();
+        if (namaPicTrimmed.length < 3) {
+            setToast({ message: 'Nama PIC minimal 3 karakter', type: 'error' });
+            return;
+        }
+        if (namaPicTrimmed.length > 100) {
+            setToast({ message: 'Nama PIC terlalu panjang (maks 100 karakter)', type: 'error' });
+            return;
+        }
+        if (!REGEX_PATTERNS.NAMA_RELAWAN.test(namaPicTrimmed)) {
+            setToast({ message: "Nama PIC tidak boleh mengandung angka atau karakter spesial selain (, . ' -)", type: 'error' });
+            return;
+        }
+
+        // F. Validasi NIK PIC
+        const nikPicTrimmed = formData.nik_pic.trim();
+        if (!REGEX_PATTERNS.NIK.test(nikPicTrimmed)) {
             setToast({ message: 'NIK PIC harus tepat 16 digit angka (tanpa huruf atau spasi)', type: 'error' });
             return;
         }
-        if (formData.no_hp_pic && !/^[0-9+\-\s]{10,13}$/.test(formData.no_hp_pic.trim())) {
-            setToast({ message: 'Nomor HP PIC tidak valid — harus 10–13 digit angka (contoh: 08123456789)', type: 'error' });
+
+        // G. Validasi Alamat PIC
+        const alamatPicTrimmed = formData.alamat_pic.trim();
+        if (alamatPicTrimmed.length < 10) {
+            setToast({ message: 'Alamat PIC terlalu pendek (minimal 10 karakter)', type: 'error' });
+            return;
+        }
+        if (alamatPicTrimmed.length > 100) {
+            setToast({ message: 'Alamat PIC terlalu panjang (maksimal 100 karakter)', type: 'error' });
+            return;
+        }
+        if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(alamatPicTrimmed)) {
+            setToast({ message: 'Alamat PIC tidak boleh hanya berisi angka', type: 'error' });
+            return;
+        }
+        if (!REGEX_PATTERNS.ALAMAT_VALID.test(alamatPicTrimmed)) {
+            setToast({ message: 'Alamat PIC hanya boleh berisi huruf, angka, spasi, dan karakter .,/#-', type: 'error' });
+            return;
+        }
+
+        // H. Validasi Nomor Telepon PIC
+        const phonePicTrimmed = formData.no_hp_pic.trim();
+        if (REGEX_PATTERNS.HAS_LETTERS.test(phonePicTrimmed)) {
+            setToast({ message: 'Nomor telepon PIC tidak boleh mengandung huruf', type: 'error' });
+            return;
+        }
+        if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(phonePicTrimmed)) {
+            setToast({ message: 'Nomor telepon PIC tidak boleh mengandung karakter spesial', type: 'error' });
+            return;
+        }
+        if (!REGEX_PATTERNS.NO_HP.test(phonePicTrimmed)) {
+            const digitCount = phonePicTrimmed.replace(/\D/g, '').length;
+            if (digitCount < 9) {
+                setToast({ message: 'Nomor telepon PIC terlalu pendek (minimal 9 digit)', type: 'error' });
+            } else if (digitCount > 13) {
+                setToast({ message: 'Nomor telepon PIC terlalu panjang (maksimal 13 digit)', type: 'error' });
+            } else {
+                setToast({ message: 'Format nomor telepon PIC wajib diawali 08 atau +628', type: 'error' });
+            }
             return;
         }
 
         const body: any = {
             nama_kader:    toTitleCase(normalizedNamaKader),
             deskripsi:     formData.deskripsi     || null,
-            nama_pic:      formData.nama_pic      || null,
-            nik_pic:       formData.nik_pic       || null,
-            alamat_pic:    formData.alamat_pic    || null,
+            nama_pic:      namaPicTrimmed,
+            nik_pic:       nikPicTrimmed,
+            alamat_pic:    alamatPicTrimmed,
             kelurahan_pic: formData.kelurahan_pic || null,
-            no_hp_pic:     formData.no_hp_pic.replace(/\D/g, '')     || null,
+            no_hp_pic:     formData.no_hp_pic.replace(/\D/g, ''),
         };
         if (isSuperAdmin) body.opd_id = formData.opd_id;
 
@@ -226,7 +290,7 @@ const DaftarKader: React.FC = () => {
             onSuccess: (d) => {
                 setToast({ message: d.message, type: 'success' });
                 setIsModalOpen(false);
-                setFormData({ opd_name: '', opd_id: 0, nama_kader: '', deskripsi: '', nama_pic: '', nik_pic: '', alamat_pic: '', kelurahan_pic: '', no_hp_pic: '' });
+                setFormData({ opd_name: '', opd_id: 0, nama_kader: '', deskripsi: '', nama_pic: '', nik_pic: '', alamat_pic: '',kemantren_pic:'', kelurahan_pic: '', no_hp_pic: '' });
             },
             onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal menambahkan kader'), type: 'error' }),
         });
@@ -235,24 +299,25 @@ const DaftarKader: React.FC = () => {
     // Simpan perubahan nama kader dan deskripsi dari modal detail.
     const handleDetailSave = async () => {
         if (!selectedKader) return;
+        
         if (!detailFormData.nama_kader.trim() || !detailFormData.deskripsi.trim()) {
             setToast({ message: 'Semua field wajib diisi', type: 'error' });
             return;
         }
-        if (detailFormData.nama_kader.trim().length < 3) {
+        const normalizedNamaKader = detailFormData.nama_kader.trim();
+        if (normalizedNamaKader.length < 3) {
             setToast({ message: 'Nama Kader minimal 3 karakter', type: 'error' });
             return;
         }
-        if (detailFormData.nama_kader.trim().length > 100) {
+        if (normalizedNamaKader.length > 100) {
             setToast({ message: 'Nama Kader terlalu panjang (maks 100 karakter)', type: 'error' });
             return;
         }
-        if (!/^[a-zA-Z\s]+$/.test(detailFormData.nama_kader)) {
-            setToast({ message: 'Nama Kader tidak boleh mengandung angka atau karakter spesial', type: 'error' });
+        if (!REGEX_PATTERNS.NAMA_RELAWAN.test(normalizedNamaKader)) {
+            setToast({ message: "Nama Kader tidak boleh mengandung angka atau karakter spesial selain (, . ' -)", type: 'error' });
             return;
         }
 
-        const normalizedNamaKader = detailFormData.nama_kader.trim();
         const isDuplicate = kaderList.some(k => 
             k.kader_id !== selectedKader.kader_id && 
             k.nama_kader.toLowerCase() === normalizedNamaKader.toLowerCase()
@@ -277,49 +342,71 @@ const DaftarKader: React.FC = () => {
     // Ganti PIC aktif untuk kader yang dipilih melalui validasi input PIC baru.
     const handleAssignPic = async () => {
         if (!selectedKader) return;
-        if (!assignPicForm.nik_pic.trim()) {
-            setToast({ message: 'NIK PIC wajib diisi', type: 'error' });
+
+        if (!assignPicForm.nik_pic.trim() || !assignPicForm.nama_pic.trim() || !assignPicForm.no_hp_pic.trim() || !assignPicForm.alamat_pic.trim() || !assignPicForm.kelurahan_pic.trim()) {
+            setToast({ message: 'Semua data pribadi PIC wajib diisi', type: 'error' });
             return;
         }
-        if (!/^\d{16}$/.test(assignPicForm.nik_pic.trim())) {
+
+        const nikPicTrimmed = assignPicForm.nik_pic.trim();
+        if (!REGEX_PATTERNS.NIK.test(nikPicTrimmed)) {
             setToast({ message: 'NIK PIC harus tepat 16 digit angka (tanpa huruf atau spasi)', type: 'error' });
             return;
         }
-        if (!assignPicForm.nama_pic.trim()) {
-            setToast({ message: 'Nama PIC wajib diisi', type: 'error' });
+
+        const namaPicTrimmed = assignPicForm.nama_pic.trim();
+        if (namaPicTrimmed.length < 3) {
+            setToast({ message: 'Nama PIC minimal 3 karakter', type: 'error' });
             return;
         }
-        if (!assignPicForm.no_hp_pic.trim()) {
-            setToast({ message: 'Nomor HP PIC wajib diisi', type: 'error' });
+        if (namaPicTrimmed.length > 100) {
+            setToast({ message: 'Nama PIC terlalu panjang (maks 100 karakter)', type: 'error' });
             return;
         }
-        if (!/^[0-9+\-\s]{10,13}$/.test(assignPicForm.no_hp_pic.trim())) {
-            setToast({ message: 'Nomor HP PIC tidak valid — harus 10–13 digit angka (contoh: 08123456789)', type: 'error' });
+        if (!REGEX_PATTERNS.NAMA_RELAWAN.test(namaPicTrimmed)) {
+            setToast({ message: "Nama tidak boleh mengandung angka atau karakter spesial selain (, . ' -)", type: 'error' });
             return;
         }
-        if (!assignPicForm.alamat_pic.trim()) {
-            setToast({ message: 'Alamat PIC wajib diisi', type: 'error' });
+
+        const alamatPicTrimmed = assignPicForm.alamat_pic.trim();
+        if (alamatPicTrimmed.length < 10) {
+            setToast({ message: 'Alamat PIC terlalu pendek (minimal 10 karakter)', type: 'error' });
             return;
         }
-        if (!assignPicForm.kelurahan_pic.trim()) {
-            setToast({ message: 'Kelurahan PIC wajib diisi', type: 'error' });
+        if (alamatPicTrimmed.length > 100) {
+            setToast({ message: 'Alamat PIC terlalu panjang (maksimal 100 karakter)', type: 'error' });
             return;
         }
-        if (assignPicForm.nama_pic && assignPicForm.nama_pic.trim().length > 0) {
-            if (assignPicForm.nama_pic.trim().length < 3) {
-                setToast({ message: 'Nama PIC minimal 3 karakter', type: 'error' });
-                return;
+        if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(alamatPicTrimmed)) {
+            setToast({ message: 'Alamat PIC tidak boleh hanya berisi angka', type: 'error' });
+            return;
+        }
+        if (!REGEX_PATTERNS.ALAMAT_VALID.test(alamatPicTrimmed)) {
+            setToast({ message: 'Alamat PIC hanya boleh berisi huruf, angka, spasi, dan karakter .,/#-', type: 'error' });
+            return;
+        }
+
+        const phonePicTrimmed = assignPicForm.no_hp_pic.trim();
+        if (REGEX_PATTERNS.HAS_LETTERS.test(phonePicTrimmed)) {
+            setToast({ message: 'Nomor telepon PIC tidak boleh mengandung huruf', type: 'error' });
+            return;
+        }
+        if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(phonePicTrimmed)) {
+            setToast({ message: 'Nomor telepon PIC tidak boleh mengandung karakter spesial', type: 'error' });
+            return;
+        }
+        if (!REGEX_PATTERNS.NO_HP.test(phonePicTrimmed)) {
+            const digitCount = phonePicTrimmed.replace(/\D/g, '').length;
+            if (digitCount < 9) {
+                setToast({ message: 'Nomor telepon PIC terlalu pendek (minimal 9 digit)', type: 'error' });
+            } else if (digitCount > 13) {
+                setToast({ message: 'Nomor telepon PIC terlalu panjang (maksimal 13 digit)', type: 'error' });
+            } else {
+                setToast({ message: 'Format nomor telepon PIC wajib diawali 08 atau +628', type: 'error' });
             }
-            if (assignPicForm.nama_pic.trim().length > 100) {
-                setToast({ message: 'Nama PIC terlalu panjang (maks 100 karakter)', type: 'error' });
-                return;
-            }
-            if (!/^[a-zA-Z\s]+$/.test(assignPicForm.nama_pic)) {
-                setToast({ message: 'Nama PIC tidak boleh mengandung angka atau karakter spesial', type: 'error' });
-                return;
-            }
+            return;
         }
-        // Re-use updateKader dengan endpoint assign-pic
+
         updateKader.mutate(
             { kader_id: selectedKader.kader_id, payload: { ...assignPicForm, no_hp_pic: assignPicForm.no_hp_pic.replace(/\D/g, '') } as any },
             {
@@ -333,8 +420,6 @@ const DaftarKader: React.FC = () => {
         );
     };
 
-
-    // Ekspor daftar kader yang sedang terfilter ke PDF.
     const handleExportPDF = async () => {
         setIsExporting(true);
         try {
@@ -357,7 +442,6 @@ const DaftarKader: React.FC = () => {
         }
     };
 
-    // Proses hasil unggahan Excel dan kirim ke endpoint bulk import.
     const handleExcelUploadConfirm = async (data: any[]) => {
         bulkKader.mutate(data, {
             onSuccess: (d) => {
@@ -373,7 +457,6 @@ const DaftarKader: React.FC = () => {
     const actions = (row: KaderData) => (
         <>
             <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
-            {/* Toggle status untuk super_admin dan OPD yang memiliki kader tersebut */}
             {(isSuperAdmin || (isOPD && row.opd_id === (user as any)?.opd_id)) && (
                 <Button
                     variant={row.status_keaktifan ? 'danger' : 'secondary'}
@@ -388,14 +471,12 @@ const DaftarKader: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            {/* Header Actions */}
             <div className="flex justify-between items-center">
                 <div className="flex gap-3">
                     <Button variant="primary" onClick={() => setIsModalOpen(true)}>
                         <Plus size={18} />
                         Tambah Kader Baru
                     </Button>
-                    {/* Upload Excel hanya untuk super_admin */}
                     {(isSuperAdmin || isOPD) && (
                         <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
                             <Upload size={18} /> Unggah dari Excel
@@ -409,7 +490,6 @@ const DaftarKader: React.FC = () => {
                 />
             </div>
 
-            {/* Table */}
             <Card>
                 <div className="mb-4 flex justify-between items-center">
                     <h2 className="text-xl font-semibold text-gray-900">Daftar Kader</h2>
@@ -456,8 +536,6 @@ const DaftarKader: React.FC = () => {
                 subtitle={isSuperAdmin ? "Pilih OPD terlebih dahulu, lalu isi detail kader" : "Isi detail kader untuk instansi Anda"}
                 maxWidth="2xl">
                 <form onSubmit={handleSubmit} className="space-y-6">
-
-                    {/* Pilih OPD — hanya untuk super_admin */}
                     {isSuperAdmin && (
                         <div className="grid grid-cols-3 gap-4 items-start">
                             <label className="text-lg font-medium text-gray-900 pt-2">
@@ -486,7 +564,7 @@ const DaftarKader: React.FC = () => {
                         { label: 'NIK PIC',      name: 'nik_pic',       required: true,  placeholder: '16 digit NIK PIC', maxLength: 16 },
                         { label: 'No. HP PIC',   name: 'no_hp_pic',     required: true, placeholder: 'Nomor HP PIC' },
                         { label: 'Alamat PIC',   name: 'alamat_pic',    required: true, placeholder: 'Alamat sesuai KTP' },
-                        { label: 'Kelurahan PIC',name: 'kelurahan_pic', required: true, placeholder: 'Kelurahan/Desa' },
+                        
                         { label: 'Deskripsi',    name: 'deskripsi',     required: true, placeholder: 'Deskripsi singkat' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
@@ -505,6 +583,42 @@ const DaftarKader: React.FC = () => {
                             />
                         </div>
                     ))}
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                        <label className="text-lg font-medium text-gray-900">
+                            Kemantren <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <AutocompleteInput
+                            name="kemantren"
+                            value={formData.kemantren_pic}
+                            options={kemantrenOptions}
+                            onChange={(val) => setFormData(prev => ({
+                                ...prev,
+                                kemantren: val,
+                                kelurahan: ''
+                            }))}
+                            placeholder="Cari nama Kemantren..."
+                            required
+                            warnIfNotFound={false}
+                            className="col-span-2"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                        <label className="text-lg font-medium text-gray-900">
+                            Kelurahan <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <AutocompleteInput
+                            name="kelurahan"
+                            value={formData.kelurahan_pic}
+                            options={kelurahanOptionsForForm}
+                            onChange={(val) => setFormData(prev => ({ ...prev, kelurahan: val }))}
+                            placeholder={formData.kemantren_pic ? 'Cari nama Kelurahan...' : 'Pilih Kemantren terlebih dahulu...'}
+                            required
+                            disabled={!formData.kemantren_pic}
+                            warnIfNotFound={false}
+                            className="col-span-2"
+                        />
+                    </div>
 
                     <div className="flex justify-between pt-6">
                         <Button type="button" onClick={() => setIsModalOpen(false)} className="bg-red-600 hover:bg-red-700 text-white px-8">Batal</Button>
@@ -519,14 +633,12 @@ const DaftarKader: React.FC = () => {
             <Modal isOpen={isDetailModalOpen} onClose={() => setIsDetailModalOpen(false)} title="Detail Kader" subtitle="Edit informasi kader" maxWidth="2xl">
                 {selectedKader && (
                     <div className="space-y-6">
-                        {/* OPD (read-only di semua role) */}
                         <div className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">OPD</label>
                             <input type="text" value={selectedKader.nama_opd} disabled
                                 className="col-span-2 px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 italic" />
                         </div>
 
-                        {/* Info Kader — editable */}
                         {[
                             { label: 'Nama Kader', name: 'nama_kader', type: 'input' },
                             { label: 'Deskripsi',  name: 'deskripsi', type: 'textarea' }
@@ -551,7 +663,6 @@ const DaftarKader: React.FC = () => {
                             </div>
                         ))}
 
-                        {/* Info PIC — read-only + tombol ganti */}
                         <div className="border-t border-gray-100 pt-4 space-y-3">
                             <div className="flex justify-between items-center">
                                 <h3 className="text-base font-semibold text-gray-700">Informasi PIC Aktif</h3>
@@ -633,7 +744,7 @@ const DaftarKader: React.FC = () => {
                 </div>
             </Modal>
 
-            {/* Confirmation Modal — untuk super_admin dan OPD */}
+            {/* Confirmation Modal */}
             {(isSuperAdmin || isOPD) && (
                 <Modal isOpen={isConfirmModalOpen} onClose={() => setIsConfirmModalOpen(false)} title="Konfirmasi"
                     subtitle={selectedKader?.status_keaktifan ? "Nonaktifkan kader ini?" : "Aktifkan kader ini?"}
@@ -657,7 +768,7 @@ const DaftarKader: React.FC = () => {
                 </Modal>
             )}
 
-            {/* Upload Excel — untuk super_admin dan OPD */}
+            {/* Upload Excel Modal */}
             {(isSuperAdmin || isOPD) && (
                 <UploadExcelModal
                     isOpen={isUploadModalOpen}

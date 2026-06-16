@@ -24,6 +24,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatPhoneDisplay } from '../utils/formatPhone';
 import { toTitleCase } from '../utils/formatText';
+import { REGEX_PATTERNS } from 'src/utils/regex';
 
 const DataRelawan: React.FC = () => {
     const { isSuperAdmin, isOPD, user } = useAuth();
@@ -428,11 +429,11 @@ const DataRelawan: React.FC = () => {
             setToast({ message: 'Nama Lengkap minimal 3 karakter', type: 'error' });
             return;
         }
-        if (!/^[a-zA-Z\s]+$/.test(formData.namaRelawan)) {
+        if (!REGEX_PATTERNS.NAMA_RELAWAN.test(formData.namaRelawan)) {
             setToast({ message: 'Nama Lengkap tidak boleh mengandung angka atau karakter spesial', type: 'error' });
             return;
         }
-        if (!/^\d{16}$/.test(formData.nik)) {
+        if (!REGEX_PATTERNS.NIK.test(formData.nik)) {
             setToast({ message: 'NIK harus terdiri dari tepat 16 digit angka', type: 'error' });
             return;
         }

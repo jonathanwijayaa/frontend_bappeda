@@ -23,7 +23,7 @@ export const dummyKemantren: Kemantren[] = [
   { id: "KEM-11", nama_kemantren: "Pakualaman" },
   { id: "KEM-12", nama_kemantren: "Tegalrejo" },
   { id: "KEM-13", nama_kemantren: "Umbulharjo" },
-  { id: "KEM-14", nama_kemantren: "Wirobrajan" }
+  { id: "KEM-14", nama_kemantren: "Wirobrajan" },
 ];
 export const dummyKelurahan: Kelurahan[] = [
   // 1. Danurejan
@@ -97,5 +97,5 @@ export const dummyKelurahan: Kelurahan[] = [
   // 14. Wirobrajan
   { id_kelurahan: "KEL-14-01", id_kemantren: "KEM-14", nama_kelurahan: "Pakuncen" },
   { id_kelurahan: "KEL-14-02", id_kemantren: "KEM-14", nama_kelurahan: "Patangpuluhan" },
-  { id_kelurahan: "KEL-14-03", id_kemantren: "KEM-14", nama_kelurahan: "Wirobrajan" }
+  { id_kelurahan: "KEL-14-03", id_kemantren: "KEM-14", nama_kelurahan: "Wirobrajan" },
 ];
