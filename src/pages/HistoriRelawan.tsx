@@ -94,6 +94,7 @@ const HistoriRelawan: React.FC = () => {
     const minYearAkhir = filterTahunAwal ? Number(filterTahunAwal) : minYearGlobal;
 
     // ── Fetch data relawan ────────────────────────────────────────
+    // Ambil data histori relawan beserta relasi penugasan dari API.
     const fetchRelawan = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -177,6 +178,7 @@ const HistoriRelawan: React.FC = () => {
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
     // ── Handle filter change ──────────────────────────────────────
+    // Ubah filter tahun awal dan sesuaikan batas tahun akhir bila perlu.
     const handleYearAwalChange = (year: string) => {
         setFilterTahunAwal(year);
         // Jika tahun akhir sudah dipilih dan < tahun awal baru, reset
@@ -186,11 +188,13 @@ const HistoriRelawan: React.FC = () => {
         setCurrentPage(1);
     };
 
+    // Ubah filter tahun akhir dan reset pagination hasil filter.
     const handleYearAkhirChange = (year: string) => {
         setFilterTahunAkhir(year);
         setCurrentPage(1);
     };
 
+    // Bersihkan semua filter histori relawan.
     const handleResetFilter = () => {
         setFilterOpd('');
         setFilterKader('');
@@ -201,6 +205,7 @@ const HistoriRelawan: React.FC = () => {
     };
 
     // ── Detail modal ──────────────────────────────────────────────
+    // Buka modal detail untuk melihat histori relawan yang dipilih.
     const handleDetailClick = (relawan: HistoriRelawanData) => {
         setSelectedRelawan(relawan);
         setIsDetailModalOpen(true);

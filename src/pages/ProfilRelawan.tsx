@@ -34,6 +34,7 @@ const ProfilRelawan = () => {
         catatan: '',
     });
 
+    // Ambil data profil relawan dari API untuk ditampilkan di halaman ini.
     const fetchProfil = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -52,11 +53,13 @@ const ProfilRelawan = () => {
 
     useEffect(() => { fetchProfil(); }, [fetchProfil]);
 
+    // Buka modal pengajuan pembaruan dan reset input perubahan.
     const handleOpenModal = () => {
         setUpdateForm({ alamat: '', kelurahan: '', noHp: '', catatan: '' });
         setIsModalOpen(true);
     };
 
+    // Kirim pengajuan perubahan data profil relawan ke backend.
     const handleConfirmSubmit = async () => {
         setIsSubmitting(true);
         try {

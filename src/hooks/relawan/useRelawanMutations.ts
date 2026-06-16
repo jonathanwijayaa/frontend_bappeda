@@ -8,6 +8,7 @@ import { RELAWAN_KEYS } from './useRelawanList';
 import { PENGAJUAN_KEYS } from './usePengajuanList';
 
 // ── Tambah relawan baru ───────────────────────────────────────
+// Buat relawan baru dan refresh daftar relawan.
 export const useCreateRelawan = (isSuperAdmin: boolean) => {
     const qc = useQueryClient();
     return useMutation({
@@ -23,6 +24,7 @@ export const useCreateRelawan = (isSuperAdmin: boolean) => {
 };
 
 // ── Update data relawan ───────────────────────────────────────
+// Simpan perubahan data utama relawan.
 export const useUpdateRelawan = (isSuperAdmin: boolean) => {
     const qc = useQueryClient();
     return useMutation({
@@ -40,6 +42,7 @@ export const useUpdateRelawan = (isSuperAdmin: boolean) => {
 };
 
 // ── Hapus satu penugasan relawan ──────────────────────────────
+// Hapus satu assignment relawan lalu refresh cache.
 export const useDeletePenugasan = (isSuperAdmin: boolean) => {
     const qc = useQueryClient();
     return useMutation({
@@ -57,6 +60,7 @@ export const useDeletePenugasan = (isSuperAdmin: boolean) => {
 };
 
 // ── Review / approve / tolak pengajuan ───────────────────────
+// Simpan keputusan review pengajuan perubahan data relawan.
 export const useReviewPengajuan = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -83,6 +87,7 @@ export const useReviewPengajuan = () => {
 };
 
 // ── Bulk upload relawan via Excel ─────────────────────────────
+// Import data relawan dari Excel untuk Super Admin atau OPD.
 export const useBulkRelawan = (isSuperAdmin: boolean) => {
     const qc = useQueryClient();
     return useMutation({

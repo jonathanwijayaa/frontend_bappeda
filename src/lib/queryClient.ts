@@ -7,11 +7,11 @@ import { QueryClient } from '@tanstack/react-query';
 const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
-            // Jangan refetch saat window focus kembali (sesuai UX dashboard admin)
+            // Hindari refetch otomatis saat tab kembali fokus supaya UI lebih stabil.
             refetchOnWindowFocus: false,
-            // Retry 1x saja sebelum tampilkan error
+            // Coba ulang satu kali saja sebelum menampilkan error.
             retry: 1,
-            // Data dianggap stale setelah 2 menit
+            // Data dianggap masih valid selama 2 menit sebelum dianggap stale.
             staleTime: 2 * 60 * 1000,
         },
     },

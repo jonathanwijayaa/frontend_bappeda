@@ -11,6 +11,7 @@ export const RIWAYAT_KEYS = {
     list: () => [...RIWAYAT_KEYS.all, 'list'] as const,
 };
 
+// Ambil riwayat pengajuan perubahan data milik relawan login.
 export const useRiwayatPengajuan = () =>
     useQuery({
         queryKey: RIWAYAT_KEYS.list(),

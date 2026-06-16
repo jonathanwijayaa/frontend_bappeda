@@ -7,6 +7,7 @@ import apiClient from '../../lib/axios';
 import { OPD_KEYS } from './useOpdList';
 
 // ── Tambah OPD baru ───────────────────────────────────────────
+// Kirim data OPD baru ke server lalu invalidate daftar OPD./ data lama sudah basi jadi akan refetch otomatis.
 export const useCreateOpd = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -20,6 +21,7 @@ export const useCreateOpd = () => {
 };
 
 // ── Update OPD ────────────────────────────────────────────────
+// Update data OPD terpilih dan refresh cache daftar OPD.
 export const useUpdateOpd = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -33,6 +35,7 @@ export const useUpdateOpd = () => {
 };
 
 // ── Toggle status aktif/nonaktif OPD ─────────────────────────
+// Ubah status aktif/nonaktif OPD lalu refresh data yang ditampilkan.
 export const useToggleOpdStatus = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -46,6 +49,7 @@ export const useToggleOpdStatus = () => {
 };
 
 // ── Bulk upload OPD via Excel ─────────────────────────────────
+// Import banyak OPD sekaligus dari data Excel.
 export const useBulkOpd = () => {
     const qc = useQueryClient();
     return useMutation({

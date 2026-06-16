@@ -7,6 +7,7 @@ import apiClient from '../../lib/axios';
 import { SARAN_KEYS } from './useSaranList';
 
 // ── Kirim saran baru (relawan / OPD) ─────────────────────────
+// Kirim saran baru dari user yang sedang login.
 export const useCreateSaran = () =>
     useMutation({
         mutationFn: (payload: { subjek: string; pesan: string }) =>
@@ -17,6 +18,7 @@ export const useCreateSaran = () =>
     });
 
 // ── Respond / update status saran (Super Admin) ───────────────
+// Update status dan catatan admin untuk saran yang masuk.
 export const useRespondSaran = () => {
     const qc = useQueryClient();
     return useMutation({

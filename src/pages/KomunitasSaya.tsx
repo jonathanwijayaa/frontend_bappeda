@@ -21,6 +21,7 @@ const KomunitasSaya = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
+    // Ambil daftar penugasan relawan yang sedang login.
     const fetchPenugasan = useCallback(async () => {
         setIsLoading(true);
         try {

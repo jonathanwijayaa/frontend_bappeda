@@ -25,6 +25,7 @@ export interface RelawanData {
     nik: string;
     namaLengkap: string;
     alamat: string;
+    kemantren: string;
     kelurahan: string;
     kader: string;
     jabatan: string;
@@ -45,6 +46,7 @@ export interface RelawanAPIData {
     relawan_id: number;
     jenis_kelamin: string;
     alamat_ktp: string | null;
+    kemantren: string | null;
     kelurahan: string | null;
     penugasan: string | null;
     status_penugasan: string | null;
@@ -81,6 +83,7 @@ export interface RelawanFormData {
     namaRelawan: string;
     nik: string;
     alamat: string;
+    kemantren: string;
     kelurahan: string;
     kader: string;
     jabatan: string;

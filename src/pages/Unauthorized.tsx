@@ -8,6 +8,7 @@ const Unauthorized = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
+    // Arahkan user kembali ke halaman utama yang sesuai role.
     const handleBack = () => {
         if (user?.role?.toLowerCase() === 'relawan') {
             navigate('/profil-relawan');

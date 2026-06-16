@@ -157,6 +157,7 @@ const DaftarKader: React.FC = () => {
         );
     };
 
+    // Validasi dan simpan kader baru beserta data PIC awal.
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.nama_kader.trim() || !formData.deskripsi.trim() || !formData.nama_pic.trim() || !formData.nik_pic.trim() || !formData.alamat_pic.trim() || !formData.kelurahan_pic.trim() || !formData.no_hp_pic.trim()) {
@@ -231,6 +232,7 @@ const DaftarKader: React.FC = () => {
         });
     };
 
+    // Simpan perubahan nama kader dan deskripsi dari modal detail.
     const handleDetailSave = async () => {
         if (!selectedKader) return;
         if (!detailFormData.nama_kader.trim() || !detailFormData.deskripsi.trim()) {
@@ -272,6 +274,7 @@ const DaftarKader: React.FC = () => {
         );
     };
 
+    // Ganti PIC aktif untuk kader yang dipilih melalui validasi input PIC baru.
     const handleAssignPic = async () => {
         if (!selectedKader) return;
         if (!assignPicForm.nik_pic.trim()) {
@@ -331,6 +334,7 @@ const DaftarKader: React.FC = () => {
     };
 
 
+    // Ekspor daftar kader yang sedang terfilter ke PDF.
     const handleExportPDF = async () => {
         setIsExporting(true);
         try {
@@ -353,6 +357,7 @@ const DaftarKader: React.FC = () => {
         }
     };
 
+    // Proses hasil unggahan Excel dan kirim ke endpoint bulk import.
     const handleExcelUploadConfirm = async (data: any[]) => {
         bulkKader.mutate(data, {
             onSuccess: (d) => {

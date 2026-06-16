@@ -7,6 +7,7 @@ import apiClient from '../../lib/axios';
 import { PROFIL_KEYS } from './useProfileData';
 
 // ── Update nama & no_hp ───────────────────────────────────────
+// Update profil user dan refresh data profil setelah sukses.
 export const useUpdateProfil = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -20,6 +21,7 @@ export const useUpdateProfil = () => {
 };
 
 // ── Ganti password ────────────────────────────────────────────
+// Kirim permintaan ganti password akun yang sedang login.
 export const useChangePassword = () =>
     useMutation({
         mutationFn: (payload: { password_lama: string; password_baru: string }) =>

@@ -14,6 +14,7 @@ export const STATISTIK_KEYS = {
     kaderPerOpd: () => [...STATISTIK_KEYS.all, 'kaderPerOpd'] as const,
 };
 
+// Ambil statistik relawan berdasarkan jenis kelamin.
 export const useStatistikGender = () =>
     useQuery({
         queryKey: STATISTIK_KEYS.gender(),
@@ -26,6 +27,7 @@ export const useStatistikGender = () =>
         },
     });
 
+// Ambil statistik relawan berdasarkan kelurahan.
 export const useStatistikKelurahan = () =>
     useQuery({
         queryKey: STATISTIK_KEYS.kelurahan(),
@@ -38,6 +40,7 @@ export const useStatistikKelurahan = () =>
         },
     });
 
+// Ambil statistik jumlah relawan per kader.
 export const useStatistikRelawanPerKader = () =>
     useQuery({
         queryKey: STATISTIK_KEYS.relawanPerKader(),
@@ -47,6 +50,7 @@ export const useStatistikRelawanPerKader = () =>
         },
     });
 
+// Ambil statistik jumlah kader per OPD.
 export const useStatistikKaderPerOpd = () =>
     useQuery({
         queryKey: STATISTIK_KEYS.kaderPerOpd(),

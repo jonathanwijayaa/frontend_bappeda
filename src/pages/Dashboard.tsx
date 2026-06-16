@@ -26,6 +26,7 @@ const Dashboard: React.FC = () => {
     const [error, setError] = useState('');
 
     useEffect(() => {
+        // Ambil ringkasan dashboard sesuai role user yang sedang login.
         const fetchDashboard = async (url: string) => {
             try {
                 setIsLoading(true);
@@ -112,7 +113,7 @@ const Dashboard: React.FC = () => {
                                 height={350}
                             />
                         ) : (
-                            <div className="flex items-center justify-center h-[350px] text-gray-400">
+                            <div className="flex items-center justify-center h-87.5 text-gray-400">
                                 Belum ada data grafik
                             </div>
                         )}
@@ -125,7 +126,7 @@ const Dashboard: React.FC = () => {
                         title={isSuperAdmin ? "Info Tambahan:" : `Info Tambahan ${user?.nama_opd || ''}:`} 
                         className="h-full" 
                     >
-                        <div className="flex items-start justify-center h-full min-h-[320px] w-full p-4 pt-2">
+                        <div className="flex items-start justify-center h-full min-h-80 w-full p-4 pt-2">
                             
                             <table className="w-auto">
                                 <tbody className="text-lg">

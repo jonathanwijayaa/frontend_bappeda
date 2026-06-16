@@ -40,6 +40,7 @@ const UbahPassword = () => {
     const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Fungsi untuk memverifikasi password lama ke backend
+    // Cek password lama ke backend sebelum user bisa menyimpan password baru.
     const verifyOldPassword = useCallback(async (password: string) => {
         if (!password.trim()) {
             setOldPasswordStatus('idle');
@@ -91,6 +92,7 @@ const UbahPassword = () => {
         passwordsMatch &&
         !isSubmitting;
 
+    // Validasi dan kirim permintaan ubah kata sandi relawan.
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!canSubmit) return;
