@@ -10,7 +10,8 @@ interface FileReviewModalProps {
     data: any[];
     dataType: 'opd' | 'kader' | 'relawan';
     title: string;
-    errors?: { rowNumber: number; emptyColumns: string[] }[];
+    // Mengubah emptyColumns menjadi errorMessages agar menampung info error kosong maupun salah format
+    errors?: { rowNumber: number; errorMessages: string[] }[];
 }
 
 const FileReviewModal: React.FC<FileReviewModalProps> = ({
@@ -33,7 +34,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
             return {
                 ...row,
                 Keterangan_Error: rowError
-                    ? `Kolom kosong: ${rowError.emptyColumns.join(', ')}`
+                    ? rowError.errorMessages.join(' | ')
                     : 'Error tidak diketahui'
             };
         });
@@ -44,7 +45,6 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
         XLSX.writeFile(workbook, `Data_Kotor_${dataType}.xlsx`);
     };
 
-    /** Klik Simpan: download data kotor (jika ada) + simpan data bersih */
     const handleConfirm = () => {
         if (hasDirtyData) {
             downloadDirtyData();
@@ -90,6 +90,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Alamat</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No HP</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">OPD</th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kemantren</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kelurahan</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kader</th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jabatan</th>
@@ -149,6 +150,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['alamat', 'alamatktp'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['nohp', 'hp', 'telepon'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['opd', 'instansi'])}</td>
+                            <td className="px-4 py-3 text-sm text-gray-900">{get(['kemantren','kecamatan'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['kelurahan', 'desa'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['kader', 'komunitaskader'])}</td>
                             <td className="px-4 py-3 text-sm text-gray-900">{get(['jabatan', 'peran'])}</td>
@@ -187,7 +189,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                                         renderTableRows(cleanData)
                                     ) : (
                                         <tr>
-                                            <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
+                                            <td colSpan={13} className="px-4 py-8 text-center text-gray-500">
                                                 Tidak ada data bersih
                                             </td>
                                         </tr>
@@ -214,7 +216,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                                 <thead className={`${hasDirtyData ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-200'} sticky top-0 border-b z-10 shadow-sm`}>
                                     <tr>
                                         <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-24">Baris</th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data Kosong / Bermasalah</th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Keterangan Masalah Konten</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
@@ -223,7 +225,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
                                             <tr key={idx} className="hover:bg-red-50 border-b">
                                                 <td className="px-4 py-3 text-sm text-gray-900 text-center font-medium bg-red-50 border-r">{err.rowNumber}</td>
                                                 <td className="px-6 py-3 text-sm text-red-600 font-medium whitespace-pre-wrap">
-                                                    {err.emptyColumns.join(', ')}
+                                                    {err.errorMessages.join(', ')}
                                                 </td>
                                             </tr>
                                         ))
