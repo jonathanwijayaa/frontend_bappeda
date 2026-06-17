@@ -69,6 +69,7 @@ const DaftarKader: React.FC = () => {
         nama_pic: '',
         no_hp_pic: '',
         alamat_pic: '',
+        kemantren_pic: '',
         kelurahan_pic: ''
     });
 
@@ -118,6 +119,18 @@ const DaftarKader: React.FC = () => {
         .filter(item => item.id_kemantren === matchedKemantren.id)
         .map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
 }, [formData.kemantren_pic]);
+
+    const kelurahanOptionsForAssignPic = useMemo<AutoOption[]>(() => {
+        const matchedKemantren = dummyKemantren.find(
+            item => item.nama_kemantren.toLowerCase() === assignPicForm.kemantren_pic.trim().toLowerCase()
+        );
+
+        if (!matchedKemantren) return [];
+
+        return dummyKelurahan
+            .filter(item => item.id_kemantren === matchedKemantren.id)
+            .map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
+    }, [assignPicForm.kemantren_pic]);
     // ── Columns ────────────────────────────────────────────────────
     const columns = [
         { header: 'NAMA KADER', accessor: 'nama_kader' as keyof KaderData, width: '18%' },
@@ -343,7 +356,7 @@ const DaftarKader: React.FC = () => {
     const handleAssignPic = async () => {
         if (!selectedKader) return;
 
-        if (!assignPicForm.nik_pic.trim() || !assignPicForm.nama_pic.trim() || !assignPicForm.no_hp_pic.trim() || !assignPicForm.alamat_pic.trim() || !assignPicForm.kelurahan_pic.trim()) {
+        if (!assignPicForm.nik_pic.trim() || !assignPicForm.nama_pic.trim() || !assignPicForm.no_hp_pic.trim() || !assignPicForm.alamat_pic.trim() || !assignPicForm.kemantren_pic.trim() || !assignPicForm.kelurahan_pic.trim()) {
             setToast({ message: 'Semua data pribadi PIC wajib diisi', type: 'error' });
             return;
         }
@@ -413,7 +426,7 @@ const DaftarKader: React.FC = () => {
                 onSuccess: (d) => {
                     setToast({ message: d.message, type: 'success' });
                     setIsAssignPicModalOpen(false);
-                    setAssignPicForm({ nik_pic: '', nama_pic: '', no_hp_pic: '', alamat_pic: '', kelurahan_pic: '' });
+                    setAssignPicForm({ nik_pic: '', nama_pic: '', no_hp_pic: '', alamat_pic: '', kemantren_pic: '', kelurahan_pic: '' });
                 },
                 onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal mengganti PIC'), type: 'error' }),
             }
@@ -593,8 +606,8 @@ const DaftarKader: React.FC = () => {
                             options={kemantrenOptions}
                             onChange={(val) => setFormData(prev => ({
                                 ...prev,
-                                kemantren: val,
-                                kelurahan: ''
+                                kemantren_pic: val,
+                                kelurahan_pic: ''
                             }))}
                             placeholder="Cari nama Kemantren..."
                             required
@@ -611,7 +624,7 @@ const DaftarKader: React.FC = () => {
                             name="kelurahan"
                             value={formData.kelurahan_pic}
                             options={kelurahanOptionsForForm}
-                            onChange={(val) => setFormData(prev => ({ ...prev, kelurahan: val }))}
+                            onChange={(val) => setFormData(prev => ({ ...prev, kelurahan_pic: val }))}
                             placeholder={formData.kemantren_pic ? 'Cari nama Kelurahan...' : 'Pilih Kemantren terlebih dahulu...'}
                             required
                             disabled={!formData.kemantren_pic}
@@ -716,7 +729,6 @@ const DaftarKader: React.FC = () => {
                         { label: 'Nama PIC',        name: 'nama_pic',      required: true, placeholder: 'Nama (jika NIK belum terdaftar)' },
                         { label: 'No. HP PIC',      name: 'no_hp_pic',     required: true, placeholder: 'Nomor HP' },
                         { label: 'Alamat PIC',      name: 'alamat_pic',    required: true, placeholder: 'Alamat KTP' },
-                        { label: 'Kelurahan PIC',   name: 'kelurahan_pic', required: true, placeholder: 'Kelurahan' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-sm font-medium text-gray-700">
@@ -732,6 +744,43 @@ const DaftarKader: React.FC = () => {
                             />
                         </div>
                     ))}
+
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                        <label className="text-sm font-medium text-gray-700">
+                            Kemantren PIC <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <AutocompleteInput
+                            name="kemantren_pic_assign"
+                            value={assignPicForm.kemantren_pic}
+                            options={kemantrenOptions}
+                            onChange={(val) => setAssignPicForm(prev => ({
+                                ...prev,
+                                kemantren_pic: val,
+                                kelurahan_pic: ''
+                            }))}
+                            placeholder="Cari nama Kemantren..."
+                            required
+                            warnIfNotFound={false}
+                            className="col-span-2"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                        <label className="text-sm font-medium text-gray-700">
+                            Kelurahan PIC <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <AutocompleteInput
+                            name="kelurahan_pic_assign"
+                            value={assignPicForm.kelurahan_pic}
+                            options={kelurahanOptionsForAssignPic}
+                            onChange={(val) => setAssignPicForm(prev => ({ ...prev, kelurahan_pic: val }))}
+                            placeholder={assignPicForm.kemantren_pic ? 'Cari nama Kelurahan...' : 'Pilih Kemantren terlebih dahulu...'}
+                            required
+                            disabled={!assignPicForm.kemantren_pic}
+                            warnIfNotFound={false}
+                            className="col-span-2"
+                        />
+                    </div>
                     <p className="text-xs text-gray-400 italic pt-2">
                         * Jika NIK sudah terdaftar di sistem, data relawan yang ada akan langsung digunakan sebagai PIC baru.
                     </p>

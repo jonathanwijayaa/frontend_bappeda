@@ -1,5 +1,7 @@
 //ProfileRelawan.tsx
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import AutocompleteInput from '../components/ui/AutocompleteInput';
+import { dummyKemantren, dummyKelurahan } from '../types/wilayah.types';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import RelawanMenu from '../components/RelawanMenu';
@@ -15,6 +17,7 @@ interface ProfilData {
     no_hp: string | null;
     jenis_kelamin: string;
     alamat_ktp: string | null;
+    kemantren: string | null;
     kelurahan: string | null;
 }
 
@@ -29,10 +32,27 @@ const ProfilRelawan = () => {
     // State form hanya menyisakan data yang diizinkan untuk diubah
     const [updateForm, setUpdateForm] = useState({
         alamat: '',
+        kemantren: '',
         kelurahan: '',
         noHp: '',
         catatan: '',
     });
+
+    const kemantrenOptions = useMemo(
+        () => dummyKemantren.map(item => ({ label: item.nama_kemantren, value: item.id })),
+        []
+    );
+
+    const kelurahanOptionsForUpdate = useMemo(() => {
+        const kemantrenToMatch = updateForm.kemantren.trim() || profil?.kemantren || '';
+        const matched = dummyKemantren.find(
+            item => item.nama_kemantren.toLowerCase() === kemantrenToMatch.toLowerCase()
+        );
+        if (!matched) return [];
+        return dummyKelurahan
+            .filter(item => item.id_kemantren === matched.id)
+            .map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
+    }, [updateForm.kemantren, profil?.kemantren]);
 
     // Ambil data profil relawan dari API untuk ditampilkan di halaman ini.
     const fetchProfil = useCallback(async () => {
@@ -55,7 +75,7 @@ const ProfilRelawan = () => {
 
     // Buka modal pengajuan pembaruan dan reset input perubahan.
     const handleOpenModal = () => {
-        setUpdateForm({ alamat: '', kelurahan: '', noHp: '', catatan: '' });
+        setUpdateForm({ alamat: '', kemantren: '', kelurahan: '', noHp: '', catatan: '' });
         setIsModalOpen(true);
     };
 
@@ -65,6 +85,7 @@ const ProfilRelawan = () => {
         try {
             const dataBaru: Record<string, string> = {};
             if (updateForm.alamat.trim())    dataBaru.alamat_ktp = updateForm.alamat.trim();
+            if (updateForm.kemantren.trim()) dataBaru.kemantren  = updateForm.kemantren.trim();
             if (updateForm.kelurahan.trim()) dataBaru.kelurahan  = updateForm.kelurahan.trim();
             if (updateForm.noHp.trim())      dataBaru.no_hp      = updateForm.noHp.trim().replace(/\D/g, '');
 
@@ -128,6 +149,7 @@ const ProfilRelawan = () => {
                                     { label: 'NIK', value: profil?.nik },
                                     { label: 'Jenis Kelamin', value: profil?.jenis_kelamin === 'L' ? 'Laki-laki' : 'Perempuan' },
                                     { label: 'Alamat KTP', value: profil?.alamat_ktp },
+                                    { label: 'Kemantren', value: profil?.kemantren },
                                     { label: 'Kelurahan', value: profil?.kelurahan },
                                     { label: 'No. HP', value: formatPhoneDisplay(profil?.no_hp) },
                                 ].map(item => (
@@ -147,7 +169,7 @@ const ProfilRelawan = () => {
                         {/* Info pengajuan */}
                         <div className="mt-5 p-3 bg-blue-50 border border-blue-100 rounded-lg">
                             <p className="text-xs text-blue-700 leading-relaxed">
-                                <span className="font-semibold">Informasi:</span> Perubahan data hanya dapat dilakukan pada Informasi Pribadi tertentu (Alamat, Kelurahan, No. HP) dan memerlukan persetujuan dari Admin OPD atau Super Admin. Pengajuan yang dikirim akan berstatus <span className="font-semibold">Menunggu Review</span> hingga diproses.
+                                <span className="font-semibold">Informasi:</span> Perubahan data hanya dapat dilakukan pada Informasi Pribadi tertentu (Alamat, Kemantren, Kelurahan, No. HP) dan memerlukan persetujuan dari Admin OPD atau Super Admin. Pengajuan yang dikirim akan berstatus <span className="font-semibold">Menunggu Review</span> hingga diproses.
                             </p>
                         </div>
                     </div>
@@ -191,13 +213,29 @@ const ProfilRelawan = () => {
                                 </div>
 
                                 <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Kemantren Baru</label>
+                                    <AutocompleteInput
+                                        name="kemantren"
+                                        value={updateForm.kemantren}
+                                        options={kemantrenOptions}
+                                        onChange={(val) => setUpdateForm(p => ({
+                                            ...p,
+                                            kemantren: val,
+                                            kelurahan: ''
+                                        }))}
+                                        placeholder={profil?.kemantren || 'Cari nama Kemantren...'}
+                                    />
+                                </div>
+
+                                <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Kelurahan Baru</label>
-                                    <input
-                                        type="text"
+                                    <AutocompleteInput
+                                        name="kelurahan"
                                         value={updateForm.kelurahan}
-                                        onChange={(e) => setUpdateForm(p => ({ ...p, kelurahan: e.target.value }))}
-                                        placeholder={profil?.kelurahan || 'Kelurahan baru'}
-                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
+                                        options={kelurahanOptionsForUpdate}
+                                        onChange={(val) => setUpdateForm(p => ({ ...p, kelurahan: val }))}
+                                        placeholder={profil?.kelurahan || 'Cari nama Kelurahan...'}
+                                        disabled={!updateForm.kemantren && !profil?.kemantren}
                                     />
                                 </div>
 

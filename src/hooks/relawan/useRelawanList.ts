@@ -19,6 +19,7 @@ const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
     nik: r.nik,
     namaLengkap: r.nama_lengkap,
     alamat: r.alamat_ktp || '-',
+    kemantren: r.kemantren || '-',
     kelurahan: r.kelurahan || '-',
     no_hp: r.no_hp || '-',
     kader: r.nama_kader || '-',

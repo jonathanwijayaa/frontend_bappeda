@@ -147,6 +147,18 @@ const DataRelawan: React.FC = () => {
             .map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
     }, [formData.kemantren]);
 
+    const kelurahanOptionsForDetail = useMemo<AutoOption[]>(() => {
+        const matchedKemantren = dummyKemantren.find(
+            item => item.nama_kemantren.toLowerCase() === detailFormData.kemantren.trim().toLowerCase()
+        );
+
+        if (!matchedKemantren) return [];
+
+        return dummyKelurahan
+            .filter(item => item.id_kemantren === matchedKemantren.id)
+            .map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
+    }, [detailFormData.kemantren]);
+
     // Ambil daftar kader untuk OPD tertentu dan simpan ke cache lokal.
     const fetchKaderOptionsForOpd = useCallback(async (opdId: number) => {
         if (opdId <= 0) return;
@@ -1190,7 +1202,6 @@ const DataRelawan: React.FC = () => {
                             { label: 'NIK', name: 'nik' },
                             { label: 'Alamat KTP', name: 'alamat' },
                             { label: 'No. HP', name: 'no_hp' },
-                            { label: 'Kelurahan', name: 'kelurahan' },
                         ].map(field => {
                             const isFieldEditable = isEditMode && field.name !== 'nik' && field.name !== 'jabatan';
                             
@@ -1211,6 +1222,55 @@ const DataRelawan: React.FC = () => {
                                 </div>
                             );
                         })}
+
+                        <div className="grid grid-cols-3 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">Kemantren</label>
+                            {isEditMode ? (
+                                <AutocompleteInput
+                                    name="kemantren"
+                                    value={detailFormData.kemantren}
+                                    options={kemantrenOptions}
+                                    onChange={(val) => setDetailFormData(prev => ({
+                                        ...prev,
+                                        kemantren: val,
+                                        kelurahan: ''
+                                    }))}
+                                    placeholder="Cari nama Kemantren..."
+                                    className="col-span-2"
+                                    warnIfNotFound={false}
+                                />
+                            ) : (
+                                <input
+                                    type="text"
+                                    value={detailFormData.kemantren}
+                                    readOnly
+                                    className="col-span-2 px-4 py-2 border border-gray-200 bg-gray-50 text-gray-400 italic font-normal cursor-not-allowed rounded-lg"
+                                />
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">Kelurahan</label>
+                            {isEditMode ? (
+                                <AutocompleteInput
+                                    name="kelurahan"
+                                    value={detailFormData.kelurahan}
+                                    options={kelurahanOptionsForDetail}
+                                    onChange={(val) => setDetailFormData(prev => ({ ...prev, kelurahan: val }))}
+                                    placeholder={detailFormData.kemantren ? 'Cari nama Kelurahan...' : 'Pilih Kemantren terlebih dahulu...'}
+                                    disabled={!detailFormData.kemantren}
+                                    className="col-span-2"
+                                    warnIfNotFound={false}
+                                />
+                            ) : (
+                                <input
+                                    type="text"
+                                    value={detailFormData.kelurahan}
+                                    readOnly
+                                    className="col-span-2 px-4 py-2 border border-gray-200 bg-gray-50 text-gray-400 italic font-normal cursor-not-allowed rounded-lg"
+                                />
+                            )}
+                        </div>
 
                         <div className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">Jenis Kelamin</label>
