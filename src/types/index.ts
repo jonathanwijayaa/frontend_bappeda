@@ -11,3 +11,4 @@ export * from './riwayat.types';
 export * from './saran.types';
 export * from './sk.types';
 export * from './statistik.types';
+export * from './wilayah.types';

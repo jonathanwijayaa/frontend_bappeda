@@ -56,16 +56,19 @@ const SuratKeputusan: React.FC = () => {
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
     // ── Handlers ──────────────────────────────────────────────
+    // Buka modal detail untuk melihat informasi SK yang dipilih.
     const handleDetailClick = (sk: SKData) => {
         setSelectedSkId(sk.sk_id);
         setIsDetailModalOpen(true);
     };
 
+    // Tampilkan preview PDF SK yang sudah diunggah.
     const handlePreviewPDF = (sk: SKData | SKDetail) => {
         setPreviewSkId(sk.sk_id);
         setIsPreviewModalOpen(true);
     };
 
+    // Validasi lalu unggah file PDF SK beserta metadata pendukung.
     const handlePDFUploadConfirm = async (file: File, metadata: any) => {
         setErrorHint(null);
 
@@ -115,11 +118,13 @@ const SuratKeputusan: React.FC = () => {
         });
     };
 
+    // Siapkan konfirmasi sebelum mengubah status aktif/nonaktif SK.
     const handleToggleSkStatus = (sk: SKData) => {
         setSelectedSkForToggle(sk);
         setIsConfirmSkOpen(true);
     };
 
+    // Kirim perubahan status SK setelah user memastikan aksi.
     const handleConfirmToggleSk = () => {
         if (!selectedSkForToggle) return;
         const newStatus: 'Aktif' | 'Tidak Aktif' = selectedSkForToggle.status_keaktifan === 'Aktif' ? 'Tidak Aktif' : 'Aktif';
@@ -138,6 +143,7 @@ const SuratKeputusan: React.FC = () => {
         );
     };
 
+    // Ekspor daftar SK yang sedang terfilter ke PDF.
     const handleExportPDF = async () => {
         setIsExporting(true);
         try {

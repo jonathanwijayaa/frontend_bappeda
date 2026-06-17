@@ -12,12 +12,14 @@ export const RELAWAN_KEYS = {
 };
 
 /** Mapping baris API flat → RelawanData untuk tabel */
+// Ubah row API relawan menjadi format tabel yang dipakai frontend.
 const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
     relawan_id: r.relawan_id,
     user_id: r.user_id,
     nik: r.nik,
     namaLengkap: r.nama_lengkap,
     alamat: r.alamat_ktp || '-',
+    kemantren: r.kemantren || '-',
     kelurahan: r.kelurahan || '-',
     no_hp: r.no_hp || '-',
     kader: r.nama_kader || '-',
@@ -31,6 +33,7 @@ const mapToRelawanData = (r: RelawanAPIData): RelawanData => ({
 /**
  * Kelompokkan rows flat API menjadi satu relawan dengan banyak assignment.
  */
+// Gabungkan baris API yang berulang menjadi satu relawan dengan daftar assignment.
 export const groupRelawanRows = (rows: any[]): RelawanData[] => {
     const map = new Map<string, RelawanData>();
     rows.forEach((r) => {
@@ -61,6 +64,7 @@ export const groupRelawanRows = (rows: any[]): RelawanData[] => {
     return Array.from(map.values());
 };
 
+// Ambil daftar relawan untuk role Super Admin atau OPD.
 export const useRelawanList = (isSuperAdmin: boolean) =>
     useQuery({
         queryKey: RELAWAN_KEYS.list(isSuperAdmin),

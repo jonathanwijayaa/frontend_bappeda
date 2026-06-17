@@ -51,6 +51,7 @@ const Dokumen: React.FC = () => {
         }
     ];
 
+    // Unduh file template atau panduan jika URL file tersedia.
     const handleDownload = (doc: DocumentItem) => {
         if (!doc.downloadUrl) {
             console.log('File belum tersedia:', doc.fileName);
@@ -73,7 +74,7 @@ const Dokumen: React.FC = () => {
                     <Card key={doc.id}>
                         <div className="flex items-start gap-4">
                             {/* Icon */}
-                            <div className="flex-shrink-0 w-16 h-16 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-200">
+                            <div className="shrink-0 w-16 h-16 bg-gray-50 rounded-lg flex items-center justify-center border border-gray-200">
                                 {doc.icon}
                             </div>
 

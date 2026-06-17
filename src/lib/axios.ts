@@ -10,7 +10,7 @@ const apiClient = axios.create({
     headers: { 'Content-Type': 'application/json' },
 });
 
-// ── Request interceptor — tambahkan token di setiap request ────
+// Tambahkan token auth ke setiap request agar API tahu user yang login.
 apiClient.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -19,7 +19,7 @@ apiClient.interceptors.request.use((config) => {
     return config;
 });
 
-// ── Response interceptor — tangani 401 global ──────────────────
+// Tangani 401 secara global: hapus sesi lokal dan arahkan ke login.
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {

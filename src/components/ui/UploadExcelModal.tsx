@@ -7,6 +7,7 @@ import * as XLSX from 'xlsx';
 import Modal from './Modal';
 import Button from './Button';
 import FileReviewModal from './FileReviewModal';
+import { REGEX_PATTERNS } from '../../utils/regex';
 
 interface UploadExcelModalProps {
     isOpen: boolean;
@@ -15,9 +16,9 @@ interface UploadExcelModalProps {
     title: string;
     templateName: string;
     dataType: 'opd' | 'kader' | 'relawan';
+    isOpdUser?: boolean;
 }
 
-// ── Mapping: field wajib sesuai nama kolom AKTUAL di template Excel ──
 const REQUIRED_FIELDS: Record<string, string[]> = {
     opd:     ['namaopd', 'status', 'alamat', 'pic', 'nikpic', 'kontak'],
     kader:   ['opd', 'namakader', 'pic', 'nikpic', 'nohp', 'alamatpic', 'kelurahanpic'],
@@ -40,7 +41,8 @@ const REQUIRED_FIELDS_CHECK: Record<string, { keys: string[], label: string }[]>
         { keys: ['nikpic', 'nik'], label: 'NIK PIC' },
         { keys: ['nohp', 'kontak', 'hp'], label: 'No HP' },
         { keys: ['alamatpic', 'alamat'], label: 'Alamat PIC' },
-        { keys: ['kelurahanpic', 'kelurahan'], label: 'Kelurahan PIC' }
+        { keys: ['kelurahanpic', 'kelurahan'], label: 'Kelurahan PIC' },
+        { keys: ['kemantrenpic', 'kemantren'], label: 'Kemantren PIC' }
     ],
     relawan: [
         { keys: ['namalengkap', 'nama'], label: 'Nama Lengkap' },
@@ -49,6 +51,7 @@ const REQUIRED_FIELDS_CHECK: Record<string, { keys: string[], label: string }[]>
         { keys: ['alamat'], label: 'Alamat' },
         { keys: ['nohp', 'hp', 'nomerhp', 'telepon'], label: 'No HP' },
         { keys: ['opd', 'instansi'], label: 'OPD/Instansi' },
+        { keys: ['kemantren','kecamatan'], label: 'Kemantren' },
         { keys: ['kelurahan', 'desa'], label: 'Kelurahan' },
         { keys: ['kader', 'komunitaskader', 'komunitas'], label: 'Kader' },
         { keys: ['jabatan', 'peran'], label: 'Jabatan/Peran' },
@@ -57,18 +60,33 @@ const REQUIRED_FIELDS_CHECK: Record<string, { keys: string[], label: string }[]>
     ],
 };
 
+const getRequiredFields = (dataType: 'opd' | 'kader' | 'relawan', isOpdUser: boolean) => {
+    if (dataType === 'relawan' && isOpdUser) {
+        return REQUIRED_FIELDS.relawan.filter((f) => f !== 'opd');
+    }
+    return REQUIRED_FIELDS[dataType];
+};
+
+const getRequiredFieldChecks = (dataType: 'opd' | 'kader' | 'relawan', isOpdUser: boolean) => {
+    if (dataType === 'relawan' && isOpdUser) {
+        return REQUIRED_FIELDS_CHECK.relawan.filter((f) => f.label !== 'OPD/Instansi');
+    }
+    return REQUIRED_FIELDS_CHECK[dataType];
+};
+
 const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
     isOpen,
     onClose,
     onConfirm,
     title,
     templateName,
-    dataType
+    dataType,
+    isOpdUser = false,
 }) => {
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [error, setError] = useState<string>('');
     const [parsedData, setParsedData] = useState<any[]>([]);
-    const [parsedErrors, setParsedErrors] = useState<{ rowNumber: number; emptyColumns: string[] }[]>([]);
+    const [parsedErrors, setParsedErrors] = useState<{ rowNumber: number; errorMessages: string[] }[]>([]);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
 
     const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: any[]) => {
@@ -94,12 +112,11 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
         if (!data || data.length === 0)
             return { isValid: false, globalError: 'File tidak mengandung data. Pastikan ada baris isi di bawah header.' };
 
-        // Normalisasi key Excel: lowercase + hapus semua non-alfanumerik
         const normalizedKeys = Object.keys(data[0]).map(k =>
             k.toLowerCase().replace(/[^a-z0-9]/g, '')
         );
 
-        const requiredFields = REQUIRED_FIELDS[dataType]; // sudah ternormalisasi
+        const requiredFields = getRequiredFields(dataType, isOpdUser);
         const missingFields = requiredFields.filter(f => !normalizedKeys.includes(f));
 
         if (missingFields.length > 0) {
@@ -109,12 +126,16 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
             };
         }
 
-        const rowErrors: { rowNumber: number; emptyColumns: string[] }[] = [];
-        const fieldsToCheck = REQUIRED_FIELDS_CHECK[dataType];
+        const rowErrors: { rowNumber: number; errorMessages: string[] }[] = [];
+        const fieldsToCheck = getRequiredFieldChecks(dataType, isOpdUser);
+
+        // Tracker Duplikasi NIK
+        const nikTracker: Record<string, number> = {}; 
 
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
-            const emptyCols: string[] = [];
+            const currentErrors: string[] = [];
+            const rowNumber = i + 2; 
             
             const getVal = (possibleKeys: string[]) => {
                 const key = Object.keys(row).find(k => possibleKeys.includes(k.toLowerCase().replace(/[^a-z0-9]/g, '')));
@@ -122,15 +143,136 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
             };
 
             fieldsToCheck.forEach(field => {
-                if (!getVal(field.keys)) {
-                    emptyCols.push(field.label);
+                const value = getVal(field.keys);
+                if (!value) {
+                    currentErrors.push(`${field.label} Kosong`);
+                } else {
+                    if (dataType === 'relawan') {
+                        if (field.label === 'Nama Lengkap') {
+                            if (value.length < 3) currentErrors.push('Nama Lengkap minimal 3 karakter');
+                            else if (!REGEX_PATTERNS.NAMA_RELAWAN.test(value)) currentErrors.push('Nama Lengkap mengandung karakter ilegal');
+                        }
+                        
+                        if (field.label === 'Jenis Kelamin') {
+                            const jkUpper = value.toUpperCase();
+                            const validJK = ['L', 'P', 'LAKI-LAKI', 'PEREMPUAN'];
+                            if (!validJK.includes(jkUpper)) {
+                                currentErrors.push('Jenis Kelamin harus Laki-Laki, Perempuan, L, atau P');
+                            }
+                        }
+                        
+                        if (field.label === 'NIK') {
+                            if (!REGEX_PATTERNS.NIK.test(value)) {
+                                currentErrors.push('NIK harus terdiri dari tepat 16 digit angka');
+                            } else {
+                                if (nikTracker[value]) {
+                                    currentErrors.push(`NIK Duplikat (Sama dengan Baris ${nikTracker[value]})`);
+                                } else {
+                                    nikTracker[value] = rowNumber;
+                                }
+                            }
+                        }
+                        if (field.label === 'Alamat') {
+                            if (value.length < 10) currentErrors.push('Alamat terlalu pendek (min 10)');
+                            else if (value.length > 100) currentErrors.push('Alamat terlalu panjang (maks 100)');
+                            else if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(value)) currentErrors.push('Alamat tidak boleh angka saja');
+                            else if (!REGEX_PATTERNS.ALAMAT_VALID.test(value)) currentErrors.push('Alamat mengandung karakter terlarang');
+                        }
+                        
+                        // ── LOGIKA BARU NO HP RELAWAN ──
+                        if (field.label === 'No HP') {
+                            const cleanPhone = value.replace(/[\s-]/g, ''); // Hanya untuk dites ke REGEX
+
+                            if (REGEX_PATTERNS.HAS_LETTERS.test(value)) {
+                                currentErrors.push('No HP tidak boleh mengandung huruf');
+                            } else if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(value)) {
+                                currentErrors.push('No HP mengandung karakter spesial ilegal');
+                            } else if (!REGEX_PATTERNS.NO_HP.test(cleanPhone)) {
+                                const digitCount = value.replace(/\D/g, '').length;
+                                if (digitCount < 9 || digitCount > 13) currentErrors.push('Format No HP salah (total harus 9-13 digit)');
+                                else currentErrors.push('Format No HP salah (wajib diawali 08 atau +628)');
+                            }
+                        }
+                    }
+
+                    if (dataType === 'kader') {
+                        if (field.label === 'Nama Kader' && !REGEX_PATTERNS.NAMA_RELAWAN.test(value)) {
+                            currentErrors.push('Nama Kader mengandung karakter ilegal');
+                        }
+                        if (field.label === 'PIC' && !REGEX_PATTERNS.NAMA_RELAWAN.test(value)) {
+                            currentErrors.push('Nama PIC mengandung karakter ilegal');
+                        }
+                        if (field.label === 'NIK PIC') {
+                            if (!REGEX_PATTERNS.NIK.test(value)) {
+                                currentErrors.push('NIK PIC harus tepat 16 digit angka');
+                            } else {
+                                if (nikTracker[value]) {
+                                    currentErrors.push(`NIK PIC Duplikat (Sama dengan Baris ${nikTracker[value]})`);
+                                } else {
+                                    nikTracker[value] = rowNumber;
+                                }
+                            }
+                        }
+                        if (field.label === 'Alamat PIC') {
+                            if (value.length < 10) currentErrors.push('Alamat PIC terlalu pendek (min 10)');
+                            else if (value.length > 100) currentErrors.push('Alamat PIC terlalu panjang (maks 100)');
+                            else if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(value)) currentErrors.push('Alamat PIC tidak boleh angka saja');
+                            else if (!REGEX_PATTERNS.ALAMAT_VALID.test(value)) currentErrors.push('Alamat PIC mengandung karakter terlarang');
+                        }
+                        
+                        // ── LOGIKA BARU NO HP KADER ──
+                        if (field.label === 'No HP') {
+                            const cleanPhone = value.replace(/[\s-]/g, '');
+
+                            if (REGEX_PATTERNS.HAS_LETTERS.test(value)) {
+                                currentErrors.push('No HP PIC tidak boleh mengandung huruf');
+                            } else if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(value)) {
+                                currentErrors.push('No HP PIC mengandung karakter spesial ilegal');
+                            } else if (!REGEX_PATTERNS.NO_HP.test(cleanPhone)) {
+                                currentErrors.push('Format No HP PIC salah (wajib diawali 08 / +628 dengan total 9-13 digit)');
+                            }
+                        }
+                    }
+
+                    if (dataType === 'opd') {
+                        if (field.label === 'Nama OPD' && !REGEX_PATTERNS.NAMA_OPD.test(value)) {
+                            currentErrors.push('Nama OPD hanya boleh berisi huruf dan spasi');
+                        }
+                        if (field.label === 'PIC' && !REGEX_PATTERNS.NAMA_RELAWAN.test(value)) {
+                            currentErrors.push('Nama PIC OPD mengandung karakter ilegal');
+                        }
+                        if (field.label === 'NIK PIC') {
+                            if (!REGEX_PATTERNS.NIK.test(value)) {
+                                currentErrors.push('NIK PIC OPD harus tepat 16 digit angka');
+                            } else {
+                                if (nikTracker[value]) {
+                                    currentErrors.push(`NIK PIC OPD Duplikat (Sama dengan Baris ${nikTracker[value]})`);
+                                } else {
+                                    nikTracker[value] = rowNumber;
+                                }
+                            }
+                        }
+                        
+                        // ── LOGIKA BARU KONTAK OPD ──
+                        if (field.label === 'Kontak') {
+                            const cleanPhone = value.replace(/[\s-]/g, '');
+
+                            if (REGEX_PATTERNS.HAS_LETTERS.test(value)) {
+                                currentErrors.push('Kontak OPD tidak boleh mengandung huruf');
+                            } else if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(value)) {
+                                currentErrors.push('Kontak OPD mengandung karakter spesial ilegal');
+                            } else if (!REGEX_PATTERNS.NO_HP.test(cleanPhone)) {
+                                currentErrors.push('Format Kontak OPD salah (wajib diawali 08 / +628 dengan total 9-13 digit)');
+                            }
+                        }
+                    }
                 }
             });
 
-            if (emptyCols.length > 0) {
+            if (currentErrors.length > 0) {
                 rowErrors.push({
-                    rowNumber: i + 2, // 1 is header
-                    emptyColumns: emptyCols
+                    rowNumber: rowNumber, 
+                    errorMessages: currentErrors
                 });
             }
         }
@@ -144,10 +286,8 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
             const workbook = XLSX.read(data, { type: 'array' });
             const sheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[sheetName];
-            // defval: '' agar kolom kosong tetap terbaca sebagai string kosong
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
 
-            // Menghapus ' (petik tunggal) di awal string jika user menambahkannya untuk mencegah auto-scientific Excel
             const sanitizedData = jsonData.map((row: any) => {
                 const newRow = { ...row };
                 for (const key in newRow) {
@@ -155,8 +295,6 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                         newRow[key] = newRow[key].substring(1);
                     }
 
-                    // Paksa NIK dan No HP menjadi format String asli di Javascript
-                    // Dengan begitu, json_to_sheet otomatis akan menulis sel tersebut sebagai format Text tanpa petik ('s') 
                     const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
                     if (cleanKey.includes('nik') || cleanKey.includes('nohp') || cleanKey.includes('hp') || cleanKey.includes('kontak')) {
                         if (newRow[key] !== null && newRow[key] !== undefined && newRow[key] !== '') {
@@ -225,7 +363,6 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                 maxWidth="md"
             >
                 <div className="space-y-6">
-                    {/* Template Download Link */}
                     <div className="flex justify-end">
                         <Link
                             to="/dokumen"
@@ -236,20 +373,20 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                         </Link>
                     </div>
 
-                    {/* Panduan urutan upload */}
                     {dataType !== 'opd' && (
                         <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                            <p className="font-medium mb-1">️ Perhatian urutan upload:</p>
+                            <p className="font-medium mb-1">⚠️ Perhatian urutan upload:</p>
                             <p>
                                 {dataType === 'kader'
                                     ? 'Pastikan data OPD sudah di-upload terlebih dahulu. Nama OPD di kolom "OPD" harus persis sama dengan yang ada di sistem.'
-                                    : 'Pastikan data OPD dan Kader sudah di-upload terlebih dahulu. Nama OPD dan Kader harus persis sama dengan yang ada di sistem.'
+                                    : isOpdUser
+                                        ? 'Pastikan data Kader di instansi Anda sudah di-upload terlebih dahulu. Nama Kader harus persis sama dengan yang ada di sistem.'
+                                        : 'Pastikan data OPD dan Kader sudah di-upload terlebih dahulu. Nama OPD dan Kader harus persis sama dengan yang ada di sistem.'
                                 }
                             </p>
                         </div>
                     )}
 
-                    {/* Drop Area */}
                     <div
                         {...getRootProps()}
                         className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
@@ -285,14 +422,12 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                         </div>
                     </div>
 
-                    {/* Error */}
                     {error && (
                         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                             <p className="text-red-600 text-sm">{error}</p>
                         </div>
                     )}
 
-                    {/* File terpilih */}
                     {selectedFile && (
                         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                             <div className="flex items-center justify-between">
@@ -313,7 +448,6 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                         </div>
                     )}
 
-                    {/* Submit */}
                     {selectedFile && (
                         <div className="flex justify-center pt-2">
                             <Button type="button" onClick={handleUpload}

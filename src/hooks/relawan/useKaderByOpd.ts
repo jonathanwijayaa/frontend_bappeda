@@ -22,6 +22,7 @@ const fetchKaderByOpd = async (opdId: number, isOPD: boolean): Promise<AutoOptio
  * Hook yang mengembalikan options kader untuk satu opd_id.
  * Cached per-opd_id sehingga multiple assignment ke OPD yang sama hanya fetch sekali.
  */
+// Ambil options kader per OPD dan cache hasilnya agar form assignment lebih cepat.
 export const useKaderByOpd = (opdId: number, isOPD: boolean, enabled = true) =>
     useQuery({
         queryKey: KADER_KEYS.byOpd(opdId),

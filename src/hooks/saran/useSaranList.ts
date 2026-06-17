@@ -11,6 +11,7 @@ export const SARAN_KEYS = {
     list: () => [...SARAN_KEYS.all, 'list'] as const,
 };
 
+// Ambil daftar saran dari backend untuk halaman admin.
 export const useSaranList = (enabled = true) =>
     useQuery({
         queryKey: SARAN_KEYS.list(),

@@ -13,6 +13,7 @@ import { exportToPDF } from '../utils/exportToPDF';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { OPDData } from '../types';
 import { useOpdList } from '../hooks/opd/useOpdList';
+import {REGEX_PATTERNS} from '../utils/regex';
 import {
     useCreateOpd,
     useUpdateOpd,
@@ -67,7 +68,7 @@ const ManajemenOPD: React.FC = () => {
         if (payload.nama_opd.trim().length > 100) {
             return 'Nama OPD terlalu panjang (maks 100 karakter)';
         }
-        if (!/^[a-zA-Z\s]+$/.test(payload.nama_opd)) {
+        if (!REGEX_PATTERNS.NAMA_OPD.test(payload.nama_opd)) {
             return 'Nama OPD tidak boleh mengandung angka atau karakter spesial';
         }
         if (payload.alamat && payload.alamat.trim().length > 0) {
@@ -77,10 +78,10 @@ const ManajemenOPD: React.FC = () => {
             if (payload.alamat.trim().length > 255) {
                 return 'Alamat OPD terlalu panjang (maks 255 karakter)';
             }
-            if (/^\d+$/.test(payload.alamat.trim())) {
+            if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(payload.alamat.trim())) {
                 return 'Alamat OPD tidak boleh hanya berisi angka';
             }
-            if (!/^[a-zA-Z0-9\s.,\-\/]+$/.test(payload.alamat.trim())) {
+            if (!REGEX_PATTERNS.ALAMAT_VALID.test(payload.alamat.trim())) {
                 return 'Alamat OPD tidak boleh mengandung karakter spesial yang tidak valid';
             }
         }
@@ -91,11 +92,11 @@ const ManajemenOPD: React.FC = () => {
             if (payload.pic.trim().length > 100) {
                 return 'Nama PIC terlalu panjang (maks 100 karakter)';
             }
-            if (!/^[a-zA-Z\s]+$/.test(payload.pic)) {
+            if (!REGEX_PATTERNS.NAMA_RELAWAN.test(payload.pic)) {
                 return 'Nama PIC tidak boleh mengandung angka atau karakter spesial';
             }
         }
-        if (payload.nik_pic && !/^\d{16}$/.test(payload.nik_pic)) {
+        if (payload.nik_pic && !REGEX_PATTERNS.NIK.test(payload.nik_pic)) {
             return 'NIK PIC harus terdiri dari tepat 16 digit angka';
         }
         return null;
@@ -147,6 +148,7 @@ const ManajemenOPD: React.FC = () => {
     ];
 
     // ── Handlers ──────────────────────────────────────────────
+    // Buka modal detail dan isi form dengan data OPD yang dipilih.
     const handleDetailClick = (opd: OPDData) => {
         setSelectedOPD(opd);
         setDetailFormData({
@@ -159,11 +161,13 @@ const ManajemenOPD: React.FC = () => {
         setIsDetailModalOpen(true);
     };
 
+    // Siapkan konfirmasi sebelum mengubah status aktif/nonaktif OPD.
     const handleToggleStatus = (opd: OPDData) => {
         setSelectedOPD(opd);
         setIsConfirmModalOpen(true);
     };
 
+    // Kirim perubahan status OPD ke server setelah konfirmasi.
     const handleConfirmToggleStatus = async () => {
         if (!selectedOPD) return;
         toggleStatus.mutate(
@@ -176,6 +180,7 @@ const ManajemenOPD: React.FC = () => {
         );
     };
 
+    // Validasi lalu simpan perubahan data OPD dari modal detail.
     const handleDetailSave = () => {
         if (!selectedOPD) return;
         const validationError = validateOpdForm(detailFormData);
@@ -207,6 +212,7 @@ const ManajemenOPD: React.FC = () => {
         );
     };
 
+    // Validasi lalu simpan OPD baru dari form tambah data.
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const validationError = validateOpdForm(formData);
@@ -233,16 +239,19 @@ const ManajemenOPD: React.FC = () => {
         });
     };
 
+    // Sinkronkan input form tambah OPD ke state lokal.
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // Sinkronkan input form detail OPD ke state lokal.
     const handleDetailInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setDetailFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // Ekspor daftar OPD yang sedang terfilter ke PDF.
     const handleExportPDF = async () => {
         setIsExporting(true);
         try {
@@ -266,6 +275,7 @@ const ManajemenOPD: React.FC = () => {
         }
     };
 
+    // Proses hasil unggahan Excel untuk impor massal OPD.
     const handleExcelUploadConfirm = (data: any[]) => {
         bulkOpd.mutate(data, {
             onSuccess: (d) => {

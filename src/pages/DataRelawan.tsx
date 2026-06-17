@@ -11,6 +11,7 @@ import UploadExcelModal from '../components/ui/UploadExcelModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
 import { RelawanData, Assignment, PengajuanAPIData } from '../types/relawan.types';
+import {dummyKelurahan, dummyKemantren} from '../types/wilayah.types';
 import { AutoOption } from '../types/common.types';
 import { useAuth } from '../context/AuthContext';
 import { useRelawanList, RELAWAN_KEYS } from '../hooks/relawan/useRelawanList';
@@ -23,6 +24,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { formatPhoneDisplay } from '../utils/formatPhone';
 import { toTitleCase } from '../utils/formatText';
+import { REGEX_PATTERNS } from '../utils/regex';
 
 const DataRelawan: React.FC = () => {
     const { isSuperAdmin, isOPD, user } = useAuth();
@@ -37,6 +39,11 @@ const DataRelawan: React.FC = () => {
     const opdOptions = useMemo<AutoOption[]>(
         () => opdListData.map(o => ({ label: o.nama_opd, value: String(o.opd_id) })),
         [opdListData]
+    );
+
+    const kemantrenOptions = useMemo<AutoOption[]>(
+        () => dummyKemantren.map(item => ({ label: item.nama_kemantren, value: item.id })),
+        []
     );
 
     const [kaderOptionsByOpdId, setKaderOptionsByOpdId] = useState<Record<number, AutoOption[]>>({});
@@ -95,7 +102,7 @@ const DataRelawan: React.FC = () => {
     }, []);
 
     const [detailFormData, setDetailFormData] = useState({
-        namaRelawan: '', nik: '', alamat: '', no_hp: '', kelurahan: '',
+        namaRelawan: '', nik: '', alamat: '', no_hp: '', kemantren: '', kelurahan: '',
         kader: '', jabatan: '', penugasan: '', jenisKelamin: 'L' as 'L' | 'P',
         assignments: [] as Assignment[]
     });
@@ -108,6 +115,7 @@ const DataRelawan: React.FC = () => {
             detailFormData.nik !== orig.nik ||
             detailFormData.alamat !== orig.alamat ||
             detailFormData.no_hp !== orig.no_hp ||
+            detailFormData.kemantren !== orig.kemantren ||
             detailFormData.kelurahan !== orig.kelurahan ||
             detailFormData.jenisKelamin !== (orig.jenisKelamin || 'L')
         ) return true;
@@ -123,10 +131,35 @@ const DataRelawan: React.FC = () => {
 
     const [formData, setFormData] = useState({
         namaRelawan: '', nik: '', jenisKelamin: 'L' as 'L' | 'P', alamat: '', no_hp: '',
-        kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
+        kemantren:'',kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
         assignments: [] as Assignment[]
     });
 
+    const kelurahanOptionsForForm = useMemo<AutoOption[]>(() => {
+        const matchedKemantren = dummyKemantren.find(
+            item => item.nama_kemantren.toLowerCase() === formData.kemantren.trim().toLowerCase()
+        );
+
+        if (!matchedKemantren) return [];
+
+        return dummyKelurahan
+            .filter(item => item.id_kemantren === matchedKemantren.id)
+            .map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
+    }, [formData.kemantren]);
+
+    const kelurahanOptionsForDetail = useMemo<AutoOption[]>(() => {
+        const matchedKemantren = dummyKemantren.find(
+            item => item.nama_kemantren.toLowerCase() === detailFormData.kemantren.trim().toLowerCase()
+        );
+
+        if (!matchedKemantren) return [];
+
+        return dummyKelurahan
+            .filter(item => item.id_kemantren === matchedKemantren.id)
+            .map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
+    }, [detailFormData.kemantren]);
+
+    // Ambil daftar kader untuk OPD tertentu dan simpan ke cache lokal.
     const fetchKaderOptionsForOpd = useCallback(async (opdId: number) => {
         if (opdId <= 0) return;
         if (kaderOptionsByOpdId[opdId]) return;
@@ -180,6 +213,7 @@ const DataRelawan: React.FC = () => {
         return result;
     }, [loadingOpdIds, formData.assignments, detailFormData.assignments, isEditMode]);
 
+    // Pastikan pilihan kader untuk OPD tertentu sudah tersedia saat penugasan dibuka.
     const fetchKaderByOpdId = useCallback((opdId: number, _assignmentIndex: number) => {
         const normalizedOpdId = opdId > 0 ? opdId : (isOPD ? ((user as any)?.opd_id ?? 0) : 0);
         if (normalizedOpdId > 0) void fetchKaderOptionsForOpd(normalizedOpdId);
@@ -188,19 +222,38 @@ const DataRelawan: React.FC = () => {
     const invalidateRelawan = useCallback(() => qc.invalidateQueries({ queryKey: RELAWAN_KEYS.all }), [qc]);
     const invalidatePengajuan = useCallback(() => qc.invalidateQueries({ queryKey: PENGAJUAN_KEYS.all }), [qc]);
 
+    // Gabungkan pesan error/skip dari import massal agar user mendapat detail yang jelas.
+    const buildBulkIssueMessage = useCallback((res: any, fallback: string) => {
+        const issues: string[] = [
+            ...(Array.isArray(res?.data?.errors) ? res.data.errors : []),
+            ...(Array.isArray(res?.data?.skipped) ? res.data.skipped : []),
+            ...(Array.isArray(res?.data?.skippedNIK) ? res.data.skippedNIK : []),
+        ].filter(Boolean).map((x: any) => (typeof x === 'string' ? x : JSON.stringify(x)));
+
+        const baseMessage = (res?.message && !/^\d+\s+peringatan\.?$/i.test(String(res.message).trim()))
+            ? res.message
+            : fallback;
+
+        if (issues.length === 0) return baseMessage;
+
+        const preview = issues.slice(0, 3).map((m) => `- ${m}`).join('\n');
+        const more = issues.length > 3 ? `\n(+${issues.length - 3} masalah lain)` : '';
+        return `${baseMessage}\n${preview}${more}`;
+    }, []);
+
     // ── FILTER DATA RELAWAN (Tabel Bawah) ──
     const filteredRelawanData = useMemo(() => {
         const lowerSearch = searchTerm.toLowerCase();
         return relawanList.filter(relawan => {
             const matchNama = relawan.namaLengkap?.toLowerCase().includes(lowerSearch) || false;
             const matchNik = relawan.nik?.toLowerCase().includes(lowerSearch) || false;
-            const matchAlamat = relawan.alamat?.toLowerCase().includes(lowerSearch) || false;
+            const matchKemantren = relawan.kemantren?.toLowerCase().includes(lowerSearch) || false;
             const matchKelurahan = relawan.kelurahan?.toLowerCase().includes(lowerSearch) || false;
             const matchAssignment = relawan.assignments?.some(a => 
                 a.opd?.toLowerCase().includes(lowerSearch) || a.kader?.toLowerCase().includes(lowerSearch)
             ) || false;
 
-            return matchNama || matchNik || matchAlamat || matchKelurahan || matchAssignment;
+            return matchNama || matchNik || matchKemantren || matchKelurahan || matchAssignment;
         });
     }, [relawanList, searchTerm]);
 
@@ -246,6 +299,7 @@ const DataRelawan: React.FC = () => {
     const currentPengajuanData = pengajuanUIData.slice(startPengajuanIndex, endPengajuanIndex);
 
 
+    // Ekspor data relawan yang sedang terfilter ke PDF.
     const handleExportPdf = useCallback(() => {
         const doc = new jsPDF({ orientation: 'landscape' });
         doc.setFontSize(14);
@@ -258,12 +312,13 @@ const DataRelawan: React.FC = () => {
         doc.setTextColor(0);
         autoTable(doc, {
             startY: 28,
-            head: [['No', 'Nama Lengkap', 'NIK', 'Alamat KTP', 'Kelurahan', 'Jenis Kelamin', 'OPD / Penugasan', 'Kader']],
+            head: [['No', 'Nama Lengkap', 'NIK', 'Alamat KTP', 'Kemantren','Kelurahan', 'Jenis Kelamin', 'OPD / Penugasan', 'Kader']],
             body: filteredRelawanData.map((r, i) => [
                 i + 1,
                 r.namaLengkap || '-',
                 r.nik || '-',
                 r.alamat || '-',
+                r.kemantren || '-',
                 r.kelurahan || '-',
                 r.jenisKelamin === 'L' ? 'Laki-laki' : 'Perempuan',
                 r.assignments && r.assignments.length > 0
@@ -310,9 +365,11 @@ const DataRelawan: React.FC = () => {
         { header: 'NAMA', accessor: 'namaLengkap' as keyof RelawanData },
         { header: 'NIK', accessor: 'nik' as keyof RelawanData },
         { header: 'ALAMAT', accessor: 'alamat' as keyof RelawanData },
+        { header: 'KEMANTREN', accessor: 'kemantren' as keyof RelawanData },
         { header: 'KELURAHAN', accessor: 'kelurahan' as keyof RelawanData },
     ];
 
+    // Buka detail relawan dan salin data utama ke form edit.
     const handleDetailClick = (relawan: RelawanData) => {
         setSelectedRelawan(relawan);
         const assignments = Array.isArray(relawan.assignments) ? relawan.assignments : [];
@@ -321,6 +378,7 @@ const DataRelawan: React.FC = () => {
             nik: relawan.nik || '',
             alamat: relawan.alamat || '-',
             no_hp: relawan.no_hp || '-',
+            kemantren: relawan.kemantren || '-',
             kelurahan: relawan.kelurahan || '-',
             kader: relawan.kader || '-',
             jabatan: relawan.jabatan || '-',
@@ -336,6 +394,7 @@ const DataRelawan: React.FC = () => {
         setIsDetailModalOpen(true);
     };
 
+    // Buka modal review untuk pengajuan perubahan data relawan.
     const handleReviewClick = (rawPengajuan: PengajuanAPIData) => {
         setSelectedPengajuan(rawPengajuan);
         setVerificationNote('');
@@ -343,6 +402,7 @@ const DataRelawan: React.FC = () => {
         setIsReviewModalOpen(true);
     };
 
+    // Kirim keputusan review pengajuan relawan ke backend.
     const handleReview = async (status: 'Disetujui' | 'Ditolak') => {
         if (!selectedPengajuan) return;
         setIsReviewing(true);
@@ -369,10 +429,11 @@ const DataRelawan: React.FC = () => {
         }
     };
 
+    // Validasi lalu simpan relawan baru beserta seluruh penugasannya.
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!formData.namaRelawan.trim() || !formData.nik.trim() || !formData.alamat.trim() || !formData.no_hp.trim() || !formData.kelurahan.trim()) {
+        if (!formData.namaRelawan.trim() || !formData.nik.trim() || !formData.alamat.trim() || !formData.no_hp.trim() || !formData.kemantren.trim() || !formData.kelurahan.trim()) {
             setToast({ message: 'Semua data pribadi wajib diisi', type: 'error' });
             return;
         }
@@ -380,11 +441,11 @@ const DataRelawan: React.FC = () => {
             setToast({ message: 'Nama Lengkap minimal 3 karakter', type: 'error' });
             return;
         }
-        if (!/^[a-zA-Z\s]+$/.test(formData.namaRelawan)) {
+        if (!REGEX_PATTERNS.NAMA_RELAWAN.test(formData.namaRelawan)) {
             setToast({ message: 'Nama Lengkap tidak boleh mengandung angka atau karakter spesial', type: 'error' });
             return;
         }
-        if (!/^\d{16}$/.test(formData.nik)) {
+        if (!REGEX_PATTERNS.NIK.test(formData.nik)) {
             setToast({ message: 'NIK harus terdiri dari tepat 16 digit angka', type: 'error' });
             return;
         }
@@ -405,6 +466,7 @@ const DataRelawan: React.FC = () => {
                 jenis_kelamin: formData.jenisKelamin,
                 alamat_ktp: formData.alamat,
                 no_hp: formData.no_hp.replace(/\D/g, ''),
+                kemantren: formData.kemantren,
                 kelurahan: formData.kelurahan,
                 assignments: formData.assignments.map(a => ({
                     opd_id: a.opd_id || null,
@@ -429,7 +491,7 @@ const DataRelawan: React.FC = () => {
                 setIsModalOpen(false);
                 setFormData({
                     namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', no_hp: '',
-                    kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
+                    kemantren:'',kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
                     assignments: []
                 });
                 invalidateRelawan();
@@ -442,23 +504,38 @@ const DataRelawan: React.FC = () => {
         }
     };
 
+    // Proses data Excel untuk import massal relawan.
     const handleExcelUploadConfirm = async (data: any[]) => {
         try {
             const { data: res } = await apiClient.post(`${API_BASE}/bulk`, data);
+            const issueMessage = buildBulkIssueMessage(res, 'Gagal import Excel');
+            const issuesCount = [
+                ...(Array.isArray(res?.data?.errors) ? res.data.errors : []),
+                ...(Array.isArray(res?.data?.skipped) ? res.data.skipped : []),
+                ...(Array.isArray(res?.data?.skippedNIK) ? res.data.skippedNIK : []),
+            ].length;
+
             if (res.success) {
-                setToast({ message: res.message || 'Berhasil memproses Excel', type: 'success' });
+                setToast({
+                    message: issuesCount > 0 ? issueMessage : (res.message || 'Berhasil memproses Excel'),
+                    type: issuesCount > 0 ? 'warning' : 'success'
+                });
                 invalidateRelawan();
                 setCurrentPage(1);
             } else {
-                setToast({ message: res.message || 'Gagal import Excel', type: 'error' });
+                setToast({ message: issueMessage, type: 'error' });
             }
         } catch (e: any) {
-            setToast({ message: parseErrorMessage(e, 'Gagal import data dari Excel'), type: 'error' });
+            const fallbackMessage = parseErrorMessage(e, 'Gagal import data dari Excel');
+            const responseData = e?.response?.data;
+            const detailedMessage = buildBulkIssueMessage(responseData, fallbackMessage);
+            setToast({ message: detailedMessage, type: 'error' });
         } finally {
             setIsUploadModalOpen(false);
         }
     };
 
+    // Tambahkan baris penugasan baru pada form relawan.
     const handleAddAssignment = () => {
         const newIndex = formData.assignments.length;
         setFormData(prev => ({
@@ -473,6 +550,7 @@ const DataRelawan: React.FC = () => {
         }
     };
 
+    // Hapus satu baris penugasan dari form relawan.
     const handleRemoveAssignment = (index: number) => {
         setFormData(prev => ({
             ...prev,
@@ -480,6 +558,7 @@ const DataRelawan: React.FC = () => {
         }));
     };
 
+    // Update OPD pada baris penugasan dan reset kader yang bergantung.
     const handleAssignmentOpdChange = (index: number, namaOpd: string) => {
         const matched = opdOptions.find(o => o.label.toLowerCase() === namaOpd.toLowerCase());
         const opdId = matched ? Number(matched.value) : 0;
@@ -491,6 +570,7 @@ const DataRelawan: React.FC = () => {
         if (opdId > 0) void fetchKaderOptionsForOpd(opdId);
     };
 
+    // Sinkronkan perubahan field umum pada baris penugasan.
     const handleAssignmentChange = (index: number, field: string, value: string) => {
         setFormData(prev => {
             const newAssignments = [...prev.assignments];
@@ -499,6 +579,7 @@ const DataRelawan: React.FC = () => {
         });
     };
 
+    // Update pilihan kader pada baris penugasan sesuai OPD yang aktif.
     const handleAssignmentKaderChange = (index: number, namaKader: string) => {
         const options = kaderOptionsByIndex[index] || [];
         const matched = options.find(o => o.label.toLowerCase() === namaKader.toLowerCase());
@@ -510,6 +591,7 @@ const DataRelawan: React.FC = () => {
         });
     };
 
+    // Sinkronkan perubahan field penugasan saat mode edit detail.
     const handleDetailAssignmentChange = (index: number, field: string, value: string) => {
         setDetailFormData(prev => {
             const newAssignments = [...prev.assignments];
@@ -518,6 +600,7 @@ const DataRelawan: React.FC = () => {
         });
     };
 
+    // Ubah OPD pada assignment edit dan muat ulang opsi kader terkait.
     const handleDetailAssignmentOpdChange = (index: number, namaOpd: string) => {
         const matched = opdOptions.find(o => o.label.toLowerCase() === namaOpd.toLowerCase());
         const opdId = matched ? Number(matched.value) : 0;
@@ -529,6 +612,7 @@ const DataRelawan: React.FC = () => {
         if (opdId > 0) void fetchKaderOptionsForOpd(opdId);
     };
 
+    // Update kader pada assignment edit berdasarkan pilihan user.
     const handleDetailAssignmentKaderChange = (index: number, value: string) => {
         const options = kaderOptionsByIndex[index] || [];
         const matched = options.find(o => o.label.toLowerCase() === value.toLowerCase());
@@ -541,6 +625,7 @@ const DataRelawan: React.FC = () => {
         });
     };
 
+    // Validasi lalu simpan perubahan detail relawan dan penugasannya.
     const handleSaveEdit = async () => {
         if (!selectedRelawan || !hasChanges) {
             setToast({ message: 'Tidak ada data yang diubah', type: 'error' });
@@ -562,6 +647,7 @@ const DataRelawan: React.FC = () => {
                 nama_lengkap: toTitleCase(detailFormData.namaRelawan.trim()),
                 alamat_ktp: detailFormData.alamat,
                 no_hp: detailFormData.no_hp.replace(/\D/g, ''),
+                kemantren: detailFormData.kemantren,
                 kelurahan: detailFormData.kelurahan,
                 jenis_kelamin: detailFormData.jenisKelamin,
                 assignments: detailFormData.assignments.map(a => ({
@@ -590,6 +676,7 @@ const DataRelawan: React.FC = () => {
         }
     };
 
+    // Siapkan konfirmasi hapus untuk penugasan yang dipilih.
     const handleDeletePenugasan = async (penugasanId: number, index: number) => {
         if (!penugasanId) {
             setDetailFormData(prev => ({
@@ -609,6 +696,7 @@ const DataRelawan: React.FC = () => {
         setDeleteConfirm({ penugasanId, index, label });
     };
 
+    // Eksekusi penghapusan penugasan setelah user mengonfirmasi.
     const handleConfirmDelete = async () => {
         if (!deleteConfirm) return;
         const { penugasanId, index } = deleteConfirm;
@@ -642,6 +730,7 @@ const DataRelawan: React.FC = () => {
         }
     };
 
+    // Tambahkan assignment baru saat relawan sedang diedit.
     const handleAddDetailAssignment = () => {
         setDetailFormData(prev => ({
             ...prev,
@@ -849,7 +938,7 @@ const DataRelawan: React.FC = () => {
                     <Button variant="primary" onClick={() => {
                         setFormData({
                             namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', no_hp: '',
-                            kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
+                            kemantren:'',kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
                             assignments: []
                         });
                         if (isOPD && (user as any)?.opd_id) {
@@ -977,7 +1066,6 @@ const DataRelawan: React.FC = () => {
                         { label: 'NIK', name: 'nik', required: true, placeholder: '16 digit NIK', maxLength: 16 },
                         { label: 'Alamat KTP', name: 'alamat', required: true, placeholder: 'Alamat sesuai KTP' },
                         { label: 'No. HP', name: 'no_hp', required: true, placeholder: 'Nomor HP' },
-                        { label: 'Kelurahan', name: 'kelurahan', required: true, placeholder: 'Kelurahan/Desa' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">
@@ -1002,6 +1090,43 @@ const DataRelawan: React.FC = () => {
                             />
                         </div>
                     ))}
+
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                        <label className="text-lg font-medium text-gray-900">
+                            Kemantren <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <AutocompleteInput
+                            name="kemantren"
+                            value={formData.kemantren}
+                            options={kemantrenOptions}
+                            onChange={(val) => setFormData(prev => ({
+                                ...prev,
+                                kemantren: val,
+                                kelurahan: ''
+                            }))}
+                            placeholder="Cari nama Kemantren..."
+                            required
+                            warnIfNotFound={false}
+                            className="col-span-2"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-4 items-center">
+                        <label className="text-lg font-medium text-gray-900">
+                            Kelurahan <span className="text-red-500 ml-1">*</span>
+                        </label>
+                        <AutocompleteInput
+                            name="kelurahan"
+                            value={formData.kelurahan}
+                            options={kelurahanOptionsForForm}
+                            onChange={(val) => setFormData(prev => ({ ...prev, kelurahan: val }))}
+                            placeholder={formData.kemantren ? 'Cari nama Kelurahan...' : 'Pilih Kemantren terlebih dahulu...'}
+                            required
+                            disabled={!formData.kemantren}
+                            warnIfNotFound={false}
+                            className="col-span-2"
+                        />
+                    </div>
 
                     <div className="grid grid-cols-3 gap-4 items-center">
                         <label className="text-lg font-medium text-gray-900">
@@ -1077,7 +1202,6 @@ const DataRelawan: React.FC = () => {
                             { label: 'NIK', name: 'nik' },
                             { label: 'Alamat KTP', name: 'alamat' },
                             { label: 'No. HP', name: 'no_hp' },
-                            { label: 'Kelurahan', name: 'kelurahan' },
                         ].map(field => {
                             const isFieldEditable = isEditMode && field.name !== 'nik' && field.name !== 'jabatan';
                             
@@ -1098,6 +1222,55 @@ const DataRelawan: React.FC = () => {
                                 </div>
                             );
                         })}
+
+                        <div className="grid grid-cols-3 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">Kemantren</label>
+                            {isEditMode ? (
+                                <AutocompleteInput
+                                    name="kemantren"
+                                    value={detailFormData.kemantren}
+                                    options={kemantrenOptions}
+                                    onChange={(val) => setDetailFormData(prev => ({
+                                        ...prev,
+                                        kemantren: val,
+                                        kelurahan: ''
+                                    }))}
+                                    placeholder="Cari nama Kemantren..."
+                                    className="col-span-2"
+                                    warnIfNotFound={false}
+                                />
+                            ) : (
+                                <input
+                                    type="text"
+                                    value={detailFormData.kemantren}
+                                    readOnly
+                                    className="col-span-2 px-4 py-2 border border-gray-200 bg-gray-50 text-gray-400 italic font-normal cursor-not-allowed rounded-lg"
+                                />
+                            )}
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-4 items-center">
+                            <label className="text-lg font-medium text-gray-900">Kelurahan</label>
+                            {isEditMode ? (
+                                <AutocompleteInput
+                                    name="kelurahan"
+                                    value={detailFormData.kelurahan}
+                                    options={kelurahanOptionsForDetail}
+                                    onChange={(val) => setDetailFormData(prev => ({ ...prev, kelurahan: val }))}
+                                    placeholder={detailFormData.kemantren ? 'Cari nama Kelurahan...' : 'Pilih Kemantren terlebih dahulu...'}
+                                    disabled={!detailFormData.kemantren}
+                                    className="col-span-2"
+                                    warnIfNotFound={false}
+                                />
+                            ) : (
+                                <input
+                                    type="text"
+                                    value={detailFormData.kelurahan}
+                                    readOnly
+                                    className="col-span-2 px-4 py-2 border border-gray-200 bg-gray-50 text-gray-400 italic font-normal cursor-not-allowed rounded-lg"
+                                />
+                            )}
+                        </div>
 
                         <div className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">Jenis Kelamin</label>
@@ -1273,6 +1446,7 @@ const DataRelawan: React.FC = () => {
                 title="Unggah Data Relawan"
                 templateName="Data Relawan"
                 dataType="relawan"
+                isOpdUser={isOPD}
             />
             
             {/* Modal Konfirmasi Hapus Penugasan */}

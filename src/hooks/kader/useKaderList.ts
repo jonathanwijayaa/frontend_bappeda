@@ -13,6 +13,7 @@ export const KADER_KEYS = {
 };
 
 /** Daftar kader utama (seluruh kader atau kader OPD) */
+// Ambil daftar kader dengan endpoint yang berbeda untuk Super Admin dan OPD.
 export const useKaderList = (isSuperAdmin: boolean) =>
     useQuery({
         queryKey: KADER_KEYS.list(isSuperAdmin),
@@ -25,6 +26,7 @@ export const useKaderList = (isSuperAdmin: boolean) =>
     });
 
 /** Kader berdasarkan opd_id — untuk dropdown di form assignment relawan */
+// Ambil opsi kader per OPD untuk input assignment relawan.
 export const useKaderByOpdId = (opdId: number, isSuperAdmin: boolean) =>
     useQuery({
         queryKey: KADER_KEYS.byOpd(opdId),
