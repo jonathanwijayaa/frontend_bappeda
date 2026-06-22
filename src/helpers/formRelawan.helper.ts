@@ -28,6 +28,40 @@ const KADER_MAP: Record<string, string[]> = {
     ["SIGRAK", "POSYANDU", "PKK"],
 };
 
+const KEMANTREN_LIST = [
+  "Danurejan",
+  "Gedongtengen",
+  "Gondokusuman",
+  "Gondomanan",
+  "Jetis",
+  "Kotagede",
+  "Kraton",
+  "Mantrijeron",
+  "Mergangsan",
+  "Ngampilan",
+  "Pakualaman",
+  "Tegalrejo",
+  "Umbulharjo",
+  "Wirobrajan",
+];
+
+const KELURAHAN_MAP: Record<string, string[]> = {
+  Danurejan: ["Bausasran", "Suryatmajan", "Tegalpanggung"],
+  Gedongtengen: ["Pringgokusuman", "Sosromenduran"],
+  Gondokusuman: ["Baciro", "Demangan", "Klitren", "Kotabaru", "Terban"],
+  Gondomanan: ["Ngupasan", "Prawirodirjan"],
+  Jetis: ["Bumijo", "Cokrodiningratan", "Gowongan"],
+  Kotagede: ["Prenggan", "Rejowinangun", "Purbayan"],
+  Kraton: ["Kadipaten", "Panembahan", "Patehan"],
+  Mantrijeron: ["Gedongkiwo", "Mantrijeron", "Suryodiningratan"],
+  Mergangsan: ["Brontokusuman", "Keparakan", "Wirogunan"],
+  Ngampilan: ["Ngampilan", "Notoprajan"],
+  Pakualaman: ["Gunungketur", "Purwokinanti"],
+  Tegalrejo: ["Bener", "Karangwaru", "Kricak", "Tegalrejo"],
+  Umbulharjo: ["Giwangan", "Muja Muju", "Pandeyan", "Sorosutan", "Tahunan", "Warungboto", "Semaki"],
+  Wirobrajan: ["Pakuncen", "Patangpuluhan", "Wirobrajan"],
+};
+
 // Tabel Pengajuan Perubahan Data
 export const pengajuanTable = (page: Page) =>
   page
@@ -57,6 +91,7 @@ export interface RelawanData {
   "DETAIL JABATAN": string;
   PENUGASAN: string;
   "STATUS KEAKTIFAN"?: string;
+  KEMANTREN: string;
 }
 
 interface IFillRelawanForm {
@@ -73,6 +108,9 @@ export const buildRelawanData = (): RelawanData => {
   const opd = faker.helpers.arrayElement(OPD_LIST);
   const kader = faker.helpers.arrayElement(KADER_MAP[opd]);
 
+  const kemantren = faker.helpers.arrayElement(KEMANTREN_LIST);
+  const kelurahan = faker.helpers.arrayElement(KELURAHAN_MAP[kemantren]);
+
   return {
     "NAMA LENGKAP": generateSafeName(),
     "JENIS KELAMIN": faker.person.sex() === "male" ? "L" : "P",
@@ -80,7 +118,8 @@ export const buildRelawanData = (): RelawanData => {
     ALAMAT: faker.location.streetAddress() + ", Yogyakarta",
     "NO HP": `08${faker.string.numeric(10)}`,
     OPD: opd,
-    KELURAHAN: faker.location.city(),
+    KEMANTREN: kemantren,
+    KELURAHAN: kelurahan,
     KADER: kader,
     JABATAN: faker.helpers.arrayElement([
       "Ketua",
@@ -115,6 +154,7 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
     await this.fillNIK();
     await this.fillAlamat();
     await this.fillNoHP();
+    await this.fillKemantren();
     await this.fillKelurahan();
     await this.fillJenisKelamin();
     await this.clickTambahDataPenugasan();
@@ -140,7 +180,7 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
   async fillKelurahan() {
     await page
       .getByRole("textbox", { name: /kelurahan/i })
-      .or(page.getByRole("textbox").nth(6))
+      .or(page.getByRole("textbox").nth(7))
       .fill(data.KELURAHAN);
   },
   async fillKader() {
@@ -190,6 +230,9 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
     } else {
       await page.getByRole("radio", { name: "Aktif", exact: true }).click();
     }
+  },
+  async fillKemantren() {
+    await page.getByRole("textbox", { name: /nama kemantren/i }).fill(data.KEMANTREN);
   },
 });
 
