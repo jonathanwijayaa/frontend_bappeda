@@ -8,7 +8,7 @@ const roles = [
 ] as const;
 
 for (const { label, creds } of roles) {
-  test.describe(`Histori Relawan - ${label}`, () => {
+  test.describe(`riwayat Relawan - ${label}`, () => {
     test.beforeEach(async ({ page }) => {
       await page.goto("https://frontend-bappeda.vercel.app/");
 
@@ -19,7 +19,7 @@ for (const { label, creds } of roles) {
       });
 
       await expect(page).toHaveURL(/dashboard/);
-      await page.getByRole("link", { name: /histori relawan/i }).click();
+      await page.getByRole("link", { name: /riwayat relawan/i }).click();
       await expect(page).toHaveURL(/histori-relawan/);
     });
 
@@ -27,60 +27,62 @@ for (const { label, creds } of roles) {
     test.describe(`TCHR.1-5 ${label} Filter & Sort by`, () => {
       // TCHR.1
       test(`TCHR.1 ${label} filter by Nama OPD`, async ({ page }) => {
-        await page.getByRole("combobox", { name: /nama opd/i }).selectOption({ index: 1 });
+        await page.getByRole("combobox").first().selectOption({ index: 1 });
 
         await expect(page.getByRole("table")).toBeVisible();
         await expect(
-          page.getByRole("heading", { name: /tabel histori data relawan/i }),
+          page.getByRole("heading", { name: /tabel riwayat data relawan/i }),
         ).toBeVisible();
+        await expect(page.getByRole("cell", { name: "OPD Demo" }).first()).toBeVisible();
       });
 
       // TCHR.2
       test(`TCHR.2 ${label} filter by Nama Kader`, async ({ page }) => {
-        await page.getByRole("combobox", { name: /nama kader/i }).selectOption({ index: 1 });
+        await page.getByRole("combobox").nth(1).selectOption({ index: 1 });
 
         await expect(page.getByRole("table")).toBeVisible();
         await expect(
-          page.getByRole("heading", { name: /tabel histori data relawan/i }),
+          page.getByRole("heading", { name: /tabel riwayat data relawan/i }),
         ).toBeVisible();
+        await expect(page.getByRole("cell", { name: "Demo Kader" }).first()).toBeVisible();
       });
 
       // TCHR.3
       test(`TCHR.3 ${label} filter by Tahun Awal`, async ({ page }) => {
-        await page.getByPlaceholder(/tahun awal/i).click();
-        await page.getByPlaceholder(/tahun awal/i).fill("2024");
-        await page.getByPlaceholder(/tahun awal/i).press("Enter");
+        await page.getByRole("button", { name: /tahun awal/i }).click();
+        await page.getByRole("button", { name: "2024" }).click();
 
         await expect(page.getByRole("table")).toBeVisible();
       });
 
       // TCHR.4
       test(`TCHR.4 ${label} filter by Tahun Akhir`, async ({ page }) => {
-        await page.getByPlaceholder(/tahun akhir/i).click();
-        await page.getByPlaceholder(/tahun akhir/i).fill("2026");
-        await page.getByPlaceholder(/tahun akhir/i).press("Enter");
+        await page.getByRole("button", { name: /tahun akhir/i }).click();
+        await page.getByRole("button", { name: "2036" }).click();
 
         await expect(page.getByRole("table")).toBeVisible();
       });
 
-      // TCHR.5 — Negative: conflicting filter combination
-      test(`TCHR.5 ${label} filters with conflicting filter combination`, async ({ page }) => {
-        // Pilih OPD
-        await page.getByRole("combobox", { name: /nama opd/i }).selectOption({ index: 1 });
+      // IMPOSIBLE TEST CASE: Filter combination sudah berhasil menghindari conflicting filter combination dari fitur combobox dan datepicker, sehingga tidak memungkinkan untuk membuat kombinasi filter yang konflik.
+      //   // TCHR.5 — Negative: conflicting filter combination
+      //   test(`TCHR.5 ${label} filters with conflicting filter combination`, async ({ page }) => {
+      //     // Pilih OPD
+      //     await page.getByRole("combobox").first().selectOption({ index: 1 });
 
-        // Pilih Kader yang tidak sesuai OPD — pilih index terakhir
-        const kaderCombobox = page.getByRole("combobox", { name: /nama kader/i });
-        const kaderOptions = await kaderCombobox.locator("option").count();
-        await kaderCombobox.selectOption({ index: kaderOptions - 1 });
+      //     // Pilih Kader yang tidak sesuai OPD — pilih index terakhir
+      //     const kaderCombobox = page.getByRole("combobox").nth(1);
+      //     const kaderOptions = await kaderCombobox.locator("option").count();
+      //     await kaderCombobox.selectOption({ index: kaderOptions - 1 });
 
-        // Tahun Awal lebih besar dari Tahun Akhir
-        await page.getByPlaceholder(/tahun awal/i).fill("2026");
-        await page.getByPlaceholder(/tahun awal/i).press("Enter");
-        await page.getByPlaceholder(/tahun akhir/i).fill("2020");
-        await page.getByPlaceholder(/tahun akhir/i).press("Enter");
+      //     // Tahun Awal lebih besar dari Tahun Akhir
+      //     await page.getByRole("button", { name: /tahun awal/i }).click();
+      //     await page.getByRole("button", { name: "2026" }).click();
+      //     await page.getByRole("button", { name: /tahun akhir/i }).click();
+      //     await page.getByRole("button", { name: "2026" }).click();
 
-        await expect(page.getByText(/tidak ada data|no data/i)).toBeVisible();
-      });
+      //     await expect(page.getByText(/tidak ada data|no data/i)).toBeVisible();
+      //   });
+      // });
     });
 
     // TCHR.6-13 Search Bar
@@ -151,10 +153,10 @@ for (const { label, creds } of roles) {
       }
     });
 
-    // TCHR.14 Tabel Histori Relawan
+    // TCHR.14 Tabel riwayat Relawan
     test(`TCHR.14 ${label} access Relawan history detail`, async ({ page }) => {
       await expect(
-        page.getByRole("heading", { name: /tabel histori data relawan/i }),
+        page.getByRole("heading", { name: /tabel riwayat data relawan/i }),
       ).toBeVisible();
       await expect(page.getByRole("table")).toBeVisible();
 
@@ -164,7 +166,7 @@ for (const { label, creds } of roles) {
         .click();
 
       await expect(
-        page.getByRole("heading", { name: /detail.*relawan|histori.*relawan/i }),
+        page.getByRole("heading", { name: /detail.*relawan|riwayat.*relawan/i }),
       ).toBeVisible();
     });
   });
