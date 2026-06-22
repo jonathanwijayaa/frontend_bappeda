@@ -24,66 +24,69 @@ for (const { label, creds } of roles) {
     });
 
     // TCHR.1-5 Filter & Sort by
-    test.describe(`TCHR.1-5 ${label} Filter & Sort by`, () => {
-      // TCHR.1
-      test(`TCHR.1 ${label} filter by Nama OPD`, async ({ page }) => {
-        await page.getByRole("combobox").first().selectOption({ index: 1 });
+    test(`TCHR.1 ${label} filter by Nama OPD`, async ({ page }) => {
+      test.skip(label === "OPD", "Filter OPD tidak tersedia untuk role OPD");
 
-        await expect(page.getByRole("table")).toBeVisible();
-        await expect(
-          page.getByRole("heading", { name: /tabel riwayat data relawan/i }),
-        ).toBeVisible();
-        await expect(page.getByRole("cell", { name: "OPD Demo" }).first()).toBeVisible();
-      });
+      await page.getByRole("combobox").first().selectOption({ index: 1 });
 
-      // TCHR.2
-      test(`TCHR.2 ${label} filter by Nama Kader`, async ({ page }) => {
-        await page.getByRole("combobox").nth(1).selectOption({ index: 1 });
-
-        await expect(page.getByRole("table")).toBeVisible();
-        await expect(
-          page.getByRole("heading", { name: /tabel riwayat data relawan/i }),
-        ).toBeVisible();
-        await expect(page.getByRole("cell", { name: "Demo Kader" }).first()).toBeVisible();
-      });
-
-      // TCHR.3
-      test(`TCHR.3 ${label} filter by Tahun Awal`, async ({ page }) => {
-        await page.getByRole("button", { name: /tahun awal/i }).click();
-        await page.getByRole("button", { name: "2024" }).click();
-
-        await expect(page.getByRole("table")).toBeVisible();
-      });
-
-      // TCHR.4
-      test(`TCHR.4 ${label} filter by Tahun Akhir`, async ({ page }) => {
-        await page.getByRole("button", { name: /tahun akhir/i }).click();
-        await page.getByRole("button", { name: "2036" }).click();
-
-        await expect(page.getByRole("table")).toBeVisible();
-      });
-
-      // IMPOSIBLE TEST CASE: Filter combination sudah berhasil menghindari conflicting filter combination dari fitur combobox dan datepicker, sehingga tidak memungkinkan untuk membuat kombinasi filter yang konflik.
-      //   // TCHR.5 — Negative: conflicting filter combination
-      //   test(`TCHR.5 ${label} filters with conflicting filter combination`, async ({ page }) => {
-      //     // Pilih OPD
-      //     await page.getByRole("combobox").first().selectOption({ index: 1 });
-
-      //     // Pilih Kader yang tidak sesuai OPD — pilih index terakhir
-      //     const kaderCombobox = page.getByRole("combobox").nth(1);
-      //     const kaderOptions = await kaderCombobox.locator("option").count();
-      //     await kaderCombobox.selectOption({ index: kaderOptions - 1 });
-
-      //     // Tahun Awal lebih besar dari Tahun Akhir
-      //     await page.getByRole("button", { name: /tahun awal/i }).click();
-      //     await page.getByRole("button", { name: "2026" }).click();
-      //     await page.getByRole("button", { name: /tahun akhir/i }).click();
-      //     await page.getByRole("button", { name: "2026" }).click();
-
-      //     await expect(page.getByText(/tidak ada data|no data/i)).toBeVisible();
-      //   });
-      // });
+      await expect(page.getByRole("table")).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: /tabel riwayat data relawan/i }),
+      ).toBeVisible();
+      await expect(page.getByRole("cell", { name: "OPD Demo" }).first()).toBeVisible();
     });
+
+    // TCHR.2
+    test(`TCHR.2 ${label} filter by Nama Kader`, async ({ page }) => {
+      if (label === "OPD") {
+        await page.getByRole("combobox").first().selectOption({ index: 1 });
+      } else {
+        await page.getByRole("combobox").first().selectOption({ index: 0 });
+      }
+
+      await expect(page.getByRole("table")).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: /tabel riwayat data relawan/i }),
+      ).toBeVisible();
+      await expect(page.getByRole("cell", { name: "Demo Kader" }).first()).toBeVisible();
+    });
+
+    // TCHR.3
+    test(`TCHR.3 ${label} filter by Tahun Awal`, async ({ page }) => {
+      await page.getByRole("button", { name: /tahun awal/i }).click();
+      await page.getByRole("button", { name: "2024" }).click();
+
+      await expect(page.getByRole("table")).toBeVisible();
+    });
+
+    // TCHR.4
+    test(`TCHR.4 ${label} filter by Tahun Akhir`, async ({ page }) => {
+      await page.getByRole("button", { name: /tahun akhir/i }).click();
+      await page.getByRole("button", { name: "2036" }).click();
+
+      await expect(page.getByRole("table")).toBeVisible();
+    });
+
+    // IMPOSIBLE TEST CASE: Filter combination sudah berhasil menghindari conflicting filter combination dari fitur combobox dan datepicker, sehingga tidak memungkinkan untuk membuat kombinasi filter yang konflik.
+    //   // TCHR.5 — Negative: conflicting filter combination
+    //   test(`TCHR.5 ${label} filters with conflicting filter combination`, async ({ page }) => {
+    //     // Pilih OPD
+    //     await page.getByRole("combobox").first().selectOption({ index: 1 });
+
+    //     // Pilih Kader yang tidak sesuai OPD — pilih index terakhir
+    //     const kaderCombobox = page.getByRole("combobox").nth(1);
+    //     const kaderOptions = await kaderCombobox.locator("option").count();
+    //     await kaderCombobox.selectOption({ index: kaderOptions - 1 });
+
+    //     // Tahun Awal lebih besar dari Tahun Akhir
+    //     await page.getByRole("button", { name: /tahun awal/i }).click();
+    //     await page.getByRole("button", { name: "2026" }).click();
+    //     await page.getByRole("button", { name: /tahun akhir/i }).click();
+    //     await page.getByRole("button", { name: "2026" }).click();
+
+    //     await expect(page.getByText(/tidak ada data|no data/i)).toBeVisible();
+    //   });
+    // });
 
     // TCHR.6-13 Search Bar
     test.describe(`TCHR.6-13 ${label} Search Bar`, () => {
