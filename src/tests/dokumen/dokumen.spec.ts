@@ -31,24 +31,28 @@ for (const { label, creds } of roles) {
           title: "downloads the application user guide",
           cardHeading: /buku panduan aplikasi/i,
           expectedFile: /panduan|guidebook|guide/i,
+          buttonIndex: 0,
         },
         {
           id: "TCDO.2",
           title: "downloads the volunteer data Excel template",
           cardHeading: /templat excel data relawan/i,
           expectedFile: /relawan|template/i,
+          buttonIndex: 1,
         },
         {
           id: "TCDO.3",
           title: "downloads the OPD data Excel template",
           cardHeading: /templat excel data opd/i,
           expectedFile: /opd|template/i,
+          buttonIndex: 2,
         },
         {
           id: "TCDO.4",
           title: "downloads the Kader data Excel template",
           cardHeading: /templat excel data kader/i,
           expectedFile: /kader|template/i,
+          buttonIndex: 3,
         },
       ];
 
@@ -56,12 +60,21 @@ for (const { label, creds } of roles) {
         test(`${dlCase.id} ${label} ${dlCase.title}`, async ({ page }) => {
           const card = page
             .locator("div")
-            .filter({ has: page.getByRole("heading", { name: dlCase.cardHeading }) })
+            .filter({
+              has: page.getByRole("heading", {
+                name: dlCase.cardHeading,
+              }),
+            })
             .first();
+
+          const downloadButton =
+            dlCase.buttonIndex === 0
+              ? card.getByRole("button", { name: /unduh/i }).first()
+              : card.getByRole("button", { name: /unduh/i }).nth(dlCase.buttonIndex);
 
           const [download] = await Promise.all([
             page.waitForEvent("download"),
-            card.getByRole("button", { name: /unduh/i }).click(),
+            downloadButton.click(),
           ]);
 
           expect(download.suggestedFilename()).toMatch(dlCase.expectedFile);
