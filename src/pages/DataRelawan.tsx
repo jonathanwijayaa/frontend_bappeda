@@ -11,7 +11,7 @@ import UploadExcelModal from '../components/ui/UploadExcelModal';
 import Toast, { ToastType } from '../components/ui/Toast';
 import Pagination from '../components/ui/Pagination';
 import { RelawanData, Assignment, PengajuanAPIData } from '../types/relawan.types';
-import {dummyKelurahan, dummyKemantren} from '../types/wilayah.types';
+import { useWilayah } from '../hooks/useWilayah';
 import { AutoOption } from '../types/common.types';
 import { useAuth } from '../context/AuthContext';
 import { useRelawanList, RELAWAN_KEYS } from '../hooks/relawan/useRelawanList';
@@ -41,9 +41,11 @@ const DataRelawan: React.FC = () => {
         [opdListData]
     );
 
+    const { kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList, kelurahanList } = useWilayah();
+
     const kemantrenOptions = useMemo<AutoOption[]>(
-        () => dummyKemantren.map(item => ({ label: item.nama_kemantren, value: item.id })),
-        []
+        () => kemantrenList.map(item => ({ label: item.nama_kemantren, value: item.id })),
+        [kemantrenList]
     );
 
     const [kaderOptionsByOpdId, setKaderOptionsByOpdId] = useState<Record<number, AutoOption[]>>({});
@@ -136,28 +138,36 @@ const DataRelawan: React.FC = () => {
     });
 
     const kelurahanOptionsForForm = useMemo<AutoOption[]>(() => {
-        const matchedKemantren = dummyKemantren.find(
-            item => item.nama_kemantren.toLowerCase() === formData.kemantren.trim().toLowerCase()
-        );
-
-        if (!matchedKemantren) return [];
-
-        return dummyKelurahan
-            .filter(item => item.id_kemantren === matchedKemantren.id)
-            .map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
-    }, [formData.kemantren]);
+        return kelurahanList.map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
+    }, [kelurahanList]);
 
     const kelurahanOptionsForDetail = useMemo<AutoOption[]>(() => {
-        const matchedKemantren = dummyKemantren.find(
+        return kelurahanList.map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
+    }, [kelurahanList]);
+
+    // Fetch kelurahan when kemantren changes in form
+    useEffect(() => {
+        const matchedKemantren = kemantrenList.find(
+            item => item.nama_kemantren.toLowerCase() === formData.kemantren.trim().toLowerCase()
+        );
+        if (matchedKemantren) {
+            fetchKelurahanByKemantrenId(matchedKemantren.id);
+        } else {
+            setKelurahanList([]);
+        }
+    }, [formData.kemantren, kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList]);
+
+    // Fetch kelurahan when kemantren changes in detail form
+    useEffect(() => {
+        const matchedKemantren = kemantrenList.find(
             item => item.nama_kemantren.toLowerCase() === detailFormData.kemantren.trim().toLowerCase()
         );
-
-        if (!matchedKemantren) return [];
-
-        return dummyKelurahan
-            .filter(item => item.id_kemantren === matchedKemantren.id)
-            .map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
-    }, [detailFormData.kemantren]);
+        if (matchedKemantren) {
+            fetchKelurahanByKemantrenId(matchedKemantren.id);
+        } else {
+            setKelurahanList([]);
+        }
+    }, [detailFormData.kemantren, kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList]);
 
     // Ambil daftar kader untuk OPD tertentu dan simpan ke cache lokal.
     const fetchKaderOptionsForOpd = useCallback(async (opdId: number) => {
