@@ -2,16 +2,48 @@ import { faker } from "@faker-js/faker";
 import { Page } from "@playwright/test";
 
 const OPD_LIST = [
-  // "Dinas Simulasi Yogyakarta",
-  // "Dinas Uji Coba Yogyakarta",
+  "Opd Demo",
   "Dinas Kesehatan (Dinkes)",
   "Dinas Perhubungan",
   "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
   "Dinas Pariwisata",
   "Dinas Kebudayaan",
   "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)",
-  "Satuan Polisi Pamong Praja (PP)",
 ];
+
+const KEMANTREN_LIST = [
+  "Danurejan",
+  "Gedongtengen",
+  "Gondokusuman",
+  "Gondomanan",
+  "Jetis",
+  "Kotagede",
+  "Kraton",
+  "Mantrijeron",
+  "Mergangsan",
+  "Ngampilan",
+  "Pakualaman",
+  "Tegalrejo",
+  "Umbulharjo",
+  "Wirobrajan",
+];
+
+const KELURAHAN_MAP: Record<string, string[]> = {
+  Danurejan: ["Bausasran", "Suryatmajan", "Tegalpanggung"],
+  Gedongtengen: ["Pringgokusuman", "Sosromenduran"],
+  Gondokusuman: ["Baciro", "Demangan", "Klitren", "Kotabaru", "Terban"],
+  Gondomanan: ["Ngupasan", "Prawirodirjan"],
+  Jetis: ["Bumijo", "Cokrodiningratan", "Gowongan"],
+  Kotagede: ["Prenggan", "Rejowinangun", "Purbayan"],
+  Kraton: ["Kadipaten", "Panembahan", "Patehan"],
+  Mantrijeron: ["Gedongkiwo", "Mantrijeron", "Suryodiningratan"],
+  Mergangsan: ["Brontokusuman", "Keparakan", "Wirogunan"],
+  Ngampilan: ["Ngampilan", "Notoprajan"],
+  Pakualaman: ["Gunungketur", "Purwokinanti"],
+  Tegalrejo: ["Bener", "Karangwaru", "Kricak", "Tegalrejo"],
+  Umbulharjo: ["Giwangan", "Muja Muju", "Pandeyan", "Sorosutan", "Tahunan", "Warungboto", "Semaki"],
+  Wirobrajan: ["Pakuncen", "Patangpuluhan", "Wirobrajan"],
+};
 
 export interface KaderData {
   OPD: string;
@@ -23,6 +55,7 @@ export interface KaderData {
   "NO HP": string;
   "ALAMAT PIC": string;
   "KELURAHAN PIC": string;
+  KEMANTREN: string;
 }
 
 interface IFillKaderForm {
@@ -30,16 +63,22 @@ interface IFillKaderForm {
   page: Page;
 }
 
-export const buildKaderData = (): KaderData => ({
-  OPD: faker.helpers.arrayElement(OPD_LIST),
-  "NAMA KADER": `Kader ${generateSafeName()}`,
-  DESKRIPSI: faker.lorem.sentences(2),
-  PIC: generateSafeName(),
-  "NIK PIC": faker.number.bigInt({ min: 1000000000000000n, max: 9999999999999999n }).toString(),
-  "NO HP": `08${faker.string.numeric(10)}`,
-  "ALAMAT PIC": faker.location.streetAddress() + ", Yogyakarta",
-  "KELURAHAN PIC": faker.location.city(),
-});
+export const buildKaderData = (): KaderData => {
+  const kemantren = faker.helpers.arrayElement(KEMANTREN_LIST);
+  const kelurahan = faker.helpers.arrayElement(KELURAHAN_MAP[kemantren]);
+
+  return {
+    OPD: faker.helpers.arrayElement(OPD_LIST),
+    "NAMA KADER": `Kader ${generateSafeName()}`,
+    DESKRIPSI: faker.lorem.sentences(2),
+    PIC: generateSafeName(),
+    "NIK PIC": faker.number.bigInt({ min: 1000000000000000n, max: 9999999999999999n }).toString(),
+    "NO HP": `08${faker.string.numeric(10)}`,
+    "ALAMAT PIC": faker.location.streetAddress() + ", Yogyakarta",
+    "KELURAHAN PIC": kelurahan,
+    KEMANTREN: kemantren,
+  };
+};
 
 function generateSafeName(): string {
   const name = faker.person.fullName();
@@ -59,6 +98,7 @@ export const fillKaderForm = async ({ data, page }: IFillKaderForm) => ({
     await this.fillNIKPIC();
     await this.fillNoHP();
     await this.fillAlamatPIC();
+    await this.fillKemantren();
     await this.fillKelurahanPIC();
   },
   async fillAllSuperAdmin() {
@@ -69,7 +109,11 @@ export const fillKaderForm = async ({ data, page }: IFillKaderForm) => ({
     await this.fillNIKPIC();
     await this.fillNoHP();
     await this.fillAlamatPIC();
+    await this.fillKemantren();
     await this.fillKelurahanPIC();
+  },
+  async fillKemantren() {
+    await page.getByRole("textbox", { name: /nama kemantren/i }).fill(data.KEMANTREN);
   },
   async fillDeskripsi() {
     await page.getByRole("textbox", { name: /Deskripsi/i }).fill(data.DESKRIPSI);

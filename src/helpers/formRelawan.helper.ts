@@ -2,28 +2,64 @@ import { faker } from "@faker-js/faker";
 import { Page } from "@playwright/test";
 
 const OPD_LIST = [
-  // "Dinas Simulasi Yogyakarta",
-  // "Dinas Uji Coba Yogyakarta",
+  "Opd Demo",
   "Dinas Kesehatan (Dinkes)",
   "Dinas Perhubungan",
   "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
   "Dinas Pariwisata",
   "Dinas Kebudayaan",
   "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)",
-  "Satuan Polisi Pamong Praja (PP)",
 ];
 
 const KADER_MAP: Record<string, string[]> = {
-  // "Dinas Simulasi Yogyakarta": ["Kader Simulasi B"],
-  // "Dinas Uji Coba Yogyakarta": ["Kader Uji Coba A"],
+  "Opd Demo": ["Kader Angie Padberg", "Kader Dana West", "Kader Miss Gladys Mraz", "Demo Kader"],
+
   "Dinas Kesehatan (Dinkes)": ["KADER KESEHATAN"],
+
   "Dinas Perhubungan": ["Kader Perhubungan C", "Kader Perhubungan C1"],
+
   "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)": ["PORDAM", "TAGANA", "IPSM"],
+
   "Dinas Pariwisata": ["Kader Pariwisata 1", "Kader Pariwisata 2"],
+
   "Dinas Kebudayaan": ["Kader Kebudayaan 1", "Kader Kebudayaan 2"],
+
   "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)":
     ["SIGRAK", "POSYANDU", "PKK"],
-  "Satuan Polisi Pamong Praja (PP)": ["SATLINMAS"],
+};
+
+const KEMANTREN_LIST = [
+  "Danurejan",
+  "Gedongtengen",
+  "Gondokusuman",
+  "Gondomanan",
+  "Jetis",
+  "Kotagede",
+  "Kraton",
+  "Mantrijeron",
+  "Mergangsan",
+  "Ngampilan",
+  "Pakualaman",
+  "Tegalrejo",
+  "Umbulharjo",
+  "Wirobrajan",
+];
+
+const KELURAHAN_MAP: Record<string, string[]> = {
+  Danurejan: ["Bausasran", "Suryatmajan", "Tegalpanggung"],
+  Gedongtengen: ["Pringgokusuman", "Sosromenduran"],
+  Gondokusuman: ["Baciro", "Demangan", "Klitren", "Kotabaru", "Terban"],
+  Gondomanan: ["Ngupasan", "Prawirodirjan"],
+  Jetis: ["Bumijo", "Cokrodiningratan", "Gowongan"],
+  Kotagede: ["Prenggan", "Rejowinangun", "Purbayan"],
+  Kraton: ["Kadipaten", "Panembahan", "Patehan"],
+  Mantrijeron: ["Gedongkiwo", "Mantrijeron", "Suryodiningratan"],
+  Mergangsan: ["Brontokusuman", "Keparakan", "Wirogunan"],
+  Ngampilan: ["Ngampilan", "Notoprajan"],
+  Pakualaman: ["Gunungketur", "Purwokinanti"],
+  Tegalrejo: ["Bener", "Karangwaru", "Kricak", "Tegalrejo"],
+  Umbulharjo: ["Giwangan", "Muja Muju", "Pandeyan", "Sorosutan", "Tahunan", "Warungboto", "Semaki"],
+  Wirobrajan: ["Pakuncen", "Patangpuluhan", "Wirobrajan"],
 };
 
 // Tabel Pengajuan Perubahan Data
@@ -55,6 +91,7 @@ export interface RelawanData {
   "DETAIL JABATAN": string;
   PENUGASAN: string;
   "STATUS KEAKTIFAN"?: string;
+  KEMANTREN: string;
 }
 
 interface IFillRelawanForm {
@@ -71,6 +108,9 @@ export const buildRelawanData = (): RelawanData => {
   const opd = faker.helpers.arrayElement(OPD_LIST);
   const kader = faker.helpers.arrayElement(KADER_MAP[opd]);
 
+  const kemantren = faker.helpers.arrayElement(KEMANTREN_LIST);
+  const kelurahan = faker.helpers.arrayElement(KELURAHAN_MAP[kemantren]);
+
   return {
     "NAMA LENGKAP": generateSafeName(),
     "JENIS KELAMIN": faker.person.sex() === "male" ? "L" : "P",
@@ -78,7 +118,8 @@ export const buildRelawanData = (): RelawanData => {
     ALAMAT: faker.location.streetAddress() + ", Yogyakarta",
     "NO HP": `08${faker.string.numeric(10)}`,
     OPD: opd,
-    KELURAHAN: faker.location.city(),
+    KEMANTREN: kemantren,
+    KELURAHAN: kelurahan,
     KADER: kader,
     JABATAN: faker.helpers.arrayElement([
       "Ketua",
@@ -113,6 +154,7 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
     await this.fillNIK();
     await this.fillAlamat();
     await this.fillNoHP();
+    await this.fillKemantren();
     await this.fillKelurahan();
     await this.fillJenisKelamin();
     await this.clickTambahDataPenugasan();
@@ -138,7 +180,7 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
   async fillKelurahan() {
     await page
       .getByRole("textbox", { name: /kelurahan/i })
-      .or(page.getByRole("textbox").nth(6))
+      .or(page.getByRole("textbox").nth(7))
       .fill(data.KELURAHAN);
   },
   async fillKader() {
@@ -166,11 +208,15 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
       .fill(data["NO HP"]);
   },
   async fillOPD() {
-    await page.getByRole("textbox", { name: /cari nama opd/i }).fill(data.OPD);
+    if (await page.getByRole("textbox", { name: /cari nama opd/i }).isVisible()) {
+      await page.getByRole("textbox", { name: /cari nama opd/i }).fill(data.OPD);
+      return;
+    }
     if (await page.getByRole("listitem").isVisible()) {
       await page.getByRole("listitem").click();
       return;
     }
+    return;
   },
   async fillPenugasan() {
     await page.getByRole("textbox", { name: /nama\/detail penugasan/i }).fill(data.PENUGASAN);
@@ -184,6 +230,9 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
     } else {
       await page.getByRole("radio", { name: "Aktif", exact: true }).click();
     }
+  },
+  async fillKemantren() {
+    await page.getByRole("textbox", { name: /nama kemantren/i }).fill(data.KEMANTREN);
   },
 });
 

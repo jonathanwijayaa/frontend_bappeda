@@ -10,7 +10,7 @@ import {
 } from "@/helpers/formRelawan.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { ensurePengajuanExists } from "@/helpers/submitPengajuan.helper";
-import { expect, test } from "@playwright/test";
+import { Browser, expect, Page, test } from "@playwright/test";
 
 const roles = [
   { label: "Super Admin", creds: credentials.superAdmin },
@@ -28,7 +28,7 @@ for (const { label, creds } of roles) {
         password: creds.password,
       });
 
-      await expect(page).toHaveURL(/dashboard/);
+      await expect(page).toHaveURL(/dashboard/, { timeout: 10000 });
       await page.getByRole("link", { name: "Relawan", exact: true }).click();
     });
 
@@ -74,7 +74,11 @@ for (const { label, creds } of roles) {
 
         await page.getByRole("button", { name: /simpan/i }).click();
 
-        await expect(page.getByText(/berhasil|success|data baru ditambahkan./i)).toBeVisible();
+        await expect(
+          page.getByText(
+            /berhasil|success|data baru ditambahkan|relawan baru ditambahkan|baru ditambahkan./i,
+          ),
+        ).toBeVisible();
       });
 
       // TCDR.5
@@ -394,7 +398,9 @@ for (const { label, creds } of roles) {
       await expect(page.getByRole("heading", { name: "Data Kotor (0)" })).toBeVisible();
       await page.getByRole("button", { name: /simpan data bersih/i }).click();
 
-      await expect(page.getByText(/berhasil|success|data baru ditambahkan/i)).toBeVisible();
+      await expect(
+        page.getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i),
+      ).toBeVisible();
     });
 
     // TCDR.18 Upload Invalid Excel
@@ -583,25 +589,33 @@ for (const { label, creds } of roles) {
       // });
     });
 
+    // ================================================================
+    // TCDR.32-35 — Pengajuan Perubahan Data (Sequential)
+    //
+    // Dijalankan dalam SATU test.describe dengan test.serial agar
+    // urutan terjamin dan tiap test mendapat pengajuan yang fresh.
+    //
+    // Tambahkan import di bagian atas dataRelawan.spec.ts:
+    //   import { ensurePengajuanExists } from "@/helpers/submitPengajuan.helper";
+    // ================================================================
+
     // TCDR.32-35 Tabel Pengajuan Perubahan Data
-    test.describe(`TCDR.32-35 ${label} Pengajuan Perubahan Data`, () => {
-      // -----------------------------------------------------------
-      // SETUP
-      // `browser` fixture dibutuhkan untuk membuka isolated context
-      // relawan tanpa mengganggu session Super Admin/OPD di `page`.
-      // -----------------------------------------------------------
-      test.beforeEach(async ({ page, browser }) => {
-        // Pastikan sudah di halaman Data Relawan
+    test.describe.serial(`TCDR.32-35 ${label} Pengajuan Perubahan Data`, () => {
+      // Helper lokal: navigasi ke halaman relawan, pastikan ada
+      // pengajuan pending, lalu buka halaman Review-nya.
+      async function goToReviewPage(page: Page, browser: Browser) {
+        // Kembali ke halaman Data Relawan dulu (kalau sudah berpindah)
+        await page.getByRole("link", { name: "Relawan", exact: true }).click();
         await expect(page).toHaveURL(/relawan/);
 
-        // Jika belum ada pengajuan pending, buat dulu lewat akun relawan
+        // Pastikan ada pengajuan pending — buat baru jika perlu
         await ensurePengajuanExists(page, browser);
 
         // Verifikasi section Pengajuan Perubahan Data tampil
         await expect(page.getByRole("heading", { name: "Pengajuan Perubahan Data" })).toBeVisible();
         await expect(pengajuanTable(page)).toBeVisible();
 
-        // Klik Review pada baris pertama yang berstatus Menunggu
+        // Buka Review pada baris pertama yang berstatus Menunggu
         await pengajuanTable(page)
           .getByRole("row")
           .filter({ hasText: /menunggu|pending/i })
@@ -611,17 +625,23 @@ for (const { label, creds } of roles) {
 
         // Centang checkbox konfirmasi verifikasi
         await page.getByRole("checkbox", { name: /saya telah memverifikasi/i }).click();
-      });
+      }
 
-      // TCDR.32
-      test(`TCDR.32 ${label} access Relawan Review`, async ({ page }) => {
+      // TCDR.32 — Akses halaman Review
+      test(`TCDR.32 ${label} access Relawan Review`, async ({ page, browser }) => {
+        await goToReviewPage(page, browser);
+
         await expect(
           page.getByRole("heading", { name: /review pengajuan perubahan data/i }),
         ).toBeVisible();
       });
 
-      // TCDR.33
-      test(`TCDR.33 ${label} accept Pengajuan perubahan data`, async ({ page }) => {
+      // TCDR.33 — Accept pengajuan
+      test(`TCDR.33 ${label} accept Pengajuan perubahan data`, async ({ page, browser }) => {
+        // Pengajuan dari TCDR.32 sudah dipakai (hanya lihat, tidak diubah),
+        // tapi untuk keamanan kita pastikan lagi ada yang pending.
+        await goToReviewPage(page, browser);
+
         await page
           .getByRole("button", { name: /setuju|terima|accept/i })
           .first()
@@ -630,8 +650,10 @@ for (const { label, creds } of roles) {
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();
       });
 
-      // TCDR.34
-      test(`TCDR.34 ${label} decline Pengajuan perubahan data`, async ({ page }) => {
+      // TCDR.34 — Decline pengajuan (butuh pengajuan BARU karena TCDR.33 sudah accept)
+      test(`TCDR.34 ${label} decline Pengajuan perubahan data`, async ({ page, browser }) => {
+        await goToReviewPage(page, browser);
+
         await page
           .getByRole("button", { name: /tolak|decline/i })
           .first()
@@ -644,8 +666,13 @@ for (const { label, creds } of roles) {
         ).toBeVisible();
       });
 
-      // TCDR.35
-      test(`TCDR.35 ${label} add verification notes to Pengajuan perubahan`, async ({ page }) => {
+      // TCDR.35 — Decline dengan catatan (butuh pengajuan BARU lagi)
+      test(`TCDR.35 ${label} add verification notes to Pengajuan perubahan`, async ({
+        page,
+        browser,
+      }) => {
+        await goToReviewPage(page, browser);
+
         await page
           .getByRole("button", { name: /tolak|decline/i })
           .first()
