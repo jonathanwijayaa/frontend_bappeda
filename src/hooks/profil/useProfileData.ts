@@ -11,6 +11,7 @@ export const PROFIL_KEYS = {
     me: () => [...PROFIL_KEYS.all, 'me'] as const,
 };
 
+// Ambil profil user yang sedang login untuk halaman profil.
 export const useProfileData = () =>
     useQuery({
         queryKey: PROFIL_KEYS.me(),

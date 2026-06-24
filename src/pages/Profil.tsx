@@ -46,16 +46,19 @@ const Profil: React.FC = () => {
     }, [profileData]);
 
     // ── Handlers ──────────────────────────────────────────────
+    // Sinkronkan perubahan input informasi profil ke state form.
     const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // Sinkronkan perubahan input password ke state form.
     const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setPasswordData(prev => ({ ...prev, [name]: value }));
     };
 
+    // Baca file avatar baru dan siapkan preview base64 sebelum disimpan.
     const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -73,6 +76,7 @@ const Profil: React.FC = () => {
         }
     };
 
+    // Kembalikan avatar ke placeholder default tanpa foto profil.
     const handleDeleteAvatar = () => {
         setAvatarPreview(
             `https://ui-avatars.com/api/?name=${encodeURIComponent(formData.nama_lengkap || 'User')}&background=gray&color=fff`
@@ -80,6 +84,7 @@ const Profil: React.FC = () => {
         setAvatarFile('');
     };
 
+    // Simpan perubahan profil pribadi ke backend.
     const handleProfileSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
@@ -111,6 +116,7 @@ const Profil: React.FC = () => {
         }
     };
 
+    // Validasi dan simpan perubahan kata sandi akun.
     const handlePasswordSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 

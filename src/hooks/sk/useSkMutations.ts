@@ -8,6 +8,7 @@ import { SK_KEYS } from './useSkList';
 import { useAuth } from '../../context/AuthContext';
 
 // ── Upload SK baru (PDF + metadata) ──────────────────────────
+// Upload file SK baru dan refresh daftar SK setelah sukses.
 export const useCreateSk = () => {
     const qc = useQueryClient();
     const { user } = useAuth();
@@ -29,6 +30,7 @@ export const useCreateSk = () => {
 };
 
 // ── Hapus SK ──────────────────────────────────────────────────
+// Hapus SK terpilih lalu refresh daftar SK.
 export const useDeleteSk = () => {
     const qc = useQueryClient();
     const { user } = useAuth();
@@ -47,6 +49,7 @@ export const useDeleteSk = () => {
 };
 
 // ── Toggle status aktif/nonaktif SK ───────────────────────────
+// Ubah status aktif/nonaktif SK kemudian refresh daftar.
 export const useToggleSkStatus = () => {
     const qc = useQueryClient();
     const { user } = useAuth();

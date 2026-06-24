@@ -11,6 +11,7 @@ export const LOG_KEYS = {
     list: (limit: number) => [...LOG_KEYS.all, 'list', limit] as const,
 };
 
+// Ambil audit log aktivitas dengan batas jumlah data tertentu.
 export const useLogList = (limit = 200) =>
     useQuery({
         queryKey: LOG_KEYS.list(limit),

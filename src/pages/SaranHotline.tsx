@@ -47,6 +47,7 @@ const SaranHotline: React.FC = () => {
     const [hotlineForm, setHotlineForm] = useState<HotlineInfo>(DEFAULT_HOTLINE);
     const [isSavingHotline, setIsSavingHotline] = useState(false);
 
+    // Ambil informasi hotline terbaru dari API settings.
     const fetchHotline = useCallback(async () => {
         setIsLoadingHotline(true);
         try {
@@ -64,6 +65,7 @@ const SaranHotline: React.FC = () => {
 
     useEffect(() => { fetchHotline(); }, [fetchHotline]);
 
+    // Simpan perubahan informasi hotline ke server.
     const handleSaveHotline = async () => {
         setIsSavingHotline(true);
         try {
@@ -119,11 +121,13 @@ const SaranHotline: React.FC = () => {
     const endIndex = startIndex + itemsPerPage;
     const currentSaranData = filteredSaran.slice(startIndex, endIndex);
 
+    // Sinkronkan input saran ke state form.
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    // Kirim saran dari relawan atau pengguna ke backend.
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.namaLengkap.trim()) {
@@ -156,11 +160,13 @@ const SaranHotline: React.FC = () => {
         );
     };
 
+    // Buka detail saran untuk melihat isi dan menyiapkan respon.
     const handleDetailClick = (saran: SaranData) => {
         setSelectedSaran(saran);
         setResponForm({ status: saran.status === 'Menunggu' ? 'Selesai' : 'Menunggu', catatan_admin: saran.catatan_admin || '' });
     };
 
+    // Simpan respon admin untuk saran yang sedang dibuka.
     const handleRespond = async () => {
         if (!selectedSaran) return;
         setIsResponding(true);
@@ -174,6 +180,7 @@ const SaranHotline: React.FC = () => {
         );
     };
 
+    // Ubah status saran dengan satu klik tanpa membuka modal.
     const handleQuickToggle = async (saran: SaranData) => {
         const newStatus = saran.status === 'Menunggu' ? 'Selesai' : 'Menunggu';
         respondSaran.mutate(
@@ -194,7 +201,7 @@ const SaranHotline: React.FC = () => {
         {
             header: 'SARAN',
             render: (row: SaranData) => (
-                <div className="truncate max-w-[250px]" title={row.pesan}>{row.pesan}</div>
+                <div className="truncate max-w-62.5" title={row.pesan}>{row.pesan}</div>
             )
         },
         {
@@ -249,7 +256,7 @@ const SaranHotline: React.FC = () => {
                 { icon: <Clock className="text-gray-600" size={24} />, label: 'Jam Layanan', value: hotline.jam_layanan },
             ].map(item => (
                 <div key={item.label} className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
                         {item.icon}
                     </div>
                     <div>
@@ -336,7 +343,7 @@ const SaranHotline: React.FC = () => {
                             )}
                         </div>
 
-                        <div className="flex gap-2 flex-shrink-0">
+                        <div className="flex gap-2 shrink-0">
                             {isEditingHotline ? (
                                 <>
                                     <Button variant="secondary" size="sm" onClick={() => { setIsEditingHotline(false); setHotlineForm(hotline); }}>

@@ -23,6 +23,7 @@ const Login = () => {
         }
     }, [location]);
 
+    // Proses login dan arahkan pengguna ke halaman yang sesuai role.
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');

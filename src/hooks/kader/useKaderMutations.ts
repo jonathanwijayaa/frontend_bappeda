@@ -10,6 +10,7 @@ const invalidateKader = (qc: ReturnType<typeof useQueryClient>) =>
     qc.invalidateQueries({ queryKey: KADER_KEYS.all });
 
 // ── Tambah kader baru ─────────────────────────────────────────
+// Buat kader baru dan invalidate cache daftar kader.
 export const useCreateKader = (isSuperAdmin: boolean) => {
     const qc = useQueryClient();
     return useMutation({
@@ -25,6 +26,7 @@ export const useCreateKader = (isSuperAdmin: boolean) => {
 };
 
 // ── Update kader ──────────────────────────────────────────────
+// Simpan perubahan data kader yang sedang diedit.
 export const useUpdateKader = (isSuperAdmin: boolean) => {
     const qc = useQueryClient();
     return useMutation({
@@ -40,6 +42,7 @@ export const useUpdateKader = (isSuperAdmin: boolean) => {
 };
 
 // ── Toggle status kader ───────────────────────────────────────
+// Ubah status aktif/nonaktif kader lalu refresh daftar.
 export const useToggleKaderStatus = (isSuperAdmin: boolean) => {
     const qc = useQueryClient();
     return useMutation({
@@ -57,6 +60,7 @@ export const useToggleKaderStatus = (isSuperAdmin: boolean) => {
 };
 
 // ── Bulk upload kader via Excel ───────────────────────────────
+// Import banyak data kader sekaligus dari hasil unggahan Excel.
 export const useBulkKader = (isSuperAdmin: boolean) => {
     const qc = useQueryClient();
     return useMutation({

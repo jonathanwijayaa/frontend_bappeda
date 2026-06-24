@@ -11,6 +11,7 @@ export const PENGAJUAN_KEYS = {
     list: (isSuperAdmin: boolean) => [...PENGAJUAN_KEYS.all, 'list', isSuperAdmin] as const,
 };
 
+// Ambil daftar pengajuan perubahan data relawan sesuai role user.
 export const usePengajuanList = (isSuperAdmin: boolean) =>
     useQuery({
         queryKey: PENGAJUAN_KEYS.list(isSuperAdmin),
