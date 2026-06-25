@@ -1,7 +1,8 @@
 //ProfileRelawan.tsx
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import AutocompleteInput from '../components/ui/AutocompleteInput';
-import { dummyKemantren, dummyKelurahan } from '../types/wilayah.types';
+// import { dummyKemantren, dummyKelurahan } from '../types/wilayah.types';
+import { useWilayah } from '../hooks/useWilayah';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import RelawanMenu from '../components/RelawanMenu';
@@ -38,21 +39,34 @@ const ProfilRelawan = () => {
         catatan: '',
     });
 
+    const { kemantrenList, kelurahanList, fetchKelurahanByKemantrenId, setKelurahanList } = useWilayah();
+
     const kemantrenOptions = useMemo(
-        () => dummyKemantren.map(item => ({ label: item.nama_kemantren, value: item.id })),
-        []
+        () => kemantrenList.map(item => ({ label: item.nama_kemantren, value: item.id })),
+        [kemantrenList]
     );
 
-    const kelurahanOptionsForUpdate = useMemo(() => {
-        const kemantrenToMatch = updateForm.kemantren.trim() || profil?.kemantren || '';
-        const matched = dummyKemantren.find(
-            item => item.nama_kemantren.toLowerCase() === kemantrenToMatch.toLowerCase()
-        );
-        if (!matched) return [];
-        return dummyKelurahan
-            .filter(item => item.id_kemantren === matched.id)
-            .map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
-    }, [updateForm.kemantren, profil?.kemantren]);
+    const kelurahanOptionsForUpdate = useMemo(
+        () => kelurahanList.map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan })),
+        [kelurahanList]
+    );
+
+    // Watch for kemantren changes and fetch corresponding kelurahan
+    useEffect(() => {
+        const kemantrenName = updateForm.kemantren.trim() || profil?.kemantren || '';
+        if (kemantrenName) {
+            const matched = kemantrenList.find(
+                item => item.nama_kemantren.toLowerCase() === kemantrenName.toLowerCase()
+            );
+            if (matched) {
+                fetchKelurahanByKemantrenId(matched.id);
+            } else {
+                setKelurahanList([]);
+            }
+        } else {
+            setKelurahanList([]);
+        }
+    }, [updateForm.kemantren, profil?.kemantren, kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList]);
 
     // Ambil data profil relawan dari API untuk ditampilkan di halaman ini.
     const fetchProfil = useCallback(async () => {

@@ -5,6 +5,7 @@ import Card from '../components/ui/Card';
 import BarChart from '../components/charts/BarChart';
 import { ChartDataItem } from '../types/dashboard.types';
 import apiClient from '../lib/axios';
+import { Clock } from 'lucide-react';
 
 interface DashboardData {
     nama_opd?: string;
@@ -24,6 +25,7 @@ const Dashboard: React.FC = () => {
     const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
+    const [timestamp, setTimestamp] = useState<string>('');
 
     useEffect(() => {
         // Ambil ringkasan dashboard sesuai role user yang sedang login.
@@ -35,6 +37,16 @@ const Dashboard: React.FC = () => {
                 
                 if (result.success && result.data) {
                     setDashboardData(result.data);
+                    const now = new Date();
+                    const formattedDate = now.toLocaleDateString('id-ID', {
+                        weekday: 'long',
+                        day: 'numeric',
+                        month: 'long',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    });
+                    setTimestamp(`${formattedDate} WIB`);   
                 } else {
                     setError(result.message || 'Gagal memuat data dashboard');
                     setDashboardData(null);
@@ -97,8 +109,12 @@ const Dashboard: React.FC = () => {
     return (
         <div className="space-y-6">
             {/* Real-time Data Notice */}
-            <div className="text-right">
-                <p className="text-sm italic text-gray-600">Data Ditampilkan secara real-time</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 border-b border-gray-100 pb-3">
+                <p className="text-xs italic text-gray-400">Data Ditampilkan secara real-time</p>
+                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-xs text-gray-600 font-medium shadow-sm w-fit">
+                    <Clock size={13} className="text-green-600 animate-pulse" />
+                    <span>Data per: {timestamp}</span>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
