@@ -139,7 +139,7 @@ const Dashboard: React.FC = () => {
                                 <div className="flex flex-col gap-0.5">
                                     <span>{isSuperAdmin ? "Jumlah Relawan per OPD" : "Jumlah Relawan per Kader"}</span>
                                     {/* Menampilkan teks dinamis: Semua Periode Data (2024 — 2026) */}
-                                    <span className="text-xs font-normal text-gray-400 tracking-wide">
+                                    <span className="text-xs font-normal text-gray-500 tracking-wide">
                                         {labelPeriodeKumulatif}
                                     </span>
                                 </div>
