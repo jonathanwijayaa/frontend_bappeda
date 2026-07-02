@@ -2,7 +2,7 @@ import React, { useState, ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 
 interface CardProps {
-    title?: string;
+    title?: ReactNode; 
     children: ReactNode;
     className?: string;
     collapsible?: boolean;

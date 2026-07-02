@@ -77,6 +77,20 @@ const Dashboard: React.FC = () => {
             jumlah: item.jumlah_relawan || 0
         }));
     }, [dashboardData]);
+    // ── AMBIL BULAN & TAHUN AWAL S.D. BULAN & TAHUN SAAT INI ──
+    const labelPeriodeKumulatif = useMemo(() => {
+        // Bulan & Tahun Awal Data di database Anda
+        // angka bulan (0-11) dan tahunnya sesuai data riil pertama
+        const tanggalAwal = new Date(2024, 5, 1); // Contoh: 1 Juni 2024
+        
+        const bulanAwalTeks = tanggalAwal.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+
+        // Bulan & Tahun berjalan saat ini
+        const tanggalSekarang = new Date();
+        const bulanSekarangTeks = tanggalSekarang.toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
+
+        return `Semua Periode Data (${bulanAwalTeks} — ${bulanSekarangTeks})`;
+    }, [dashboardData]);
 
 
     if (isLoading) {
@@ -119,22 +133,32 @@ const Dashboard: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
                 {/* Chart Section */}
-                <div className="lg:col-span-3">
-                    <Card title={isSuperAdmin ? "Jumlah Relawan per OPD" : "Jumlah Relawan per Kader"}>
-                        {chartData.length > 0 ? (
-                            <BarChart
-                                data={chartData}
-                                dataKey="jumlah"
-                                xAxisKey="name"
-                                height={350}
-                            />
-                        ) : (
-                            <div className="flex items-center justify-center h-87.5 text-gray-400">
-                                Belum ada data grafik
-                            </div>
-                        )}
-                    </Card>
-                </div>
+                    <div className="lg:col-span-3">
+                        <Card 
+                            title={
+                                <div className="flex flex-col gap-0.5">
+                                    <span>{isSuperAdmin ? "Jumlah Relawan per OPD" : "Jumlah Relawan per Kader"}</span>
+                                    {/* Menampilkan teks dinamis: Semua Periode Data (2024 — 2026) */}
+                                    <span className="text-xs font-normal text-gray-400 tracking-wide">
+                                        {labelPeriodeKumulatif}
+                                    </span>
+                                </div>
+                            }
+                        >
+                            {chartData.length > 0 ? (
+                                <BarChart
+                                    data={chartData}
+                                    dataKey="jumlah"
+                                    xAxisKey="name"
+                                    height={350}
+                                />
+                            ) : (
+                                <div className="flex items-center justify-center h-87.5 text-gray-400">
+                                    Belum ada data grafik
+                                </div>
+                            )}
+                        </Card>
+                    </div>
 
                 {/* Info Section */}
                 <div className="lg:col-span-2 flex flex-col h-full">
