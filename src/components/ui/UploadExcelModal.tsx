@@ -129,21 +129,35 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
         const rowErrors: { rowNumber: number; errorMessages: string[] }[] = [];
         const fieldsToCheck = getRequiredFieldChecks(dataType, isOpdUser);
 
-        // Tracker Duplikasi NIK
-        const nikTracker: Record<string, number> = {}; 
+        // Helper membaca nilai cell murni (Ditarik ke atas agar bisa dipakai di Phase 1)
+        const getRowVal = (row: any, possibleKeys: string[]) => {
+            const key = Object.keys(row).find(k => possibleKeys.includes(k.toLowerCase().replace(/[^a-z0-9]/g, '')));
+            return key ? String(row[key]).trim() : '';
+        };
 
+        // ================== PHASE 1: HITUNG FREKUENSI NIK UNTUK DETEKSI DUPLIKASI TOTAL ==================
+        const nikFrequency: Record<string, number> = {}; // Menyimpan total kemunculan NIK
+
+        // Cari tahu key NIK/NIK PIC berdasarkan tipe datanya
+        const nikKeys = dataType === 'relawan' 
+            ? ['nik'] 
+            : ['nikpic', 'nik'];
+
+        data.forEach(row => {
+            const nikValue = getRowVal(row, nikKeys);
+            if (nikValue && REGEX_PATTERNS.NIK.test(nikValue)) {
+                nikFrequency[nikValue] = (nikFrequency[nikValue] || 0) + 1;
+            }
+        });
+
+        // ================== PHASE 2: VALIDASI ATURAN KONTEN & FILTER KOTOR ==================
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
             const currentErrors: string[] = [];
             const rowNumber = i + 2; 
-            
-            const getVal = (possibleKeys: string[]) => {
-                const key = Object.keys(row).find(k => possibleKeys.includes(k.toLowerCase().replace(/[^a-z0-9]/g, '')));
-                return key ? String(row[key]).trim() : '';
-            };
 
             fieldsToCheck.forEach(field => {
-                const value = getVal(field.keys);
+                const value = getRowVal(row, field.keys);
                 if (!value) {
                     currentErrors.push(`${field.label} Kosong`);
                 } else {
@@ -161,15 +175,12 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                             }
                         }
                         
+                        // ── MODIFIKASI VALIDASI NIK RELAWAN ──
                         if (field.label === 'NIK') {
                             if (!REGEX_PATTERNS.NIK.test(value)) {
                                 currentErrors.push('NIK harus terdiri dari tepat 16 digit angka');
-                            } else {
-                                if (nikTracker[value]) {
-                                    currentErrors.push(`NIK Duplikat (Sama dengan Baris ${nikTracker[value]})`);
-                                } else {
-                                    nikTracker[value] = rowNumber;
-                                }
+                            } else if (nikFrequency[value] > 1) {
+                                currentErrors.push(`NIK Duplikat (Ditemukan ${nikFrequency[value]} kali dalam file ini)`);
                             }
                         }
                         if (field.label === 'Alamat') {
@@ -178,11 +189,8 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                             else if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(value)) currentErrors.push('Alamat tidak boleh angka saja');
                             else if (!REGEX_PATTERNS.ALAMAT_VALID.test(value)) currentErrors.push('Alamat mengandung karakter terlarang');
                         }
-                        
-                        // ── LOGIKA BARU NO HP RELAWAN ──
                         if (field.label === 'No HP') {
-                            const cleanPhone = value.replace(/[\s-]/g, ''); // Hanya untuk dites ke REGEX
-
+                            const cleanPhone = value.replace(/[\s-]/g, '');
                             if (REGEX_PATTERNS.HAS_LETTERS.test(value)) {
                                 currentErrors.push('No HP tidak boleh mengandung huruf');
                             } else if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(value)) {
@@ -202,15 +210,13 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                         if (field.label === 'PIC' && !REGEX_PATTERNS.NAMA_RELAWAN.test(value)) {
                             currentErrors.push('Nama PIC mengandung karakter ilegal');
                         }
+                        
+                        // ── MODIFIKASI VALIDASI NIK KADER ──
                         if (field.label === 'NIK PIC') {
                             if (!REGEX_PATTERNS.NIK.test(value)) {
                                 currentErrors.push('NIK PIC harus tepat 16 digit angka');
-                            } else {
-                                if (nikTracker[value]) {
-                                    currentErrors.push(`NIK PIC Duplikat (Sama dengan Baris ${nikTracker[value]})`);
-                                } else {
-                                    nikTracker[value] = rowNumber;
-                                }
+                            } else if (nikFrequency[value] > 1) {
+                                currentErrors.push(`NIK PIC Duplikat (Ditemukan ${nikFrequency[value]} kali dalam file ini)`);
                             }
                         }
                         if (field.label === 'Alamat PIC') {
@@ -219,11 +225,8 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                             else if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(value)) currentErrors.push('Alamat PIC tidak boleh angka saja');
                             else if (!REGEX_PATTERNS.ALAMAT_VALID.test(value)) currentErrors.push('Alamat PIC mengandung karakter terlarang');
                         }
-                        
-                        // ── LOGIKA BARU NO HP KADER ──
                         if (field.label === 'No HP') {
                             const cleanPhone = value.replace(/[\s-]/g, '');
-
                             if (REGEX_PATTERNS.HAS_LETTERS.test(value)) {
                                 currentErrors.push('No HP PIC tidak boleh mengandung huruf');
                             } else if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(value)) {
@@ -241,22 +244,17 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                         if (field.label === 'PIC' && !REGEX_PATTERNS.NAMA_RELAWAN.test(value)) {
                             currentErrors.push('Nama PIC OPD mengandung karakter ilegal');
                         }
+                        
+                        // ── MODIFIKASI VALIDASI NIK OPD ──
                         if (field.label === 'NIK PIC') {
                             if (!REGEX_PATTERNS.NIK.test(value)) {
                                 currentErrors.push('NIK PIC OPD harus tepat 16 digit angka');
-                            } else {
-                                if (nikTracker[value]) {
-                                    currentErrors.push(`NIK PIC OPD Duplikat (Sama dengan Baris ${nikTracker[value]})`);
-                                } else {
-                                    nikTracker[value] = rowNumber;
-                                }
+                            } else if (nikFrequency[value] > 1) {
+                                currentErrors.push(`NIK PIC OPD Duplikat (Ditemukan ${nikFrequency[value]} kali dalam file ini)`);
                             }
                         }
-                        
-                        // ── LOGIKA BARU KONTAK OPD ──
                         if (field.label === 'Kontak') {
                             const cleanPhone = value.replace(/[\s-]/g, '');
-
                             if (REGEX_PATTERNS.HAS_LETTERS.test(value)) {
                                 currentErrors.push('Kontak OPD tidak boleh mengandung huruf');
                             } else if (REGEX_PATTERNS.HAS_ILLEGAL_SPECIAL_CHAR.test(value)) {

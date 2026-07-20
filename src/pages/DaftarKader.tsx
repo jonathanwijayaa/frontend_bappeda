@@ -1,5 +1,5 @@
 //DaftarKader.tsx — Role-aware: Super Admin & OPD
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Plus, FileDown, Loader2, Upload } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -16,7 +16,7 @@ import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { formatPhoneDisplay } from '../utils/formatPhone';
 import { KaderData, AutoOption } from '../types';
 import { REGEX_PATTERNS } from '../utils/regex';
-import { dummyKelurahan, dummyKemantren } from '../types/wilayah.types';
+import { useWilayah } from '../hooks/useWilayah';
 import { useKaderList } from '../hooks/kader/useKaderList';
 import { useOpdList } from '../hooks/opd/useOpdList';
 import { useCreateKader, useUpdateKader, useToggleKaderStatus, useBulkKader } from '../hooks/kader/useKaderMutations';
@@ -78,11 +78,12 @@ const DaftarKader: React.FC = () => {
         [opdListData]
     );
 
-    const kemantrenOptions = useMemo<AutoOption[]>(
-        () => dummyKemantren.map(item => ({ label: item.nama_kemantren, value: item.id })),
-        []
-    );
+    const { kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList, kelurahanList } = useWilayah();
 
+    const kemantrenOptions = useMemo<AutoOption[]>(
+        () => kemantrenList.map(item => ({ label: item.nama_kemantren, value: item.id })),
+        [kemantrenList]
+    );
 
     const hasChanges = useMemo(() => {
         if (!selectedKader) return false;
@@ -109,28 +110,36 @@ const DaftarKader: React.FC = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
     const kelurahanOptionsForForm = useMemo<AutoOption[]>(() => {
-    const matchedKemantren = dummyKemantren.find(
-        item => item.nama_kemantren.toLowerCase() === formData.kemantren_pic.trim().toLowerCase()
-    );
-
-    if (!matchedKemantren) return [];
-
-    return dummyKelurahan
-        .filter(item => item.id_kemantren === matchedKemantren.id)
-        .map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
-}, [formData.kemantren_pic]);
+        return kelurahanList.map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
+    }, [kelurahanList]);
 
     const kelurahanOptionsForAssignPic = useMemo<AutoOption[]>(() => {
-        const matchedKemantren = dummyKemantren.find(
+        return kelurahanList.map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
+    }, [kelurahanList]);
+
+    // Fetch kelurahan when kemantren changes in form
+    useEffect(() => {
+        const matchedKemantren = kemantrenList.find(
+            item => item.nama_kemantren.toLowerCase() === formData.kemantren_pic.trim().toLowerCase()
+        );
+        if (matchedKemantren) {
+            fetchKelurahanByKemantrenId(matchedKemantren.id);
+        } else {
+            setKelurahanList([]);
+        }
+    }, [formData.kemantren_pic, kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList]);
+
+    // Fetch kelurahan when kemantren changes in assign pic form
+    useEffect(() => {
+        const matchedKemantren = kemantrenList.find(
             item => item.nama_kemantren.toLowerCase() === assignPicForm.kemantren_pic.trim().toLowerCase()
         );
-
-        if (!matchedKemantren) return [];
-
-        return dummyKelurahan
-            .filter(item => item.id_kemantren === matchedKemantren.id)
-            .map(item => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
-    }, [assignPicForm.kemantren_pic]);
+        if (matchedKemantren) {
+            fetchKelurahanByKemantrenId(matchedKemantren.id);
+        } else {
+            setKelurahanList([]);
+        }
+    }, [assignPicForm.kemantren_pic, kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList]);
     // ── Columns ────────────────────────────────────────────────────
     const columns = [
         { header: 'NAMA KADER', accessor: 'nama_kader' as keyof KaderData, width: '18%' },
