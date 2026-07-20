@@ -32,8 +32,9 @@ for (const { label, creds } of roles) {
 
       const fileInput = page.locator("input[type='file']");
       await fileInput.setInputFiles(filePath);
+      await page.getByRole("checkbox").first().check();
 
-      await page.getByRole("button", { name: /simpan|upload|lanjutkan|Unggah SK/i }).click();
+      await page.getByRole("button", { name: /Unggah SK/i }).click();
 
       await expect(page.getByText(/berhasil|success/i)).toBeVisible();
     });

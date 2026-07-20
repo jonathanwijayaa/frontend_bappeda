@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
 import { Page } from "@playwright/test";
+import { roles } from "src/tests/daftar kader/daftarKader.spec";
 
 const OPD_LIST = [
   "Opd Demo",
   "Dinas Kesehatan (Dinkes)",
   "Dinas Perhubungan",
-  "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
+  // "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
   "Dinas Pariwisata",
   "Dinas Kebudayaan",
   "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)",
@@ -103,6 +104,7 @@ export const fillKaderForm = async ({ data, page }: IFillKaderForm) => ({
   },
   async fillAllSuperAdmin() {
     await this.fillOPD();
+    await this.OPDvalidation();
     await this.fillNamaKader();
     await this.fillDeskripsi();
     await this.fillPIC();
@@ -141,5 +143,11 @@ export const fillKaderForm = async ({ data, page }: IFillKaderForm) => ({
   },
   async cancel() {
     await page.getByRole("button", { name: "Batal" }).click();
+  },
+  // TOLONG BENERIN STATUS LABEL INI
+  async OPDvalidation() {
+    if (Array.isArray(roles) ? roles.some((r: any) => r.label === "Super Admin") : false) {
+      await page.getByText("✓ OPD ditemukan dan siap").waitFor({ state: "visible" });
+    }
   },
 });

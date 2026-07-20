@@ -4,7 +4,7 @@ import { buildKaderData, fillKaderForm } from "@/helpers/formKader.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { expect, test } from "@playwright/test";
 
-const roles = [
+export const roles = [
   { label: "Super Admin", creds: credentials.superAdmin, isSuperAdmin: true },
   { label: "OPD", creds: credentials.opd, isSuperAdmin: false },
 ] as const;
@@ -192,22 +192,22 @@ for (const { label, creds, isSuperAdmin } of roles) {
           {
             title: "Kontak too short",
             value: "08123",
-            expectedMessage: /nomor hp pic tidak valid.*harus 10.*13 digit angka/i,
+            expectedMessage: /nomor telepon pic terlalu pendek/i,
           },
           {
             title: "Kontak with letters",
             value: "08ABCDE123",
-            expectedMessage: /nomor hp pic tidak valid.*harus 10.*13 digit angka/i,
+            expectedMessage: /nomor telepon pic tidak boleh mengandung huruf/i,
           },
           {
             title: "Kontak with special characters",
             value: "08!@#$%^&*",
-            expectedMessage: /nomor hp pic tidak valid.*harus 10.*13 digit angka/i,
+            expectedMessage: /nomor telepon pic tidak boleh mengandung karakter spesial/i,
           },
           {
             title: "Kontak too long",
             value: "081234567890123456789",
-            expectedMessage: /nomor hp pic tidak valid.*harus 10.*13 digit angka/i,
+            expectedMessage: /nomor telepon pic terlalu panjang/i,
           },
         ];
 
@@ -228,7 +228,7 @@ for (const { label, creds, isSuperAdmin } of roles) {
               expect(isValid).toBe(false);
             } else {
               await expect(
-                page.getByText(/nomor hp pic tidak valid.*harus 10.*13 digit angka/i),
+                page.getByText(kontakCase.expectedMessage, { exact: true }),
               ).toBeVisible();
             }
           });

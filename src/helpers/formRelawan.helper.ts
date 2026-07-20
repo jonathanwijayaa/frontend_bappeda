@@ -104,6 +104,7 @@ function generateSafeName(): string {
   return name.replace(/[^a-zA-Z\s]/g, "").trim();
 }
 
+
 export const buildRelawanData = (): RelawanData => {
   const opd = faker.helpers.arrayElement(OPD_LIST);
   const kader = faker.helpers.arrayElement(KADER_MAP[opd]);
@@ -159,6 +160,7 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
     await this.fillJenisKelamin();
     await this.clickTambahDataPenugasan();
     await this.fillOPD();
+    await this.OPDvalidation();
     await this.fillKader();
     await this.fillJabatan();
     await this.fillDetailJabatan();
@@ -233,6 +235,9 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
   },
   async fillKemantren() {
     await page.getByRole("textbox", { name: /nama kemantren/i }).fill(data.KEMANTREN);
+  },
+  async OPDvalidation() {
+    await page.getByText("✓ OPD ditemukan dan siap").waitFor({ state: "visible" });
   },
 });
 
