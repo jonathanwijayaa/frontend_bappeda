@@ -53,7 +53,7 @@ export const useToggleOpdStatus = () => {
 export const useBulkOpd = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: any[]) =>
+    mutationFn: (data: unknown[]) =>
       apiClient.post("/opd/bulk", data).then((r) => {
         if (!r.data.success) throw new Error(r.data.message);
         return r.data;

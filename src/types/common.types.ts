@@ -2,6 +2,6 @@
 
 /** Generic option untuk dropdown / autocomplete */
 export interface AutoOption {
-    label: string;
-    value: string;
+  label: string;
+  value: string;
 }

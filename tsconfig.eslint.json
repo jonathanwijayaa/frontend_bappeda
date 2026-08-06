@@ -1,9 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "include": [
-    "src",
-    "server.ts",
-    "playwright.config.ts",
-    "playwright.config.bappeda.ts"
-  ]
+  "include": ["src", "server.ts", "playwright.config.ts", "playwright.config.bappeda.ts"]
 }

@@ -1,15 +1,15 @@
 // Log Aktifitas (Audit Log) Types — sesuai response backend getAuditLogs
 
 export interface LogData {
-    log_id: number;
-    action_type: string;
-    table_name: string;
-    record_id: number | null;
-    old_value: any | null;
-    new_value: any | null;
-    ip_address: string | null;
-    timestamp: string;
-    nama_pengguna: string | null;
-    role_pengguna: string | null;
-    nik: string | null;
+  action_type: string;
+  ip_address: string | null;
+  log_id: number;
+  nama_pengguna: string | null;
+  new_value: unknown | null;
+  nik: string | null;
+  old_value: unknown | null;
+  record_id: number | null;
+  role_pengguna: string | null;
+  table_name: string;
+  timestamp: string;
 }

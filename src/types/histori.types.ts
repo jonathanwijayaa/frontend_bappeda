@@ -1,34 +1,35 @@
 // Histori Relawan Types — digunakan di halaman HistoriRelawan
 
 export interface HistoriAssignment {
-    id: string;
-    opd: string;
-    opd_id?: number;
-    kader: string;
-    kader_id?: number | null;
-    peran: string;
-    detail: string;
-    penugasan?: string;
-    status_keaktifan: string;
-    nomorSK?: string;
-    tanggalTerbit?: string;
-    batasAktif?: string;
-    tahun?: number | string;
-    tahunMulai?: number | null;
-    tahunSelesai?: number | null;
+  batasAktif?: string;
+  detail: string;
+  id: string;
+  kader: string;
+  kader_id?: number | null;
+  nomorSK?: string;
+  opd: string;
+  opd_id?: number;
+  penugasan?: string;
+  peran: string;
+  status_keaktifan: string;
+  tahun?: number | string;
+  tahunMulai?: number | null;
+  tahunSelesai?: number | null;
+  tanggalTerbit?: string;
 }
 
 export interface HistoriRelawanData {
-    nik: string;
-    namaLengkap: string;
-    alamat: string;
-    no_hp: string;
-    kelurahan: string;
-    jenisKelamin: string;
-    kader: string;
-    jabatan: string;
-    penugasan: string;
-    relawan_id?: number;
-    user_id?: number;
-    assignments: HistoriAssignment[];
+  alamat: string;
+  assignments: HistoriAssignment[];
+  jabatan: string;
+  jenisKelamin: string;
+  kader: string;
+  kelurahan: string;
+  kemantren: string;
+  namaLengkap: string;
+  nik: string;
+  no_hp: string;
+  penugasan: string;
+  relawan_id?: number;
+  user_id?: number;
 }
