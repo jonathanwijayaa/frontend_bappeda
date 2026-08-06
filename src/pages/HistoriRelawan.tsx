@@ -1,4 +1,3 @@
-// HistoriRelawan.tsx
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { Loader2, History, Search } from 'lucide-react';
 import Card from '../components/ui/Card';
@@ -14,6 +13,7 @@ import { HistoriRelawanData } from '../types/histori.types';
 import { AutoOption } from '../types/common.types';
 import { formatPhoneDisplay } from '../utils/formatPhone';
 import Toast, { ToastType } from '../components/ui/Toast';
+import { useWilayah } from '../hooks/useWilayah'; // 1. Import hook useWilayah
 
 // ── Helper: kelompokkan baris flat dari API menjadi per-relawan ─
 const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
@@ -26,6 +26,7 @@ const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
                 alamat: row.alamat_ktp || '-',
                 no_hp: row.no_hp || '-',
                 kelurahan: row.kelurahan || '-',
+                kemantren: row.kemantren || '-',
                 jenisKelamin: row.jenis_kelamin || 'L',
                 kader: row.nama_kader || '-',
                 jabatan: row.jabatan || '-',
@@ -67,9 +68,14 @@ const HistoriRelawan: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
+    // ── 2. Panggil Custom Hook useWilayah ─────────────────────────
+    const { kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList, kelurahanList } = useWilayah();
+
     // ── Filter state ──────────────────────────────────────────────
     const [filterOpd, setFilterOpd] = useState<string>('');
     const [filterKader, setFilterKader] = useState<string>('');
+    const [filterKemantren, setFilterKemantren] = useState<string>('');
+    const [filterKelurahan, setFilterKelurahan] = useState<string>('');
     const [filterTahunAwal, setFilterTahunAwal] = useState<string>('');
     const [filterTahunAkhir, setFilterTahunAkhir] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -77,6 +83,17 @@ const HistoriRelawan: React.FC = () => {
     // ── Dropdown options ──────────────────────────────────────────
     const [opdOptions, setOpdOptions] = useState<AutoOption[]>([]);
     const [kaderOptions, setKaderOptions] = useState<AutoOption[]>([]);
+
+    // ── 3. Transform Kemantren & Kelurahan menjadi AutoOption[] ───
+    const kemantrenOptions = useMemo<AutoOption[]>(
+        () => kemantrenList.map(item => ({ label: item.nama_kemantren, value: item.nama_kemantren })),
+        [kemantrenList]
+    );
+
+    const kelurahanOptions = useMemo<AutoOption[]>(
+        () => kelurahanList.map(item => ({ label: item.nama_kelurahan, value: item.nama_kelurahan })),
+        [kelurahanList]
+    );
 
     // ── Pagination ────────────────────────────────────────────────
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -88,13 +105,11 @@ const HistoriRelawan: React.FC = () => {
 
     // ── Tahun range ───────────────────────────────────────────────
     const currentYear = new Date().getFullYear();
-    const maxYearAkhir = currentYear + 10; // batas_aktif SK bisa di masa depan
+    const maxYearAkhir = currentYear + 10;
     const minYearGlobal = 2000;
-    // Jika tahun awal dipilih, tahun akhir minimal = tahun awal
     const minYearAkhir = filterTahunAwal ? Number(filterTahunAwal) : minYearGlobal;
 
     // ── Fetch data relawan ────────────────────────────────────────
-    // Ambil data histori relawan beserta relasi penugasan dari API.
     const fetchRelawan = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -111,18 +126,16 @@ const HistoriRelawan: React.FC = () => {
         }
     }, [API_BASE]);
 
-    // ── Fetch OPD & Kader options ─────────────────────────────────
+    // ── Fetch OPD & Kader ─────────────────────────────────────────
     useEffect(() => {
         fetchRelawan();
 
-        // Fetch OPD options
         apiClient.get('/opd').then(r => r.data).then(result => {
             if (result.success) {
                 setOpdOptions(result.data.map((o: any) => ({ label: o.nama_opd, value: o.nama_opd })));
             }
         }).catch(() => { });
 
-        // Fetch Kader options — endpoint berbeda untuk OPD user vs Super Admin
         const kaderEndpoint = isOPD ? '/opd-admin/kader' : '/kader';
         apiClient.get(kaderEndpoint).then(r => r.data).then(result => {
             if (result.success) {
@@ -131,31 +144,45 @@ const HistoriRelawan: React.FC = () => {
         }).catch(() => { });
     }, [fetchRelawan, isOPD]);
 
+    // ── 4. Trigger Fetch Kelurahan berdasarkan Kemantren yang dipilih ─
+    useEffect(() => {
+        const matchedKemantren = kemantrenList.find(
+            item => item.nama_kemantren.toLowerCase() === filterKemantren.trim().toLowerCase()
+        );
+
+        if (matchedKemantren) {
+            fetchKelurahanByKemantrenId(matchedKemantren.id);
+        } else {
+            setKelurahanList([]);
+            setFilterKelurahan('');
+        }
+    }, [filterKemantren, kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList]);
+
     // ── Filtering ─────────────────────────────────────────────────
     const filteredData = useMemo(() => {
         const q = searchTerm.toLowerCase();
         return relawanList.filter(relawan => {
-            // Searchbar: nama atau NIK
             const matchSearch = !q ||
                 relawan.namaLengkap.toLowerCase().includes(q) ||
                 relawan.nik.toLowerCase().includes(q);
 
-            // Filter Nama OPD: relawan punya minimal satu assignment di OPD tsb
             const matchOpd = !filterOpd || relawan.assignments.some(
                 a => a.opd.toLowerCase() === filterOpd.toLowerCase()
             );
 
-            // Filter Nama Kader: relawan punya minimal satu assignment di Kader tsb
             const matchKader = !filterKader || relawan.assignments.some(
                 a => a.kader.toLowerCase() === filterKader.toLowerCase()
             );
 
-            // Filter Tahun — berdasarkan field tahun di assignment (dari SK tanggal_terbit & batas_aktif)
+            const matchKemantren = !filterKemantren ||
+                (relawan.kemantren && relawan.kemantren.toLowerCase() === filterKemantren.toLowerCase());
+
+            const matchKelurahan = !filterKelurahan ||
+                (relawan.kelurahan && relawan.kelurahan.toLowerCase() === filterKelurahan.toLowerCase());
+
             const matchTahun = (() => {
                 if (!filterTahunAwal && !filterTahunAkhir) return true;
-                // Relawan harus punya minimal 1 assignment dengan data SK yang cocok
                 return relawan.assignments.some(a => {
-                    // Assignment tanpa data SK → tidak cocok dengan filter tahun
                     if (!a.tahunMulai && !a.tahunSelesai) return false;
 
                     const awal = filterTahunAwal ? Number(filterTahunAwal) : 0;
@@ -164,54 +191,49 @@ const HistoriRelawan: React.FC = () => {
                     const skAwal = a.tahunMulai || 0;
                     const skAkhir = a.tahunSelesai || 9999;
 
-                    // Overlap check: rentang SK [skAwal, skAkhir] harus beririsan dengan filter [awal, akhir]
                     return (skAkhir >= awal) && (skAwal <= akhir);
                 });
             })();
 
-            return matchSearch && matchOpd && matchKader && matchTahun;
+            return matchSearch && matchOpd && matchKader && matchKemantren && matchKelurahan && matchTahun;
         });
-    }, [relawanList, searchTerm, filterOpd, filterKader, filterTahunAwal, filterTahunAkhir]);
+    }, [relawanList, searchTerm, filterOpd, filterKader, filterKemantren, filterKelurahan, filterTahunAwal, filterTahunAkhir]);
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
     const startIndex = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
-    // ── Handle filter change ──────────────────────────────────────
-    // Ubah filter tahun awal dan sesuaikan batas tahun akhir bila perlu.
+    // ── Handlers ──────────────────────────────────────────────────
     const handleYearAwalChange = (year: string) => {
         setFilterTahunAwal(year);
-        // Jika tahun akhir sudah dipilih dan < tahun awal baru, reset
         if (year && filterTahunAkhir && Number(filterTahunAkhir) < Number(year)) {
             setFilterTahunAkhir('');
         }
         setCurrentPage(1);
     };
 
-    // Ubah filter tahun akhir dan reset pagination hasil filter.
     const handleYearAkhirChange = (year: string) => {
         setFilterTahunAkhir(year);
         setCurrentPage(1);
     };
 
-    // Bersihkan semua filter histori relawan.
     const handleResetFilter = () => {
         setFilterOpd('');
         setFilterKader('');
+        setFilterKemantren('');
+        setFilterKelurahan('');
         setFilterTahunAwal('');
         setFilterTahunAkhir('');
         setSearchTerm('');
         setCurrentPage(1);
     };
 
-    // ── Detail modal ──────────────────────────────────────────────
-    // Buka modal detail untuk melihat histori relawan yang dipilih.
     const handleDetailClick = (relawan: HistoriRelawanData) => {
         setSelectedRelawan(relawan);
         setIsDetailModalOpen(true);
     };
 
-    // ── Table columns (mirip Data Relawan) ────────────────────────
+    // ── Table Columns ─────────────────────────────────────────────
     const columns = [
         { header: 'NAMA', accessor: 'namaLengkap' as keyof HistoriRelawanData, width: '20%' },
         { header: 'NIK', accessor: 'nik' as keyof HistoriRelawanData, width: '16%' },
@@ -245,7 +267,6 @@ const HistoriRelawan: React.FC = () => {
         <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>Detail</Button>
     );
 
-    // ── Render detail field (read-only, tampil sebagai teks) ──────
     const renderFieldRow = (label: string, value: string | undefined) => (
         <div key={label} className="grid grid-cols-3 gap-4 items-start py-2 border-b border-gray-100 last:border-b-0">
             <span className="text-sm font-medium text-gray-500">{label}</span>
@@ -253,52 +274,49 @@ const HistoriRelawan: React.FC = () => {
         </div>
     );
 
-    const isActiveFilter = filterOpd || filterKader || filterTahunAwal || filterTahunAkhir;
+    const isActiveFilter = filterOpd || filterKader || filterKemantren || filterKelurahan || filterTahunAwal || filterTahunAkhir;
 
     return (
         <div className="space-y-6">
-            {/* ── Filter Bar ── */}
+            {/* ── Filter Bar (Grid 3 x 2) ── */}
             <Card>
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-1">
                         <History size={18} className="text-green-600" />
                         <h3 className="font-semibold text-gray-800 text-sm">Filter Riwayat</h3>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                        {/* Filter OPD */}
-                        {isSuperAdmin && (
-                            <div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {/* Baris 1 - OPD */}
+                        <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Nama OPD</label>
                             <Select
                                 value={filterOpd}
                                 onChange={(e) => { setFilterOpd(e.target.value); setCurrentPage(1); }}
                                 placeholder="Semua OPD"
-                                options={[
-                                    // { value: '', label: 'Semua OPD' },
-                                    ...opdOptions,
-                                ]}
+                                options={opdOptions}
+                                disabled={!isSuperAdmin}
                                 className="w-full text-sm"
                             />
                         </div>
-                        )
-                            }
 
-                        {/* Filter Kader */}
+                        {/* Baris 1 - Kemantren */}
                         <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">Nama Kader</label>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Kemantren</label>
                             <Select
-                                value={filterKader}
-                                onChange={(e) => { setFilterKader(e.target.value); setCurrentPage(1); }}
-                                placeholder="Semua Kader"
-                                options={[
-                                    // { value: '', label: 'Semua Kader' },
-                                    ...kaderOptions,
-                                ]}
+                                value={filterKemantren}
+                                onChange={(e) => {
+                                    setFilterKemantren(e.target.value);
+                                    setFilterKelurahan('');
+                                    setCurrentPage(1);
+                                }}
+                                placeholder="Semua Kemantren"
+                                options={kemantrenOptions}
                                 className="w-full text-sm"
                             />
                         </div>
 
-                        {/* Filter Tahun Awal */}
+                        {/* Baris 1 - Tahun Awal */}
                         <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Tahun Awal</label>
                             <YearPicker
@@ -310,7 +328,32 @@ const HistoriRelawan: React.FC = () => {
                             />
                         </div>
 
-                        {/* Filter Tahun Akhir */}
+                        {/* Baris 2 - Kader */}
+                        <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Nama Kader</label>
+                            <Select
+                                value={filterKader}
+                                onChange={(e) => { setFilterKader(e.target.value); setCurrentPage(1); }}
+                                placeholder="Semua Kader"
+                                options={kaderOptions}
+                                className="w-full text-sm"
+                            />
+                        </div>
+
+                        {/* Baris 2 - Kelurahan */}
+                        <div>
+                            <label className="block text-xs font-medium text-gray-500 mb-1">Kelurahan</label>
+                            <Select
+                                value={filterKelurahan}
+                                onChange={(e) => { setFilterKelurahan(e.target.value); setCurrentPage(1); }}
+                                placeholder={filterKemantren ? "Semua Kelurahan" : "Pilih Kemantren dulu"}
+                                options={kelurahanOptions}
+                                disabled={!filterKemantren}
+                                className="w-full text-sm"
+                            />
+                        </div>
+
+                        {/* Baris 2 - Tahun Akhir */}
                         <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Tahun Akhir</label>
                             <YearPicker
@@ -323,13 +366,13 @@ const HistoriRelawan: React.FC = () => {
                         </div>
                     </div>
 
-                    {/* Reset Filter */}
+                    {/* Reset Filter Button */}
                     {isActiveFilter && (
-                        <div className="flex justify-end">
+                        <div className="flex justify-end pt-1">
                             <Button
                                 onClick={handleResetFilter}
                                 className="text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
-                                variant='danger'
+                                variant="danger"
                             >
                                 ✕ Reset Filter
                             </Button>
@@ -338,7 +381,7 @@ const HistoriRelawan: React.FC = () => {
                 </div>
             </Card>
 
-            {/* ── Searchbar ── */}
+            {/* ── Search Bar ── */}
             <div className="relative">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
                 <input
@@ -350,7 +393,7 @@ const HistoriRelawan: React.FC = () => {
                 />
             </div>
 
-            {/* ── Tabel Riwayat ── */}
+            {/* ── Tabel ── */}
             <Card title="Tabel Riwayat Data Relawan">
                 {isLoading ? (
                     <div className="flex items-center justify-center h-40">
@@ -371,7 +414,6 @@ const HistoriRelawan: React.FC = () => {
                     <Table columns={columns} data={currentData} actions={rowActions} minRows={5} />
                 )}
 
-                {/* Pagination */}
                 {!isLoading && filteredData.length > 0 && (
                     <div className="mt-4 flex justify-between items-center">
                         <div className="text-sm text-gray-500">
@@ -386,7 +428,7 @@ const HistoriRelawan: React.FC = () => {
                 )}
             </Card>
 
-            {/* ── Modal Detail (read-only) ── */}
+            {/* ── Detail Modal ── */}
             <Modal
                 isOpen={isDetailModalOpen}
                 onClose={() => { setIsDetailModalOpen(false); setSelectedRelawan(null); }}
@@ -396,7 +438,6 @@ const HistoriRelawan: React.FC = () => {
             >
                 {selectedRelawan && (
                     <div className="space-y-6">
-                        {/* ── Informasi Pribadi ── */}
                         <div>
                             <h3 className="text-base font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">
                                 Informasi Pribadi
@@ -407,11 +448,11 @@ const HistoriRelawan: React.FC = () => {
                                 {renderFieldRow('Jenis Kelamin', selectedRelawan.jenisKelamin === 'L' ? 'Laki-laki (L)' : 'Perempuan (P)')}
                                 {renderFieldRow('Alamat KTP', selectedRelawan.alamat)}
                                 {renderFieldRow('No. HP', formatPhoneDisplay(selectedRelawan.no_hp))}
+                                {renderFieldRow('Kemantren', selectedRelawan.kemantren)}
                                 {renderFieldRow('Kelurahan', selectedRelawan.kelurahan)}
                             </div>
                         </div>
 
-                        {/* ── Daftar Penugasan ── */}
                         <div>
                             <h3 className="text-base font-semibold text-gray-800 mb-3 pb-2 border-b border-gray-200">
                                 Daftar Penugasan
@@ -466,7 +507,6 @@ const HistoriRelawan: React.FC = () => {
                 )}
             </Modal>
 
-            {/* Toast */}
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
         </div>
     );

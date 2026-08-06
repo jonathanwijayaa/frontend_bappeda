@@ -23,6 +23,7 @@ export interface HistoriRelawanData {
     namaLengkap: string;
     alamat: string;
     no_hp: string;
+    kemantren:string;
     kelurahan: string;
     jenisKelamin: string;
     kader: string;

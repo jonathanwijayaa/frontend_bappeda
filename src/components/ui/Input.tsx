@@ -27,7 +27,7 @@ const Input: React.FC<InputProps> = ({
             <input
                 type={inputType}
                 placeholder={placeholder}
-                className={`w-full px-4 py-2 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  ${icon ? 'pl-10' : ''
+                className={`w-full px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent  ${icon ? 'pl-10' : ''
                     } ${showPasswordToggle ? 'pr-10' : ''} ${className}`}
                 {...props}
             />
