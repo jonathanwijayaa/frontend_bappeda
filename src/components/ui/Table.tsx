@@ -67,7 +67,7 @@ export function Table<T extends Record<string, any>>({
                         {actions && <th className="px-4 py-3.5 text-right font-bold tracking-wider">AKSI</th>}
                     </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-100">
                     {data.map((row, rowIdx) => (
                         <tr key={rowIdx} className="hover:bg-gray-50/60 transition-colors">
                             {columns.map((col, colIdx) => (
