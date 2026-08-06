@@ -3,20 +3,10 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useAuth } from "../context/AuthContext";
 import Card from "../components/ui/Card";
 import BarChart from "../components/charts/BarChart";
-import type { ChartDataItem } from "../types/dashboard.types";
+import type { ChartDataItem,DashboardData } from "../types/dashboard.types";
 import apiClient from "../lib/axios";
 import { Clock } from "lucide-react";
 
-interface DashboardData {
-  grafik_relawan_per_opd: { jumlah_relawan: number; nama_opd: string }[];
-  nama_opd?: string;
-  ringkasan: {
-    pengajuan_pending: number;
-    total_kader: number;
-    total_opd: number;
-    total_relawan_aktif: number;
-  };
-}
 
 const Dashboard: React.FC = () => {
   const { isOPD, isSuperAdmin, user } = useAuth();

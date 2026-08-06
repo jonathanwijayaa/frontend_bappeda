@@ -12,19 +12,20 @@ import apiClient from "../lib/axios";
 import { parseErrorMessage } from "../utils/parseErrorMessage";
 import { formatPhoneDisplay } from "../utils/formatPhone";
 import { Loader2 } from "lucide-react";
+import { ProfilDataRelawan } from "../types/profil.types";
 
-interface ProfilData {
-  alamat_ktp: string | null;
-  jenis_kelamin: string;
-  kelurahan: string | null;
-  kemantren: string | null;
-  nama_lengkap: string;
-  nik: string;
-  no_hp: string | null;
-}
+// interface ProfilDataRelawan {
+//   alamat_ktp: string | null;
+//   jenis_kelamin: string;
+//   kelurahan: string | null;
+//   kemantren: string | null;
+//   nama_lengkap: string;
+//   nik: string;
+//   no_hp: string | null;
+// }
 
 const ProfilRelawan = () => {
-  const [profil, setProfil] = useState<ProfilData | null>(null);
+  const [profil, setProfil] = useState<ProfilDataRelawan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);

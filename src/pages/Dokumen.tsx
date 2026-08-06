@@ -6,15 +6,7 @@ import Button from "../components/ui/Button";
 import templateRelawan from "../excel/Template_Data_Relawan.xlsx";
 import templateOPD from "../excel/Template_Data_OPD.xlsx";
 import templateKader from "../excel/Template_Data_Kader.xlsx";
-
-interface DocumentItem {
-  description: string;
-  downloadUrl?: string;
-  fileName: string;
-  icon: React.ReactNode;
-  id: string;
-  title: string;
-}
+import {DocumentItem} from "../types/dokumen.types";
 
 const Dokumen: React.FC = () => {
   const documents: DocumentItem[] = [

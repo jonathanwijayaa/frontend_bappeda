@@ -29,12 +29,7 @@ import { useProfileData } from "../hooks/profil/useProfileData";
 import { parseErrorMessage } from "../utils/parseErrorMessage";
 import apiClient from "../lib/axios";
 import { formatPhoneDisplay } from "../utils/formatPhone";
-interface HotlineInfo {
-  jam_layanan: string;
-  telepon: string;
-  updated_at?: string | null;
-  whatsapp: string;
-}
+import { HotlineInfo } from "../types/saran.types";
 
 const DEFAULT_HOTLINE: HotlineInfo = {
   jam_layanan: "Senin–Jumat, 08.00–16.00",

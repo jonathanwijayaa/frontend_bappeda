@@ -35,3 +35,11 @@ export interface ErrorHint {
   steps: string[];
   title: string;
 }
+export interface SKUploadMetadata {
+    batasAktif?: string;
+    judulSK: string;
+    kader_ids?: string | number[];
+    nomorSK: string;
+    opd_id: string | number;
+    tanggalTerbit: string;
+  }

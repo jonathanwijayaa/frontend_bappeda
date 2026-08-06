@@ -335,8 +335,9 @@ const HistoriRelawan: React.FC = () => {
 
   // ── Table Columns ─────────────────────────────────────────────
   const columns = [
-    { accessor: "namaLengkap" as keyof HistoriRelawanData, header: "NAMA", width: "20%" },
-    { accessor: "nik" as keyof HistoriRelawanData, header: "NIK", width: "16%" },
+
+    { accessor: "nik" as keyof HistoriRelawanData, header: "NIK", width: "20%" },
+    { accessor: "namaLengkap" as keyof HistoriRelawanData, header: "NAMA", width: "16%" },
     { accessor: "alamat" as keyof HistoriRelawanData, header: "ALAMAT", width: "20%" },
     { accessor: "kelurahan" as keyof HistoriRelawanData, header: "KELURAHAN", width: "14%" },
     {

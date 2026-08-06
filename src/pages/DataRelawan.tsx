@@ -412,8 +412,8 @@ const DataRelawan: React.FC = () => {
       head: [
         [
           "No",
-          "Nama Lengkap",
           "NIK",
+          "Nama Lengkap",
           "Alamat KTP",
           "Kemantren",
           "Kelurahan",
@@ -456,8 +456,8 @@ const DataRelawan: React.FC = () => {
   ];
 
   const relawanColumns = [
-    { accessor: "namaLengkap" as keyof RelawanData, header: "NAMA" },
     { accessor: "nik" as keyof RelawanData, header: "NIK" },
+    { accessor: "namaLengkap" as keyof RelawanData, header: "NAMA" },
     { accessor: "alamat" as keyof RelawanData, header: "ALAMAT" },
     { accessor: "kemantren" as keyof RelawanData, header: "KEMANTREN" },
     { accessor: "kelurahan" as keyof RelawanData, header: "KELURAHAN" },

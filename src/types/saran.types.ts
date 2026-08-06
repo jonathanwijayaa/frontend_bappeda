@@ -12,3 +12,10 @@ export interface SaranData {
   subjek: string | null;
   updated_at: string;
 }
+
+export interface HotlineInfo {
+  jam_layanan: string;
+  telepon: string;
+  updated_at?: string | null;
+  whatsapp: string;
+}

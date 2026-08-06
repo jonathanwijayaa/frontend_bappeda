@@ -9,3 +9,13 @@ export interface ProfileData {
   role: string;
   user_id: number;
 }
+
+export interface ProfilDataRelawan {
+  alamat_ktp: string | null;
+  jenis_kelamin: string;
+  kelurahan: string | null;
+  kemantren: string | null;
+  nama_lengkap: string;
+  nik: string;
+  no_hp: string | null;
+}
