@@ -348,7 +348,7 @@ const DaftarKader: React.FC = () => {
       return;
     }
 
-    const body: unknown = {
+    const body: Record<string, unknown> = {
       alamat_pic: alamatPicTrimmed,
       deskripsi: formData.deskripsi || null,
       kelurahan_pic: formData.kelurahan_pic || null,
@@ -359,7 +359,7 @@ const DaftarKader: React.FC = () => {
     };
     if (isSuperAdmin) body.opd_id = formData.opd_id;
 
-    createKader.mutate(body, {
+    createKader.mutate(body as Record<string, unknown>, {
       onError: (e: unknown) =>
         setToast({ message: parseErrorMessage(e, "Gagal menambahkan kader"), type: "error" }),
       onSuccess: (d) => {
@@ -531,7 +531,7 @@ const DaftarKader: React.FC = () => {
         payload: {
           ...assignPicForm,
           no_hp_pic: assignPicForm.no_hp_pic.replace(/\D/g, ""),
-        } as unknown,
+        } as Record<string, unknown>,
       },
       {
         onError: (e: unknown) =>
@@ -597,7 +597,7 @@ const DaftarKader: React.FC = () => {
       <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>
         Detail
       </Button>
-      {(isSuperAdmin || (isOPD && row.opd_id === (user as unknown)?.opd_id)) && (
+      {(isSuperAdmin || (isOPD && row.opd_id === user?.opd_id)) && (
         <Button
           variant={row.status_keaktifan ? "danger" : "secondary"}
           size="sm"
@@ -756,11 +756,11 @@ const DaftarKader: React.FC = () => {
               <input
                 type="text"
                 name={field.name}
-                value={(formData as unknown)[field.name]}
+                value={(formData as unknown as Record<string, string>)[field.name]}
                 onChange={(e) => setFormData((prev) => ({ ...prev, [field.name]: e.target.value }))}
                 placeholder={field.placeholder}
                 required={field.required}
-                maxLength={(field as unknown).maxLength}
+                maxLength={(field as Record<string, unknown>).maxLength as number | undefined}
                 className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -869,7 +869,7 @@ const DaftarKader: React.FC = () => {
                 </label>
                 {field.type === "textarea" ? (
                   <textarea
-                    value={(detailFormData as unknown)[field.name]}
+                    value={(detailFormData as Record<string, string>)[field.name]}
                     onChange={(e) =>
                       setDetailFormData((prev) => ({ ...prev, [field.name]: e.target.value }))
                     }
@@ -879,7 +879,7 @@ const DaftarKader: React.FC = () => {
                 ) : (
                   <input
                     type="text"
-                    value={(detailFormData as unknown)[field.name]}
+                    value={(detailFormData as Record<string, string>)[field.name]}
                     onChange={(e) =>
                       setDetailFormData((prev) => ({ ...prev, [field.name]: e.target.value }))
                     }
@@ -982,12 +982,12 @@ const DaftarKader: React.FC = () => {
               </label>
               <input
                 type="text"
-                value={(assignPicForm as unknown)[field.name]}
+                value={(assignPicForm as Record<string, string>)[field.name]}
                 onChange={(e) =>
                   setAssignPicForm((prev) => ({ ...prev, [field.name]: e.target.value }))
                 }
                 placeholder={field.placeholder}
-                maxLength={(field as unknown).maxLength}
+                maxLength={(field as Record<string, unknown>).maxLength as number | undefined}
                 className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
             </div>

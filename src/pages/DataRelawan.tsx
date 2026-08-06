@@ -11,7 +11,7 @@ import UploadExcelModal from "../components/ui/UploadExcelModal";
 import type { ToastType } from "../components/ui/Toast";
 import Toast from "../components/ui/Toast";
 import Pagination from "../components/ui/Pagination";
-import type { RelawanData, Assignment, PengajuanAPIData } from "../types/relawan.types";
+import type { RelawanData, Assignment, PengajuanAPIData, PengajuanData } from "../types/relawan.types";
 import { useWilayah } from "../hooks/useWilayah";
 import type { AutoOption } from "../types/common.types";
 import { useAuth } from "../context/AuthContext";
@@ -94,8 +94,8 @@ const DataRelawan: React.FC = () => {
     kader: "",
     kader_id: null,
     nomorSK: "",
-    opd: isOPD ? (user as unknown)?.nama_opd || "" : "",
-    opd_id: isOPD ? (user as unknown)?.opd_id || 0 : 0,
+    opd: isOPD ? user?.nama_opd || "" : "",
+    opd_id: isOPD ? user?.opd_id || 0 : 0,
     penugasan: "",
     peran: "",
     skId: "",
@@ -136,7 +136,7 @@ const DataRelawan: React.FC = () => {
     const origAssign = orig.assignments ?? [];
     if (detailFormData.assignments.length !== origAssign.length) return true;
     return detailFormData.assignments.some((a, i) => {
-      const o = origAssign[i] as unknown;
+      const o = origAssign[i];
       return (
         !o ||
         a.opd !== o.opd ||
@@ -207,8 +207,8 @@ const DataRelawan: React.FC = () => {
         const endpoint = isOPD ? "/opd-admin/kader" : `/kader?opd_id=${opdId}`;
         const { data } = await apiClient.get(endpoint);
         const options: AutoOption[] = data?.success
-          ? (data.data as unknown[]).map((k) => ({
-              label: k.nama_kader as string,
+          ? (data.data as Array<{ kader_id: number; nama_kader: string }>).map((k) => ({
+              label: k.nama_kader,
               value: String(k.kader_id),
             }))
           : [];
@@ -225,7 +225,7 @@ const DataRelawan: React.FC = () => {
   useEffect(() => {
     const assignments = isEditMode ? detailFormData.assignments : formData.assignments;
     const opdIds = Array.from(
-      new Set(assignments.map((a) => Number((a as unknown).opd_id || 0)).filter((id) => id > 0)),
+      new Set(assignments.map((a) => Number(a.opd_id || 0)).filter((id) => id > 0)),
     );
     opdIds.forEach((opdId) => {
       void fetchKaderOptionsForOpd(opdId);
@@ -236,7 +236,7 @@ const DataRelawan: React.FC = () => {
     const result: Record<number, AutoOption[]> = {};
     const assignments = isEditMode ? detailFormData.assignments : formData.assignments;
     assignments.forEach((a, i) => {
-      const opdId = Number((a as unknown).opd_id || 0);
+      const opdId = Number(a.opd_id || 0);
       result[i] = opdId > 0 ? kaderOptionsByOpdId[opdId] || [] : [];
     });
     return result;
@@ -246,7 +246,7 @@ const DataRelawan: React.FC = () => {
     const result: Record<number, boolean> = {};
     const assignments = isEditMode ? detailFormData.assignments : formData.assignments;
     assignments.forEach((a, i) => {
-      const opdId = Number((a as unknown).opd_id || 0);
+      const opdId = Number(a.opd_id || 0);
       result[i] = opdId > 0 ? !!loadingOpdIds[opdId] : false;
     });
     return result;
@@ -255,7 +255,7 @@ const DataRelawan: React.FC = () => {
   // Pastikan pilihan kader untuk OPD tertentu sudah tersedia saat penugasan dibuka.
   const fetchKaderByOpdId = useCallback(
     (opdId: number, _assignmentIndex: number) => {
-      const normalizedOpdId = opdId > 0 ? opdId : isOPD ? ((user as unknown)?.opd_id ?? 0) : 0;
+      const normalizedOpdId = opdId > 0 ? opdId : isOPD ? (user?.opd_id ?? 0) : 0;
       if (normalizedOpdId > 0) void fetchKaderOptionsForOpd(normalizedOpdId);
     },
     [isOPD, user, fetchKaderOptionsForOpd],
@@ -271,29 +271,38 @@ const DataRelawan: React.FC = () => {
   );
 
   // Gabungkan pesan error/skip dari import massal agar user mendapat detail yang jelas.
-  const buildBulkIssueMessage = useCallback((res: unknown, fallback: string) => {
-    const issues: string[] = [
-      ...(Array.isArray(res?.data?.errors) ? res.data.errors : []),
-      ...(Array.isArray(res?.data?.skipped) ? res.data.skipped : []),
-      ...(Array.isArray(res?.data?.skippedNIK) ? res.data.skippedNIK : []),
-    ]
-      .filter(Boolean)
-      .map((x: unknown) => (typeof x === "string" ? x : JSON.stringify(x)));
+  const buildBulkIssueMessage = useCallback(
+    (
+      res: {
+        data?: { errors?: unknown[]; skipped?: unknown[]; skippedNIK?: unknown[] };
+        message?: string;
+      } | null | undefined,
+      fallback: string,
+    ) => {
+      const issues: string[] = [
+        ...(Array.isArray(res?.data?.errors) ? res.data.errors : []),
+        ...(Array.isArray(res?.data?.skipped) ? res.data.skipped : []),
+        ...(Array.isArray(res?.data?.skippedNIK) ? res.data.skippedNIK : []),
+      ]
+        .filter(Boolean)
+        .map((x: unknown) => (typeof x === "string" ? x : JSON.stringify(x)));
 
-    const baseMessage =
-      res?.message && !/^\d+\s+peringatan\.?$/i.test(String(res.message).trim())
-        ? res.message
-        : fallback;
+      const baseMessage =
+        res?.message && !/^\d+\s+peringatan\.?$/i.test(String(res.message).trim())
+          ? res.message
+          : fallback;
 
-    if (issues.length === 0) return baseMessage;
+      if (issues.length === 0) return baseMessage;
 
-    const preview = issues
-      .slice(0, 3)
-      .map((m) => `- ${m}`)
-      .join("\n");
-    const more = issues.length > 3 ? `\n(+${issues.length - 3} masalah lain)` : "";
-    return `${baseMessage}\n${preview}${more}`;
-  }, []);
+      const preview = issues
+        .slice(0, 3)
+        .map((m) => `- ${m}`)
+        .join("\n");
+      const more = issues.length > 3 ? `\n(+${issues.length - 3} masalah lain)` : "";
+      return `${baseMessage}\n${preview}${more}`;
+    },
+    [],
+  );
 
   // ── FILTER DATA RELAWAN (Tabel Bawah) ──
   const filteredRelawanData = useMemo(() => {
@@ -385,12 +394,12 @@ const DataRelawan: React.FC = () => {
         r.kelurahan || "-",
         r.jenisKelamin === "L" ? "Laki-laki" : "Perempuan",
         r.assignments && r.assignments.length > 0
-          ? [...new Set(r.assignments.map((a: unknown) => a.opd).filter(Boolean))].join(", ") ||
+          ? [...new Set(r.assignments.map((a: Assignment) => a.opd).filter(Boolean))].join(", ") ||
             r.penugasan ||
             "-"
           : r.penugasan || "-",
         r.assignments && r.assignments.length > 0
-          ? [...new Set(r.assignments.map((a: unknown) => a.kader).filter(Boolean))].join(", ") ||
+          ? [...new Set(r.assignments.map((a: Assignment) => a.kader).filter(Boolean))].join(", ") ||
             r.kader ||
             "-"
           : r.kader || "-",
@@ -427,7 +436,7 @@ const DataRelawan: React.FC = () => {
     { accessor: "tanggalPengajuan" as const, header: "TANGGAL PENGAJUAN" },
     {
       header: "STATUS",
-      render: (row: unknown) => {
+      render: (row: PengajuanData) => {
         const isDisetujui =
           row.status_pengajuan === "Disetujui" || row.status_pengajuan === "Diterima";
         const isDitolak = row.status_pengajuan === "Ditolak";
@@ -472,8 +481,8 @@ const DataRelawan: React.FC = () => {
       penugasan: relawan.penugasan || "-",
     });
 
-    assignments.forEach((a: unknown) => {
-      const opdId = Number(a?.opd_id || 0);
+    assignments.forEach((a) => {
+      const opdId = Number(a.opd_id || 0);
       if (opdId > 0) void fetchKaderOptionsForOpd(opdId);
     });
     setIsDetailModalOpen(true);
@@ -638,7 +647,11 @@ const DataRelawan: React.FC = () => {
       }
     } catch (e: unknown) {
       const fallbackMessage = parseErrorMessage(e, "Gagal import data dari Excel");
-      const responseData = e?.response?.data;
+      const axiosErr = e as import("axios").AxiosError<{
+        data?: { errors?: unknown[]; skipped?: unknown[]; skippedNIK?: unknown[] };
+        message?: string;
+      }>;
+      const responseData = axiosErr?.response?.data;
       const detailedMessage = buildBulkIssueMessage(responseData, fallbackMessage);
       setToast({ message: detailedMessage, type: "error" });
     } finally {
@@ -653,8 +666,8 @@ const DataRelawan: React.FC = () => {
       ...prev,
       assignments: [...prev.assignments, createEmptyAssignment()],
     }));
-    if (isOPD && (user as unknown)?.opd_id) {
-      fetchKaderByOpdId((user as unknown).opd_id, newIndex);
+    if (isOPD && user?.opd_id) {
+      fetchKaderByOpdId(user.opd_id, newIndex);
     }
   };
 
@@ -726,7 +739,7 @@ const DataRelawan: React.FC = () => {
         kader_id: null,
         opd: namaOpd,
         opd_id: opdId,
-      } as unknown;
+      };
       return { ...prev, assignments: newAssignments };
     });
     if (opdId > 0) void fetchKaderOptionsForOpd(opdId);
@@ -744,7 +757,7 @@ const DataRelawan: React.FC = () => {
         ...newAssignments[index],
         kader: kaderName,
         kader_id: kaderId,
-      } as unknown;
+      };
       return { ...prev, assignments: newAssignments };
     });
   };
@@ -768,7 +781,7 @@ const DataRelawan: React.FC = () => {
     }
     setIsSavingEdit(true);
     try {
-      const relawanId = (selectedRelawan as unknown).relawan_id;
+      const relawanId = selectedRelawan.relawan_id;
       const endpoint = isSuperAdmin
         ? `/admin/relawan/${relawanId}`
         : `/opd-admin/relawan/${relawanId}`;
@@ -776,13 +789,13 @@ const DataRelawan: React.FC = () => {
         alamat_ktp: detailFormData.alamat,
         assignments: detailFormData.assignments.map((a) => ({
           detail: a.detail,
-          kader_id: (a as unknown).kader_id || null,
+          kader_id: a.kader_id || null,
           opd: a.opd,
-          opd_id: (a as unknown).opd_id || null,
+          opd_id: a.opd_id || null,
           penugasan: a.penugasan,
           penugasan_id:
-            !String((a as unknown).id).startsWith("new-") && !isNaN(parseInt((a as unknown).id))
-              ? parseInt((a as unknown).id)
+            !String(a.id).startsWith("new-") && !isNaN(parseInt(a.id))
+              ? parseInt(a.id)
               : undefined,
           peran: a.peran,
           status_keaktifan: a.status_keaktifan,
@@ -817,12 +830,12 @@ const DataRelawan: React.FC = () => {
       }));
       return;
     }
-    const assignment = detailFormData.assignments[index] as unknown;
+    const assignment = detailFormData.assignments[index];
     const label = [
       selectedRelawan?.namaLengkap,
-      assignment.opd ? `dari ${assignment.opd}` : "",
-      assignment.kader ? `(Kader: ${assignment.kader})` : "",
-      assignment.peran ? `— ${assignment.peran}` : "",
+      assignment?.opd ? `dari ${assignment.opd}` : "",
+      assignment?.kader ? `(Kader: ${assignment.kader})` : "",
+      assignment?.peran ? `— ${assignment.peran}` : "",
     ]
       .filter(Boolean)
       .join(" ");
@@ -872,16 +885,16 @@ const DataRelawan: React.FC = () => {
   const handleAddDetailAssignment = () => {
     setDetailFormData((prev) => ({
       ...prev,
-      assignments: [...prev.assignments, createEmptyAssignment("new") as unknown],
+      assignments: [...prev.assignments, createEmptyAssignment("new")],
     }));
-    if (isOPD && (user as unknown)?.opd_id) {
+    if (isOPD && user?.opd_id) {
       const newIndex = detailFormData.assignments.length;
-      fetchKaderByOpdId((user as unknown).opd_id, newIndex);
+      fetchKaderByOpdId(user.opd_id, newIndex);
     }
   };
 
   const renderAssignmentFields = (
-    assignment: unknown,
+    assignment: Assignment,
     index: number,
     isReadOnly: boolean,
     context: "detail" | "form" = "form",
@@ -893,7 +906,7 @@ const DataRelawan: React.FC = () => {
   ) => {
     const currentKaderOptions = context === "form" ? kaderOptionsByIndex[index] || [] : [];
     const isKaderLoading = isLoadingKaderByIndex[index] || false;
-    const hasOpdSelected = isOPD || assignment.opd_id > 0 || assignment.opd !== "";
+    const hasOpdSelected = isOPD || Number(assignment.opd_id || 0) > 0 || assignment.opd !== "";
     const currentStatusKeaktifan = normalizeStatusKeaktifan(assignment.status_keaktifan);
 
     const onFieldChange = handlers?.onFieldChange ?? handleAssignmentChange;
@@ -925,7 +938,7 @@ const DataRelawan: React.FC = () => {
               <input
                 type="text"
                 disabled
-                value={assignment.opd || (user as unknown)?.nama_opd || "Instansi Anda"}
+                value={assignment.opd || user?.nama_opd || "Instansi Anda"}
                 className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 italic cursor-not-allowed"
               />
             ) : (
@@ -940,7 +953,7 @@ const DataRelawan: React.FC = () => {
                 disabled={isReadOnly}
               />
             )}
-            {!isReadOnly && !isOPD && assignment.opd_id > 0 && (
+            {!isReadOnly && !isOPD && Number(assignment.opd_id || 0) > 0 && (
               <p className="mt-1 text-xs text-green-600 font-medium">OPD ditemukan</p>
             )}
           </div>
@@ -980,7 +993,7 @@ const DataRelawan: React.FC = () => {
                   hasOpdSelected &&
                   !isKaderLoading &&
                   currentKaderOptions.length === 0 &&
-                  assignment.opd_id > 0 && (
+                  Number(assignment.opd_id || 0) > 0 && (
                     <p className="mt-1 text-xs text-yellow-600">OPD ini belum memiliki kader</p>
                   )}
               </>
@@ -1076,9 +1089,9 @@ const DataRelawan: React.FC = () => {
     );
   };
 
-  const pengajuanActions = (row: unknown) =>
+  const pengajuanActions = (row: Record<string, unknown>) =>
     row.status_pengajuan === "Menunggu Review" ? (
-      <Button variant="secondary" size="sm" onClick={() => handleReviewClick(row._raw)}>
+      <Button variant="secondary" size="sm" onClick={() => handleReviewClick(row._raw as PengajuanAPIData)}>
         Review
       </Button>
     ) : null;
@@ -1111,8 +1124,8 @@ const DataRelawan: React.FC = () => {
                 no_hp: "",
                 penugasan: "",
               });
-              if (isOPD && (user as unknown)?.opd_id) {
-                fetchKaderByOpdId((user as unknown).opd_id, 0);
+              if (isOPD && user?.opd_id) {
+                fetchKaderByOpdId(user.opd_id, 0);
               }
               setIsModalOpen(true);
             }}
@@ -1289,7 +1302,7 @@ const DataRelawan: React.FC = () => {
               <input
                 type="text"
                 name={field.name}
-                value={(formData as unknown)[field.name]}
+                value={(formData as unknown as Record<string, string>)[field.name]}
                 onChange={(e) => {
                   if (field.name === "nik") {
                     const val = e.target.value.replace(/\D/g, "");
@@ -1300,7 +1313,7 @@ const DataRelawan: React.FC = () => {
                 }}
                 placeholder={field.placeholder}
                 required={field.required}
-                maxLength={(field as unknown).maxLength}
+                maxLength={(field as Record<string, unknown>).maxLength as number | undefined}
                 className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -1446,8 +1459,8 @@ const DataRelawan: React.FC = () => {
                     type="text"
                     value={
                       !isEditMode && field.name === "no_hp"
-                        ? formatPhoneDisplay((detailFormData as unknown)[field.name])
-                        : (detailFormData as unknown)[field.name]
+                        ? formatPhoneDisplay((detailFormData as unknown as Record<string, string>)[field.name])
+                        : (detailFormData as unknown as Record<string, string>)[field.name]
                     }
                     readOnly={!isFieldEditable}
                     onChange={(e) =>
@@ -1547,12 +1560,12 @@ const DataRelawan: React.FC = () => {
               {Array.isArray(detailFormData.assignments) &&
               detailFormData.assignments.length > 0 ? (
                 detailFormData.assignments.map((assignment, index) => {
-                  const penugasanId = parseInt((assignment as unknown).id);
+                  const penugasanId = parseInt(assignment.id);
                   const isNewAssignment =
-                    isNaN(penugasanId) || String((assignment as unknown).id).startsWith("new-");
+                    isNaN(penugasanId) || String(assignment.id).startsWith("new-");
                   return (
                     <div
-                      key={(assignment as unknown).id}
+                      key={assignment.id}
                       className="relative bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4 space-y-4"
                     >
                       {isEditMode && (
@@ -1662,15 +1675,15 @@ const DataRelawan: React.FC = () => {
               </div>
             </div>
 
-            {selectedPengajuan.data_baru &&
+            {Boolean(selectedPengajuan.data_baru) &&
               (() => {
-                let dataBaru: unknown = {};
+                let dataBaru: Record<string, unknown> = {};
                 try {
                   dataBaru =
                     typeof selectedPengajuan.data_baru === "string"
-                      ? JSON.parse(selectedPengajuan.data_baru)
-                      : selectedPengajuan.data_baru;
-                } catch (e) {
+                      ? (JSON.parse(selectedPengajuan.data_baru) as Record<string, unknown>)
+                      : (selectedPengajuan.data_baru as Record<string, unknown>);
+                } catch {
                   return (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2 mt-4">
                       <p className="text-sm font-medium text-red-800">
@@ -1680,7 +1693,7 @@ const DataRelawan: React.FC = () => {
                   );
                 }
 
-                if (Object.keys(dataBaru).length === 0) return null;
+                if (!dataBaru || Object.keys(dataBaru).length === 0) return null;
 
                 return (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-2 mt-4">
@@ -1688,16 +1701,16 @@ const DataRelawan: React.FC = () => {
                       Detail Perubahan yang Diajukan
                     </p>
                     <div className="grid grid-cols-2 gap-2 text-sm text-yellow-700">
-                      {dataBaru.nama_lengkap && (
+                      {Boolean(dataBaru.nama_lengkap) && (
                         <>
                           <span className="font-medium">Nama Lengkap Baru:</span>
-                          <span className="font-semibold">{dataBaru.nama_lengkap}</span>
+                          <span className="font-semibold">{String(dataBaru.nama_lengkap)}</span>
                         </>
                       )}
-                      {dataBaru.alamat_ktp && (
+                      {Boolean(dataBaru.alamat_ktp) && (
                         <>
                           <span className="font-medium">Alamat KTP Baru:</span>
-                          <span className="font-semibold">{dataBaru.alamat_ktp}</span>
+                          <span className="font-semibold">{String(dataBaru.alamat_ktp)}</span>
                         </>
                       )}
                     </div>

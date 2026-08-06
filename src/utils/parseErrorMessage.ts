@@ -1,6 +1,17 @@
 // utils/parseErrorMessage.ts
 // Helper terpusat: ubah error API → pesan yang ramah & spesifik untuk user
 
+import type { AxiosError } from "axios";
+
+interface ApiErrorData {
+  code?: string;
+  detail?: string;
+  error?: string;
+  errors?: Array<string | { message?: string; msg?: string }>;
+  hint?: unknown;
+  message?: string;
+}
+
 /**
  * Mengekstrak pesan error yang spesifik dari berbagai bentuk error response API.
  * Mendeteksi kondisi umum seperti duplikat data, koneksi gagal, validasi, dll.
@@ -9,12 +20,18 @@ export function parseErrorMessage(
   e: unknown,
   fallback = "Terjadi kesalahan, silakan coba lagi",
 ): string {
-  // Ambil pesan dari berbagai struktur response
-  const data = e?.response?.data;
-  const status = e?.response?.status;
+  // Type guard for Axios errors
+  const axiosErr = e as AxiosError<ApiErrorData> | undefined;
+  const data = axiosErr?.response?.data;
+  const status = axiosErr?.response?.status;
 
   // ── Pesan langsung dari backend ──────────────────────────────────
-  const rawMsg: string = data?.message || data?.error || data?.detail || e?.message || "";
+  const rawMsg: string =
+    data?.message ||
+    data?.error ||
+    data?.detail ||
+    (e instanceof Error ? e.message : "") ||
+    "";
 
   // ── Deteksi duplikat data (PostgreSQL unique violation = code 23505) ──
   const isDuplicate =
@@ -59,15 +76,16 @@ export function parseErrorMessage(
   }
 
   // ── Server Error ─────────────────────────────────────────────────
-  if (status >= 500) {
+  if (status && status >= 500) {
     return "Terjadi kesalahan pada server. Silakan coba beberapa saat lagi.";
   }
 
   // ── Network / No Response ────────────────────────────────────────
-  if (!e?.response) {
+  if (!axiosErr?.response) {
     return "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.";
   }
 
   // ── Fallback: gunakan pesan dari backend jika ada ────────────────
   return rawMsg || fallback;
 }
+

@@ -36,7 +36,7 @@ const formatValue = (val: unknown): string => {
 const renderDiff = (action: string, oldVal: unknown, newVal: unknown) => {
   // 1. UI UNTUK AKSI INSERT (Hanya tampilkan data baru)
   if (action === "INSERT") {
-    const data = newVal || {};
+    const data = (newVal || {}) as Record<string, unknown>;
     const keys = Object.keys(data);
 
     if (keys.length === 0)
@@ -60,20 +60,15 @@ const renderDiff = (action: string, oldVal: unknown, newVal: unknown) => {
 
   // 2. UI UNTUK AKSI UPDATE (Tampilkan perbandingan)
   if (action === "UPDATE") {
-    if (typeof oldVal !== "object" || typeof newVal !== "object" || !oldVal || !newVal) {
-      return (
-        <p className="text-sm text-red-500 italic">
-          Format data lama/baru tidak valid untuk perbandingan.
-        </p>
-      );
-    }
+    const oldData = (oldVal || {}) as Record<string, unknown>;
+    const newData = (newVal || {}) as Record<string, unknown>;
 
     const allKeys = Array.from(
-      new Set([...Object.keys(oldVal || {}), ...Object.keys(newVal || {})]),
+      new Set([...Object.keys(oldData), ...Object.keys(newData)]),
     );
     // Hanya ambil key yang nilainya benar-benar berubah
     const changedKeys = allKeys.filter(
-      (k) => JSON.stringify((oldVal || {})[k]) !== JSON.stringify((newVal || {})[k]),
+      (k) => JSON.stringify(oldData[k]) !== JSON.stringify(newData[k]),
     );
 
     if (changedKeys.length === 0) {
@@ -93,13 +88,13 @@ const renderDiff = (action: string, oldVal: unknown, newVal: unknown) => {
               <div className="p-3 bg-red-50">
                 <p className="text-xs text-red-500 font-medium mb-1">Sebelum</p>
                 <p className="text-sm text-gray-700 break-words whitespace-pre-wrap">
-                  {formatValue((oldVal || {})[key])}
+                  {formatValue(oldData[key])}
                 </p>
               </div>
               <div className="p-3 bg-green-50">
                 <p className="text-xs text-green-600 font-medium mb-1">Sesudah</p>
                 <p className="text-sm text-gray-700 break-words whitespace-pre-wrap">
-                  {formatValue((newVal || {})[key])}
+                  {formatValue(newData[key])}
                 </p>
               </div>
             </div>
@@ -111,7 +106,7 @@ const renderDiff = (action: string, oldVal: unknown, newVal: unknown) => {
 
   // 3. UI UNTUK AKSI DELETE (Opsional: Hanya tampilkan data lama yang dihapus)
   if (action === "DELETE") {
-    const data = oldVal || {};
+    const data = (oldVal || {}) as Record<string, unknown>;
     const keys = Object.keys(data);
 
     if (keys.length === 0)
@@ -138,23 +133,23 @@ const renderDiff = (action: string, oldVal: unknown, newVal: unknown) => {
 const getRecordName = (log: LogData): string => {
   if (!log) return "-";
   // Gunakan new_value jika ada, jika tidak gunakan old_value (misal untuk DELETE)
-  const data = log.new_value || log.old_value || {};
+  const data = (log.new_value || log.old_value || {}) as Record<string, unknown>;
 
   switch (log.table_name) {
     case "users":
-      return data.nama_lengkap || data.nik || String(log.record_id);
+      return String(data.nama_lengkap || data.nik || log.record_id);
     case "opd":
-      return data.nama_opd || String(log.record_id);
+      return String(data.nama_opd || log.record_id);
     case "kader":
-      return data.nama_kader || String(log.record_id);
+      return String(data.nama_kader || log.record_id);
     case "relawan":
-      return data.nama_lengkap || String(log.record_id);
+      return String(data.nama_lengkap || log.record_id);
     case "surat_keputusan":
-      return data.judul_sk || data.nomor_sk || String(log.record_id);
+      return String(data.judul_sk || data.nomor_sk || log.record_id);
     case "penugasan_relawan":
-      return data.penugasan || data.jabatan || String(log.record_id);
+      return String(data.penugasan || data.jabatan || log.record_id);
     case "saran_masukan":
-      return data.subjek || String(log.record_id);
+      return String(data.subjek || log.record_id);
     case "hotline_settings":
       return "Pengaturan Hotline";
     default:

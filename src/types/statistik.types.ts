@@ -1,4 +1,5 @@
 export interface ChartData {
+  [key: string]: number | string;
   name: string;
   value: number;
 }

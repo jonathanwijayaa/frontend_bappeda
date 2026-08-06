@@ -73,12 +73,12 @@ const Riwayat = () => {
               <p className="text-xs font-semibold text-gray-500 mb-1.5">
                 {FIELD_LABELS[key] || key}
               </p>
-              {item.data_lama?.[key] && (
+              {item.data_lama?.[key] ? (
                 <div className="flex gap-2 text-xs mb-1">
                   <span className="text-red-500 font-medium flex-shrink-0">Dari:</span>
-                  <span className="text-gray-600">{item.data_lama[key]}</span>
+                  <span className="text-gray-600">{String(item.data_lama[key])}</span>
                 </div>
-              )}
+              ) : null}
               <div className="flex gap-2 text-xs">
                 <span className="text-green-600 font-medium flex-shrink-0">Menjadi:</span>
                 <span className="text-gray-800 font-medium">{String(value)}</span>
@@ -115,7 +115,7 @@ const Riwayat = () => {
           ].map((tab) => (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key as unknown)}
+              onClick={() => setActiveTab(tab.key as "diproses" | "selesai")}
               className={`pb-2 text-sm font-medium transition-colors flex items-center gap-2 ${
                 activeTab === tab.key
                   ? "text-gray-800 border-b-2 border-gray-800"

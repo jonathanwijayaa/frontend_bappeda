@@ -74,7 +74,17 @@ const SuratKeputusan: React.FC = () => {
   };
 
   // Validasi lalu unggah file PDF SK beserta metadata pendukung.
-  const handlePDFUploadConfirm = async (file: File, metadata: unknown) => {
+  interface SKUploadMetadata {
+    batasAktif?: string;
+    judulSK: string;
+    kader_ids?: string | number[];
+    nomorSK: string;
+    opd_id: string | number;
+    tanggalTerbit: string;
+  }
+
+  const handlePDFUploadConfirm = async (file: File, metadataParam: unknown) => {
+    const metadata = metadataParam as SKUploadMetadata;
     setErrorHint(null);
 
     if (!metadata.opd_id) {
@@ -97,7 +107,7 @@ const SuratKeputusan: React.FC = () => {
     formData.append("judul_sk", metadata.judulSK);
     formData.append("tanggal_terbit", metadata.tanggalTerbit);
     formData.append("batas_aktif", metadata.batasAktif || "");
-    formData.append("opd_id", metadata.opd_id);
+    formData.append("opd_id", String(metadata.opd_id));
     // Kirim kader_ids (bisa 'ALL' atau array angka)
     if (metadata.kader_ids) {
       formData.append(
@@ -109,7 +119,8 @@ const SuratKeputusan: React.FC = () => {
     createSk.mutate(formData, {
       onError: (e: unknown) => {
         setToast({ message: parseErrorMessage(e, "Gagal mengunggah SK"), type: "error" });
-        if (e.response?.data?.hint) setErrorHint(e.response.data.hint);
+        const axiosErr = e as import("axios").AxiosError<{ hint?: import("../types/sk.types").ErrorHint }>;
+        if (axiosErr.response?.data?.hint) setErrorHint(axiosErr.response.data.hint);
       },
       onSuccess: (d) => {
         setToast({
@@ -166,7 +177,7 @@ const SuratKeputusan: React.FC = () => {
           { dataKey: "status_keaktifan", header: "STATUS" },
           { dataKey: "jumlah_relawan", header: "JML RELAWAN" },
         ],
-        data: filteredData,
+        data: filteredData as unknown as Record<string, unknown>[],
         filename: `surat-keputusan-${new Date().toISOString().split("T")[0]}.pdf`,
         title: "Daftar Surat Keputusan",
       });
@@ -566,8 +577,8 @@ const SuratKeputusan: React.FC = () => {
         title="Upload Surat Keputusan (PDF)"
         isOPD={isOPD}
         userOpdData={{
-          id: (user as unknown)?.opd_id,
-          name: (user as unknown)?.nama_opd,
+          id: user?.opd_id,
+          name: user?.nama_opd,
         }}
       />
 

@@ -45,7 +45,7 @@ const DEFAULT_HOTLINE: HotlineInfo = {
 const SaranHotline: React.FC = () => {
   const { isSuperAdmin, user } = useAuth();
   const isRelawan = user?.role === "relawan";
-  const userNoHp = (user as unknown)?.no_hp || "";
+  const userNoHp = user?.no_hp || "";
 
   // ── Server State ─────────────────────────────────────────
   const { data: saranList = [], isLoading } = useSaranList(isSuperAdmin);
@@ -438,7 +438,7 @@ const SaranHotline: React.FC = () => {
                       </label>
                       <input
                         type="text"
-                        value={(hotlineForm as unknown)[field.key]}
+                        value={(hotlineForm as unknown as Record<string, string>)[field.key]}
                         onChange={(e) =>
                           setHotlineForm((prev) => ({ ...prev, [field.key]: e.target.value }))
                         }

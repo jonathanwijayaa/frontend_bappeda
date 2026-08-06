@@ -8,7 +8,7 @@ interface ExportColumn {
 
 interface ExportOptions {
   columns: ExportColumn[];
-  data: unknown[];
+  data: Record<string, unknown>[];
   filename?: string;
   title: string;
 }

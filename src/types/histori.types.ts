@@ -1,7 +1,6 @@
 // Histori Relawan Types — digunakan di halaman HistoriRelawan
 
 export interface HistoriAssignment {
-  [key: string]: unknown;
   batasAktif?: string;
   detail: string;
   id: string;
@@ -20,7 +19,6 @@ export interface HistoriAssignment {
 }
 
 export interface HistoriRelawanData {
-  [key: string]: unknown;
   alamat: string;
   assignments: HistoriAssignment[];
   jabatan: string;
