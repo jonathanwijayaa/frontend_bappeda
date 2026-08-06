@@ -9,18 +9,14 @@ export interface OPDData {
   "NIK PIC": string;
   KONTAK: string;
 }
-
 interface IFillOPDForm {
   data: OPDData;
   page: Page;
 }
-
 function generateSafeOPDName(): string {
   const opdName = faker.company.name();
   return opdName.replace(/[^a-zA-Z\s]/g, "").trim();
 }
-
-
 export const buildOPDData = (): OPDData => ({
   "NAMA OPD": `OPD ${generateSafeOPDName()}`,
   STATUS: "Aktif",
@@ -29,7 +25,6 @@ export const buildOPDData = (): OPDData => ({
   "NIK PIC": faker.number.bigInt({ min: 1000000000000000n, max: 9999999999999999n }).toString(),
   KONTAK: `08${faker.string.numeric(10)}`,
 });
-
 export const fillOPDForm = async ({ data, page }: IFillOPDForm) => ({
   async fillAlamat() {
     await page.getByRole("textbox", { name: "Alamat OPD" }).fill(data.ALAMAT);
