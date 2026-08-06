@@ -18,28 +18,28 @@ const Dokumen: React.FC = () => {
       title: "Buku Panduan Aplikasi",
     },
     {
-      description: "Templat untuk mengunggah data relawan secara massal",
+      description: "Format untuk mengunggah data relawan secara massal",
       downloadUrl: templateRelawan,
       fileName: "Template_Data_Relawan.xlsx",
       icon: <FileText size={24} className="text-green-600" />,
       id: "template-relawan",
-      title: "Templat Excel Data Relawan",
+      title: "Format Excel Data Relawan",
     },
     {
-      description: "Templat untuk mengunggah data OPD secara massal",
+      description: "Format untuk mengunggah data OPD secara massal",
       downloadUrl: templateOPD,
       fileName: "Template_Data_OPD.xlsx",
       icon: <FileText size={24} className="text-green-600" />,
       id: "template-opd",
-      title: "Templat Excel Data OPD",
+      title: "Format Excel Data OPD",
     },
     {
-      description: "Templat untuk mengunggah data kader secara massal",
+      description: "Format untuk mengunggah data kader secara massal",
       downloadUrl: templateKader,
       fileName: "Template_Data_Kader.xlsx",
       icon: <FileText size={24} className="text-teal-600" />,
       id: "template-kader",
-      title: "Templat Excel Data Kader",
+      title: "Format Excel Data Kader",
     },
   ];
 
@@ -96,8 +96,8 @@ const Dokumen: React.FC = () => {
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <h4 className="font-semibold text-blue-900 mb-2">Informasi Penting</h4>
           <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-            <li>Pastikan menggunakan templat Excel yang sesuai saat mengunggah data</li>
-            <li>Jangan mengubah struktur kolom pada templat Excel</li>
+            <li>Pastikan menggunakan format Excel yang sesuai saat mengunggah data</li>
+            <li>Jangan mengubah struktur kolom pada format Excel</li>
             <li>Untuk bantuan lebih lanjut, silakan baca guidebook aplikasi</li>
             <li>Hubungi administrator jika mengalami kendala</li>
           </ul>

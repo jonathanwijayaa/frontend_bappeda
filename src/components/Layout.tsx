@@ -36,7 +36,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       "/daftar-kader": "Kelola data kader yang terdaftar dalam sistem",
       "/dashboard": "Ringkasan data dan informasi utama sistem",
       "/data-relawan": "Kelola data relawan dan penugasan mereka",
-      "/dokumen": "Akses guidebook dan template Excel untuk mengelola data",
+      "/dokumen": "Akses guidebook dan format Excel untuk mengelola data",
       "/edit-profil": "Ubah informasi pribadi dan pengaturan akun",
       "/histori-relawan": "Lihat riwayat data dan penugasan seluruh relawan",
       "/log-aktifitas": "Riwayat aktivitas pengguna dalam sistem",
