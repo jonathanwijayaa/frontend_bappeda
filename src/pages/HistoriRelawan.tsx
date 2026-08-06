@@ -13,7 +13,7 @@ import { HistoriRelawanData } from '../types/histori.types';
 import { AutoOption } from '../types/common.types';
 import { formatPhoneDisplay } from '../utils/formatPhone';
 import Toast, { ToastType } from '../components/ui/Toast';
-import { useWilayah } from '../hooks/useWilayah'; // 1. Import hook useWilayah
+import { useWilayah } from '../hooks/useWilayah';
 
 // ── Helper: kelompokkan baris flat dari API menjadi per-relawan ─
 const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
@@ -59,6 +59,14 @@ const groupRelawanData = (rows: any[]): HistoriRelawanData[] => {
     return Array.from(map.values());
 };
 
+// ── Interface Raw Kader dari API ──
+interface RawKader {
+    kader_id: number;
+    nama_kader: string;
+    nama_opd?: string;
+    opd_id?: number;
+}
+
 // ── Component ────────────────────────────────────────────────────
 const HistoriRelawan: React.FC = () => {
     const { isSuperAdmin, isOPD } = useAuth();
@@ -68,7 +76,7 @@ const HistoriRelawan: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
-    // ── 2. Panggil Custom Hook useWilayah ─────────────────────────
+    // Custom Hook Wilayah
     const { kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList, kelurahanList } = useWilayah();
 
     // ── Filter state ──────────────────────────────────────────────
@@ -80,11 +88,11 @@ const HistoriRelawan: React.FC = () => {
     const [filterTahunAkhir, setFilterTahunAkhir] = useState<string>('');
     const [searchTerm, setSearchTerm] = useState<string>('');
 
-    // ── Dropdown options ──────────────────────────────────────────
+    // ── Dropdown options & raw state ──────────────────────────────
     const [opdOptions, setOpdOptions] = useState<AutoOption[]>([]);
-    const [kaderOptions, setKaderOptions] = useState<AutoOption[]>([]);
+    const [rawKaderList, setRawKaderList] = useState<RawKader[]>([]);
 
-    // ── 3. Transform Kemantren & Kelurahan menjadi AutoOption[] ───
+    // ── Transform Options Kemantren & Kelurahan ───────────────────
     const kemantrenOptions = useMemo<AutoOption[]>(
         () => kemantrenList.map(item => ({ label: item.nama_kemantren, value: item.nama_kemantren })),
         [kemantrenList]
@@ -94,6 +102,20 @@ const HistoriRelawan: React.FC = () => {
         () => kelurahanList.map(item => ({ label: item.nama_kelurahan, value: item.nama_kelurahan })),
         [kelurahanList]
     );
+
+    // ── Filter Opsi Kader Berdasarkan OPD yang Dipilih ────────────
+    const kaderOptions = useMemo<AutoOption[]>(() => {
+        let list = rawKaderList;
+
+        // Jika OPD dipilih, saring kader yang terikat/mempunyai relasi dengan OPD tersebut
+        if (filterOpd) {
+            list = rawKaderList.filter(k => k.nama_opd?.toLowerCase() === filterOpd.toLowerCase());
+        }
+
+        // Ambil nama kader yang unik
+        const uniqueNames = Array.from(new Set(list.map(k => k.nama_kader).filter(Boolean)));
+        return uniqueNames.map(nama => ({ label: nama, value: nama }));
+    }, [rawKaderList, filterOpd]);
 
     // ── Pagination ────────────────────────────────────────────────
     const [currentPage, setCurrentPage] = useState<number>(1);
@@ -126,25 +148,27 @@ const HistoriRelawan: React.FC = () => {
         }
     }, [API_BASE]);
 
-    // ── Fetch OPD & Kader ─────────────────────────────────────────
+    // ── Fetch OPD & Raw Kader Data ────────────────────────────────
     useEffect(() => {
         fetchRelawan();
 
+        // Fetch OPD
         apiClient.get('/opd').then(r => r.data).then(result => {
             if (result.success) {
                 setOpdOptions(result.data.map((o: any) => ({ label: o.nama_opd, value: o.nama_opd })));
             }
         }).catch(() => { });
 
+        // Fetch Master Data Kader lengkap dengan relasi OPD
         const kaderEndpoint = isOPD ? '/opd-admin/kader' : '/kader';
         apiClient.get(kaderEndpoint).then(r => r.data).then(result => {
             if (result.success) {
-                setKaderOptions(result.data.map((k: any) => ({ label: k.nama_kader, value: k.nama_kader })));
+                setRawKaderList(result.data);
             }
         }).catch(() => { });
     }, [fetchRelawan, isOPD]);
 
-    // ── 4. Trigger Fetch Kelurahan berdasarkan Kemantren yang dipilih ─
+    // ── Fetch Kelurahan berdasarkan Kemantren ─────────────────────
     useEffect(() => {
         const matchedKemantren = kemantrenList.find(
             item => item.nama_kemantren.toLowerCase() === filterKemantren.trim().toLowerCase()
@@ -157,6 +181,25 @@ const HistoriRelawan: React.FC = () => {
             setFilterKelurahan('');
         }
     }, [filterKemantren, kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList]);
+
+    // ── Reset Pilihan Kader Jika Kader Tidak Ada di OPD Baru ─────
+    const handleOpdChange = (opdValue: string) => {
+        setFilterOpd(opdValue);
+
+        if (opdValue && filterKader) {
+            // Cek apakah kader yang sedang dipilih terdaftar di OPD baru
+            const isValidForNewOpd = rawKaderList.some(
+                k => k.nama_opd?.toLowerCase() === opdValue.toLowerCase() &&
+                     k.nama_kader.toLowerCase() === filterKader.toLowerCase()
+            );
+
+            // Jika kader tidak terdaftar pada OPD tersebut, reset pilihan kader
+            if (!isValidForNewOpd) {
+                setFilterKader('');
+            }
+        }
+        setCurrentPage(1);
+    };
 
     // ── Filtering ─────────────────────────────────────────────────
     const filteredData = useMemo(() => {
@@ -292,7 +335,7 @@ const HistoriRelawan: React.FC = () => {
                             <label className="block text-xs font-medium text-gray-500 mb-1">Nama OPD</label>
                             <Select
                                 value={filterOpd}
-                                onChange={(e) => { setFilterOpd(e.target.value); setCurrentPage(1); }}
+                                onChange={(e) => handleOpdChange(e.target.value)}
                                 placeholder="Semua OPD"
                                 options={opdOptions}
                                 disabled={!isSuperAdmin}
@@ -328,13 +371,17 @@ const HistoriRelawan: React.FC = () => {
                             />
                         </div>
 
-                        {/* Baris 2 - Kader */}
+                        {/* Baris 2 - Kader (Bisa dipilih langsung / menyesuaikan OPD) */}
                         <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Nama Kader</label>
                             <Select
                                 value={filterKader}
                                 onChange={(e) => { setFilterKader(e.target.value); setCurrentPage(1); }}
-                                placeholder="Semua Kader"
+                                placeholder={
+                                    filterOpd
+                                        ? kaderOptions.length > 0 ? "Semua Kader di OPD ini" : "Tidak ada kader di OPD ini"
+                                        : "Semua Kader"
+                                }
                                 options={kaderOptions}
                                 className="w-full text-sm"
                             />
@@ -389,7 +436,7 @@ const HistoriRelawan: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                     placeholder="Cari nama atau NIK relawan..."
-                    className="w-full pl-9 pr-4 py-2.5 border border-gray-400 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white shadow-sm"
+                    className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white shadow-sm"
                 />
             </div>
 
