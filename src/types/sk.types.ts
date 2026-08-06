@@ -1,37 +1,37 @@
 // Surat Keputusan (SK) Data Types — sesuai response API backend
 
 export interface SKData {
-    sk_id: number;
-    nomor_sk: string;
-    judul_sk: string | null;
-    tanggal_terbit: string | null;
-    batas_aktif: string | null;
-    status_keaktifan: string;
-    nama_opd: string;
-    opd_id?: number;
-    jumlah_relawan: number;
-    has_file: boolean;
+  batas_aktif: string | null;
+  has_file: boolean;
+  judul_sk: string | null;
+  jumlah_relawan: number;
+  nama_opd: string;
+  nomor_sk: string;
+  opd_id?: number;
+  sk_id: number;
+  status_keaktifan: string;
+  tanggal_terbit: string | null;
 }
 
 export interface SKRelawanItem {
-    penugasan_id: number;
-    nik: string;
-    nama_lengkap: string;
-    no_hp: string | null;
-    nama_kader: string | null;
-    kader_id: number | null;
-    status_keaktifan: string;
-    jabatan: string | null;
+  jabatan: string | null;
+  kader_id: number | null;
+  nama_kader: string | null;
+  nama_lengkap: string;
+  nik: string;
+  no_hp: string | null;
+  penugasan_id: number;
+  status_keaktifan: string;
 }
 
 export interface SKDetail extends SKData {
-    file_path?: string;
-    daftar_relawan: SKRelawanItem[];
+  daftar_relawan: SKRelawanItem[];
+  file_path?: string;
 }
 
 export interface ErrorHint {
-    title: string;
-    steps: string[];
-    link?: string;
-    link_text?: string;
+  link?: string;
+  link_text?: string;
+  steps: string[];
+  title: string;
 }

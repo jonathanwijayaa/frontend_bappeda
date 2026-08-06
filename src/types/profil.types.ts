@@ -1,11 +1,11 @@
 // Profil Types — sesuai response API backend /profile/me
 
 export interface ProfileData {
-    user_id: number;
-    nik: string;
-    nama_lengkap: string;
-    no_hp: string | null;
-    email: string | null;
-    role: string;
-    foto_profil?: string | null;
+  email: string | null;
+  foto_profil?: string | null;
+  nama_lengkap: string;
+  nik: string;
+  no_hp: string | null;
+  role: string;
+  user_id: number;
 }
