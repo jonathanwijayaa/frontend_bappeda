@@ -46,6 +46,7 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 .env.bappeda
+src/assets/files/*.xlsx
 
 # Playwright
 /test-results/

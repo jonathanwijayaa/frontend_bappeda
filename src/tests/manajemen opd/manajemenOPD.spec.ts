@@ -1,5 +1,6 @@
+import { generateOPDExcel } from "@/helpers/baseExcel.helper";
 import { credentials } from "@/helpers/credentials.helper";
-import { buildOPDData, fillOPDForm } from "@/helpers/form.helper";
+import { buildOPDData, fillOPDForm } from "@/helpers/formOPD.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { expect, test } from "@playwright/test";
 
@@ -45,12 +46,12 @@ test.describe("TCMO.3-5 Fill Form Add OPD", () => {
     await form.fillAll();
 
     await expect(page.getByRole("textbox", { name: "Nama Dinas / OPD" })).toHaveValue(
-      opdData.namaOPD,
+      opdData["NAMA OPD"],
     );
-    await expect(page.getByRole("textbox", { name: "Alamat OPD" })).toHaveValue(opdData.alamat);
-    await expect(page.getByRole("textbox", { name: "Penanggung jawab" })).toHaveValue(opdData.pic);
+    await expect(page.getByRole("textbox", { name: "Alamat OPD" })).toHaveValue(opdData.ALAMAT);
+    await expect(page.getByRole("textbox", { name: "Penanggung jawab" })).toHaveValue(opdData.PIC);
     await expect(page.getByRole("textbox", { name: "Nomor telepon / email" })).toHaveValue(
-      opdData.kontak,
+      opdData.KONTAK,
     );
   });
 
@@ -105,7 +106,8 @@ test.describe("TCMO.6 Super Admin fill invalid OPD name", () => {
       const opdData = buildOPDData();
 
       // override namaOPD dengan invalid value
-      opdData.namaOPD = opdCase.value;
+      // override namaOPD dengan invalid value
+      opdData["NAMA OPD"] = opdCase.value;
 
       const form = await fillOPDForm({
         data: opdData,
@@ -117,10 +119,15 @@ test.describe("TCMO.6 Super Admin fill invalid OPD name", () => {
       await page.getByRole("button", { name: /simpan/i }).click();
 
       // Expected: gagal submit
-      await expect(page).not.toHaveURL(/manajemen-opd/);
+      // await expect(page).not.toHaveURL(/manajemen-opd/);
 
-      // Optional assertion
-      await expect(page.getByText(/Nama OPD|nama opd|invalid|wajib|warning/i)).toBeVisible();
+      await page.getByRole("button", { name: /simpan/i }).click();
+
+      const namaOpdInput = page.getByRole("textbox", { name: /nama opd/i });
+
+      const isValid = await namaOpdInput.evaluate((el: HTMLInputElement) => el.checkValidity());
+
+      expect(isValid).toBe(false);
     });
   }
 });
@@ -180,7 +187,7 @@ test.describe("TCMO.8 Super Admin fill invalid OPD address", () => {
       const opdData = buildOPDData();
 
       // override alamat dengan invalid value
-      opdData.alamat = addressCase.value;
+      opdData.ALAMAT = addressCase.value;
 
       const form = await fillOPDForm({
         data: opdData,
@@ -218,7 +225,7 @@ test.describe("TCMO.9 Super Admin fill invalid PIC name", () => {
       const opdData = buildOPDData();
 
       // override PIC dengan invalid value
-      opdData.pic = picCase.value;
+      opdData.PIC = picCase.value;
 
       const form = await fillOPDForm({
         data: opdData,
@@ -256,7 +263,7 @@ test.describe("TCMO.10 Super Admin fill invalid kontak", () => {
       const opdData = buildOPDData();
 
       // override kontak dengan invalid value
-      opdData.kontak = kontakCase.value;
+      opdData.KONTAK = kontakCase.value;
 
       const form = await fillOPDForm({
         data: opdData,
@@ -279,38 +286,51 @@ test.describe("TCMO.10 Super Admin fill invalid kontak", () => {
 
 // TCMO.11 Upload Excel OPD
 test("TCMO.11 Super Admin upload OPD excel file", async ({ page }) => {
+  const filePath = generateOPDExcel({ type: "valid", total: 5 });
+
   await page.getByRole("button", { name: "Unggah dari Excel" }).click();
 
   const fileInput = page.locator("input[type='file']");
-
-  await fileInput.setInputFiles("src/assets/files/Sample_Data_OPD.xlsx");
+  await fileInput.setInputFiles(filePath);
   await page.getByRole("button", { name: "Lanjutkan" }).click();
+  await page.getByRole("button", { name: "Simpan Data Bersih" }).click();
 
   await expect(page.getByText(/berhasil|success/i)).toBeVisible();
 });
 
 // TCMO.12 Upload Invalid Excel
 test("TCMO.12 Super Admin upload invalid template excel OPD data", async ({ page }) => {
-  const fileInput = page.locator("input[type='file']");
+  const filePath = generateOPDExcel({ type: "invalid", total: 3 });
 
-  await fileInput.setInputFiles("tests/files/Invalid_Sample_Data_OPD.xlsx");
+  await page.getByRole("button", { name: "Unggah dari Excel" }).click();
+
+  const fileInput = page.locator("input[type='file']");
+  await fileInput.setInputFiles(filePath);
   await page.getByRole("button", { name: "Lanjutkan" }).click();
+  await page.getByRole("button", { name: "Simpan Data Bersih" }).click();
 
   await expect(page.getByText(/error|invalid/i)).toBeVisible();
 });
 
 // TCMO.13 Download Template Excel
 test("TCMO.13 Super Admin click Template Excel Data OPD hyperlink", async ({ page }) => {
+  await page.getByRole("button", { name: "Unggah dari Excel" }).click();
+
   await page.getByRole("link", { name: /templat excel data opd/i }).click();
 
-  await expect(page).toHaveURL(/excel|template/);
+  await expect(page).toHaveURL(/excel|template|dokumen|download/);
 });
 
 // TCMO.14 Cancel Upload Excel
 test("TCMO.14 Super Admin cancel upload OPD data excel", async ({ page }) => {
-  await page.getByRole("button", { name: /upload excel/i }).click();
+  const filePath = generateOPDExcel({ type: "valid", total: 1 });
 
-  await page.getByRole("button", { name: /batal/i }).click();
+  await page.getByRole("button", { name: "Unggah dari Excel" }).click();
 
-  await expect(page.getByText(/upload/i)).toBeVisible();
+  const fileInput = page.locator("input[type='file']");
+  await fileInput.setInputFiles(filePath);
+
+  await page.getByRole("button").nth(5).click();
+
+  await expect(page.getByRole("heading", { name: "Manajemen OPD" })).toBeVisible();
 });

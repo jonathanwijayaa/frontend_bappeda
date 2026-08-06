@@ -1,14 +1,14 @@
 export const credentials = {
   opd: {
-    NIK: "1234567890123488",
-    password: "rahasia123",
+    NIK: "0000000000000000",
+    password: "0000000000000000",
   },
   relawan: {
-    NIK: "1234567890123481",
-    password: "rahasia123",
+    NIK: "2222222222222222",
+    password: "2222222222222222",
   },
   superAdmin: {
-    NIK: "1234567890123411",
-    password: "rahasia123",
+    NIK: "1234567890100011",
+    password: "1234567890100011",
   },
 };
