@@ -1,13 +1,14 @@
 export interface ChartData {
-    name: string;
-    value: number;
+  [key: string]: number | string;
+  name: string;
+  value: number;
 }
 
 export interface StatistikState {
-    gender: ChartData[];
-    kelurahan: ChartData[];
-    relawanPerKader: ChartData[];
-    kaderPerOpd: ChartData[];
-    loading: boolean;
-    error: string | null;
+  error: string | null;
+  gender: ChartData[];
+  kaderPerOpd: ChartData[];
+  kelurahan: ChartData[];
+  loading: boolean;
+  relawanPerKader: ChartData[];
 }

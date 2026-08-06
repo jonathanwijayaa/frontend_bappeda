@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 @theme inline {
-  --color-primary-green: #008F3B;
+  --color-primary-green: #008f3b;
   --color-primary-blue: #3b82f6;
   --color-background-gray: #f3f4f6;
 }
 
 :root {
-  font-family: 'Poppins', sans-serif;
+  font-family: "Poppins", sans-serif;
   line-height: 1.5;
   font-weight: 400;
 }
