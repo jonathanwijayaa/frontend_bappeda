@@ -1,111 +1,96 @@
-import type { ReactNode } from "react";
+import React from 'react';
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
-interface Column<T> {
-  accessor?: keyof T;
-  header: string;
-  // e.g. '150px', '20%'
-  noTruncate?: boolean;
-  render?: (row: T) => ReactNode;
-  width?: string; // set true for badge/action columns that shouldn't truncate
+export interface Column<T> {
+    header: string;
+    accessor?: keyof T;
+    width?: string;
+    sortable?: boolean;
+    sortKey?: string;
+    render?: (row: T) => React.ReactNode;
 }
 
 interface TableProps<T> {
-  actions?: (row: T) => ReactNode;
-  columns: Column<T>[];
-  data: T[];
-  highlightedRowId?: string | null;
-  minRows?: number;
-  rowIdAccessor?: keyof T;
+    columns: Column<T>[];
+    data: T[];
+    actions?: (row: T) => React.ReactNode;
+    minRows?: number;
+    sortColumn?: string | null;
+    sortOrder?: 'asc' | 'desc' | null;
+    onSort?: (columnKey: string) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function Table<T extends Record<string, any>>({
-  actions,
-  columns,
-  data,
-  highlightedRowId = null,
-  minRows = 0,
-  rowIdAccessor = "id" as keyof T,
+export function Table<T extends Record<string, any>>({
+    columns,
+    data,
+    actions,
+    minRows = 5,
+    sortColumn,
+    sortOrder,
+    onSort,
 }: TableProps<T>) {
-  // Calculate how many empty rows we need to add
-  const emptyRowsCount = Math.max(0, minRows - data.length);
+    const renderSortIcon = (colKey: string) => {
+        if (sortColumn !== colKey || !sortOrder) {
+            return <ArrowUpDown size={13} className="text-gray-400 group-hover:text-gray-600 transition-colors ml-1 inline-block" />;
+        }
+        return sortOrder === 'asc' ? (
+            <ArrowUp size={13} className="text-green-600 ml-1 inline-block" />
+        ) : (
+            <ArrowDown size={13} className="text-green-600 ml-1 inline-block" />
+        );
+    };
 
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full table-fixed">
-        <thead>
-          <tr className="bg-gray-50 border-b border-gray-200">
-            {columns.map((column, index) => (
-              <th
-                key={index}
-                style={column.width ? { width: column.width } : undefined}
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider overflow-hidden"
-              >
-                {column.header}
-              </th>
-            ))}
-            {actions && (
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[160px]">
-                AKSI
-              </th>
-            )}
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((row, rowIndex) => {
-            const rowId = String(row[rowIdAccessor]);
-            const isHighlighted = highlightedRowId === rowId;
+    return (
+        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+            <table className="w-full text-left text-xs text-gray-700 border-collapse">
+                <thead className="bg-gray-50 text-gray-500 font-semibold border-b border-gray-200">
+                    <tr>
+                        {columns.map((col, idx) => {
+                            const key = (col.sortKey || col.accessor || '') as string;
+                            const isSortable = col.sortable && key;
 
-            return (
-              <tr
-                key={rowIndex}
-                data-sk-id={rowId}
-                className={`hover:bg-gray-50 transition-colors duration-300 ${
-                  isHighlighted ? "bg-yellow-100 animate-pulse" : ""
-                }`}
-              >
-                {columns.map((column, colIndex) => {
-                  const rawValue = column.accessor ? String(row[column.accessor] ?? "") : "";
-                  const content = column.render
-                    ? column.render(row)
-                    : column.accessor
-                      ? row[column.accessor]
-                      : "";
-                  return (
-                    <td key={colIndex} className="px-6 py-4 text-sm text-gray-900 overflow-hidden">
-                      {column.noTruncate ? (
-                        <div>{content}</div>
-                      ) : (
-                        <div className="truncate" title={!column.render ? rawValue : undefined}>
-                          {content}
-                        </div>
-                      )}
-                    </td>
-                  );
-                })}
-                {actions && (
-                  <td className="px-6 py-4 text-sm overflow-hidden">
-                    <div className="flex gap-2">{actions(row)}</div>
-                  </td>
-                )}
-              </tr>
-            );
-          })}
-          {/* Empty placeholder rows to maintain consistent height */}
-          {Array.from({ length: emptyRowsCount }).map((_, index) => (
-            <tr key={`empty-${index}`} className="h-[57px]">
-              {columns.map((_, colIndex) => (
-                <td key={colIndex} className="px-6 py-4 text-sm text-gray-900">
-                  &nbsp;
-                </td>
-              ))}
-              {actions && <td className="px-6 py-4 text-sm">&nbsp;</td>}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+                            return (
+                                <th
+                                    key={idx}
+                                    style={{ width: col.width }}
+                                    onClick={() => isSortable && onSort && onSort(key)}
+                                    className={`px-4 py-3 select-none ${isSortable ? 'cursor-pointer hover:bg-gray-100 group transition-colors' : ''}`}
+                                >
+                                    <div className="flex items-center gap-1">
+                                        <span>{col.header}</span>
+                                        {isSortable && renderSortIcon(key)}
+                                    </div>
+                                </th>
+                            );
+                        })}
+                        {actions && <th className="px-4 py-3 text-right">AKSI</th>}
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                    {data.map((row, rowIdx) => (
+                        <tr key={rowIdx} className="hover:bg-gray-50/80 transition-colors">
+                            {columns.map((col, colIdx) => (
+                                <td key={colIdx} className="px-4 py-3">
+                                    {col.render
+                                        ? col.render(row)
+                                        : col.accessor
+                                        ? String(row[col.accessor] ?? '-')
+                                        : '-'}
+                                </td>
+                            ))}
+                            {actions && <td className="px-4 py-3 text-right">{actions(row)}</td>}
+                        </tr>
+                    ))}
+                    {data.length < minRows &&
+                        Array.from({ length: minRows - data.length }).map((_, idx) => (
+                            <tr key={`empty-${idx}`} className="h-10">
+                                <td colSpan={columns.length + (actions ? 1 : 0)} />
+                            </tr>
+                        ))}
+                </tbody>
+            </table>
+        </div>
+    );
 }
 
 export default Table;

@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { Loader2, History, Search } from "lucide-react";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
-import Table from "../components/ui/Table";
+import Table, { Column } from "../components/ui/Table";
 import Modal from "../components/ui/Modal";
 import Select from "../components/ui/Select";
 import YearPicker from "../components/ui/YearPicker";
@@ -120,6 +120,10 @@ const HistoriRelawan: React.FC = () => {
   const [filterTahunAkhir, setFilterTahunAkhir] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
+  // ── Sorting State ─────────────────────────────────────────────
+  const [sortColumn, setSortColumn] = useState<"namaLengkap" | "nik" | null>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
+
   // ── Dropdown options & raw state ──────────────────────────────
   const [opdOptions, setOpdOptions] = useState<AutoOption[]>([]);
   const [rawKaderList, setRawKaderList] = useState<RawKader[]>([]);
@@ -139,12 +143,10 @@ const HistoriRelawan: React.FC = () => {
   const kaderOptions = useMemo<AutoOption[]>(() => {
     let list = rawKaderList;
 
-    // Jika OPD dipilih, saring kader yang terikat/mempunyai relasi dengan OPD tersebut
     if (filterOpd) {
       list = rawKaderList.filter((k) => k.nama_opd?.toLowerCase() === filterOpd.toLowerCase());
     }
 
-    // Ambil nama kader yang unik
     const uniqueNames = Array.from(new Set(list.map((k) => k.nama_kader).filter(Boolean)));
     return uniqueNames.map((nama) => ({ label: nama, value: nama }));
   }, [rawKaderList, filterOpd]);
@@ -184,7 +186,6 @@ const HistoriRelawan: React.FC = () => {
   useEffect(() => {
     fetchRelawan();
 
-    // Fetch OPD
     apiClient
       .get("/opd")
       .then((r) => r.data)
@@ -197,7 +198,6 @@ const HistoriRelawan: React.FC = () => {
       })
       .catch(() => undefined);
 
-    // Fetch Master Data Kader lengkap dengan relasi OPD
     const kaderEndpoint = isOPD ? "/opd-admin/kader" : "/kader";
     apiClient
       .get(kaderEndpoint)
@@ -229,14 +229,12 @@ const HistoriRelawan: React.FC = () => {
     setFilterOpd(opdValue);
 
     if (opdValue && filterKader) {
-      // Cek apakah kader yang sedang dipilih terdaftar di OPD baru
       const isValidForNewOpd = rawKaderList.some(
         (k) =>
           k.nama_opd?.toLowerCase() === opdValue.toLowerCase() &&
           k.nama_kader.toLowerCase() === filterKader.toLowerCase(),
       );
 
-      // Jika kader tidak terdaftar pada OPD tersebut, reset pilihan kader
       if (!isValidForNewOpd) {
         setFilterKader("");
       }
@@ -299,9 +297,38 @@ const HistoriRelawan: React.FC = () => {
     filterTahunAkhir,
   ]);
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  // ── Sorting Logic ─────────────────────────────────────────────
+  const handleSort = (columnKey: string) => {
+    if (columnKey !== "namaLengkap" && columnKey !== "nik") return;
+
+    if (sortColumn !== columnKey) {
+      setSortColumn(columnKey as "namaLengkap" | "nik");
+      setSortOrder("asc");
+    } else if (sortOrder === "asc") {
+      setSortOrder("desc");
+    } else {
+      setSortColumn(null);
+      setSortOrder(null);
+    }
+    setCurrentPage(1);
+  };
+
+  const sortedAndFilteredHistoriData = useMemo(() => {
+    if (!sortColumn || !sortOrder) return filteredData;
+
+    return [...filteredData].sort((a, b) => {
+      const valA = String(a[sortColumn] || "").toLowerCase();
+      const valB = String(b[sortColumn] || "").toLowerCase();
+
+      const res = valA.localeCompare(valB, "id", { numeric: true });
+      return sortOrder === "asc" ? res : -res;
+    });
+  }, [filteredData, sortColumn, sortOrder]);
+
+  // ── Pagination Calculation ────────────────────────────────────
+  const totalPages = Math.ceil(sortedAndFilteredHistoriData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
+  const currentData = sortedAndFilteredHistoriData.slice(startIndex, startIndex + itemsPerPage);
 
   // ── Handlers ──────────────────────────────────────────────────
   const handleYearAwalChange = (year: string) => {
@@ -325,6 +352,8 @@ const HistoriRelawan: React.FC = () => {
     setFilterTahunAwal("");
     setFilterTahunAkhir("");
     setSearchTerm("");
+    setSortColumn(null);
+    setSortOrder(null);
     setCurrentPage(1);
   };
 
@@ -334,12 +363,11 @@ const HistoriRelawan: React.FC = () => {
   };
 
   // ── Table Columns ─────────────────────────────────────────────
-  const columns = [
-
-    { accessor: "nik" as keyof HistoriRelawanData, header: "NIK", width: "20%" },
-    { accessor: "namaLengkap" as keyof HistoriRelawanData, header: "NAMA", width: "16%" },
-    { accessor: "alamat" as keyof HistoriRelawanData, header: "ALAMAT", width: "20%" },
-    { accessor: "kelurahan" as keyof HistoriRelawanData, header: "KELURAHAN", width: "14%" },
+  const columns: Column<HistoriRelawanData>[] = [
+    { accessor: "nik", header: "NIK", width: "16%", sortable: true },
+    { accessor: "namaLengkap", header: "NAMA", width: "20%", sortable: true },
+    { accessor: "alamat", header: "ALAMAT", width: "20%" },
+    { accessor: "kelurahan", header: "KELURAHAN", width: "14%" },
     {
       header: "OPD",
       render: (row: HistoriRelawanData) => (
@@ -532,7 +560,7 @@ const HistoriRelawan: React.FC = () => {
             <Loader2 size={28} className="animate-spin text-gray-400" />
             <span className="ml-3 text-gray-500">Memuat riwayat data relawan...</span>
           </div>
-        ) : filteredData.length === 0 ? (
+        ) : sortedAndFilteredHistoriData.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <History size={40} className="text-gray-300 mb-3" />
             <p className="text-gray-600 font-medium">Tidak ada data riwayat</p>
@@ -543,15 +571,23 @@ const HistoriRelawan: React.FC = () => {
             </p>
           </div>
         ) : (
-          <Table columns={columns} data={currentData} actions={rowActions} minRows={5} />
+          <Table
+            columns={columns}
+            data={currentData}
+            actions={rowActions}
+            minRows={5}
+            sortColumn={sortColumn}
+            sortOrder={sortOrder}
+            onSort={handleSort}
+          />
         )}
 
-        {!isLoading && filteredData.length > 0 && (
+        {!isLoading && sortedAndFilteredHistoriData.length > 0 && (
           <div className="mt-4 flex justify-between items-center">
             <div className="text-sm text-gray-500">
               Menampilkan {startIndex + 1}–
-              {Math.min(startIndex + itemsPerPage, filteredData.length)} dari {filteredData.length}{" "}
-              relawan
+              {Math.min(startIndex + itemsPerPage, sortedAndFilteredHistoriData.length)} dari{" "}
+              {sortedAndFilteredHistoriData.length} relawan
             </div>
             <Pagination
               currentPage={currentPage}

@@ -4,7 +4,7 @@ import { Plus, Upload, Loader2, X, FileDown } from "lucide-react";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
 import { SearchInput } from "../components/ui/Input";
-import Table from "../components/ui/Table";
+import Table, { Column } from "../components/ui/Table";
 import Modal from "../components/ui/Modal";
 import AutocompleteInput from "../components/ui/AutocompleteInput";
 import UploadExcelModal from "../components/ui/UploadExcelModal";
@@ -60,6 +60,14 @@ const DataRelawan: React.FC = () => {
   // ── STATE PENCARIAN TERPISAH ──
   const [searchTerm, setSearchTerm] = useState<string>(""); // Pencarian Daftar Relawan (Bawah)
   const [searchPengajuan, setSearchPengajuan] = useState<string>(""); // Pencarian Pengajuan (Atas)
+
+// State Sort khusus NIK dan Nama
+const [sortColumn, setSortColumn] = useState<'namaLengkap' | 'nik' | null>(null);
+const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
+
+
+// Panggilan Komponen Tabl
+
 
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
@@ -323,10 +331,39 @@ const DataRelawan: React.FC = () => {
     });
   }, [relawanList, searchTerm]);
 
-  const totalPages = Math.ceil(filteredRelawanData.length / itemsPerPage);
+  // Pengurutan Data
+  const handleSort = useCallback((columnKey: string) => {
+    if (columnKey !== "namaLengkap" && columnKey !== "nik") return;
+    if (sortColumn === columnKey) {
+      if (sortOrder === "asc") {
+        setSortOrder("desc");
+      } else if (sortOrder === "desc") {
+        setSortColumn(null);
+        setSortOrder(null);
+      } else {
+        setSortOrder("asc");
+      }
+    } else {
+      setSortColumn(columnKey);
+      setSortOrder("asc");
+    }
+  }, [sortColumn, sortOrder]);
+
+  const sortedRelawanData = useMemo(() => {
+    if (!sortColumn || !sortOrder) return filteredRelawanData;
+    return [...filteredRelawanData].sort((a, b) => {
+      const valA = String(a[sortColumn] || "").toLowerCase();
+      const valB = String(b[sortColumn] || "").toLowerCase();
+      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [filteredRelawanData, sortColumn, sortOrder]);
+
+  const totalPages = Math.ceil(sortedRelawanData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentRelawanData = filteredRelawanData.slice(startIndex, endIndex);
+  const currentRelawanData = sortedRelawanData.slice(startIndex, endIndex);
 
   // ── FILTER & SORT DATA PENGAJUAN (Tabel Atas) ──
   const pengajuanUIData = useMemo(() => {
@@ -455,12 +492,12 @@ const DataRelawan: React.FC = () => {
     },
   ];
 
-  const relawanColumns = [
-    { accessor: "nik" as keyof RelawanData, header: "NIK" },
-    { accessor: "namaLengkap" as keyof RelawanData, header: "NAMA" },
-    { accessor: "alamat" as keyof RelawanData, header: "ALAMAT" },
-    { accessor: "kemantren" as keyof RelawanData, header: "KEMANTREN" },
-    { accessor: "kelurahan" as keyof RelawanData, header: "KELURAHAN" },
+  const relawanColumns: Column<RelawanData>[] = [
+    { accessor: "nik", header: "NIK", sortable: true },
+    { accessor: "namaLengkap", header: "NAMA", sortable: true },
+    { accessor: "alamat", header: "ALAMAT" },
+    { accessor: "kemantren", header: "KEMANTREN" },
+    { accessor: "kelurahan", header: "KELURAHAN" },
   ];
 
   // Buka detail relawan dan salin data utama ke form edit.
@@ -1243,6 +1280,9 @@ const DataRelawan: React.FC = () => {
             data={currentRelawanData}
             actions={relawanActions}
             minRows={5}
+            sortColumn={sortColumn}
+            sortOrder={sortOrder}
+            onSort={handleSort}
           />
         )}
 
