@@ -147,7 +147,7 @@ const Select: React.FC<SelectProps> = ({
                         ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
                         : open
                             ? 'border-blue-500 ring-2 ring-blue-500/20'
-                            : 'border-gray-300 hover:border-blue-400 text-gray-900'
+                            : 'border-gray-400 hover:border-blue-400 text-gray-900'
                     }
                 `}
                 {...props}

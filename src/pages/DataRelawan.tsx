@@ -62,14 +62,14 @@ const DataRelawan: React.FC = () => {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
-    
+
     const [selectedRelawan, setSelectedRelawan] = useState<RelawanData | null>(null);
     const [selectedPengajuan, setSelectedPengajuan] = useState<PengajuanAPIData | null>(null);
     const [verificationNote, setVerificationNote] = useState<string>('');
     const [isDataChecked, setIsDataChecked] = useState<boolean>(false);
-    
+
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
-    
+
     // ── STATE PAGINATION TERPISAH UNTUK 2 TABEL ──
     const [currentPage, setCurrentPage] = useState<number>(1); // Untuk Tabel Relawan
     const [currentPengajuanPage, setCurrentPengajuanPage] = useState<number>(1); // Untuk Tabel Pengajuan
@@ -133,7 +133,7 @@ const DataRelawan: React.FC = () => {
 
     const [formData, setFormData] = useState({
         namaRelawan: '', nik: '', jenisKelamin: 'L' as 'L' | 'P', alamat: '', no_hp: '',
-        kemantren:'',kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
+        kemantren: '', kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
         assignments: [] as Assignment[]
     });
 
@@ -259,7 +259,7 @@ const DataRelawan: React.FC = () => {
             const matchNik = relawan.nik?.toLowerCase().includes(lowerSearch) || false;
             const matchKemantren = relawan.kemantren?.toLowerCase().includes(lowerSearch) || false;
             const matchKelurahan = relawan.kelurahan?.toLowerCase().includes(lowerSearch) || false;
-            const matchAssignment = relawan.assignments?.some(a => 
+            const matchAssignment = relawan.assignments?.some(a =>
                 a.opd?.toLowerCase().includes(lowerSearch) || a.kader?.toLowerCase().includes(lowerSearch)
             ) || false;
 
@@ -275,10 +275,10 @@ const DataRelawan: React.FC = () => {
     // ── FILTER & SORT DATA PENGAJUAN (Tabel Atas) ──
     const pengajuanUIData = useMemo(() => {
         const lowerSearch = searchPengajuan.toLowerCase();
-        
+
         // Filter berdasarkan search text khusus pengajuan
-        const filtered = pengajuanList.filter(p => 
-            p.nik?.toLowerCase().includes(lowerSearch) || 
+        const filtered = pengajuanList.filter(p =>
+            p.nik?.toLowerCase().includes(lowerSearch) ||
             p.nama_lengkap?.toLowerCase().includes(lowerSearch) ||
             p.jenis_perubahan?.toLowerCase().includes(lowerSearch)
         );
@@ -322,7 +322,7 @@ const DataRelawan: React.FC = () => {
         doc.setTextColor(0);
         autoTable(doc, {
             startY: 28,
-            head: [['No', 'Nama Lengkap', 'NIK', 'Alamat KTP', 'Kemantren','Kelurahan', 'Jenis Kelamin', 'OPD / Penugasan', 'Kader']],
+            head: [['No', 'Nama Lengkap', 'NIK', 'Alamat KTP', 'Kemantren', 'Kelurahan', 'Jenis Kelamin', 'OPD / Penugasan', 'Kader']],
             body: filteredRelawanData.map((r, i) => [
                 i + 1,
                 r.namaLengkap || '-',
@@ -348,7 +348,7 @@ const DataRelawan: React.FC = () => {
             },
             margin: { left: 14, right: 14 },
         });
-        doc.save(`data-relawan-${new Date().toISOString().slice(0,10)}.pdf`);
+        doc.save(`data-relawan-${new Date().toISOString().slice(0, 10)}.pdf`);
     }, [filteredRelawanData]);
 
     const pengajuanColumns = [
@@ -421,13 +421,13 @@ const DataRelawan: React.FC = () => {
                 ? `/admin/relawan/pengajuan/${selectedPengajuan.pengajuan_id}/review`
                 : `/opd-admin/relawan/pengajuan/${selectedPengajuan.pengajuan_id}/review`;
             const { data } = await apiClient.post(endpoint, { status, catatan_verifikator: verificationNote });
-            
+
             if (data.success) {
                 setToast({ message: data.message, type: 'success' });
                 setIsReviewModalOpen(false);
                 invalidatePengajuan();
                 if (status === 'Disetujui') invalidateRelawan();
-                
+
                 setCurrentPengajuanPage(1);
             } else {
                 setToast({ message: data.message || 'Gagal memproses pengajuan', type: 'error' });
@@ -489,7 +489,7 @@ const DataRelawan: React.FC = () => {
                     status_keaktifan: a.status_keaktifan
                 }))
             }]);
-            const errors  = data?.data?.errors  ?? [];
+            const errors = data?.data?.errors ?? [];
             const skipped = data?.data?.skipped ?? data?.data?.skippedNIK ?? [];
             if (errors.length > 0 || skipped.length > 0) {
                 let errorMsg = data.message || 'Gagal memproses data relawan';
@@ -501,11 +501,11 @@ const DataRelawan: React.FC = () => {
                 setIsModalOpen(false);
                 setFormData({
                     namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', no_hp: '',
-                    kemantren:'',kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
+                    kemantren: '', kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
                     assignments: []
                 });
                 invalidateRelawan();
-                setCurrentPage(1); 
+                setCurrentPage(1);
             }
         } catch (e: any) {
             setToast({ message: parseErrorMessage(e, 'Gagal menyimpan data relawan'), type: 'error' });
@@ -724,8 +724,8 @@ const DataRelawan: React.FC = () => {
                 }));
                 setSelectedRelawan(prev => prev ? {
                     ...prev,
-                    assignments: Array.isArray(prev.assignments) 
-                        ? prev.assignments.filter((_, i) => i !== index) 
+                    assignments: Array.isArray(prev.assignments)
+                        ? prev.assignments.filter((_, i) => i !== index)
                         : []
                 } : null);
                 invalidateRelawan();
@@ -770,7 +770,7 @@ const DataRelawan: React.FC = () => {
         const isKaderLoading = isLoadingKaderByIndex[index] || false;
         const hasOpdSelected = isOPD || assignment.opd_id > 0 || assignment.opd !== '';
         const currentStatusKeaktifan = normalizeStatusKeaktifan(assignment.status_keaktifan);
-        
+
         const onFieldChange = handlers?.onFieldChange ?? handleAssignmentChange;
         const onOpdChange = handlers?.onOpdChange ?? handleAssignmentOpdChange;
         const onKaderChange = handlers?.onKaderChange ?? handleAssignmentKaderChange;
@@ -828,9 +828,9 @@ const DataRelawan: React.FC = () => {
                                     onChange={(val) => onKaderChange(index, val)}
                                     placeholder={
                                         !hasOpdSelected ? 'Pilih OPD terlebih dahulu...'
-                                        : isKaderLoading ? 'Memuat kader...'
-                                        : currentKaderOptions.length === 0 ? 'Tidak ada kader di OPD ini'
-                                        : 'Cari nama Kader...'
+                                            : isKaderLoading ? 'Memuat kader...'
+                                                : currentKaderOptions.length === 0 ? 'Tidak ada kader di OPD ini'
+                                                    : 'Cari nama Kader...'
                                     }
                                     disabled={isReadOnly || !hasOpdSelected || isKaderLoading}
                                     warnIfNotFound={false}
@@ -865,7 +865,7 @@ const DataRelawan: React.FC = () => {
                         value={assignment.peran}
                         onChange={(e) => onFieldChange(index, 'peran', e.target.value)}
                         disabled={isReadOnly}
-                        className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                        className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
                     >
                         <option value="">-- Pilih Jabatan --</option>
                         <option value="Ketua">Ketua</option>
@@ -887,7 +887,7 @@ const DataRelawan: React.FC = () => {
                         placeholder="Detail jabatan (contoh: Anggota Umum Bidang X)"
                         disabled={isReadOnly}
                         required
-                        className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                        className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
                     />
                 </div>
 
@@ -900,7 +900,7 @@ const DataRelawan: React.FC = () => {
                         placeholder="Nama/detail penugasan"
                         disabled={isReadOnly}
                         required
-                        className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                        className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
                     />
                 </div>
 
@@ -919,7 +919,7 @@ const DataRelawan: React.FC = () => {
                                     checked={currentStatusKeaktifan === status.value}
                                     onChange={(e) => onFieldChange(index, 'status_keaktifan', normalizeStatusKeaktifan(e.target.value))}
                                     disabled={isReadOnly}
-                                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
+                                    className="w-4 h-4 text-blue-600 border-gray-400 focus:ring-blue-500 cursor-pointer"
                                 />
                                 <span className="text-gray-700">{status.label}</span>
                             </label>
@@ -948,7 +948,7 @@ const DataRelawan: React.FC = () => {
                     <Button variant="primary" onClick={() => {
                         setFormData({
                             namaRelawan: '', nik: '', jenisKelamin: 'L', alamat: '', no_hp: '',
-                            kemantren:'',kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
+                            kemantren: '', kelurahan: '', kader: '', jabatan: '', penugasan: '', detail_penugasan: '',
                             assignments: []
                         });
                         if (isOPD && (user as any)?.opd_id) {
@@ -992,7 +992,7 @@ const DataRelawan: React.FC = () => {
                 ) : (
                     <>
                         <Table columns={pengajuanColumns} data={currentPengajuanData} actions={pengajuanActions} minRows={3} />
-                        
+
                         {/* Pagination Tabel Pengajuan */}
                         <div className="mt-4 flex justify-between items-center">
                             <div className="text-sm text-gray-500">
@@ -1096,7 +1096,7 @@ const DataRelawan: React.FC = () => {
                                 placeholder={field.placeholder}
                                 required={field.required}
                                 maxLength={(field as any).maxLength}
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                     ))}
@@ -1147,7 +1147,7 @@ const DataRelawan: React.FC = () => {
                             value={formData.jenisKelamin}
                             onChange={(e) => setFormData(prev => ({ ...prev, jenisKelamin: e.target.value as 'L' | 'P' }))}
                             required
-                            className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                            className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                         >
                             <option value="L">Laki-laki (L)</option>
                             <option value="P">Perempuan (P)</option>
@@ -1214,7 +1214,7 @@ const DataRelawan: React.FC = () => {
                             { label: 'No. HP', name: 'no_hp' },
                         ].map(field => {
                             const isFieldEditable = isEditMode && field.name !== 'nik' && field.name !== 'jabatan';
-                            
+
                             return (
                                 <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                                     <label className="text-lg font-medium text-gray-900">{field.label}</label>
@@ -1289,8 +1289,8 @@ const DataRelawan: React.FC = () => {
                                 disabled={!isEditMode}
                                 onChange={(e) => setDetailFormData(prev => ({ ...prev, jenisKelamin: e.target.value as 'L' | 'P' }))}
                                 className={`col-span-2 px-4 py-2 border rounded-lg focus:outline-none transition-all
-                                    ${isEditMode 
-                                        ? 'border-blue-300 bg-white text-gray-900 font-medium' 
+                                    ${isEditMode
+                                        ? 'border-blue-300 bg-white text-gray-900 font-medium'
                                         : 'border-gray-200 bg-gray-50 text-gray-400 italic font-normal cursor-not-allowed'
                                     }`}
                             >
@@ -1431,7 +1431,7 @@ const DataRelawan: React.FC = () => {
                                 onChange={(e) => setVerificationNote(e.target.value)}
                                 placeholder="Tuliskan catatan untuk relawan..."
                                 rows={3}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                className="w-full px-3 py-2 border border-gray-400 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                             />
                         </div>
 
@@ -1458,7 +1458,7 @@ const DataRelawan: React.FC = () => {
                 dataType="relawan"
                 isOpdUser={isOPD}
             />
-            
+
             {/* Modal Konfirmasi Hapus Penugasan */}
             {deleteConfirm && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-9999">

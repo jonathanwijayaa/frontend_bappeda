@@ -30,7 +30,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
 }) => {
     const [file, setFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
-    
+
     // === STATE: Pemilihan Kader ===
     const [kaderOptions, setKaderOptions] = useState<{ kader_id: number; nama_kader: string }[]>([]);
     const [selectedKaderIds, setSelectedKaderIds] = useState<number[]>([]);
@@ -209,11 +209,11 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                             ? 'border-blue-500 bg-blue-50'
                             : isDragReject
                                 ? 'border-red-500 bg-red-50'
-                                : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+                                : 'border-gray-400 hover:border-blue-400 hover:bg-gray-50'
                         }`}
                 >
                     <input {...getInputProps()} />
-                    
+
                     {file ? (
                         <div className="flex items-center justify-center gap-2 text-green-600">
                             <FileText size={24} />
@@ -262,7 +262,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                             type="text"
                             value={metadata.nomorSK}
                             onChange={(e) => setMetadata({ ...metadata, nomorSK: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="800/123/BPBD/2026"
                         />
                     </div>
@@ -275,7 +275,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                             type="text"
                             value={metadata.judulSK}
                             onChange={(e) => setMetadata({ ...metadata, judulSK: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             placeholder="Pengangkatan Kader"
                         />
                     </div>
@@ -288,7 +288,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                             type="date"
                             value={metadata.tanggalTerbit}
                             onChange={(e) => setMetadata({ ...metadata, tanggalTerbit: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                     </div>
 
@@ -300,7 +300,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                             type="date"
                             value={metadata.batasAktif}
                             onChange={(e) => setMetadata({ ...metadata, batasAktif: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         />
                     </div>
 
@@ -343,7 +343,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                             <label className="block text-sm font-medium text-gray-700">
                                 Target Kader <span className="text-red-500">*</span>
                             </label>
-                            
+
                             {/* Checkbox Pilih Semua ditaruh sejajar dengan label */}
                             {kaderOptions.length > 0 && (
                                 <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-800">
@@ -351,7 +351,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                                         type="checkbox"
                                         checked={isAllSelected}
                                         onChange={handleSelectAllKader}
-                                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                                        className="rounded border-gray-400 text-blue-600 focus:ring-blue-500 w-4 h-4"
                                     />
                                     Pilih Semua ({kaderOptions.length} kader)
                                 </label>
@@ -365,22 +365,21 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
                                 {/* Render Opsi Per Kader */}
                                 {kaderOptions.map(kader => {
                                     const isSelected = selectedKaderIds.includes(kader.kader_id);
-                                    
+
                                     return (
-                                        <label 
-                                            key={kader.kader_id} 
+                                        <label
+                                            key={kader.kader_id}
                                             // Highlight Biru & Hilangkan statis disabled
-                                            className={`flex items-center gap-3 cursor-pointer p-2 rounded-md transition-colors border ${
-                                                isSelected 
-                                                ? 'bg-blue-50 border-blue-200' 
-                                                : 'hover:bg-gray-50 border-transparent'
-                                            }`}
+                                            className={`flex items-center gap-3 cursor-pointer p-2 rounded-md transition-colors border ${isSelected
+                                                    ? 'bg-blue-50 border-blue-200'
+                                                    : 'hover:bg-gray-50 border-transparent'
+                                                }`}
                                         >
                                             <input
                                                 type="checkbox"
                                                 checked={isSelected}
                                                 onChange={() => handleToggleKader(kader.kader_id)}
-                                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-4 h-4"
+                                                className="rounded border-gray-400 text-blue-600 focus:ring-blue-500 w-4 h-4"
                                             />
                                             <span className={`text-sm ${isSelected ? 'text-blue-800 font-medium' : 'text-gray-600'}`}>
                                                 {kader.nama_kader}

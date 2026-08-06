@@ -98,10 +98,10 @@ const ProfilRelawan = () => {
         setIsSubmitting(true);
         try {
             const dataBaru: Record<string, string> = {};
-            if (updateForm.alamat.trim())    dataBaru.alamat_ktp = updateForm.alamat.trim();
-            if (updateForm.kemantren.trim()) dataBaru.kemantren  = updateForm.kemantren.trim();
-            if (updateForm.kelurahan.trim()) dataBaru.kelurahan  = updateForm.kelurahan.trim();
-            if (updateForm.noHp.trim())      dataBaru.no_hp      = updateForm.noHp.trim().replace(/\D/g, '');
+            if (updateForm.alamat.trim()) dataBaru.alamat_ktp = updateForm.alamat.trim();
+            if (updateForm.kemantren.trim()) dataBaru.kemantren = updateForm.kemantren.trim();
+            if (updateForm.kelurahan.trim()) dataBaru.kelurahan = updateForm.kelurahan.trim();
+            if (updateForm.noHp.trim()) dataBaru.no_hp = updateForm.noHp.trim().replace(/\D/g, '');
 
             if (Object.keys(dataBaru).length === 0) {
                 setToast({ message: 'Minimal satu data harus diubah', type: 'error' });
@@ -115,9 +115,9 @@ const ProfilRelawan = () => {
                 return;
             }
 
-            const { data: result } = await apiClient.post('/relawan/profile/update', { 
-                data_baru: dataBaru, 
-                catatan: updateForm.catatan 
+            const { data: result } = await apiClient.post('/relawan/profile/update', {
+                data_baru: dataBaru,
+                catatan: updateForm.catatan
             });
 
             if (result.success) {
@@ -222,7 +222,7 @@ const ProfilRelawan = () => {
                                         onChange={(e) => setUpdateForm(p => ({ ...p, alamat: e.target.value }))}
                                         placeholder={profil?.alamat_ktp || 'Alamat tempat tinggal baru'}
                                         rows={3}
-                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 resize-none text-sm"
+                                        className="w-full px-3 py-2.5 border border-gray-400 rounded-lg focus:ring-2 focus:ring-green-500 resize-none text-sm"
                                     />
                                 </div>
 
@@ -260,7 +260,7 @@ const ProfilRelawan = () => {
                                         value={updateForm.noHp}
                                         onChange={(e) => setUpdateForm(p => ({ ...p, noHp: e.target.value }))}
                                         placeholder={profil?.no_hp || 'Contoh: 0812xxxxxxxx'}
-                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
+                                        className="w-full px-3 py-2.5 border border-gray-400 rounded-lg focus:ring-2 focus:ring-green-500 text-sm"
                                     />
                                 </div>
 
@@ -271,7 +271,7 @@ const ProfilRelawan = () => {
                                         onChange={(e) => setUpdateForm(p => ({ ...p, catatan: e.target.value }))}
                                         placeholder="Tuliskan alasan mengapa data perlu diubah..."
                                         rows={3}
-                                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 resize-none text-sm"
+                                        className="w-full px-3 py-2.5 border border-gray-400 rounded-lg focus:ring-2 focus:ring-green-500 resize-none text-sm"
                                     />
                                 </div>
                             </div>

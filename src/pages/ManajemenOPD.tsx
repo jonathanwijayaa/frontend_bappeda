@@ -13,7 +13,7 @@ import { exportToPDF } from '../utils/exportToPDF';
 import { parseErrorMessage } from '../utils/parseErrorMessage';
 import { OPDData } from '../types';
 import { useOpdList } from '../hooks/opd/useOpdList';
-import {REGEX_PATTERNS} from '../utils/regex';
+import { REGEX_PATTERNS } from '../utils/regex';
 import {
     useCreateOpd,
     useUpdateOpd,
@@ -25,20 +25,20 @@ import { toTitleCase } from '../utils/formatText';
 const ManajemenOPD: React.FC = () => {
     // ── Server State (TanStack Query) ─────────────────────────
     const { data: opdList = [], isLoading } = useOpdList();
-    const createOpd    = useCreateOpd();
-    const updateOpd    = useUpdateOpd();
+    const createOpd = useCreateOpd();
+    const updateOpd = useUpdateOpd();
     const toggleStatus = useToggleOpdStatus();
-    const bulkOpd      = useBulkOpd();
+    const bulkOpd = useBulkOpd();
 
     // ── UI State (useState) ───────────────────────────────────
-    const [searchTerm, setSearchTerm]               = useState<string>('');
-    const [isModalOpen, setIsModalOpen]             = useState<boolean>(false);
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
-    const [selectedOPD, setSelectedOPD]             = useState<OPDData | null>(null);
-    const [currentPage, setCurrentPage]             = useState<number>(1);
-    const [isExporting, setIsExporting]             = useState<boolean>(false);
+    const [selectedOPD, setSelectedOPD] = useState<OPDData | null>(null);
+    const [currentPage, setCurrentPage] = useState<number>(1);
+    const [isExporting, setIsExporting] = useState<boolean>(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const itemsPerPage = 5;
 
@@ -106,10 +106,10 @@ const ManajemenOPD: React.FC = () => {
         if (!selectedOPD) return false;
         return (
             detailFormData.nama_opd !== (selectedOPD.nama_opd || '') ||
-            detailFormData.alamat   !== (selectedOPD.alamat   || '') ||
-            detailFormData.pic      !== (selectedOPD.pic      || '') ||
-            detailFormData.nik_pic  !== (selectedOPD.nik_pic  || '') ||
-            detailFormData.kontak   !== (selectedOPD.kontak   || '')
+            detailFormData.alamat !== (selectedOPD.alamat || '') ||
+            detailFormData.pic !== (selectedOPD.pic || '') ||
+            detailFormData.nik_pic !== (selectedOPD.nik_pic || '') ||
+            detailFormData.kontak !== (selectedOPD.kontak || '')
         );
     }, [selectedOPD, detailFormData]);
 
@@ -125,8 +125,8 @@ const ManajemenOPD: React.FC = () => {
         );
     }, [opdList, searchTerm]);
 
-    const totalPages  = Math.ceil(filteredData.length / itemsPerPage);
-    const startIndex  = (currentPage - 1) * itemsPerPage;
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
     const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
     // ── Columns ────────────────────────────────────────────────
@@ -142,9 +142,9 @@ const ManajemenOPD: React.FC = () => {
                 </span>
             )
         },
-        { header: 'ALAMAT',  accessor: 'alamat'  as keyof OPDData, width: '24%' },
-        { header: 'PIC',     accessor: 'pic'     as keyof OPDData, width: '15%' },
-        { header: 'KONTAK',  accessor: 'kontak'  as keyof OPDData, width: '15%' },
+        { header: 'ALAMAT', accessor: 'alamat' as keyof OPDData, width: '24%' },
+        { header: 'PIC', accessor: 'pic' as keyof OPDData, width: '15%' },
+        { header: 'KONTAK', accessor: 'kontak' as keyof OPDData, width: '15%' },
     ];
 
     // ── Handlers ──────────────────────────────────────────────
@@ -153,10 +153,10 @@ const ManajemenOPD: React.FC = () => {
         setSelectedOPD(opd);
         setDetailFormData({
             nama_opd: opd.nama_opd || '',
-            alamat:   opd.alamat   || '',
-            pic:      opd.pic      || '',
-            nik_pic:  opd.nik_pic  || '',
-            kontak:   opd.kontak   || ''
+            alamat: opd.alamat || '',
+            pic: opd.pic || '',
+            nik_pic: opd.nik_pic || '',
+            kontak: opd.kontak || ''
         });
         setIsDetailModalOpen(true);
     };
@@ -174,7 +174,7 @@ const ManajemenOPD: React.FC = () => {
             { opd_id: selectedOPD.opd_id, status_keaktifan: !selectedOPD.status_keaktifan },
             {
                 onSuccess: (d) => setToast({ message: d.message, type: 'success' }),
-                onError:   (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal mengubah status'), type: 'error' }),
+                onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal mengubah status'), type: 'error' }),
                 onSettled: () => { setIsConfirmModalOpen(false); setSelectedOPD(null); },
             }
         );
@@ -190,8 +190,8 @@ const ManajemenOPD: React.FC = () => {
         }
 
         const normalizedNamaOpd = detailFormData.nama_opd.trim();
-        const isDuplicate = opdList.some(o => 
-            o.opd_id !== selectedOPD.opd_id && 
+        const isDuplicate = opdList.some(o =>
+            o.opd_id !== selectedOPD.opd_id &&
             o.nama_opd.toLowerCase() === normalizedNamaOpd.toLowerCase()
         );
         if (isDuplicate) {
@@ -259,10 +259,10 @@ const ManajemenOPD: React.FC = () => {
                 title: 'Data Manajemen OPD',
                 columns: [
                     { header: 'NAMA OPD', dataKey: 'nama_opd' },
-                    { header: 'STATUS',   dataKey: 'status_keaktifan' },
-                    { header: 'ALAMAT',   dataKey: 'alamat' },
-                    { header: 'PIC',      dataKey: 'pic' },
-                    { header: 'KONTAK',   dataKey: 'kontak' }
+                    { header: 'STATUS', dataKey: 'status_keaktifan' },
+                    { header: 'ALAMAT', dataKey: 'alamat' },
+                    { header: 'PIC', dataKey: 'pic' },
+                    { header: 'KONTAK', dataKey: 'kontak' }
                 ],
                 data: filteredData.map(opd => ({ ...opd, status_keaktifan: opd.status_keaktifan ? 'Aktif' : 'Tidak Aktif' })),
                 filename: `manajemen-opd-${new Date().toISOString().split('T')[0]}.pdf`
@@ -369,11 +369,11 @@ const ManajemenOPD: React.FC = () => {
             <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Tambah OPD Baru" subtitle="Isi data OPD yang ingin ditambahkan" maxWidth="2xl">
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {[
-                        { label: 'Nama OPD',  name: 'nama_opd', required: true, placeholder: 'Nama Dinas / OPD' },
-                        { label: 'Alamat',    name: 'alamat',   required: true, placeholder: 'Alamat OPD' },
-                        { label: 'PIC',       name: 'pic',      required: true, placeholder: 'Penanggung jawab' },
-                        { label: 'NIK PIC',   name: 'nik_pic',  required: true, placeholder: '16 digit NIK PIC', maxLength: 16 },
-                        { label: 'Kontak',    name: 'kontak',   required: true, placeholder: 'Nomor telepon / email' },
+                        { label: 'Nama OPD', name: 'nama_opd', required: true, placeholder: 'Nama Dinas / OPD' },
+                        { label: 'Alamat', name: 'alamat', required: true, placeholder: 'Alamat OPD' },
+                        { label: 'PIC', name: 'pic', required: true, placeholder: 'Penanggung jawab' },
+                        { label: 'NIK PIC', name: 'nik_pic', required: true, placeholder: '16 digit NIK PIC', maxLength: 16 },
+                        { label: 'Kontak', name: 'kontak', required: true, placeholder: 'Nomor telepon / email' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">
@@ -387,7 +387,7 @@ const ManajemenOPD: React.FC = () => {
                                 placeholder={field.placeholder}
                                 required={field.required}
                                 maxLength={(field as any).maxLength}
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                     ))}
@@ -406,10 +406,10 @@ const ManajemenOPD: React.FC = () => {
                     <div className="space-y-6">
                         {[
                             { label: 'Nama OPD', name: 'nama_opd', required: true },
-                            { label: 'Alamat',   name: 'alamat', required: true },
-                            { label: 'PIC',      name: 'pic', required: true },
-                            { label: 'NIK PIC',  name: 'nik_pic', required: true, maxLength: 16 },
-                            { label: 'Kontak',   name: 'kontak', required: true },
+                            { label: 'Alamat', name: 'alamat', required: true },
+                            { label: 'PIC', name: 'pic', required: true },
+                            { label: 'NIK PIC', name: 'nik_pic', required: true, maxLength: 16 },
+                            { label: 'Kontak', name: 'kontak', required: true },
                         ].map(field => (
                             <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                                 <label className="text-lg font-medium text-gray-900">
@@ -421,7 +421,7 @@ const ManajemenOPD: React.FC = () => {
                                     value={(detailFormData as any)[field.name]}
                                     onChange={handleDetailInputChange}
                                     maxLength={(field as any).maxLength}
-                                    className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
                         ))}

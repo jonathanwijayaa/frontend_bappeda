@@ -14,7 +14,7 @@ const Profil: React.FC = () => {
 
     // ── Server State ──────────────────────────────────────────
     const { data: profileData, isLoading: isLoadingProfile } = useProfileData();
-    const updateProfil   = useUpdateProfil();
+    const updateProfil = useUpdateProfil();
     const changePassword = useChangePassword();
 
     // ── UI State ──────────────────────────────────────────────
@@ -35,11 +35,10 @@ const Profil: React.FC = () => {
         if (profileData) {
             setFormData({
                 nama_lengkap: profileData.nama_lengkap || '',
-                no_hp:        profileData.no_hp        || '',
+                no_hp: profileData.no_hp || '',
             });
             setAvatarPreview(
-                profileData.foto_profil || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.nama_lengkap)}&background=${
-                    profileData.role === 'super_admin' ? '10B981' : profileData.role === 'opd' ? '3B82F6' : '6B7280'
+                profileData.foto_profil || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData.nama_lengkap)}&background=${profileData.role === 'super_admin' ? '10B981' : profileData.role === 'opd' ? '3B82F6' : '6B7280'
                 }&color=fff`
             );
         }
@@ -88,7 +87,7 @@ const Profil: React.FC = () => {
     const handleProfileSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        const hasProfileChanges = 
+        const hasProfileChanges =
             formData.nama_lengkap.trim() !== (profileData?.nama_lengkap || '') ||
             (formData.no_hp.trim() || '') !== (profileData?.no_hp || '') ||
             avatarFile !== undefined;
@@ -107,8 +106,8 @@ const Profil: React.FC = () => {
         try {
             await updateProfil.mutateAsync({
                 nama_lengkap: formData.nama_lengkap.trim(),
-                no_hp:        cleanedNoHp || null,
-                foto_profil:  avatarFile
+                no_hp: cleanedNoHp || null,
+                foto_profil: avatarFile
             });
             setToast({ message: 'Informasi pribadi berhasil diperbarui!', type: 'success' });
         } catch (err: any) {
@@ -189,7 +188,7 @@ const Profil: React.FC = () => {
                                         onChange={handleAvatarChange}
                                         className="hidden"
                                     />
-                                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                                    <span className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-400 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
                                         <Camera size={16} />
                                         Ganti
                                     </span>
@@ -224,7 +223,7 @@ const Profil: React.FC = () => {
                                         name="nama_lengkap"
                                         value={formData.nama_lengkap}
                                         onChange={handleProfileChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                     />
                                 </div>
 
@@ -253,7 +252,7 @@ const Profil: React.FC = () => {
                                         value={formData.no_hp}
                                         onChange={handleProfileChange}
                                         placeholder="Contoh: 08123456789"
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                     />
                                 </div>
 
@@ -293,7 +292,7 @@ const Profil: React.FC = () => {
                                         name="passwordLama"
                                         value={passwordData.passwordLama}
                                         onChange={handlePasswordChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                     />
                                 </div>
 
@@ -307,7 +306,7 @@ const Profil: React.FC = () => {
                                         name="passwordBaru"
                                         value={passwordData.passwordBaru}
                                         onChange={handlePasswordChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                     />
                                 </div>
 
@@ -321,7 +320,7 @@ const Profil: React.FC = () => {
                                         name="konfirmasiPassword"
                                         value={passwordData.konfirmasiPassword}
                                         onChange={handlePasswordChange}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                        className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                                     />
                                 </div>
 

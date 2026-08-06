@@ -15,9 +15,9 @@ interface ValidationRule {
 const validationRules: ValidationRule[] = [
     { label: 'Minimal 8 karakter', test: (p) => p.length >= 8 },
     { label: 'Mengandung angka', test: (p) => /\d/.test(p) },
-    { 
-        label: 'Minimal 1 karakter spesial (contoh: !, @, #, $, %, ^, *, _, +)', 
-        test: (p) => /[^A-Za-z0-9]/.test(p) 
+    {
+        label: 'Minimal 1 karakter spesial (contoh: !, @, #, $, %, ^, *, _, +)',
+        test: (p) => /[^A-Za-z0-9]/.test(p)
     },
 ];
 
@@ -128,7 +128,7 @@ const UbahPassword = () => {
             case 'checking':
                 return 'border-yellow-400 ring-1 ring-yellow-300';
             default:
-                return 'border-gray-300';
+                return 'border-gray-400';
         }
     };
 
@@ -182,13 +182,12 @@ const UbahPassword = () => {
                     {/* New Password */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">Kata Sandi Baru</label>
-                        <div className={`flex items-center border rounded-xl px-3 transition-colors ${
-                            form.newPassword === ''
-                                ? 'border-gray-300'
+                        <div className={`flex items-center border rounded-xl px-3 transition-colors ${form.newPassword === ''
+                                ? 'border-gray-400'
                                 : isNewPasswordValid
-                                ? 'border-green-400 ring-1 ring-green-300'
-                                : 'border-red-400 ring-1 ring-red-300'
-                        } focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-400`}>
+                                    ? 'border-green-400 ring-1 ring-green-300'
+                                    : 'border-red-400 ring-1 ring-red-300'
+                            } focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-400`}>
                             <input
                                 id="new-password"
                                 type={showNew ? 'text' : 'password'}
@@ -237,13 +236,12 @@ const UbahPassword = () => {
                     {/* Confirm Password */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1.5">Konfirmasi Kata Sandi Baru</label>
-                        <div className={`flex items-center border rounded-xl px-3 transition-colors ${
-                            form.confirmPassword === ''
-                                ? 'border-gray-300'
+                        <div className={`flex items-center border rounded-xl px-3 transition-colors ${form.confirmPassword === ''
+                                ? 'border-gray-400'
                                 : passwordsMatch
-                                ? 'border-green-400 ring-1 ring-green-300'
-                                : 'border-red-400 ring-1 ring-red-300'
-                        } focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-400`}>
+                                    ? 'border-green-400 ring-1 ring-green-300'
+                                    : 'border-red-400 ring-1 ring-red-300'
+                            } focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-400`}>
                             <input
                                 id="confirm-password"
                                 type={showConfirm ? 'text' : 'password'}
@@ -276,11 +274,10 @@ const UbahPassword = () => {
                     <button
                         type="submit"
                         disabled={!canSubmit}
-                        className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2 ${
-                            canSubmit
+                        className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all duration-200 flex items-center justify-center gap-2 ${canSubmit
                                 ? 'bg-green-600 hover:bg-green-700 active:scale-95 shadow-md shadow-green-200'
                                 : 'bg-gray-300 cursor-not-allowed'
-                        }`}
+                            }`}
                     >
                         {isSubmitting ? (
                             <>

@@ -37,7 +37,7 @@ export interface AssignmentFieldsProps {
     onRemove?: (index: number) => void;
 }
 
-const JABATAN_OPTIONS = ['Ketua','Wakil','Sekretaris','Bendahara','Seksi','Anggota','Lainnya'];
+const JABATAN_OPTIONS = ['Ketua', 'Wakil', 'Sekretaris', 'Bendahara', 'Seksi', 'Anggota', 'Lainnya'];
 
 const AssignmentFields: React.FC<AssignmentFieldsProps> = memo(({
     assignment,
@@ -116,10 +116,10 @@ const AssignmentFields: React.FC<AssignmentFieldsProps> = memo(({
                         onChange={(val) => onKaderChange(index, val)}
                         placeholder={
                             isReadOnly ? 'Kader' :
-                            !hasOpdSelected ? 'Pilih OPD terlebih dahulu...' :
-                            isKaderLoading ? 'Memuat kader...' :
-                            kaderOptions.length === 0 ? 'Tidak ada kader di OPD ini' :
-                            'Cari nama Kader...'
+                                !hasOpdSelected ? 'Pilih OPD terlebih dahulu...' :
+                                    isKaderLoading ? 'Memuat kader...' :
+                                        kaderOptions.length === 0 ? 'Tidak ada kader di OPD ini' :
+                                            'Cari nama Kader...'
                         }
                         disabled={isReadOnly || !hasOpdSelected || isKaderLoading}
                         warnIfNotFound={false}
@@ -140,7 +140,7 @@ const AssignmentFields: React.FC<AssignmentFieldsProps> = memo(({
                     value={assignment.peran}
                     onChange={(e) => onFieldChange(index, 'peran', e.target.value)}
                     disabled={isReadOnly}
-                    className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                    className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
                 >
                     <option value="">-- Pilih Jabatan --</option>
                     {JABATAN_OPTIONS.map(j => <option key={j} value={j}>{j}</option>)}
@@ -156,7 +156,7 @@ const AssignmentFields: React.FC<AssignmentFieldsProps> = memo(({
                     onChange={(e) => onFieldChange(index, 'detail', e.target.value)}
                     placeholder="Detail jabatan (contoh: Bidang X)"
                     disabled={isReadOnly}
-                    className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                    className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
                 />
             </div>
 
@@ -169,7 +169,7 @@ const AssignmentFields: React.FC<AssignmentFieldsProps> = memo(({
                     onChange={(e) => onFieldChange(index, 'penugasan', e.target.value)}
                     placeholder="Nama/detail penugasan"
                     disabled={isReadOnly}
-                    className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
+                    className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
                 />
             </div>
 
@@ -189,7 +189,7 @@ const AssignmentFields: React.FC<AssignmentFieldsProps> = memo(({
                                 checked={assignment.status_keaktifan === status.value}
                                 onChange={(e) => onFieldChange(index, 'status_keaktifan', e.target.value)}
                                 disabled={isReadOnly}
-                                className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500 cursor-pointer"
+                                className="w-4 h-4 text-blue-600 border-gray-400 focus:ring-blue-500 cursor-pointer"
                             />
                             <span className="text-gray-700">{status.label}</span>
                         </label>

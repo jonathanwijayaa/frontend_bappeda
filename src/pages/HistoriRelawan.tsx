@@ -389,7 +389,7 @@ const HistoriRelawan: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                     placeholder="Cari nama atau NIK relawan..."
-                    className="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white shadow-sm"
+                    className="w-full pl-9 pr-4 py-2.5 border border-gray-400 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white shadow-sm"
                 />
             </div>
 

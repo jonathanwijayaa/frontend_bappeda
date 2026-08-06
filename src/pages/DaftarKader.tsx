@@ -27,21 +27,21 @@ const DaftarKader: React.FC = () => {
 
     // ── Server State (TanStack Query) ─────────────────────────
     const { data: kaderList = [], isLoading } = useKaderList(!!isSuperAdmin);
-    const { data: opdListData = [] }           = useOpdList(!!isSuperAdmin);
-    const createKader  = useCreateKader(!!isSuperAdmin);
-    const updateKader  = useUpdateKader(!!isSuperAdmin);
+    const { data: opdListData = [] } = useOpdList(!!isSuperAdmin);
+    const createKader = useCreateKader(!!isSuperAdmin);
+    const updateKader = useUpdateKader(!!isSuperAdmin);
     const toggleStatus = useToggleKaderStatus(!!isSuperAdmin);
-    const bulkKader    = useBulkKader(!!isSuperAdmin);
+    const bulkKader = useBulkKader(!!isSuperAdmin);
 
     // ── UI State ──────────────────────────────────────────────
-    const [searchTerm, setSearchTerm]               = useState('');
-    const [isModalOpen, setIsModalOpen]             = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-    const [selectedKader, setSelectedKader]         = useState<KaderData | null>(null);
-    const [currentPage, setCurrentPage]             = useState(1);
-    const [isExporting, setIsExporting]             = useState(false);
+    const [selectedKader, setSelectedKader] = useState<KaderData | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [isExporting, setIsExporting] = useState(false);
     const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
     const itemsPerPage = 5;
 
@@ -89,7 +89,7 @@ const DaftarKader: React.FC = () => {
         if (!selectedKader) return false;
         return (
             detailFormData.nama_kader !== (selectedKader.nama_kader || '') ||
-            detailFormData.deskripsi  !== (selectedKader.deskripsi  || '')
+            detailFormData.deskripsi !== (selectedKader.deskripsi || '')
         );
     }, [selectedKader, detailFormData]);
 
@@ -190,7 +190,7 @@ const DaftarKader: React.FC = () => {
             { kader_id: selectedKader.kader_id, status_keaktifan: !selectedKader.status_keaktifan },
             {
                 onSuccess: (d) => setToast({ message: d.message, type: 'success' }),
-                onError:   (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal mengubah status'), type: 'error' }),
+                onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal mengubah status'), type: 'error' }),
                 onSettled: () => { setIsConfirmModalOpen(false); setSelectedKader(null); },
             }
         );
@@ -298,13 +298,13 @@ const DaftarKader: React.FC = () => {
         }
 
         const body: any = {
-            nama_kader:    toTitleCase(normalizedNamaKader),
-            deskripsi:     formData.deskripsi     || null,
-            nama_pic:      namaPicTrimmed,
-            nik_pic:       nikPicTrimmed,
-            alamat_pic:    alamatPicTrimmed,
+            nama_kader: toTitleCase(normalizedNamaKader),
+            deskripsi: formData.deskripsi || null,
+            nama_pic: namaPicTrimmed,
+            nik_pic: nikPicTrimmed,
+            alamat_pic: alamatPicTrimmed,
             kelurahan_pic: formData.kelurahan_pic || null,
-            no_hp_pic:     formData.no_hp_pic.replace(/\D/g, ''),
+            no_hp_pic: formData.no_hp_pic.replace(/\D/g, ''),
         };
         if (isSuperAdmin) body.opd_id = formData.opd_id;
 
@@ -312,7 +312,7 @@ const DaftarKader: React.FC = () => {
             onSuccess: (d) => {
                 setToast({ message: d.message, type: 'success' });
                 setIsModalOpen(false);
-                setFormData({ opd_name: '', opd_id: 0, nama_kader: '', deskripsi: '', nama_pic: '', nik_pic: '', alamat_pic: '',kemantren_pic:'', kelurahan_pic: '', no_hp_pic: '' });
+                setFormData({ opd_name: '', opd_id: 0, nama_kader: '', deskripsi: '', nama_pic: '', nik_pic: '', alamat_pic: '', kemantren_pic: '', kelurahan_pic: '', no_hp_pic: '' });
             },
             onError: (e: any) => setToast({ message: parseErrorMessage(e, 'Gagal menambahkan kader'), type: 'error' }),
         });
@@ -321,7 +321,7 @@ const DaftarKader: React.FC = () => {
     // Simpan perubahan nama kader dan deskripsi dari modal detail.
     const handleDetailSave = async () => {
         if (!selectedKader) return;
-        
+
         if (!detailFormData.nama_kader.trim() || !detailFormData.deskripsi.trim()) {
             setToast({ message: 'Semua field wajib diisi', type: 'error' });
             return;
@@ -340,8 +340,8 @@ const DaftarKader: React.FC = () => {
             return;
         }
 
-        const isDuplicate = kaderList.some(k => 
-            k.kader_id !== selectedKader.kader_id && 
+        const isDuplicate = kaderList.some(k =>
+            k.kader_id !== selectedKader.kader_id &&
             k.nama_kader.toLowerCase() === normalizedNamaKader.toLowerCase()
         );
         if (isDuplicate) {
@@ -581,13 +581,13 @@ const DaftarKader: React.FC = () => {
                     )}
 
                     {[
-                        { label: 'Nama Kader',    name: 'nama_kader',    required: true,  placeholder: 'Nama Kader atau komunitas' },
-                        { label: 'Nama PIC',     name: 'nama_pic',      required: true, placeholder: 'Nama Person in Charge' },
-                        { label: 'NIK PIC',      name: 'nik_pic',       required: true,  placeholder: '16 digit NIK PIC', maxLength: 16 },
-                        { label: 'No. HP PIC',   name: 'no_hp_pic',     required: true, placeholder: 'Nomor HP PIC' },
-                        { label: 'Alamat PIC',   name: 'alamat_pic',    required: true, placeholder: 'Alamat sesuai KTP' },
-                        
-                        { label: 'Deskripsi',    name: 'deskripsi',     required: true, placeholder: 'Deskripsi singkat' },
+                        { label: 'Nama Kader', name: 'nama_kader', required: true, placeholder: 'Nama Kader atau komunitas' },
+                        { label: 'Nama PIC', name: 'nama_pic', required: true, placeholder: 'Nama Person in Charge' },
+                        { label: 'NIK PIC', name: 'nik_pic', required: true, placeholder: '16 digit NIK PIC', maxLength: 16 },
+                        { label: 'No. HP PIC', name: 'no_hp_pic', required: true, placeholder: 'Nomor HP PIC' },
+                        { label: 'Alamat PIC', name: 'alamat_pic', required: true, placeholder: 'Alamat sesuai KTP' },
+
+                        { label: 'Deskripsi', name: 'deskripsi', required: true, placeholder: 'Deskripsi singkat' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-lg font-medium text-gray-900">
@@ -601,7 +601,7 @@ const DaftarKader: React.FC = () => {
                                 placeholder={field.placeholder}
                                 required={field.required}
                                 maxLength={(field as any).maxLength}
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
                     ))}
@@ -663,7 +663,7 @@ const DaftarKader: React.FC = () => {
 
                         {[
                             { label: 'Nama Kader', name: 'nama_kader', type: 'input' },
-                            { label: 'Deskripsi',  name: 'deskripsi', type: 'textarea' }
+                            { label: 'Deskripsi', name: 'deskripsi', type: 'textarea' }
                         ].map(field => (
                             <div key={field.name} className={`grid grid-cols-3 gap-4 ${field.type === 'textarea' ? 'items-start' : 'items-center'}`}>
                                 <label className={`text-lg font-medium text-gray-900 ${field.type === 'textarea' ? 'pt-2' : ''}`}>{field.label}</label>
@@ -672,14 +672,14 @@ const DaftarKader: React.FC = () => {
                                         value={(detailFormData as any)[field.name]}
                                         onChange={(e) => setDetailFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
                                         rows={4}
-                                        className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                                        className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                                     />
                                 ) : (
                                     <input
                                         type="text"
                                         value={(detailFormData as any)[field.name]}
                                         onChange={(e) => setDetailFormData(prev => ({ ...prev, [field.name]: e.target.value }))}
-                                        className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     />
                                 )}
                             </div>
@@ -734,10 +734,10 @@ const DaftarKader: React.FC = () => {
                 title="Ganti PIC Kader" subtitle="Masukkan NIK PIC baru. Histori PIC lama akan tersimpan." maxWidth="xl">
                 <div className="space-y-4">
                     {[
-                        { label: 'NIK PIC Baru',    name: 'nik_pic',       required: true,  placeholder: '16 digit NIK', maxLength: 16 },
-                        { label: 'Nama PIC',        name: 'nama_pic',      required: true, placeholder: 'Nama (jika NIK belum terdaftar)' },
-                        { label: 'No. HP PIC',      name: 'no_hp_pic',     required: true, placeholder: 'Nomor HP' },
-                        { label: 'Alamat PIC',      name: 'alamat_pic',    required: true, placeholder: 'Alamat KTP' },
+                        { label: 'NIK PIC Baru', name: 'nik_pic', required: true, placeholder: '16 digit NIK', maxLength: 16 },
+                        { label: 'Nama PIC', name: 'nama_pic', required: true, placeholder: 'Nama (jika NIK belum terdaftar)' },
+                        { label: 'No. HP PIC', name: 'no_hp_pic', required: true, placeholder: 'Nomor HP' },
+                        { label: 'Alamat PIC', name: 'alamat_pic', required: true, placeholder: 'Alamat KTP' },
                     ].map(field => (
                         <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
                             <label className="text-sm font-medium text-gray-700">
@@ -749,7 +749,7 @@ const DaftarKader: React.FC = () => {
                                 onChange={(e) => setAssignPicForm(prev => ({ ...prev, [field.name]: e.target.value }))}
                                 placeholder={field.placeholder}
                                 maxLength={(field as any).maxLength}
-                                className="col-span-2 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                             />
                         </div>
                     ))}

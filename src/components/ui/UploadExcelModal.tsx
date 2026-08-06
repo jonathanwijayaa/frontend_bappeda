@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Link } from 'react-router-dom';
-import { Upload, FileSpreadsheet, X } from 'lucide-react';  
+import { Upload, FileSpreadsheet, X } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Modal from './Modal';
 import Button from './Button';
@@ -20,13 +20,13 @@ interface UploadExcelModalProps {
 }
 
 const REQUIRED_FIELDS: Record<string, string[]> = {
-    opd:     ['namaopd', 'status', 'alamat', 'pic', 'nikpic', 'kontak'],
-    kader:   ['opd', 'namakader', 'pic', 'nikpic', 'nohp', 'alamatpic', 'kelurahanpic'],
+    opd: ['namaopd', 'status', 'alamat', 'pic', 'nikpic', 'kontak'],
+    kader: ['opd', 'namakader', 'pic', 'nikpic', 'nohp', 'alamatpic', 'kelurahanpic'],
     relawan: ['namalengkap', 'jeniskelamin', 'nik', 'alamat', 'nohp', 'opd', 'kelurahan', 'kader', 'jabatan', 'detailjabatan', 'penugasan'],
 };
 
 const REQUIRED_FIELDS_CHECK: Record<string, { keys: string[], label: string }[]> = {
-    opd:     [
+    opd: [
         { keys: ['namaopd', 'nama'], label: 'Nama OPD' },
         { keys: ['status'], label: 'Status' },
         { keys: ['alamat'], label: 'Alamat' },
@@ -34,7 +34,7 @@ const REQUIRED_FIELDS_CHECK: Record<string, { keys: string[], label: string }[]>
         { keys: ['nikpic', 'nik'], label: 'NIK PIC' },
         { keys: ['kontak', 'nohp'], label: 'Kontak' }
     ],
-    kader:   [
+    kader: [
         { keys: ['opd', 'instansi'], label: 'OPD' },
         { keys: ['namakader', 'kader', 'nama'], label: 'Nama Kader' },
         { keys: ['pic', 'namapic'], label: 'PIC' },
@@ -51,7 +51,7 @@ const REQUIRED_FIELDS_CHECK: Record<string, { keys: string[], label: string }[]>
         { keys: ['alamat'], label: 'Alamat' },
         { keys: ['nohp', 'hp', 'nomerhp', 'telepon'], label: 'No HP' },
         { keys: ['opd', 'instansi'], label: 'OPD/Instansi' },
-        { keys: ['kemantren','kecamatan'], label: 'Kemantren' },
+        { keys: ['kemantren', 'kecamatan'], label: 'Kemantren' },
         { keys: ['kelurahan', 'desa'], label: 'Kelurahan' },
         { keys: ['kader', 'komunitaskader', 'komunitas'], label: 'Kader' },
         { keys: ['jabatan', 'peran'], label: 'Jabatan/Peran' },
@@ -139,8 +139,8 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
         const nikFrequency: Record<string, number> = {}; // Menyimpan total kemunculan NIK
 
         // Cari tahu key NIK/NIK PIC berdasarkan tipe datanya
-        const nikKeys = dataType === 'relawan' 
-            ? ['nik'] 
+        const nikKeys = dataType === 'relawan'
+            ? ['nik']
             : ['nikpic', 'nik'];
 
         data.forEach(row => {
@@ -154,7 +154,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
         for (let i = 0; i < data.length; i++) {
             const row = data[i];
             const currentErrors: string[] = [];
-            const rowNumber = i + 2; 
+            const rowNumber = i + 2;
 
             fieldsToCheck.forEach(field => {
                 const value = getRowVal(row, field.keys);
@@ -166,7 +166,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                             if (value.length < 3) currentErrors.push('Nama Lengkap minimal 3 karakter');
                             else if (!REGEX_PATTERNS.NAMA_RELAWAN.test(value)) currentErrors.push('Nama Lengkap mengandung karakter ilegal');
                         }
-                        
+
                         if (field.label === 'Jenis Kelamin') {
                             const jkUpper = value.toUpperCase();
                             const validJK = ['L', 'P', 'LAKI-LAKI', 'PEREMPUAN'];
@@ -174,7 +174,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                                 currentErrors.push('Jenis Kelamin harus Laki-Laki, Perempuan, L, atau P');
                             }
                         }
-                        
+
                         // ── MODIFIKASI VALIDASI NIK RELAWAN ──
                         if (field.label === 'NIK') {
                             if (!REGEX_PATTERNS.NIK.test(value)) {
@@ -210,7 +210,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                         if (field.label === 'PIC' && !REGEX_PATTERNS.NAMA_RELAWAN.test(value)) {
                             currentErrors.push('Nama PIC mengandung karakter ilegal');
                         }
-                        
+
                         // ── MODIFIKASI VALIDASI NIK KADER ──
                         if (field.label === 'NIK PIC') {
                             if (!REGEX_PATTERNS.NIK.test(value)) {
@@ -244,7 +244,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                         if (field.label === 'PIC' && !REGEX_PATTERNS.NAMA_RELAWAN.test(value)) {
                             currentErrors.push('Nama PIC OPD mengandung karakter ilegal');
                         }
-                        
+
                         // ── MODIFIKASI VALIDASI NIK OPD ──
                         if (field.label === 'NIK PIC') {
                             if (!REGEX_PATTERNS.NIK.test(value)) {
@@ -269,7 +269,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
 
             if (currentErrors.length > 0) {
                 rowErrors.push({
-                    rowNumber: rowNumber, 
+                    rowNumber: rowNumber,
                     errorMessages: currentErrors
                 });
             }
@@ -393,7 +393,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
                                 ? 'border-blue-500 bg-blue-50'
                                 : isDragReject
                                     ? 'border-red-500 bg-red-50'
-                                    : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
+                                    : 'border-gray-400 hover:border-blue-400 hover:bg-gray-50'
                             }`}
                     >
                         <input {...getInputProps()} />

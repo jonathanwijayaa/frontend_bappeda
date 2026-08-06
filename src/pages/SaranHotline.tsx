@@ -194,9 +194,9 @@ const SaranHotline: React.FC = () => {
 
     const saranColumns = [
         { header: 'NAMA PENGIRIM', accessor: 'nama_lengkap' as keyof SaranData },
-        { 
-            header: 'NO. TELEPON', 
-            render: (row: SaranData) => formatPhoneDisplay(row.no_hp) 
+        {
+            header: 'NO. TELEPON',
+            render: (row: SaranData) => formatPhoneDisplay(row.no_hp)
         },
         {
             header: 'SARAN',
@@ -216,7 +216,7 @@ const SaranHotline: React.FC = () => {
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${row.status === 'Selesai'
                     ? 'bg-green-50 text-green-700 border-green-200'
                     : 'bg-yellow-50 text-yellow-700 border-yellow-200'
-                }`}>
+                    }`}>
                     {row.status === 'Selesai' ? '✓ Selesai' : '⏳ Menunggu'}
                 </span>
             )
@@ -262,10 +262,10 @@ const SaranHotline: React.FC = () => {
                     <div>
                         <p className="text-sm text-gray-600 mb-1">{item.label}</p>
                         {item.label === 'WhatsApp' ? (
-                            <a 
-                                href={formatWhatsAppUrl(item.value)} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
+                            <a
+                                href={formatWhatsAppUrl(item.value)}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="text-base font-semibold text-green-600 hover:text-green-700 hover:underline flex items-center gap-1 w-fit"
                             >
                                 {item.value}
@@ -283,11 +283,11 @@ const SaranHotline: React.FC = () => {
     const feedbackForm = (
         <form onSubmit={handleSubmit} className="space-y-4">
             <input type="text" name="namaLengkap" value={formData.namaLengkap} onChange={handleInputChange} placeholder="Nama Lengkap"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" />
+                className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" />
             <input type="tel" name="noTelepon" value={formData.noTelepon} disabled={!!userNoHp} onChange={handleInputChange} placeholder="No. Telepon"
-                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm ${!!userNoHp ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed' : 'border-gray-300'}`} />
+                className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm ${!!userNoHp ? 'border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed' : 'border-gray-400'}`} />
             <textarea name="saran" value={formData.saran} onChange={handleInputChange} placeholder="Tuliskan saran atau kendala Anda di sini..." rows={6}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none text-sm" />
+                className="w-full px-4 py-3 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none text-sm" />
             <Button type="submit" disabled={isSubmitting} className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors justify-center disabled:opacity-70">
                 {isSubmitting ? (<span className="flex items-center justify-center gap-2"><Loader2 size={18} className="animate-spin" /> Mengirim...</span>) : 'Kirim Saran'}
             </Button>
@@ -329,7 +329,7 @@ const SaranHotline: React.FC = () => {
                                                 value={(hotlineForm as any)[field.key]}
                                                 onChange={e => setHotlineForm(prev => ({ ...prev, [field.key]: e.target.value }))}
                                                 placeholder={field.placeholder}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                className="w-full px-3 py-2 border border-gray-400 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                                             />
                                         </div>
                                     ))}
@@ -386,7 +386,7 @@ const SaranHotline: React.FC = () => {
                                     value={searchTerm}
                                     onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                                     placeholder="Cari nama, telepon, atau pesan..."
-                                    className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                                    className="w-full pl-9 pr-4 py-2 border border-gray-400 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
                                 />
                             </div>
                         </div>
@@ -454,7 +454,7 @@ const SaranHotline: React.FC = () => {
                                 </div>
                                 <div>
                                     <label className="text-xs text-gray-500 mb-1 block">Catatan Admin (opsional)</label>
-                                    <textarea value={responForm.catatan_admin} onChange={(e) => setResponForm(prev => ({ ...prev, catatan_admin: e.target.value }))} placeholder="Tuliskan respon atau catatan untuk pengirim..." rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" />
+                                    <textarea value={responForm.catatan_admin} onChange={(e) => setResponForm(prev => ({ ...prev, catatan_admin: e.target.value }))} placeholder="Tuliskan respon atau catatan untuk pengirim..." rows={3} className="w-full px-3 py-2 border border-gray-400 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-green-500 text-sm" />
                                 </div>
                                 {selectedSaran.catatan_admin && (
                                     <div className="mt-2 p-3 bg-green-50 border border-green-100 rounded-lg text-xs text-green-800">
