@@ -42,7 +42,7 @@ export function Table<T extends Record<string, any>>({
     };
 
     return (
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto w-full">
             <table className="w-full text-left text-xs text-gray-700 border-collapse">
                 <thead className="bg-gray-50/80 text-gray-400 font-bold tracking-wider">
                     <tr>
@@ -64,14 +64,19 @@ export function Table<T extends Record<string, any>>({
                                 </th>
                             );
                         })}
-                        {actions && <th className="px-4 py-3.5 text-right font-bold tracking-wider">AKSI</th>}
+                        {/* Header AKSI dibuat rata tengah dengan lebar fixed */}
+                        {actions && (
+                            <th className="px-4 py-3.5 text-center font-bold tracking-wider w-28 whitespace-nowrap">
+                                AKSI
+                            </th>
+                        )}
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                     {data.map((row, rowIdx) => (
                         <tr key={rowIdx} className="hover:bg-gray-50/60 transition-colors">
                             {columns.map((col, colIdx) => (
-                                <td key={colIdx} className="px-4 py-4 text-gray-800">
+                                <td key={colIdx} className="px-4 py-3.5 text-gray-800 align-middle">
                                     {col.render
                                         ? col.render(row)
                                         : col.accessor
@@ -79,7 +84,14 @@ export function Table<T extends Record<string, any>>({
                                         : '-'}
                                 </td>
                             ))}
-                            {actions && <td className="px-4 py-4 text-right">{actions(row)}</td>}
+                            {/* Baris Tombol Aksi disejajarkan ke tengah area kolom AKSI */}
+                            {actions && (
+                                <td className="px-4 py-3.5 text-center align-middle w-28 whitespace-nowrap">
+                                    <div className="flex flex-col items-center justify-center gap-1.5">
+                                        {actions(row)}
+                                    </div>
+                                </td>
+                            )}
                         </tr>
                     ))}
                     {data.length < minRows &&
