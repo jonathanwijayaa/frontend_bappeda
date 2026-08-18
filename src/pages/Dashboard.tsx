@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import Card from "../components/ui/Card";
 import BarChart from "../components/charts/BarChart";
 import DonutChart from "../components/charts/DonutChart";
+import Select from "../components/ui/Select";
 import HorizontalBarChart from "../components/charts/HorizontalBarChart";
 import type { ChartDataItem,DashboardData,TopRelawanItem } from "../types/dashboard.types";
 import {useStatistikGender, useStatistikKelurahan, useStatistikRelawanPerKader, useStatistikKaderPerOpd, } from "../hooks/statistik/useStatistik";
@@ -174,7 +175,7 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* ── Real-time Status Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 border-b border-gray-100 pb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 border-b border-gray-100 pb-2">
         <p className="text-xs italic text-gray-400">Data ditampilkan secara real-time</p>
         <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-full px-3 py-1 text-xs text-gray-600 font-medium shadow-sm w-fit">
           <Clock size={13} className="text-green-600 animate-pulse" />
@@ -253,21 +254,30 @@ const Dashboard: React.FC = () => {
         <div className="lg:col-span-3">
           <Card
             title={
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 w-full">
+              <div className="flex items-center justify-between gap-4 w-full">
+                {/* Sisi Kiri: Judul & Subtitle */}
                 <div className="flex flex-col gap-0.5">
-                  <span className="font-semibold text-gray-800">
+                  <span className="font-semibold text-gray-800 text-sm md:text-base">
                     {isSuperAdmin ? "Jumlah Relawan per OPD" : "Jumlah Relawan per Kader"}
                   </span>
-                  <span className="text-xs font-normal text-gray-500">{labelPeriodeKumulatif}</span>
+                  <span className="text-xs font-normal text-gray-500">
+                    {labelPeriodeKumulatif}
+                  </span>
                 </div>
+
+                {/* Sisi Kanan: Dropdown Select Filter */}
                 {rawChartData.length > 10 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAllChart(!showAllChart)}
-                    className="text-xs text-green-700 bg-green-50 hover:bg-green-100 font-medium px-2.5 py-1 rounded-lg transition-colors self-start sm:self-auto"
-                  >
-                    {showAllChart ? "Tampilkan Top 10" : `Lihat Semua (${rawChartData.length})`}
-                  </button>
+                  <div className="w-40 shrink-0">
+                    <Select
+                      value={showAllChart ? "all" : "top10"}
+                      onChange={(e) => setShowAllChart(e.target.value === "all")}
+                      options={[
+                        { label: "Top 10 Data", value: "top10" },
+                        { label: `Semua Data (${rawChartData.length})`, value: "all" },
+                      ]}
+                      placeholder="Pilih tampilan..."
+                    />
+                  </div>
                 )}
               </div>
             }
