@@ -8,7 +8,7 @@ import DaftarKader from "./pages/DaftarKader";
 import DataRelawan from "./pages/DataRelawan";
 import SuratKeputusan from "./pages/SuratKeputusan";
 import LogAktifitas from "./pages/LogAktifitas";
-import Statistik from "./pages/Statistik";
+// import Statistik from "./pages/Statistik";
 import Dokumen from "./pages/Dokumen";
 import SaranHotline from "./pages/SaranHotline";
 import Profil from "./pages/Profil";
@@ -185,7 +185,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
+      {/* <Route
         path="/statistik"
         element={
           <ProtectedRoute allowedRoles={["super_admin", "opd"]}>
@@ -194,7 +194,7 @@ function AppRoutes() {
             </Layout>
           </ProtectedRoute>
         }
-      />
+      /> */}
       <Route
         path="/dokumen"
         element={
