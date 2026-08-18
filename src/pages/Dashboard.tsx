@@ -150,70 +150,78 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* ── BARIS 1: KPI Stat Cards (4 Cards Ringkasan) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-            <Users size={22} />
+      {/* ── BARIS 1: KPI Stat Cards ── */}
+        <div
+          className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${
+            isSuperAdmin ? "lg:grid-cols-4" : "lg:grid-cols-3"
+          }`}
+        >
+          {/* Card 1: Total Relawan */}
+          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+              <Users size={22} />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500">Total Relawan Aktif</p>
+              <p className="text-2xl font-bold text-gray-900 mt-0.5">
+                {dashboardData.ringkasan.total_relawan_aktif.toLocaleString("id-ID")}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-medium text-gray-500">Total Relawan Aktif</p>
-            <p className="text-2xl font-bold text-gray-900 mt-0.5">
-              {dashboardData.ringkasan.total_relawan_aktif.toLocaleString("id-ID")}
-            </p>
-          </div>
-        </div>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-green-50 text-green-600 rounded-xl">
-            <UserCheck size={22} />
+          {/* Card 2: Total Kader */}
+          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+            <div className="p-3 bg-green-50 text-green-600 rounded-xl">
+              <UserCheck size={22} />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500">Total Kader</p>
+              <p className="text-2xl font-bold text-gray-900 mt-0.5">
+                {dashboardData.ringkasan.total_kader.toLocaleString("id-ID")}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs font-medium text-gray-500">Total Kader</p>
-            <p className="text-2xl font-bold text-gray-900 mt-0.5">
-              {dashboardData.ringkasan.total_kader.toLocaleString("id-ID")}
-            </p>
-          </div>
-        </div>
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-          <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
-            <Building2 size={22} />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-gray-500">
-              {isSuperAdmin ? "Total OPD Terdaftar" : "Instansi Anda"}
-            </p>
-            <p className="text-2xl font-bold text-gray-900 mt-0.5">
-              {isSuperAdmin ? dashboardData.ringkasan.total_opd : user?.nama_opd || "OPD"}
-            </p>
-          </div>
-        </div>
+          {/* Card 3: Total OPD (Hanya untuk Super Admin) */}
+          {isSuperAdmin && (
+            <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+              <div className="p-3 bg-purple-50 text-purple-600 rounded-xl">
+                <Building2 size={22} />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-gray-500">Total OPD Terdaftar</p>
+                <p className="text-2xl font-bold text-gray-900 mt-0.5">
+                  {dashboardData.ringkasan.total_opd}
+                </p>
+              </div>
+            </div>
+          )}
 
-        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
-          <div
-            className={`p-3 rounded-xl ${
-              dashboardData.ringkasan.pengajuan_pending > 0
-                ? "bg-amber-50 text-amber-600"
-                : "bg-gray-50 text-gray-400"
-            }`}
-          >
-            <FileClock size={22} />
-          </div>
-          <div>
-            <p className="text-xs font-medium text-gray-500">Pengajuan Pending</p>
-            <p
-              className={`text-2xl font-bold mt-0.5 ${
+          {/* Card 4: Pengajuan Pending */}
+          <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+            <div
+              className={`p-3 rounded-xl ${
                 dashboardData.ringkasan.pengajuan_pending > 0
-                  ? "text-amber-600"
-                  : "text-gray-900"
+                  ? "bg-amber-50 text-amber-600"
+                  : "bg-gray-50 text-gray-400"
               }`}
             >
-              {dashboardData.ringkasan.pengajuan_pending}
-            </p>
+              <FileClock size={22} />
+            </div>
+            <div>
+              <p className="text-xs font-medium text-gray-500">Pengajuan Pending</p>
+              <p
+                className={`text-2xl font-bold mt-0.5 ${
+                  dashboardData.ringkasan.pengajuan_pending > 0
+                    ? "text-amber-600"
+                    : "text-gray-900"
+                }`}
+              >
+                {dashboardData.ringkasan.pengajuan_pending}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
       {/* ── BARIS 2: Visualisasi Utama & Demografi ── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
