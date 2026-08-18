@@ -19,8 +19,10 @@ export const useRelawanList = (isSuperAdmin: boolean) =>
       const endpoint = isSuperAdmin ? "/admin/relawan" : "/opd-admin/relawan";
       const { data } = await apiClient.get(endpoint);
       if (!data.success) throw new Error(data.message || "Gagal memuat data relawan");
-      return groupRelawanRows(data.data);
+      
+      const rawList = Array.isArray(data.data) ? data.data : [];
+      return groupRelawanRows(rawList);
     },
     queryKey: RELAWAN_KEYS.list(isSuperAdmin),
+    staleTime: 30 * 1000,
   });
-

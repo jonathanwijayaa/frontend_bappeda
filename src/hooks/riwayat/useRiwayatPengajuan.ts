@@ -17,7 +17,18 @@ export const useRiwayatPengajuan = () =>
     queryFn: async (): Promise<PengajuanItem[]> => {
       const { data } = await apiClient.get("/relawan/history");
       if (!data.success) throw new Error(data.message || "Gagal memuat riwayat");
-      return data.data.riwayat_pengajuan || [];
+
+      const rawList = Array.isArray(data.data?.riwayat_pengajuan)
+        ? data.data.riwayat_pengajuan
+        : Array.isArray(data.data)
+        ? data.data
+        : [];
+
+      // Normalisasi status_pengajuan ke status
+      return rawList.map((item: any) => ({
+        ...item,
+        status: (item.status_pengajuan || item.status || "Menunggu Review") as PengajuanItem["status"],
+      }));
     },
     queryKey: RIWAYAT_KEYS.list(),
   });

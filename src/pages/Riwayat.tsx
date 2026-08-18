@@ -1,4 +1,3 @@
-//Riwaya.tsx
 import { useState, useMemo } from "react";
 import RelawanMenu from "../components/RelawanMenu";
 import type { ToastType } from "../components/ui/Toast";
@@ -7,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import type { PengajuanItem } from "../types";
 import { useRiwayatPengajuan } from "../hooks/riwayat/useRiwayatPengajuan";
 
-const STATUS_CONFIG = {
+const STATUS_CONFIG: Record<string, { dot: string; label: string; text: string }> = {
   Diterima: { dot: "bg-green-500", label: "Diterima", text: "text-green-700" },
   Ditolak: { dot: "bg-red-500", label: "Ditolak", text: "text-red-600" },
   "Menunggu Review": { dot: "bg-yellow-400", label: "Menunggu Review", text: "text-yellow-700" },
@@ -31,17 +30,20 @@ const Riwayat = () => {
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
   const diprosesItems = useMemo(
-    () => pengajuanList.filter((p) => p.status === "Menunggu Review"),
+    () => pengajuanList.filter((p) => (p.status || "").toLowerCase().includes("menunggu")),
     [pengajuanList],
   );
   const selesaiItems = useMemo(
-    () => pengajuanList.filter((p) => p.status !== "Menunggu Review"),
+    () => pengajuanList.filter((p) => !(p.status || "").toLowerCase().includes("menunggu")),
     [pengajuanList],
   );
   const currentItems = activeTab === "diproses" ? diprosesItems : selesaiItems;
 
-  const getStatusBadge = (status: PengajuanItem["status"]) => {
-    const cfg = STATUS_CONFIG[status];
+  // Defensif badge render (tidak akan undefined crash)
+  const getStatusBadge = (status?: string) => {
+    const defaultCfg = { dot: "bg-gray-400", label: status || "Diproses", text: "text-gray-600" };
+    const cfg = (status && STATUS_CONFIG[status]) || defaultCfg;
+
     return (
       <span className={`flex items-center gap-1.5 text-sm font-medium ${cfg.text}`}>
         <span className={`w-2.5 h-2.5 rounded-full ${cfg.dot}`} />
@@ -50,15 +52,20 @@ const Riwayat = () => {
     );
   };
 
-  const formatDate = (dateStr: string) =>
-    new Date(dateStr).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    return isNaN(date.getTime())
+      ? dateStr
+      : date.toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" });
+  };
 
   const renderPerubahan = (item: PengajuanItem) => {
     if (!item.data_baru) return null;
     let dataBaru: Record<string, unknown> = {};
     try {
       dataBaru = typeof item.data_baru === "string" ? JSON.parse(item.data_baru) : item.data_baru;
-    } catch (e) {
+    } catch {
       return <p className="text-sm text-red-500 mt-2">Data perubahan tidak dapat dibaca.</p>;
     }
 
@@ -100,8 +107,8 @@ const Riwayat = () => {
         {/* Info banner */}
         <div className="mb-5 p-3 bg-blue-50 border border-blue-100 rounded-lg">
           <p className="text-xs text-blue-700 leading-relaxed">
-            <span className="font-semibold"></span> Pengajuan perubahan data memerlukan persetujuan
-            Admin. Status: <span className="font-semibold text-yellow-700">Menunggu Review</span> →{" "}
+            Pengajuan perubahan data memerlukan persetujuan Admin. Status:{" "}
+            <span className="font-semibold text-yellow-700">Menunggu Review</span> →{" "}
             <span className="font-semibold text-green-700">Diterima</span> atau{" "}
             <span className="font-semibold text-red-600">Ditolak</span>.
           </p>

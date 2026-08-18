@@ -1,5 +1,5 @@
 // src/pages/SaranHotline.tsx
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Phone,
   MessageCircle,
@@ -27,6 +27,7 @@ import Pagination from "../components/ui/Pagination";
 import { useAuth } from "../context/AuthContext";
 import type { SaranData } from "../types";
 import { useSaranList } from "../hooks/saran/useSaranList";
+import { useSaranMineList } from "../hooks/saran/useSaranMineList";
 import { useCreateSaran, useRespondSaran } from "../hooks/saran/useSaranMutations";
 import { useProfileData } from "../hooks/profil/useProfileData";
 import { parseErrorMessage } from "../utils/parseErrorMessage";
@@ -48,8 +49,13 @@ const SaranHotline: React.FC = () => {
   // ── Tab State untuk User Non-Super Admin (OPD / Relawan) ──
   const [activeTab, setActiveTab] = useState<"kirim" | "riwayat">("kirim");
 
-  // ── Server State ─────────────────────────────────────────
-  const { data: saranList = [], isLoading } = useSaranList(isSuperAdmin);
+  // ── Server State (Pecah Query Berdasarkan Role) ───────────
+  const { data: adminSaranList = [], isLoading: isLoadingAdmin } = useSaranList(isSuperAdmin);
+  const { data: mineSaranList = [], isLoading: isLoadingMine } = useSaranMineList(!isSuperAdmin);
+
+  const saranList = isSuperAdmin ? adminSaranList : mineSaranList;
+  const isLoading = isSuperAdmin ? isLoadingAdmin : isLoadingMine;
+
   const { data: profileData } = useProfileData();
   const createSaran = useCreateSaran();
   const respondSaran = useRespondSaran();
@@ -129,27 +135,19 @@ const SaranHotline: React.FC = () => {
     }));
   }, [user?.name, userNoHp, profileData?.no_hp]);
 
-  // Filter List (Untuk Super Admin dan Riwayat Pribadi)
-  const userFilteredSaran = saranList.filter((s) => {
-    if (isSuperAdmin) return true;
-    const cleanUserPhone = userNoHp.replace(/\D/g, "");
-    const cleanSaranPhone = (s.no_hp || "").replace(/\D/g, "");
-    return (
-      (cleanUserPhone && cleanSaranPhone === cleanUserPhone) ||
-      (user?.name && s.nama_lengkap?.toLowerCase() === user.name.toLowerCase())
-    );
-  });
-
-  const filteredSaran = userFilteredSaran.filter((s) => {
+  // Saring Pencarian Sederhana
+  const filteredSaran = useMemo(() => {
     const q = searchTerm.toLowerCase();
-    return (
-      !q ||
-      (s.nama_lengkap || "").toLowerCase().includes(q) ||
-      (s.no_hp || "").toLowerCase().includes(q) ||
-      (s.pesan || "").toLowerCase().includes(q) ||
-      (s.status || "").toLowerCase().includes(q)
-    );
-  });
+    return saranList.filter((s) => {
+      return (
+        !q ||
+        (s.nama_lengkap || "").toLowerCase().includes(q) ||
+        (s.no_hp || "").toLowerCase().includes(q) ||
+        (s.pesan || "").toLowerCase().includes(q) ||
+        (s.status || "").toLowerCase().includes(q)
+      );
+    });
+  }, [saranList, searchTerm]);
 
   const totalPages = Math.ceil(filteredSaran.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -295,7 +293,6 @@ const SaranHotline: React.FC = () => {
     },
   ];
 
-  // Kolom Riwayat untuk OPD dengan Hyperlink
   const riwayatColumnsUser = [
     {
       header: "TANGGAL PENGAJUAN",
@@ -792,9 +789,9 @@ const SaranHotline: React.FC = () => {
             >
               <History size={14} />
               Riwayat Saya
-              {userFilteredSaran.length > 0 && (
+              {saranList.length > 0 && (
                 <span className="ml-1 px-1.5 py-0.2 bg-green-100 text-green-800 text-[10px] rounded-full">
-                  {userFilteredSaran.length}
+                  {saranList.length}
                 </span>
               )}
             </button>
@@ -829,13 +826,13 @@ const SaranHotline: React.FC = () => {
                   <div className="flex justify-center py-8">
                     <Loader2 size={24} className="animate-spin text-gray-400" />
                   </div>
-                ) : userFilteredSaran.length === 0 ? (
+                ) : saranList.length === 0 ? (
                   <p className="text-center text-gray-400 text-xs py-8">
                     Belum ada saran atau laporan yang Anda kirimkan.
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {userFilteredSaran.map((s) => (
+                    {saranList.map((s) => (
                       <div
                         key={s.saran_id}
                         onClick={() => handleUserViewDetail(s)}
@@ -973,9 +970,9 @@ const SaranHotline: React.FC = () => {
           >
             <History size={14} />
             Riwayat Masukan Saya
-            {userFilteredSaran.length > 0 && (
+            {saranList.length > 0 && (
               <span className="ml-1 px-2 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold rounded-full">
-                {userFilteredSaran.length}
+                {saranList.length}
               </span>
             )}
           </button>
@@ -1000,7 +997,7 @@ const SaranHotline: React.FC = () => {
               <Loader2 size={28} className="animate-spin text-gray-400" />
               <span className="ml-3 text-gray-500">Memuat riwayat saran...</span>
             </div>
-          ) : userFilteredSaran.length === 0 ? (
+          ) : saranList.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <p className="text-gray-600 font-medium">Belum ada saran terkirim</p>
               <p className="text-sm text-gray-400 mt-1">
@@ -1015,11 +1012,11 @@ const SaranHotline: React.FC = () => {
             />
           )}
 
-          {userFilteredSaran.length > 0 && (
+          {saranList.length > 0 && (
             <div className="mt-4 flex justify-between items-center">
               <div className="text-sm text-gray-500">
-                Menampilkan {startIndex + 1}-{Math.min(endIndex, userFilteredSaran.length)} dari{" "}
-                {userFilteredSaran.length} Masukan
+                Menampilkan {startIndex + 1}-{Math.min(endIndex, saranList.length)} dari{" "}
+                {saranList.length} Masukan
               </div>
               <Pagination
                 currentPage={currentPage}
