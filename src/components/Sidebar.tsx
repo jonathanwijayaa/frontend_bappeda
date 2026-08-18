@@ -44,7 +44,7 @@ const Sidebar: React.FC = () => {
     { icon: Users, label: "Relawan", path: "/data-relawan" },
     { icon: FileText, label: "Surat Keputusan", path: "/surat-keputusan" },
     { icon: Clock, label: "Log Aktivitas", path: "/log-aktifitas" },
-    { icon: BarChart3, label: "Statistik", path: "/statistik" },
+    // { icon: BarChart3, label: "Statistik", path: "/statistik" },
     { icon: FolderOpen, label: "Dokumen", path: "/dokumen" },
     { icon: History, label: "Riwayat Relawan", path: "/histori-relawan" },
   ];
@@ -54,7 +54,7 @@ const Sidebar: React.FC = () => {
     { icon: UserCircle, label: "Kader", path: "/daftar-kader" },
     { icon: Users, label: "Relawan", path: "/data-relawan" },
     { icon: FileText, label: "Surat Keputusan", path: "/surat-keputusan" },
-    { icon: BarChart3, label: "Statistik", path: "/statistik" },
+    // { icon: BarChart3, label: "Statistik", path: "/statistik" },
     { icon: FolderOpen, label: "Dokumen", path: "/dokumen" },
     { icon: History, label: "Riwayat Relawan", path: "/histori-relawan" },
   ];
