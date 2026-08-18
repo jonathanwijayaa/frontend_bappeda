@@ -7,90 +7,24 @@ import Modal from "../components/ui/Modal";
 import Select from "../components/ui/Select";
 import YearPicker from "../components/ui/YearPicker";
 import Pagination from "../components/ui/Pagination";
+import DetailFieldRow from "../components/ui/DetailFieldRow";
 import apiClient from "../lib/axios";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import type { HistoriRelawanData } from "../types/histori.types";
 import type { AutoOption } from "../types/common.types";
 import { formatPhoneDisplay } from "../utils/formatPhone";
-import type { ToastType } from "../components/ui/Toast";
-import Toast from "../components/ui/Toast";
+import { groupRelawanRows } from "../utils/groupRelawan";
+import { useTableSort } from "../hooks/useTableSort";
 import { useWilayah } from "../hooks/useWilayah";
 
-// ── Tipe untuk baris mentah dari API ─
-interface RawRelawanRow {
-  alamat_ktp?: string;
-  batas_aktif?: string;
-  detail_jabatan?: string;
-  jabatan?: string;
-  jenis_kelamin?: string;
-  kader_id?: number | null;
-  kelurahan?: string;
-  kemantren?: string;
-  nama_kader?: string;
-  nama_lengkap: string;
-  nama_opd?: string;
-  nik: string;
-  no_hp?: string;
-  nomor_sk?: string;
-  opd_id?: number;
-  penugasan?: string;
-  penugasan_id?: number;
-  relawan_id?: number;
-  status_penugasan?: string;
-  tahun?: number | string;
-  tanggal_terbit?: string;
-  user_id?: number;
-}
-
+// groupRelawanData diekstrak ke src/utils/groupRelawan.ts
+// RawRelawanRow tidak lagi dibutuhkan — typing dihandle oleh groupRelawan.ts
+// ── Interface Raw Kader & OPD dari API ──
 interface OpdItem {
   nama_opd: string;
 }
 
-// ── Helper: kelompokkan baris flat dari API menjadi per-relawan ─
-const groupRelawanData = (rows: RawRelawanRow[]): HistoriRelawanData[] => {
-  const map = new Map<string, HistoriRelawanData>();
-  rows.forEach((row) => {
-    if (!map.has(row.nik)) {
-      map.set(row.nik, {
-        alamat: row.alamat_ktp || "-",
-        assignments: [],
-        jabatan: row.jabatan || "-",
-        jenisKelamin: row.jenis_kelamin || "L",
-        kader: row.nama_kader || "-",
-        kelurahan: row.kelurahan || "-",
-        kemantren: row.kemantren || "-",
-        namaLengkap: row.nama_lengkap,
-        nik: row.nik,
-        no_hp: row.no_hp || "-",
-        penugasan: row.nama_opd || row.penugasan || "-",
-        relawan_id: row.relawan_id,
-        user_id: row.user_id,
-      });
-    }
-    if (row.nama_opd || row.penugasan || row.nama_kader) {
-      map.get(row.nik)!.assignments.push({
-        batasAktif: row.batas_aktif || "",
-        detail: row.detail_jabatan || "",
-        id: row.penugasan_id?.toString() || Math.random().toString(),
-        kader: row.nama_kader || "",
-        kader_id: row.kader_id || null,
-        nomorSK: row.nomor_sk || "",
-        opd: row.nama_opd || "",
-        opd_id: row.opd_id || 0,
-        penugasan: row.penugasan || "",
-        peran: row.jabatan || "",
-        status_keaktifan: row.status_penugasan || "Aktif",
-        tahun: row.tahun || "",
-        tahunMulai: row.tanggal_terbit ? new Date(row.tanggal_terbit).getFullYear() : null,
-        tahunSelesai: row.batas_aktif ? new Date(row.batas_aktif).getFullYear() : null,
-        tanggalTerbit: row.tanggal_terbit || "",
-      });
-    }
-  });
-  return Array.from(map.values());
-};
-
-// ── Interface Raw Kader dari API ──
 interface RawKader {
   kader_id: number;
   nama_kader: string;
@@ -100,12 +34,13 @@ interface RawKader {
 
 // ── Component ────────────────────────────────────────────────────
 const HistoriRelawan: React.FC = () => {
-  const { isOPD, isSuperAdmin } = useAuth();
+  const { isOPD, user } = useAuth();
+  const isSuperAdmin = user?.role === "super_admin";
   const API_BASE = isSuperAdmin ? "/admin/relawan" : "/opd-admin/relawan";
 
   const [relawanList, setRelawanList] = useState<HistoriRelawanData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+  const { showToast } = useToast();
 
   // Custom Hook Wilayah
   const { fetchKelurahanByKemantrenId, kelurahanList, kemantrenList, setKelurahanList } =
@@ -120,15 +55,18 @@ const HistoriRelawan: React.FC = () => {
   const [filterTahunAkhir, setFilterTahunAkhir] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
-  // ── Sorting State ─────────────────────────────────────────────
-  const [sortColumn, setSortColumn] = useState<"namaLengkap" | "nik" | null>(null);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
+  // ── Sorting (via reusable hook) ────────────────────────────────
+  const { sortColumn, sortOrder, handleSort, resetSort } = useTableSort<"namaLengkap" | "nik">(
+    ["namaLengkap", "nik"],
+    () => setCurrentPage(1),
+  );
 
   // ── Dropdown options & raw state ──────────────────────────────
   const [opdOptions, setOpdOptions] = useState<AutoOption[]>([]);
   const [rawKaderList, setRawKaderList] = useState<RawKader[]>([]);
 
   // ── Transform Options Kemantren & Kelurahan ───────────────────
+  // Histori page uses nama as value (for text filter), not id
   const kemantrenOptions = useMemo<AutoOption[]>(
     () => kemantrenList.map((item) => ({ label: item.nama_kemantren, value: item.nama_kemantren })),
     [kemantrenList],
@@ -171,16 +109,16 @@ const HistoriRelawan: React.FC = () => {
     try {
       const { data: result } = await apiClient.get(API_BASE);
       if (result.success) {
-        setRelawanList(groupRelawanData(result.data));
+        setRelawanList(groupRelawanRows(result.data) as unknown as HistoriRelawanData[]);
       } else {
-        setToast({ message: result.message || "Gagal memuat data histori", type: "error" });
+        showToast(result.message || "Gagal memuat data histori", "error");
       }
     } catch {
-      setToast({ message: "Tidak dapat terhubung ke server", type: "error" });
+      showToast("Tidak dapat terhubung ke server", "error");
     } finally {
       setIsLoading(false);
     }
-  }, [API_BASE]);
+  }, [API_BASE, showToast]);
 
   // ── Fetch OPD & Raw Kader Data ────────────────────────────────
   useEffect(() => {
@@ -297,29 +235,12 @@ const HistoriRelawan: React.FC = () => {
     filterTahunAkhir,
   ]);
 
-  // ── Sorting Logic ─────────────────────────────────────────────
-  const handleSort = (columnKey: string) => {
-    if (columnKey !== "namaLengkap" && columnKey !== "nik") return;
-
-    if (sortColumn !== columnKey) {
-      setSortColumn(columnKey as "namaLengkap" | "nik");
-      setSortOrder("asc");
-    } else if (sortOrder === "asc") {
-      setSortOrder("desc");
-    } else {
-      setSortColumn(null);
-      setSortOrder(null);
-    }
-    setCurrentPage(1);
-  };
-
+  // ── Sorting Logic (via useTableSort hook) ─────────────────────
   const sortedAndFilteredHistoriData = useMemo(() => {
     if (!sortColumn || !sortOrder) return filteredData;
-
     return [...filteredData].sort((a, b) => {
       const valA = String(a[sortColumn] || "").toLowerCase();
       const valB = String(b[sortColumn] || "").toLowerCase();
-
       const res = valA.localeCompare(valB, "id", { numeric: true });
       return sortOrder === "asc" ? res : -res;
     });
@@ -352,8 +273,7 @@ const HistoriRelawan: React.FC = () => {
     setFilterTahunAwal("");
     setFilterTahunAkhir("");
     setSearchTerm("");
-    setSortColumn(null);
-    setSortOrder(null);
+    resetSort();
     setCurrentPage(1);
   };
 
@@ -398,17 +318,7 @@ const HistoriRelawan: React.FC = () => {
     </Button>
   );
 
-  const renderFieldRow = (label: string, value: string | undefined) => (
-    <div
-      key={label}
-      className="grid grid-cols-3 gap-4 items-start py-2 border-b border-gray-100 last:border-b-0"
-    >
-      <span className="text-sm font-medium text-gray-500">{label}</span>
-      <span className="col-span-2 text-sm text-gray-900 font-medium break-words">
-        {value || "-"}
-      </span>
-    </div>
-  );
+  // renderFieldRow diekstrak ke <DetailFieldRow /> component
 
   const isActiveFilter =
     filterOpd ||
@@ -616,16 +526,16 @@ const HistoriRelawan: React.FC = () => {
                 Informasi Pribadi
               </h3>
               <div className="space-y-1">
-                {renderFieldRow("Nama Relawan", selectedRelawan.namaLengkap)}
-                {renderFieldRow("NIK", selectedRelawan.nik)}
-                {renderFieldRow(
-                  "Jenis Kelamin",
-                  selectedRelawan.jenisKelamin === "L" ? "Laki-laki (L)" : "Perempuan (P)",
-                )}
-                {renderFieldRow("Alamat KTP", selectedRelawan.alamat)}
-                {renderFieldRow("No. HP", formatPhoneDisplay(selectedRelawan.no_hp))}
-                {renderFieldRow("Kemantren", selectedRelawan.kemantren)}
-                {renderFieldRow("Kelurahan", selectedRelawan.kelurahan)}
+                <DetailFieldRow label="Nama Relawan" value={selectedRelawan.namaLengkap} />
+                <DetailFieldRow label="NIK" value={selectedRelawan.nik} />
+                <DetailFieldRow
+                  label="Jenis Kelamin"
+                  value={selectedRelawan.jenisKelamin === "L" ? "Laki-laki (L)" : "Perempuan (P)"}
+                />
+                <DetailFieldRow label="Alamat KTP" value={selectedRelawan.alamat} />
+                <DetailFieldRow label="No. HP" value={formatPhoneDisplay(selectedRelawan.no_hp)} />
+                <DetailFieldRow label="Kemantren" value={selectedRelawan.kemantren} />
+                <DetailFieldRow label="Kelurahan" value={selectedRelawan.kelurahan} />
               </div>
             </div>
 
@@ -656,38 +566,42 @@ const HistoriRelawan: React.FC = () => {
                         </span>
                       </div>
                       <div className="space-y-1">
-                        {renderFieldRow("OPD", assignment.opd)}
-                        {renderFieldRow("Kader", assignment.kader)}
-                        {renderFieldRow("Peran / Jabatan", assignment.peran)}
-                        {renderFieldRow("Detail Jabatan", assignment.detail)}
-                        {renderFieldRow("Penugasan", assignment.penugasan)}
+                        <DetailFieldRow label="OPD" value={assignment.opd} />
+                        <DetailFieldRow label="Kader" value={assignment.kader} />
+                        <DetailFieldRow label="Peran / Jabatan" value={assignment.peran} />
+                        <DetailFieldRow label="Detail Jabatan" value={assignment.detail} />
+                        <DetailFieldRow label="Penugasan" value={assignment.penugasan} />
                         {assignment.tahun
-                          ? renderFieldRow("Tahun", String(assignment.tahun))
+                          ? <DetailFieldRow label="Tahun" value={String(assignment.tahun)} />
                           : null}
-                        {assignment.nomorSK ? renderFieldRow("Nomor SK", assignment.nomorSK) : null}
+                        {assignment.nomorSK ? <DetailFieldRow label="Nomor SK" value={assignment.nomorSK} /> : null}
                         {assignment.nomorSK
-                          ? renderFieldRow(
-                              "Tanggal Terbit",
-                              assignment.tanggalTerbit
-                                ? new Date(assignment.tanggalTerbit).toLocaleDateString("id-ID", {
-                                    day: "numeric",
-                                    month: "long",
-                                    year: "numeric",
-                                  })
-                                : "-",
-                            )
+                          ? <DetailFieldRow
+                              label="Tanggal Terbit"
+                              value={
+                                assignment.tanggalTerbit
+                                  ? new Date(assignment.tanggalTerbit).toLocaleDateString("id-ID", {
+                                      day: "numeric",
+                                      month: "long",
+                                      year: "numeric",
+                                    })
+                                  : "-"
+                              }
+                            />
                           : null}
                         {assignment.nomorSK
-                          ? renderFieldRow(
-                              "Batas Aktif",
-                              assignment.batasAktif
-                                ? new Date(assignment.batasAktif).toLocaleDateString("id-ID", {
-                                    day: "numeric",
-                                    month: "long",
-                                    year: "numeric",
-                                  })
-                                : "-",
-                            )
+                          ? <DetailFieldRow
+                              label="Batas Aktif"
+                              value={
+                                assignment.batasAktif
+                                  ? new Date(assignment.batasAktif).toLocaleDateString("id-ID", {
+                                      day: "numeric",
+                                      month: "long",
+                                      year: "numeric",
+                                    })
+                                  : "-"
+                              }
+                            />
                           : null}
                       </div>
                     </div>
@@ -702,10 +616,8 @@ const HistoriRelawan: React.FC = () => {
           </div>
         )}
       </Modal>
-
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 };
 
-export default HistoriRelawan;
+export default HistoriRelawan;

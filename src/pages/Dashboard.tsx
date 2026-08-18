@@ -47,43 +47,10 @@ const Dashboard: React.FC = () => {
         if (result.success && result.data) {
           setDashboardData(result.data);
 
-          // Top Relawan: gunakan dari response dashboard jika ada, atau hitung via endpoint relawan
-          const relawanEndpoint = isSuperAdmin ? "/admin/relawan" : "/opd-admin/relawan";
-          apiClient
-            .get(relawanEndpoint)
-            .then((res) => {
-              if (res.data?.success && Array.isArray(res.data.data)) {
-                const countMap = new Map<
-                  string,
-                  { id: number; nama: string; opd: string; count: number }
-                >();
-
-                res.data.data.forEach((row: any) => {
-                  const existing = countMap.get(row.nik) || {
-                    id: row.relawan_id,
-                    nama: row.nama_lengkap,
-                    opd: row.nama_opd || "-",
-                    count: 0,
-                  };
-                  if (row.penugasan_id || row.nama_opd || row.nama_kader) {
-                    existing.count += 1;
-                  }
-                  countMap.set(row.nik, existing);
-                });
-
-                const sorted = Array.from(countMap.values())
-                  .sort((a, b) => b.count - a.count)
-                  .slice(0, 5)
-                  .map((item) => ({
-                    nama_lengkap: item.nama,
-                    nama_opd: item.opd,
-                    relawan_id: item.id,
-                    total_penugasan: item.count,
-                  }));
-                setTopRelawanList(sorted);
-              }
-            })
-            .catch(() => undefined);
+          // Top Relawan: langsung dari payload dashboard
+          if (Array.isArray(result.data.top_relawan)) {
+            setTopRelawanList(result.data.top_relawan);
+          }
 
           const now = new Date();
           const formattedDate = now.toLocaleDateString("id-ID", {
