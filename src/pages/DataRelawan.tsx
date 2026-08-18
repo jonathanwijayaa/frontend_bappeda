@@ -493,11 +493,50 @@ const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
   ];
 
   const relawanColumns: Column<RelawanData>[] = [
-    { accessor: "nik", header: "NIK", sortable: true },
-    { accessor: "namaLengkap", header: "NAMA", sortable: true },
-    { accessor: "alamat", header: "ALAMAT" },
-    { accessor: "kemantren", header: "KEMANTREN" },
-    { accessor: "kelurahan", header: "KELURAHAN" },
+    {
+    header: "NIK",
+    accessor: "nik",
+    width: "18%",
+    sortable: true,
+    render: (row) => (
+      <span className="font-mono tracking-tight whitespace-nowrap select-all font-medium text-gray-900">
+        {row.nik}
+      </span>
+    ),
+  },
+  {
+    header: "NAMA",
+    accessor: "namaLengkap",
+    width: "20%",
+    sortable: true,
+    render: (row) => (
+      <span className="font-medium text-gray-900 line-clamp-2 break-words" title={row.namaLengkap}>
+        {row.namaLengkap}
+      </span>
+    ),
+  },
+  {
+    header: "ALAMAT",
+    accessor: "alamat",
+    width: "26%",
+    render: (row) => (
+      <span className="line-clamp-3 break-words text-gray-600" title={row.alamat}>
+        {row.alamat || "-"}
+      </span>
+    ),
+  },
+  {
+    header: "KEMANTREN",
+    accessor: "kemantren",
+    width: "13%",
+    render: (row) => <span className="line-clamp-2 break-words">{row.kemantren || "-"}</span>,
+  },
+  {
+    header: "KELURAHAN",
+    accessor: "kelurahan",
+    width: "13%",
+    render: (row) => <span className="line-clamp-2 break-words">{row.kelurahan || "-"}</span>,
+  },
   ];
 
   // Buka detail relawan dan salin data utama ke form edit.

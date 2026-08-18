@@ -19,6 +19,7 @@ interface TableProps<T> {
     sortColumn?: string | null;
     sortOrder?: 'asc' | 'desc' | null;
     onSort?: (columnKey: string) => void;
+    actionsWidth?: string;
 }
 
 export function Table<T extends Record<string, any>>({
@@ -29,21 +30,23 @@ export function Table<T extends Record<string, any>>({
     sortColumn,
     sortOrder,
     onSort,
+    actionsWidth = "18%",
 }: TableProps<T>) {
     const renderSortIcon = (colKey: string) => {
         if (sortColumn !== colKey || !sortOrder) {
-            return <ArrowUpDown size={12} className="text-gray-400 group-hover:text-gray-600 transition-colors ml-1 inline" />;
+            return <ArrowUpDown size={12} className="text-gray-400 group-hover:text-gray-600 transition-colors ml-1 inline shrink-0" />;
         }
         return sortOrder === 'asc' ? (
-            <ArrowUp size={12} className="text-green-600 ml-1 inline font-bold" />
+            <ArrowUp size={12} className="text-green-600 ml-1 inline shrink-0 font-bold" />
         ) : (
-            <ArrowDown size={12} className="text-green-600 ml-1 inline font-bold" />
+            <ArrowDown size={12} className="text-green-600 ml-1 inline shrink-0 font-bold" />
         );
     };
 
     return (
         <div className="overflow-x-auto w-full">
-            <table className="w-full text-left text-xs text-gray-700 border-collapse">
+            {/* table-fixed mengunci lebar kolom agar stabil di setiap pagination */}
+            <table className="w-full table-fixed text-left text-xs text-gray-700 border-collapse">
                 <thead className="bg-gray-50/80 text-gray-400 font-bold tracking-wider">
                     <tr>
                         {columns.map((col, idx) => {
@@ -58,15 +61,17 @@ export function Table<T extends Record<string, any>>({
                                     className={`px-4 py-3.5 select-none ${isSortable ? 'cursor-pointer hover:text-gray-600 group transition-colors' : ''}`}
                                 >
                                     <div className="flex items-center gap-1">
-                                        <span>{col.header}</span>
+                                        <span className="truncate">{col.header}</span>
                                         {isSortable && renderSortIcon(key)}
                                     </div>
                                 </th>
                             );
                         })}
-                        {/* Header AKSI dibuat rata tengah dengan lebar fixed */}
                         {actions && (
-                            <th className="px-4 py-3.5 text-center font-bold tracking-wider w-28 whitespace-nowrap">
+                            <th 
+                                style={{ width: actionsWidth }} 
+                                className="px-4 py-3.5 text-center font-bold tracking-wider"
+                            >
                                 AKSI
                             </th>
                         )}
@@ -80,14 +85,14 @@ export function Table<T extends Record<string, any>>({
                                     {col.render
                                         ? col.render(row)
                                         : col.accessor
-                                        ? String(row[col.accessor] ?? '-')
+                                        ? <span className="line-clamp-2 break-words">{String(row[col.accessor] ?? '-')}</span>
                                         : '-'}
                                 </td>
                             ))}
-                            {/* Baris Tombol Aksi disejajarkan ke tengah area kolom AKSI */}
+
                             {actions && (
-                                <td className="px-4 py-3.5 text-center align-middle w-28 whitespace-nowrap">
-                                    <div className="flex flex-col items-center justify-center gap-1.5">
+                                <td className="px-4 py-3.5 text-center align-middle">
+                                    <div className="flex items-center justify-center gap-2">
                                         {actions(row)}
                                     </div>
                                 </td>

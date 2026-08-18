@@ -150,37 +150,68 @@ const DaftarKader: React.FC = () => {
     }
   }, [assignPicForm.kemantren_pic, kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList]);
   // ── Columns ────────────────────────────────────────────────────
-  const columns = [
-    { accessor: "nama_kader" as keyof KaderData, header: "NAMA KADER", width: "18%" },
-    {
-      header: "STATUS",
-      noTruncate: true,
-      render: (row: KaderData) => (
-        <span
-          className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${row.status_keaktifan ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
-        >
-          {row.status_keaktifan ? "Aktif" : "Tidak Aktif"}
-        </span>
-      ),
-      width: "10%",
-    },
-    ...(isSuperAdmin
-      ? [{ accessor: "nama_opd" as keyof KaderData, header: "OPD", width: "18%" }]
-      : []),
-    { header: "PIC", render: (row: KaderData) => <span>{row.pic_nama || "-"}</span>, width: "15%" },
-    {
-      header: isOPD ? "JUMLAH ANGGOTA" : "DESKRIPSI",
-      render: (row: KaderData) =>
-        isOPD ? (
-          <span>{row.jumlah_anggota ?? 0} orang</span>
-        ) : (
-          <span className="truncate max-w-[200px] block" title={row.deskripsi || ""}>
-            {row.deskripsi || "-"}
+ const columns = [
+      {
+        accessor: "nama_kader" as keyof KaderData,
+        header: "NAMA KADER",
+        width: isSuperAdmin ? "18%" : "26%",
+        render: (row: KaderData) => (
+          <span className="font-medium text-gray-900 line-clamp-3 break-words" title={row.nama_kader}>
+            {row.nama_kader || "-"}
           </span>
         ),
-      width: "16%",
-    },
-  ];
+      },
+      {
+        header: "STATUS",
+        width: "10%",
+        render: (row: KaderData) => (
+          <span
+            className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${
+              row.status_keaktifan ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"
+            }`}
+          >
+            {row.status_keaktifan ? "Aktif" : "Tidak Aktif"}
+          </span>
+        ),
+      },
+      ...(isSuperAdmin
+        ? [
+            {
+              accessor: "nama_opd" as keyof KaderData,
+              header: "OPD",
+              width: "18%",
+              render: (row: KaderData) => (
+                <span className="line-clamp-3 break-words text-gray-700" title={row.nama_opd}>
+                  {row.nama_opd || "-"}
+                </span>
+              ),
+            },
+          ]
+        : []),
+      {
+        header: "PIC",
+        width: isSuperAdmin ? "16%" : "22%",
+        render: (row: KaderData) => (
+          <span className="line-clamp-2 break-words text-gray-700" title={row.pic_nama || ""}>
+            {row.pic_nama || "-"}
+          </span>
+        ),
+      },
+      {
+        header: isOPD ? "JUMLAH ANGGOTA" : "DESKRIPSI",
+        width: isSuperAdmin ? "20%" : "24%",
+        render: (row: KaderData) =>
+          isOPD ? (
+            <span className="font-medium text-gray-800 whitespace-nowrap">
+              {row.jumlah_anggota ?? 0} orang
+            </span>
+          ) : (
+            <span className="line-clamp-3 break-words text-gray-500" title={row.deskripsi || ""}>
+              {row.deskripsi || "-"}
+            </span>
+          ),
+      },
+    ];
 
   // ── Handlers ───────────────────────────────────────────────────
   const handleOpdChange = (namaOpd: string) => {
@@ -593,7 +624,7 @@ const DaftarKader: React.FC = () => {
     createKader.isPending || updateKader.isPending || toggleStatus.isPending || bulkKader.isPending;
 
   const actions = (row: KaderData) => (
-    <>
+    <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
       <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>
         Detail
       </Button>
@@ -606,7 +637,7 @@ const DaftarKader: React.FC = () => {
           {row.status_keaktifan ? "Nonaktif" : "Aktifkan"}
         </Button>
       )}
-    </>
+    </div>
   );
 
   return (
