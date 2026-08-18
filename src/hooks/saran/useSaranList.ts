@@ -9,6 +9,7 @@ import type { SaranData } from "../../types";
 export const SARAN_KEYS = {
   all: ["saran"] as const,
   list: () => [...SARAN_KEYS.all, "list"] as const,
+  mine: () => [...SARAN_KEYS.all, "mine"] as const,
 };
 
 // Ambil daftar saran dari backend untuk halaman admin.

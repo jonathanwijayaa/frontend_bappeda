@@ -14,3 +14,10 @@ export interface DashboardData {
     total_relawan_aktif: number;
   };
 }
+
+export interface TopRelawanItem {
+  relawan_id: number;
+  nama_lengkap: string;
+  nama_opd?: string;
+  total_penugasan: number;
+}

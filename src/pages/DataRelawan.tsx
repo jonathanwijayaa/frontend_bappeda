@@ -21,8 +21,7 @@ import { useOpdList } from "../hooks/opd/useOpdList";
 import { useQueryClient } from "@tanstack/react-query";
 import apiClient from "../lib/axios";
 import { parseErrorMessage } from "../utils/parseErrorMessage";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { exportToPDF } from "../utils/exportToPDF";
 import { formatPhoneDisplay } from "../utils/formatPhone";
 import { toTitleCase } from "../utils/formatText";
 import { REGEX_PATTERNS } from "../utils/regex";
@@ -407,64 +406,44 @@ const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
 
   // Ekspor data relawan yang sedang terfilter ke PDF.
   const handleExportPdf = useCallback(() => {
-    const doc = new jsPDF({ orientation: "landscape" });
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Data Relawan", 14, 16);
-    doc.setFontSize(9);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(100);
-    doc.text(
-      `Dicetak: ${new Date().toLocaleString("id-ID")}  |  Total: ${filteredRelawanData.length} relawan`,
-      14,
-      23,
-    );
-    doc.setTextColor(0);
-    autoTable(doc, {
-      alternateRowStyles: { fillColor: [240, 253, 244] },
-      body: filteredRelawanData.map((r, i) => [
-        i + 1,
-        r.namaLengkap || "-",
-        r.nik || "-",
-        r.alamat || "-",
-        r.kemantren || "-",
-        r.kelurahan || "-",
-        r.jenisKelamin === "L" ? "Laki-laki" : "Perempuan",
-        r.assignments && r.assignments.length > 0
-          ? [...new Set(r.assignments.map((a: Assignment) => a.opd).filter(Boolean))].join(", ") ||
-            r.penugasan ||
-            "-"
-          : r.penugasan || "-",
+    const exportData = filteredRelawanData.map((r, i) => ({
+      alamat: r.alamat || "-",
+      jenisKelamin: r.jenisKelamin === "L" ? "Laki-laki" : "Perempuan",
+      kader:
         r.assignments && r.assignments.length > 0
           ? [...new Set(r.assignments.map((a: Assignment) => a.kader).filter(Boolean))].join(", ") ||
             r.kader ||
             "-"
           : r.kader || "-",
-      ]),
-      columnStyles: {
-        0: { cellWidth: 10, halign: "center" },
-        2: { cellWidth: 35 },
-        5: { cellWidth: 22, halign: "center" },
-      },
-      head: [
-        [
-          "No",
-          "NIK",
-          "Nama Lengkap",
-          "Alamat KTP",
-          "Kemantren",
-          "Kelurahan",
-          "Jenis Kelamin",
-          "OPD / Penugasan",
-          "Kader",
-        ],
+      kelurahan: r.kelurahan || "-",
+      kemantren: r.kemantren || "-",
+      namaLengkap: r.namaLengkap || "-",
+      nik: r.nik || "-",
+      no: i + 1,
+      opd:
+        r.assignments && r.assignments.length > 0
+          ? [...new Set(r.assignments.map((a: Assignment) => a.opd).filter(Boolean))].join(", ") ||
+            r.penugasan ||
+            "-"
+          : r.penugasan || "-",
+    }));
+
+    exportToPDF({
+      columns: [
+        { dataKey: "no", header: "NO" },
+        { dataKey: "nik", header: "NIK" },
+        { dataKey: "namaLengkap", header: "NAMA LENGKAP" },
+        { dataKey: "alamat", header: "ALAMAT KTP" },
+        { dataKey: "kemantren", header: "KEMANTREN" },
+        { dataKey: "kelurahan", header: "KELURAHAN" },
+        { dataKey: "jenisKelamin", header: "JENIS KELAMIN" },
+        { dataKey: "opd", header: "OPD / PENUGASAN" },
+        { dataKey: "kader", header: "KADER" },
       ],
-      headStyles: { fillColor: [22, 163, 74], fontStyle: "bold", textColor: 255 },
-      margin: { left: 14, right: 14 },
-      startY: 28,
-      styles: { cellPadding: 3, fontSize: 8 },
+      data: exportData as unknown as Record<string, unknown>[],
+      filename: `data-relawan-${new Date().toISOString().slice(0, 10)}.pdf`,
+      title: "Data Relawan",
     });
-    doc.save(`data-relawan-${new Date().toISOString().slice(0, 10)}.pdf`);
   }, [filteredRelawanData]);
 
   const pengajuanColumns = [
@@ -493,11 +472,50 @@ const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
   ];
 
   const relawanColumns: Column<RelawanData>[] = [
-    { accessor: "nik", header: "NIK", sortable: true },
-    { accessor: "namaLengkap", header: "NAMA", sortable: true },
-    { accessor: "alamat", header: "ALAMAT" },
-    { accessor: "kemantren", header: "KEMANTREN" },
-    { accessor: "kelurahan", header: "KELURAHAN" },
+    {
+    header: "NIK",
+    accessor: "nik",
+    width: "18%",
+    sortable: true,
+    render: (row) => (
+      <span className="font-mono tracking-tight whitespace-nowrap select-all font-medium text-gray-900">
+        {row.nik}
+      </span>
+    ),
+  },
+  {
+    header: "NAMA",
+    accessor: "namaLengkap",
+    width: "20%",
+    sortable: true,
+    render: (row) => (
+      <span className="font-medium text-gray-900 line-clamp-2 break-words" title={row.namaLengkap}>
+        {row.namaLengkap}
+      </span>
+    ),
+  },
+  {
+    header: "ALAMAT",
+    accessor: "alamat",
+    width: "26%",
+    render: (row) => (
+      <span className="line-clamp-3 break-words text-gray-600" title={row.alamat}>
+        {row.alamat || "-"}
+      </span>
+    ),
+  },
+  {
+    header: "KEMANTREN",
+    accessor: "kemantren",
+    width: "13%",
+    render: (row) => <span className="line-clamp-2 break-words">{row.kemantren || "-"}</span>,
+  },
+  {
+    header: "KELURAHAN",
+    accessor: "kelurahan",
+    width: "13%",
+    render: (row) => <span className="line-clamp-2 break-words">{row.kelurahan || "-"}</span>,
+  },
   ];
 
   // Buka detail relawan dan salin data utama ke form edit.

@@ -1,3 +1,4 @@
+// src/components/ui/Table.tsx
 import React from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
@@ -18,6 +19,7 @@ interface TableProps<T> {
     sortColumn?: string | null;
     sortOrder?: 'asc' | 'desc' | null;
     onSort?: (columnKey: string) => void;
+    actionsWidth?: string;
 }
 
 export function Table<T extends Record<string, any>>({
@@ -28,22 +30,24 @@ export function Table<T extends Record<string, any>>({
     sortColumn,
     sortOrder,
     onSort,
+    actionsWidth = "18%",
 }: TableProps<T>) {
     const renderSortIcon = (colKey: string) => {
         if (sortColumn !== colKey || !sortOrder) {
-            return <ArrowUpDown size={13} className="text-gray-400 group-hover:text-gray-600 transition-colors ml-1 inline-block" />;
+            return <ArrowUpDown size={12} className="text-gray-400 group-hover:text-gray-600 transition-colors ml-1 inline shrink-0" />;
         }
         return sortOrder === 'asc' ? (
-            <ArrowUp size={13} className="text-green-600 ml-1 inline-block" />
+            <ArrowUp size={12} className="text-green-600 ml-1 inline shrink-0 font-bold" />
         ) : (
-            <ArrowDown size={13} className="text-green-600 ml-1 inline-block" />
+            <ArrowDown size={12} className="text-green-600 ml-1 inline shrink-0 font-bold" />
         );
     };
 
     return (
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-            <table className="w-full text-left text-xs text-gray-700 border-collapse">
-                <thead className="bg-gray-50 text-gray-500 font-semibold border-b border-gray-200">
+        <div className="overflow-x-auto w-full">
+            {/* table-fixed mengunci lebar kolom agar stabil di setiap pagination */}
+            <table className="w-full table-fixed text-left text-xs text-gray-700 border-collapse">
+                <thead className="bg-gray-50/80 text-gray-400 font-bold tracking-wider">
                     <tr>
                         {columns.map((col, idx) => {
                             const key = (col.sortKey || col.accessor || '') as string;
@@ -54,36 +58,50 @@ export function Table<T extends Record<string, any>>({
                                     key={idx}
                                     style={{ width: col.width }}
                                     onClick={() => isSortable && onSort && onSort(key)}
-                                    className={`px-4 py-3 select-none ${isSortable ? 'cursor-pointer hover:bg-gray-100 group transition-colors' : ''}`}
+                                    className={`px-4 py-3.5 select-none ${isSortable ? 'cursor-pointer hover:text-gray-600 group transition-colors' : ''}`}
                                 >
                                     <div className="flex items-center gap-1">
-                                        <span>{col.header}</span>
+                                        <span className="truncate">{col.header}</span>
                                         {isSortable && renderSortIcon(key)}
                                     </div>
                                 </th>
                             );
                         })}
-                        {actions && <th className="px-4 py-3 text-right">AKSI</th>}
+                        {actions && (
+                            <th 
+                                style={{ width: actionsWidth }} 
+                                className="px-4 py-3.5 text-center font-bold tracking-wider"
+                            >
+                                AKSI
+                            </th>
+                        )}
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                     {data.map((row, rowIdx) => (
-                        <tr key={rowIdx} className="hover:bg-gray-50/80 transition-colors">
+                        <tr key={rowIdx} className="hover:bg-gray-50/60 transition-colors">
                             {columns.map((col, colIdx) => (
-                                <td key={colIdx} className="px-4 py-3">
+                                <td key={colIdx} className="px-4 py-3.5 text-gray-800 align-middle">
                                     {col.render
                                         ? col.render(row)
                                         : col.accessor
-                                        ? String(row[col.accessor] ?? '-')
+                                        ? <span className="line-clamp-2 break-words">{String(row[col.accessor] ?? '-')}</span>
                                         : '-'}
                                 </td>
                             ))}
-                            {actions && <td className="px-4 py-3 text-right">{actions(row)}</td>}
+
+                            {actions && (
+                                <td className="px-4 py-3.5 text-center align-middle">
+                                    <div className="flex items-center justify-center gap-2">
+                                        {actions(row)}
+                                    </div>
+                                </td>
+                            )}
                         </tr>
                     ))}
                     {data.length < minRows &&
                         Array.from({ length: minRows - data.length }).map((_, idx) => (
-                            <tr key={`empty-${idx}`} className="h-10">
+                            <tr key={`empty-${idx}`} className="h-12">
                                 <td colSpan={columns.length + (actions ? 1 : 0)} />
                             </tr>
                         ))}

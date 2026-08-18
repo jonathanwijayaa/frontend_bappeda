@@ -1,4 +1,4 @@
-//SaranHotline.tsx
+// src/pages/SaranHotline.tsx
 import React, { useEffect, useState, useCallback } from "react";
 import {
   Phone,
@@ -12,6 +12,9 @@ import {
   X,
   Search,
   ExternalLink,
+  Send,
+  History,
+  MessageSquareText,
 } from "lucide-react";
 import Card from "../components/ui/Card";
 import RelawanMenu from "../components/RelawanMenu";
@@ -42,6 +45,9 @@ const SaranHotline: React.FC = () => {
   const isRelawan = user?.role === "relawan";
   const userNoHp = user?.no_hp || "";
 
+  // ── Tab State untuk User Non-Super Admin (OPD / Relawan) ──
+  const [activeTab, setActiveTab] = useState<"kirim" | "riwayat">("kirim");
+
   // ── Server State ─────────────────────────────────────────
   const { data: saranList = [], isLoading } = useSaranList(isSuperAdmin);
   const { data: profileData } = useProfileData();
@@ -55,7 +61,6 @@ const SaranHotline: React.FC = () => {
   const [hotlineForm, setHotlineForm] = useState<HotlineInfo>(DEFAULT_HOTLINE);
   const [isSavingHotline, setIsSavingHotline] = useState(false);
 
-  // Ambil informasi hotline terbaru dari API settings.
   const fetchHotline = useCallback(async () => {
     setIsLoadingHotline(true);
     try {
@@ -65,7 +70,7 @@ const SaranHotline: React.FC = () => {
         setHotlineForm(data.data);
       }
     } catch {
-      // pakai default
+      // fallback default
     } finally {
       setIsLoadingHotline(false);
     }
@@ -75,7 +80,6 @@ const SaranHotline: React.FC = () => {
     fetchHotline();
   }, [fetchHotline]);
 
-  // Simpan perubahan informasi hotline ke server.
   const handleSaveHotline = async () => {
     setIsSavingHotline(true);
     try {
@@ -105,6 +109,7 @@ const SaranHotline: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
   const [selectedSaran, setSelectedSaran] = useState<SaranData | null>(null);
+  const [isDetailModalUserOpen, setIsDetailModalUserOpen] = useState(false);
   const [isResponding, setIsResponding] = useState(false);
   const [responForm, setResponForm] = useState({
     catatan_admin: "",
@@ -124,8 +129,18 @@ const SaranHotline: React.FC = () => {
     }));
   }, [user?.name, userNoHp, profileData?.no_hp]);
 
-  // Filter & Pagination
-  const filteredSaran = saranList.filter((s) => {
+  // Filter List (Untuk Super Admin dan Riwayat Pribadi)
+  const userFilteredSaran = saranList.filter((s) => {
+    if (isSuperAdmin) return true;
+    const cleanUserPhone = userNoHp.replace(/\D/g, "");
+    const cleanSaranPhone = (s.no_hp || "").replace(/\D/g, "");
+    return (
+      (cleanUserPhone && cleanSaranPhone === cleanUserPhone) ||
+      (user?.name && s.nama_lengkap?.toLowerCase() === user.name.toLowerCase())
+    );
+  });
+
+  const filteredSaran = userFilteredSaran.filter((s) => {
     const q = searchTerm.toLowerCase();
     return (
       !q ||
@@ -135,18 +150,17 @@ const SaranHotline: React.FC = () => {
       (s.status || "").toLowerCase().includes(q)
     );
   });
+
   const totalPages = Math.ceil(filteredSaran.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentSaranData = filteredSaran.slice(startIndex, endIndex);
 
-  // Sinkronkan input saran ke state form.
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Kirim saran dari relawan atau pengguna ke backend.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.namaLengkap.trim()) {
@@ -190,7 +204,6 @@ const SaranHotline: React.FC = () => {
     );
   };
 
-  // Buka detail saran untuk melihat isi dan menyiapkan respon.
   const handleDetailClick = (saran: SaranData) => {
     setSelectedSaran(saran);
     setResponForm({
@@ -199,7 +212,11 @@ const SaranHotline: React.FC = () => {
     });
   };
 
-  // Simpan respon admin untuk saran yang sedang dibuka.
+  const handleUserViewDetail = (saran: SaranData) => {
+    setSelectedSaran(saran);
+    setIsDetailModalUserOpen(true);
+  };
+
   const handleRespond = async () => {
     if (!selectedSaran) return;
     setIsResponding(true);
@@ -221,7 +238,6 @@ const SaranHotline: React.FC = () => {
     );
   };
 
-  // Ubah status saran dengan satu klik tanpa membuka modal.
   const handleQuickToggle = async (saran: SaranData) => {
     const newStatus = saran.status === "Menunggu" ? "Selesai" : "Menunggu";
     respondSaran.mutate(
@@ -234,22 +250,25 @@ const SaranHotline: React.FC = () => {
     );
   };
 
-  const saranColumns = [
-    { accessor: "nama_lengkap" as keyof SaranData, header: "NAMA PENGIRIM" },
+  const saranColumnsAdmin = [
+    { accessor: "nama_lengkap" as keyof SaranData, header: "NAMA PENGIRIM", width: "20%" },
     {
       header: "NO. TELEPON",
+      width: "16%",
       render: (row: SaranData) => formatPhoneDisplay(row.no_hp),
     },
     {
       header: "SARAN",
+      width: "30%",
       render: (row: SaranData) => (
-        <div className="truncate max-w-62.5" title={row.pesan}>
+        <span className="line-clamp-2 break-words" title={row.pesan}>
           {row.pesan}
-        </div>
+        </span>
       ),
     },
     {
       header: "TANGGAL TERKIRIM",
+      width: "18%",
       render: (row: SaranData) => (
         <span>
           {new Date(row.created_at).toLocaleString("id-ID", {
@@ -261,6 +280,7 @@ const SaranHotline: React.FC = () => {
     },
     {
       header: "STATUS",
+      width: "16%",
       render: (row: SaranData) => (
         <span
           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
@@ -275,8 +295,62 @@ const SaranHotline: React.FC = () => {
     },
   ];
 
-  const saranActions = (row: SaranData) => (
-    <>
+  // Kolom Riwayat untuk OPD dengan Hyperlink
+  const riwayatColumnsUser = [
+    {
+      header: "TANGGAL PENGAJUAN",
+      width: "20%",
+      render: (row: SaranData) => (
+        <span className="text-gray-600 font-medium">
+          {new Date(row.created_at).toLocaleString("id-ID", {
+            dateStyle: "medium",
+            timeStyle: "short",
+          })}
+        </span>
+      ),
+    },
+    {
+      header: "PESAN / KENDALA",
+      width: "42%",
+      render: (row: SaranData) => (
+        <button
+          type="button"
+          onClick={() => handleUserViewDetail(row)}
+          className="text-left font-semibold text-blue-600 hover:text-blue-800 hover:underline line-clamp-2 break-words"
+          title="Klik untuk melihat tanggapan admin"
+        >
+          {row.pesan}
+        </button>
+      ),
+    },
+    {
+      header: "STATUS",
+      width: "18%",
+      render: (row: SaranData) => (
+        <span
+          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+            row.status === "Selesai"
+              ? "bg-green-100 text-green-700"
+              : "bg-amber-100 text-amber-700"
+          }`}
+        >
+          {row.status === "Selesai" ? "✓ Selesai" : "⏳ Menunggu"}
+        </span>
+      ),
+    },
+    {
+      header: "TANGGAPAN ADMIN",
+      width: "20%",
+      render: (row: SaranData) => (
+        <span className="text-xs text-gray-500 line-clamp-2">
+          {row.catatan_admin ? row.catatan_admin : <em>Belum ada tanggapan</em>}
+        </span>
+      ),
+    },
+  ];
+
+  const saranActionsAdmin = (row: SaranData) => (
+    <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
       <button
         onClick={() => handleDetailClick(row)}
         className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
@@ -286,15 +360,18 @@ const SaranHotline: React.FC = () => {
       </button>
       <button
         onClick={() => handleQuickToggle(row)}
-        className={`p-1.5 rounded-lg transition-colors ${row.status === "Selesai" ? "text-gray-400 hover:bg-gray-200" : "text-green-600 hover:bg-green-100"}`}
+        className={`p-1.5 rounded-lg transition-colors ${
+          row.status === "Selesai"
+            ? "text-gray-400 hover:bg-gray-200"
+            : "text-green-600 hover:bg-green-100"
+        }`}
         title={row.status === "Selesai" ? "Batal Selesai" : "Tandai Selesai"}
       >
         <Check size={18} />
       </button>
-    </>
+    </div>
   );
 
-  // Helper URL WhatsApp
   const formatWhatsAppUrl = (waNumber: string) => {
     let cleaned = waNumber.replace(/\D/g, "");
     if (cleaned.startsWith("0")) {
@@ -303,7 +380,6 @@ const SaranHotline: React.FC = () => {
     return `https://api.whatsapp.com/send/?phone=${cleaned}&type=phone_number&app_absent=0`;
   };
 
-  // Contact info (dari API, bukan hardcoded)
   const contactInfo = (
     <div className="space-y-5">
       {[
@@ -365,7 +441,9 @@ const SaranHotline: React.FC = () => {
         disabled={!!userNoHp}
         onChange={handleInputChange}
         placeholder="No. Telepon"
-        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm ${userNoHp ? "border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed" : "border-gray-400"}`}
+        className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm ${
+          userNoHp ? "border-gray-200 bg-gray-100 text-gray-500 cursor-not-allowed" : "border-gray-400"
+        }`}
       />
       <textarea
         name="saran"
@@ -395,7 +473,6 @@ const SaranHotline: React.FC = () => {
   if (isSuperAdmin) {
     return (
       <div className="space-y-6">
-        {/* ── Panel Editor Hotline ── */}
         <Card>
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
@@ -494,7 +571,7 @@ const SaranHotline: React.FC = () => {
           </div>
         </Card>
 
-        {/* ── Kotak Masuk Saran ── */}
+        {/* Kotak Masuk Saran Admin */}
         {isLoading ? (
           <div className="flex items-center justify-center h-48">
             <Loader2 size={28} className="animate-spin text-gray-400" />
@@ -502,7 +579,6 @@ const SaranHotline: React.FC = () => {
           </div>
         ) : (
           <Card>
-            {/* Header: judul kiri + search bar kanan — sejajar */}
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-800">
                 Kotak Masuk Saran &amp; Kendala
@@ -539,10 +615,11 @@ const SaranHotline: React.FC = () => {
               </div>
             ) : (
               <Table
-                columns={saranColumns}
+                columns={saranColumnsAdmin}
                 data={currentSaranData}
-                actions={saranActions}
+                actions={saranActionsAdmin}
                 minRows={5}
+                actionsWidth="12%"
               />
             )}
 
@@ -562,9 +639,9 @@ const SaranHotline: React.FC = () => {
           </Card>
         )}
 
-        {/* Modal Detail + Respon */}
+        {/* Modal Detail + Respon Admin */}
         <Modal
-          isOpen={!!selectedSaran}
+          isOpen={!!selectedSaran && !isDetailModalUserOpen}
           onClose={() => setSelectedSaran(null)}
           title="Detail Saran & Beri Respon"
           maxWidth="md"
@@ -623,7 +700,9 @@ const SaranHotline: React.FC = () => {
                           className="w-4 h-4 text-green-600"
                         />
                         <span
-                          className={`text-sm font-medium ${s === "Selesai" ? "text-green-700" : "text-yellow-700"}`}
+                          className={`text-sm font-medium ${
+                            s === "Selesai" ? "text-green-700" : "text-yellow-700"
+                          }`}
                         >
                           {s === "Selesai" ? "✓ Selesai" : "⏳ Menunggu"}
                         </span>
@@ -687,25 +766,177 @@ const SaranHotline: React.FC = () => {
         <RelawanMenu />
         <div className="px-4 py-5 space-y-4">
           <h1 className="text-xl font-bold text-gray-800 text-center">Saran dan Hotline</h1>
-          <Card className="shadow-md">
-            <div className="p-4">
-              <h2 className="text-base font-bold text-gray-800 mb-4">
-                Hotline BAPPEDA Kota Yogyakarta
-              </h2>
-              {isLoadingHotline ? (
-                <Loader2 size={20} className="animate-spin text-gray-400" />
-              ) : (
-                contactInfo
+
+          {/* Segmented Control (Mobile) */}
+          <div className="flex p-1 bg-gray-200/80 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setActiveTab("kirim")}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-lg transition-all ${
+                activeTab === "kirim"
+                  ? "bg-white text-green-700 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <Send size={14} />
+              Kirim Masukan
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("riwayat")}
+              className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-lg transition-all ${
+                activeTab === "riwayat"
+                  ? "bg-white text-green-700 shadow-sm"
+                  : "text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              <History size={14} />
+              Riwayat Saya
+              {userFilteredSaran.length > 0 && (
+                <span className="ml-1 px-1.5 py-0.2 bg-green-100 text-green-800 text-[10px] rounded-full">
+                  {userFilteredSaran.length}
+                </span>
               )}
-            </div>
-          </Card>
-          <Card className="shadow-md">
-            <div className="p-4">
-              <h2 className="text-base font-bold text-gray-800 mb-4">Kirim Saran</h2>
-              {feedbackForm}
-            </div>
-          </Card>
+            </button>
+          </div>
+
+          {activeTab === "kirim" ? (
+            <>
+              <Card className="shadow-md">
+                <div className="p-4">
+                  <h2 className="text-base font-bold text-gray-800 mb-4">
+                    Hotline BAPPEDA Kota Yogyakarta
+                  </h2>
+                  {isLoadingHotline ? (
+                    <Loader2 size={20} className="animate-spin text-gray-400" />
+                  ) : (
+                    contactInfo
+                  )}
+                </div>
+              </Card>
+              <Card className="shadow-md">
+                <div className="p-4">
+                  <h2 className="text-base font-bold text-gray-800 mb-4">Kirim Saran</h2>
+                  {feedbackForm}
+                </div>
+              </Card>
+            </>
+          ) : (
+            <Card className="shadow-md">
+              <div className="p-4 space-y-3">
+                <h2 className="text-base font-bold text-gray-800 mb-2">Riwayat Saran Terkirim</h2>
+                {isLoading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 size={24} className="animate-spin text-gray-400" />
+                  </div>
+                ) : userFilteredSaran.length === 0 ? (
+                  <p className="text-center text-gray-400 text-xs py-8">
+                    Belum ada saran atau laporan yang Anda kirimkan.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {userFilteredSaran.map((s) => (
+                      <div
+                        key={s.saran_id}
+                        onClick={() => handleUserViewDetail(s)}
+                        className="bg-gray-50 border border-gray-200 rounded-xl p-3.5 space-y-2 cursor-pointer hover:border-blue-300 transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] text-gray-400">
+                            {new Date(s.created_at).toLocaleDateString("id-ID", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              s.status === "Selesai"
+                                ? "bg-green-100 text-green-700"
+                                : "bg-amber-100 text-amber-700"
+                            }`}
+                          >
+                            {s.status === "Selesai" ? "✓ Selesai" : "⏳ Menunggu"}
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold text-blue-600 line-clamp-2">{s.pesan}</p>
+                        {s.catatan_admin ? (
+                          <div className="bg-white border border-green-100 p-2 rounded-lg text-[11px] text-green-800">
+                            <span className="font-semibold">Balasan Admin: </span>
+                            <span className="line-clamp-1">{s.catatan_admin}</span>
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-gray-400 italic">Menunggu balasan admin</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
         </div>
+
+        {/* Modal Baca Detail & Tanggapan Pengguna */}
+        <Modal
+          isOpen={isDetailModalUserOpen}
+          onClose={() => {
+            setIsDetailModalUserOpen(false);
+            setSelectedSaran(null);
+          }}
+          title="Detail Masukan & Tanggapan"
+          maxWidth="md"
+        >
+          {selectedSaran && (
+            <div className="space-y-4 text-sm">
+              <div>
+                <span className="text-xs text-gray-400 block mb-1">Tanggal Pengiriman</span>
+                <p className="font-medium text-gray-800">
+                  {new Date(selectedSaran.created_at).toLocaleString("id-ID", {
+                    dateStyle: "full",
+                    timeStyle: "short",
+                  })}
+                </p>
+              </div>
+
+              <div>
+                <span className="text-xs text-gray-400 block mb-1">Status Penanganan</span>
+                <span
+                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                    selectedSaran.status === "Selesai"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-amber-100 text-amber-700"
+                  }`}
+                >
+                  {selectedSaran.status === "Selesai" ? "✓ Selesai Ditanggapi" : "⏳ Sedang Diproses / Menunggu"}
+                </span>
+              </div>
+
+              <div>
+                <span className="text-xs text-gray-400 block mb-1">Pesan yang Diajukan</span>
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 whitespace-pre-wrap leading-relaxed text-xs">
+                  {selectedSaran.pesan}
+                </div>
+              </div>
+
+              <div className="border-t border-gray-100 pt-3">
+                <span className="text-xs font-semibold text-gray-700 block mb-1 flex items-center gap-1">
+                  <MessageSquareText size={14} className="text-green-600" /> Tanggapan & Solusi Admin
+                </span>
+                {selectedSaran.catatan_admin ? (
+                  <div className="p-3 bg-green-50/70 border border-green-200 rounded-lg text-green-900 whitespace-pre-wrap leading-relaxed text-xs">
+                    {selectedSaran.catatan_admin}
+                  </div>
+                ) : (
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-lg text-gray-400 italic text-xs">
+                    Belum ada tanggapan atau catatan solusi dari administrator.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </Modal>
+
         {toast && (
           <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />
         )}
@@ -716,16 +947,156 @@ const SaranHotline: React.FC = () => {
   // ── OPD VIEW (Desktop) ──
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card title="Hotline BAPPEDA Kota Yogyakarta">
-          {isLoadingHotline ? (
-            <Loader2 size={20} className="animate-spin text-gray-400" />
+      {/* Segmented Control / Tab Bar (Desktop OPD) */}
+      <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+        <div className="flex p-1 bg-gray-100 rounded-xl w-fit">
+          <button
+            type="button"
+            onClick={() => setActiveTab("kirim")}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+              activeTab === "kirim"
+                ? "bg-white text-green-700 shadow-sm"
+                : "text-gray-500 hover:text-gray-900"
+            }`}
+          >
+            <Send size={14} />
+            Kirim Saran & Hotline
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("riwayat")}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+              activeTab === "riwayat"
+                ? "bg-white text-green-700 shadow-sm"
+                : "text-gray-500 hover:text-gray-900"
+            }`}
+          >
+            <History size={14} />
+            Riwayat Masukan Saya
+            {userFilteredSaran.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 bg-green-100 text-green-800 text-[10px] font-bold rounded-full">
+                {userFilteredSaran.length}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {activeTab === "kirim" ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card title="Hotline BAPPEDA Kota Yogyakarta">
+            {isLoadingHotline ? (
+              <Loader2 size={20} className="animate-spin text-gray-400" />
+            ) : (
+              contactInfo
+            )}
+          </Card>
+          <Card title="Kirim Saran & Masukan">{feedbackForm}</Card>
+        </div>
+      ) : (
+        <Card title="Riwayat Masukan & Laporan Saya">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-48">
+              <Loader2 size={28} className="animate-spin text-gray-400" />
+              <span className="ml-3 text-gray-500">Memuat riwayat saran...</span>
+            </div>
+          ) : userFilteredSaran.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <p className="text-gray-600 font-medium">Belum ada saran terkirim</p>
+              <p className="text-sm text-gray-400 mt-1">
+                Anda belum pernah mengajukan saran atau keluhan sebelumnya.
+              </p>
+            </div>
           ) : (
-            contactInfo
+            <Table
+              columns={riwayatColumnsUser}
+              data={currentSaranData}
+              minRows={5}
+            />
+          )}
+
+          {userFilteredSaran.length > 0 && (
+            <div className="mt-4 flex justify-between items-center">
+              <div className="text-sm text-gray-500">
+                Menampilkan {startIndex + 1}-{Math.min(endIndex, userFilteredSaran.length)} dari{" "}
+                {userFilteredSaran.length} Masukan
+              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={(page) => setCurrentPage(page)}
+              />
+            </div>
           )}
         </Card>
-        <Card title="Kirim Saran & Masukan">{feedbackForm}</Card>
-      </div>
+      )}
+
+      {/* Modal Detail & Tanggapan Admin untuk OPD */}
+      <Modal
+        isOpen={isDetailModalUserOpen}
+        onClose={() => {
+          setIsDetailModalUserOpen(false);
+          setSelectedSaran(null);
+        }}
+        title="Detail Masukan & Tanggapan Administrator"
+        maxWidth="md"
+      >
+        {selectedSaran && (
+          <div className="space-y-4 text-sm">
+            <div>
+              <span className="text-xs text-gray-400 block mb-1">Tanggal Pengajuan</span>
+              <p className="font-medium text-gray-800">
+                {new Date(selectedSaran.created_at).toLocaleString("id-ID", {
+                  dateStyle: "full",
+                  timeStyle: "short",
+                })}
+              </p>
+            </div>
+
+            <div>
+              <span className="text-xs text-gray-400 block mb-1">Status Penanganan</span>
+              <span
+                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                  selectedSaran.status === "Selesai"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-amber-100 text-amber-700"
+                }`}
+              >
+                {selectedSaran.status === "Selesai" ? "✓ Selesai Ditanggapi" : "⏳ Sedang Diproses / Menunggu"}
+              </span>
+            </div>
+
+            <div>
+              <span className="text-xs text-gray-400 block mb-1">Isi Pesan Masukan / Kendala</span>
+              <div className="p-3.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-800 whitespace-pre-wrap leading-relaxed text-xs">
+                {selectedSaran.pesan}
+              </div>
+            </div>
+
+            <div className="border-t border-gray-100 pt-3">
+              <span className="text-xs font-semibold text-gray-700 block mb-1.5 flex items-center gap-1.5">
+                <MessageSquareText size={15} className="text-green-600" /> Respon / Jawaban Administrator
+              </span>
+              {selectedSaran.catatan_admin ? (
+                <div className="p-3.5 bg-green-50/70 border border-green-200 rounded-lg text-green-900 whitespace-pre-wrap leading-relaxed text-xs">
+                  {selectedSaran.catatan_admin}
+                </div>
+              ) : (
+                <div className="p-3.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-400 italic text-xs">
+                  Belum ada tanggapan atau catatan balasan dari administrator.
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end pt-2 border-t border-gray-100">
+              <Button variant="secondary" onClick={() => setIsDetailModalUserOpen(false)}>
+                Tutup
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );

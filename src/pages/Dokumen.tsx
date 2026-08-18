@@ -46,7 +46,6 @@ const Dokumen: React.FC = () => {
   // Unduh file template atau panduan jika URL file tersedia.
   const handleDownload = (doc: DocumentItem) => {
     if (!doc.downloadUrl) {
-      console.log("File belum tersedia:", doc.fileName);
       return;
     }
 

@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import apiClient from "../lib/axios";
+import type { AutoOption } from "../types/common.types";
 
 export interface Kemantren {
   id: string;
@@ -55,12 +56,26 @@ export const useWilayah = () => {
     }
   }, []);
 
+  // Computed options — agar consumer tidak perlu useMemo manual
+  const kemantrenOptions = useMemo<AutoOption[]>(
+    () => kemantrenList.map((item) => ({ label: item.nama_kemantren, value: item.id })),
+    [kemantrenList],
+  );
+
+  const kelurahanOptions = useMemo<AutoOption[]>(
+    () => kelurahanList.map((item) => ({ label: item.nama_kelurahan, value: item.id_kelurahan })),
+    [kelurahanList],
+  );
+
   return {
     fetchKelurahanByKemantrenId,
     isLoadingKelurahan,
     isLoadingKemantren,
     kelurahanList,
+    kelurahanOptions,
     kemantrenList,
+    kemantrenOptions,
     setKelurahanList,
   };
 };
+

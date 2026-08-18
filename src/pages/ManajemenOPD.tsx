@@ -60,54 +60,68 @@ const ManajemenOPD: React.FC = () => {
   });
 
   const validateOpdForm = (payload: typeof formData): string | null => {
-    if (
-      !payload.nama_opd.trim() ||
-      !payload.alamat.trim() ||
-      !payload.pic.trim() ||
-      !payload.nik_pic.trim() ||
-      !payload.kontak.trim()
-    ) {
-      return "Semua field wajib diisi";
+  if (
+    !payload.nama_opd.trim() ||
+    !payload.alamat.trim() ||
+    !payload.pic.trim() ||
+    !payload.nik_pic.trim() ||
+    !payload.kontak.trim()
+  ) {
+    return "Semua field wajib diisi";
+  }
+
+  if (payload.nama_opd.trim().length < 3) {
+    return "Nama OPD minimal 3 karakter";
+  }
+  if (payload.nama_opd.trim().length > 100) {
+    return "Nama OPD terlalu panjang (maks 100 karakter)";
+  }
+  if (!REGEX_PATTERNS.NAMA_OPD.test(payload.nama_opd)) {
+    return "Nama OPD tidak boleh mengandung angka atau karakter spesial";
+  }
+
+  if (payload.alamat && payload.alamat.trim().length > 0) {
+    if (payload.alamat.trim().length < 5) {
+      return "Alamat OPD minimal 5 karakter";
     }
-    if (payload.nama_opd.trim().length < 3) {
-      return "Nama OPD minimal 3 karakter";
+    if (payload.alamat.trim().length > 255) {
+      return "Alamat OPD terlalu panjang (maks 255 karakter)";
     }
-    if (payload.nama_opd.trim().length > 100) {
-      return "Nama OPD terlalu panjang (maks 100 karakter)";
+    if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(payload.alamat.trim())) {
+      return "Alamat OPD tidak boleh hanya berisi angka";
     }
-    if (!REGEX_PATTERNS.NAMA_OPD.test(payload.nama_opd)) {
-      return "Nama OPD tidak boleh mengandung angka atau karakter spesial";
+    if (!REGEX_PATTERNS.ALAMAT_VALID.test(payload.alamat.trim())) {
+      return "Alamat OPD tidak boleh mengandung karakter spesial yang tidak valid";
     }
-    if (payload.alamat && payload.alamat.trim().length > 0) {
-      if (payload.alamat.trim().length < 5) {
-        return "Alamat OPD minimal 5 karakter";
-      }
-      if (payload.alamat.trim().length > 255) {
-        return "Alamat OPD terlalu panjang (maks 255 karakter)";
-      }
-      if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(payload.alamat.trim())) {
-        return "Alamat OPD tidak boleh hanya berisi angka";
-      }
-      if (!REGEX_PATTERNS.ALAMAT_VALID.test(payload.alamat.trim())) {
-        return "Alamat OPD tidak boleh mengandung karakter spesial yang tidak valid";
-      }
+  }
+
+  if (payload.pic && payload.pic.trim().length > 0) {
+    if (payload.pic.trim().length < 3) {
+      return "Nama PIC minimal 3 karakter";
     }
-    if (payload.pic && payload.pic.trim().length > 0) {
-      if (payload.pic.trim().length < 3) {
-        return "Nama PIC minimal 3 karakter";
-      }
-      if (payload.pic.trim().length > 100) {
-        return "Nama PIC terlalu panjang (maks 100 karakter)";
-      }
-      if (!REGEX_PATTERNS.NAMA_RELAWAN.test(payload.pic)) {
-        return "Nama PIC tidak boleh mengandung angka atau karakter spesial";
-      }
+    if (payload.pic.trim().length > 100) {
+      return "Nama PIC terlalu panjang (maks 100 karakter)";
     }
-    if (payload.nik_pic && !REGEX_PATTERNS.NIK.test(payload.nik_pic)) {
-      return "NIK PIC harus terdiri dari tepat 16 digit angka";
+    if (!REGEX_PATTERNS.NAMA_RELAWAN.test(payload.pic)) {
+      return "Nama PIC tidak boleh mengandung angka atau karakter spesial";
     }
-    return null;
-  };
+  }
+
+  if (payload.nik_pic && !REGEX_PATTERNS.NIK.test(payload.nik_pic)) {
+    return "NIK PIC harus terdiri dari tepat 16 digit angka";
+  }
+
+  // ── TAMBAHKAN VALIDASI KONTAK DI SINI ──
+  const cleanKontak = payload.kontak.replace(/[\s-]/g, ""); // buang spasi dan strip jika ada
+  if (REGEX_PATTERNS.HAS_LETTERS.test(cleanKontak)) {
+    return "Nomor kontak tidak boleh mengandung huruf";
+  }
+  if (!REGEX_PATTERNS.NO_HP.test(cleanKontak)) {
+    return "Format nomor kontak tidak valid (harus diawali 08 atau +628, minimal 9-13 digit angka)";
+  }
+
+  return null;
+};
 
   const hasChanges = useMemo(() => {
     if (!selectedOPD) return false;
@@ -138,24 +152,61 @@ const ManajemenOPD: React.FC = () => {
   const currentData = filteredData.slice(startIndex, startIndex + itemsPerPage);
 
   // ── Columns ────────────────────────────────────────────────
-  const columns = [
-    { accessor: "nama_opd" as keyof OPDData, header: "NAMA OPD", width: "18%" },
-    {
-      header: "STATUS",
-      noTruncate: true,
-      render: (row: OPDData) => (
-        <span
-          className={`inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${row.status_keaktifan ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}
-        >
-          {row.status_keaktifan ? "Aktif" : "Tidak Aktif"}
-        </span>
-      ),
-      width: "10%",
-    },
-    { accessor: "alamat" as keyof OPDData, header: "ALAMAT", width: "24%" },
-    { accessor: "pic" as keyof OPDData, header: "PIC", width: "15%" },
-    { accessor: "kontak" as keyof OPDData, header: "KONTAK", width: "15%" },
-  ];
+const columns = [
+  {
+    accessor: "nama_opd" as keyof OPDData,
+    header: "NAMA OPD",
+    width: "20%",
+    render: (row: OPDData) => (
+      <span className="font-medium text-gray-900 line-clamp-3 break-words" title={row.nama_opd}>
+        {row.nama_opd || "-"}
+      </span>
+    ),
+  },
+  {
+    header: "STATUS",
+    width: "10%",
+    render: (row: OPDData) => (
+      <span
+        className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap ${
+          row.status_keaktifan ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"
+        }`}
+      >
+        {row.status_keaktifan ? "Aktif" : "Tidak Aktif"}
+      </span>
+    ),
+  },
+  {
+    accessor: "alamat" as keyof OPDData,
+    header: "ALAMAT",
+    width: "24%",
+    render: (row: OPDData) => (
+      <span className="line-clamp-3 break-words text-gray-600" title={row.alamat || "-"}>
+        {row.alamat || "-"}
+      </span>
+    ),
+  },
+  {
+    accessor: "pic" as keyof OPDData,
+    header: "PIC",
+    width: "14%",
+    render: (row: OPDData) => (
+      <span className="line-clamp-2 break-words text-gray-700" title={row.pic || "-"}>
+        {row.pic || "-"}
+      </span>
+    ),
+  },
+  {
+    accessor: "kontak" as keyof OPDData,
+    header: "KONTAK",
+    width: "14%",
+    render: (row: OPDData) => (
+      <span className="whitespace-nowrap font-mono text-gray-700">
+        {row.kontak || "-"}
+      </span>
+    ),
+  },
+];
 
   // ── Handlers ──────────────────────────────────────────────
   // Buka modal detail dan isi form dengan data OPD yang dipilih.
@@ -310,7 +361,7 @@ const ManajemenOPD: React.FC = () => {
   };
 
   const actions = (row: OPDData) => (
-    <>
+    <div className="flex items-center justify-center gap-1.5 whitespace-nowrap">
       <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>
         Detail
       </Button>
@@ -321,7 +372,7 @@ const ManajemenOPD: React.FC = () => {
       >
         {row.status_keaktifan ? "Nonaktif" : "Aktifkan"}
       </Button>
-    </>
+    </div>
   );
 
   const isSaving = createOpd.isPending || updateOpd.isPending || toggleStatus.isPending;

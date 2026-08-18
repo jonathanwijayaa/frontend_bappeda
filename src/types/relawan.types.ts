@@ -15,6 +15,9 @@ export interface Assignment {
   peran: string;
   skId: string;
   status_keaktifan: "Aktif" | "Tidak Aktif";
+  tahun?: number | string;
+  tahunMulai?: number | null;
+  tahunSelesai?: number | null;
   // Reference to SK document
   tanggalTerbit?: string; // Batas aktif SK
 }
