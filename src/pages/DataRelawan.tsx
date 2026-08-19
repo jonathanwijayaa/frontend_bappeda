@@ -97,7 +97,12 @@ const DataRelawan: React.FC = () => {
       namaLengkap: p.nama_lengkap,
       nik: p.nik,
       status_pengajuan: p.status_pengajuan,
-      verifikator: p.nama_verifikator || "-",
+      verifikator: 
+      p.nama_verifikator ||
+      (p as any).verifikator_nama ||
+      (p as any).nama_admin ||
+      (p as any).verifikator?.nama_lengkap ||
+      (p.verifikator_id ? `Admin #${p.verifikator_id}` : "-"),
       tanggalPengajuan: new Date(p.tanggal_pengajuan).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }),
     }));
   }, [pengajuanList, pengajuanTab, historyStatusFilter, searchPengajuan]);
