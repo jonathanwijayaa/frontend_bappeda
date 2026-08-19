@@ -6,6 +6,7 @@ import { SearchInput } from "../../components/ui/Input";
 import Table from "../../components/ui/Table";
 import Pagination from "../../components/ui/Pagination";
 import type { PengajuanAPIData, PengajuanData } from "../../types/relawan.types";
+import Select from "../../components/ui/Select";
 
 interface PengajuanTableSectionProps {
   pengajuanTab: "pending" | "history";
@@ -25,6 +26,12 @@ interface PengajuanTableSectionProps {
   endIndex: number;
   onOpenReview: (pengajuan: PengajuanAPIData) => void;
 }
+
+const statusOptions = [
+{ label: "Semua Status", value: "ALL" },
+{ label: "Disetujui", value: "DISETUJUI" },
+{ label: "Ditolak", value: "DITOLAK" },
+];
 
 export const PengajuanTableSection: React.FC<PengajuanTableSectionProps> = ({
   pengajuanTab,
@@ -137,32 +144,30 @@ export const PengajuanTableSection: React.FC<PengajuanTableSectionProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 self-end lg:self-auto">
-          {pengajuanTab === "history" && (
-            <select
-              value={historyStatusFilter}
-              onChange={(e) => {
-                setHistoryStatusFilter(e.target.value);
+            <div className="flex flex-wrap items-center gap-3 self-end lg:self-auto">
+            {pengajuanTab === "history" && (
+                <div className="w-48">
+                <Select
+                    value={historyStatusFilter}
+                    onChange={(e) => {
+                    setHistoryStatusFilter(e.target.value);
+                    setCurrentPage(1);
+                    }}
+                    options={statusOptions}
+                    className="text-xs"
+                />
+                </div>
+            )}
+            <SearchInput
+                value={searchPengajuan}
+                onChange={(e) => {
+                setSearchPengajuan(e.target.value);
                 setCurrentPage(1);
-              }}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 shadow-sm"
-            >
-              <option value="ALL">Semua Status</option>
-              <option value="DISETUJUI">✓ Disetujui / Diterima</option>
-              <option value="DITOLAK">✕ Ditolak</option>
-            </select>
-          )}
-
-          <SearchInput
-            value={searchPengajuan}
-            onChange={(e) => {
-              setSearchPengajuan(e.target.value);
-              setCurrentPage(1);
-            }}
-            placeholder="Cari NIK, nama, verifikator..."
-            className="w-64"
-          />
-        </div>
+                }}
+                placeholder="Cari NIK, nama, verifikator..."
+                className="w-64"
+            />
+            </div>
       </div>
 
       {isLoading ? (

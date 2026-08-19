@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Plus, Loader2 } from "lucide-react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
+import Select from "../../components/ui/Select";
 import AutocompleteInput from "../../components/ui/AutocompleteInput";
 import { AssignmentFormFields } from "./AssignmentFormFields";
 import type { Assignment } from "../../types/relawan.types";
@@ -24,6 +25,11 @@ interface TambahRelawanModalProps {
   onSubmit: (formData: any) => Promise<void>;
   isSaving: boolean;
 }
+
+const JENIS_KELAMIN_OPTIONS = [
+  { label: "Laki-laki (L)", value: "L" },
+  { label: "Perempuan (P)", value: "P" },
+];
 
 export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
   isOpen,
@@ -91,8 +97,20 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Tambah Relawan Baru" subtitle="Isi data relawan yang ingin ditambahkan" maxWidth="2xl">
-      <form onSubmit={(e) => { e.preventDefault(); void onSubmit(formData); }} className="space-y-6">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Tambah Relawan Baru"
+      subtitle="Isi data relawan yang ingin ditambahkan"
+      maxWidth="2xl"
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void onSubmit(formData);
+        }}
+        className="space-y-6"
+      >
         {[
           { label: "Nama Relawan", name: "namaRelawan", placeholder: "Nama Lengkap Relawan", required: true },
           { label: "NIK", maxLength: 16, name: "nik", placeholder: "16 digit NIK", required: true },
@@ -100,7 +118,9 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
           { label: "No. HP", name: "no_hp", placeholder: "Nomor HP", required: true },
         ].map((f) => (
           <div key={f.name} className="grid grid-cols-3 gap-4 items-center">
-            <label className="text-lg font-medium text-gray-900">{f.label} *</label>
+            <label className="text-lg font-medium text-gray-900">
+              {f.label} {f.required && <span className="text-red-500">*</span>}
+            </label>
             <input
               type="text"
               value={(formData as any)[f.name]}
@@ -117,7 +137,9 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
         ))}
 
         <div className="grid grid-cols-3 gap-4 items-center">
-          <label className="text-lg font-medium text-gray-900">Kemantren *</label>
+          <label className="text-lg font-medium text-gray-900">
+            Kemantren <span className="text-red-500">*</span>
+          </label>
           <AutocompleteInput
             name="kemantren"
             value={formData.kemantren}
@@ -134,13 +156,17 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
         </div>
 
         <div className="grid grid-cols-3 gap-4 items-center">
-          <label className="text-lg font-medium text-gray-900">Kelurahan *</label>
+          <label className="text-lg font-medium text-gray-900">
+            Kelurahan <span className="text-red-500">*</span>
+          </label>
           <AutocompleteInput
             name="kelurahan"
             value={formData.kelurahan}
             options={kelurahanOptions}
             onChange={(val) => setFormData((prev) => ({ ...prev, kelurahan: val }))}
-            placeholder={formData.kemantren ? "Cari nama Kelurahan..." : "Pilih Kemantren terlebih dahulu..."}
+            placeholder={
+              formData.kemantren ? "Cari nama Kelurahan..." : "Pilih Kemantren terlebih dahulu..."
+            }
             required
             disabled={!formData.kemantren}
             warnIfNotFound={false}
@@ -149,16 +175,22 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
         </div>
 
         <div className="grid grid-cols-3 gap-4 items-center">
-          <label className="text-lg font-medium text-gray-900">Jenis Kelamin *</label>
-          <select
-            name="jenisKelamin"
-            value={formData.jenisKelamin}
-            onChange={(e) => setFormData((prev) => ({ ...prev, jenisKelamin: e.target.value as "L" | "P" }))}
-            className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-          >
-            <option value="L">Laki-laki (L)</option>
-            <option value="P">Perempuan (P)</option>
-          </select>
+          <label className="text-lg font-medium text-gray-900">
+            Jenis Kelamin <span className="text-red-500">*</span>
+          </label>
+          <div className="col-span-2">
+            <Select
+              name="jenisKelamin"
+              value={formData.jenisKelamin}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  jenisKelamin: e.target.value as "L" | "P",
+                }))
+              }
+              options={JENIS_KELAMIN_OPTIONS}
+            />
+          </div>
         </div>
 
         <div className="pt-4 border-t border-gray-200">
@@ -188,7 +220,11 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
         </div>
 
         <div className="flex justify-end pt-6">
-          <Button type="submit" disabled={isSaving} className="bg-green-600 hover:bg-green-700 text-white px-12 disabled:opacity-50">
+          <Button
+            type="submit"
+            disabled={isSaving}
+            className="bg-green-600 hover:bg-green-700 text-white px-12 disabled:opacity-50"
+          >
             {isSaving ? <Loader2 size={16} className="animate-spin" /> : "Simpan"}
           </Button>
         </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
+import Select from "../../components/ui/Select";
 import AutocompleteInput from "../../components/ui/AutocompleteInput";
 import { AssignmentFormFields } from "./AssignmentFormFields";
 import type { RelawanData, Assignment } from "../../types/relawan.types";
@@ -26,6 +27,11 @@ interface DetailRelawanModalProps {
   onDeletePenugasan: (penugasanId: number, index: number) => void;
   isSavingEdit: boolean;
 }
+
+const JENIS_KELAMIN_OPTIONS = [
+  { label: "Laki-laki (L)", value: "L" },
+  { label: "Perempuan (P)", value: "P" },
+];
 
 export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
   isOpen,
@@ -107,7 +113,11 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
               <label className="text-lg font-medium text-gray-900">{f.label}</label>
               <input
                 type="text"
-                value={!isEditMode && f.name === "no_hp" ? formatPhoneDisplay((detailFormData as any)[f.name]) : (detailFormData as any)[f.name]}
+                value={
+                  !isEditMode && f.name === "no_hp"
+                    ? formatPhoneDisplay((detailFormData as any)[f.name])
+                    : (detailFormData as any)[f.name]
+                }
                 readOnly={!editable}
                 onChange={(e) => setDetailFormData((prev) => ({ ...prev, [f.name]: e.target.value }))}
                 className={`col-span-2 px-4 py-2 border rounded-lg ${
@@ -136,7 +146,12 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
               warnIfNotFound={false}
             />
           ) : (
-            <input type="text" value={detailFormData.kemantren} readOnly className="col-span-2 px-4 py-2 border border-gray-200 bg-gray-50 text-gray-400 italic rounded-lg" />
+            <input
+              type="text"
+              value={detailFormData.kemantren}
+              readOnly
+              className="col-span-2 px-4 py-2 border border-gray-200 bg-gray-50 text-gray-400 italic rounded-lg"
+            />
           )}
         </div>
 
@@ -154,21 +169,31 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
               warnIfNotFound={false}
             />
           ) : (
-            <input type="text" value={detailFormData.kelurahan} readOnly className="col-span-2 px-4 py-2 border border-gray-200 bg-gray-50 text-gray-400 italic rounded-lg" />
+            <input
+              type="text"
+              value={detailFormData.kelurahan}
+              readOnly
+              className="col-span-2 px-4 py-2 border border-gray-200 bg-gray-50 text-gray-400 italic rounded-lg"
+            />
           )}
         </div>
 
         <div className="grid grid-cols-3 gap-4 items-center">
           <label className="text-lg font-medium text-gray-900">Jenis Kelamin</label>
-          <select
-            value={detailFormData.jenisKelamin}
-            disabled={!isEditMode}
-            onChange={(e) => setDetailFormData((prev) => ({ ...prev, jenisKelamin: e.target.value as "L" | "P" }))}
-            className="col-span-2 px-4 py-2 border rounded-lg disabled:bg-gray-50 disabled:text-gray-400"
-          >
-            <option value="L">Laki-laki (L)</option>
-            <option value="P">Perempuan (P)</option>
-          </select>
+          <div className="col-span-2">
+            <Select
+              name="jenisKelamin"
+              value={detailFormData.jenisKelamin}
+              disabled={!isEditMode}
+              onChange={(e) =>
+                setDetailFormData((prev) => ({
+                  ...prev,
+                  jenisKelamin: e.target.value as "L" | "P",
+                }))
+              }
+              options={JENIS_KELAMIN_OPTIONS}
+            />
+          </div>
         </div>
 
         <div className="pt-4 border-t border-gray-200">
@@ -199,8 +224,17 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
 
         {isEditMode && (
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-            <Button onClick={() => setIsEditMode(false)} className="bg-gray-200 text-gray-700 hover:bg-gray-300 px-6">Batal</Button>
-            <Button onClick={() => void onSaveEdit(detailFormData)} disabled={isSavingEdit} className="bg-blue-600 hover:bg-blue-700 text-white px-10 disabled:opacity-50">
+            <Button
+              onClick={() => setIsEditMode(false)}
+              className="bg-gray-200 text-gray-700 hover:bg-gray-300 px-6"
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={() => void onSaveEdit(detailFormData)}
+              disabled={isSavingEdit}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-10 disabled:opacity-50"
+            >
               {isSavingEdit ? <Loader2 size={16} className="animate-spin" /> : "Simpan Perubahan"}
             </Button>
           </div>

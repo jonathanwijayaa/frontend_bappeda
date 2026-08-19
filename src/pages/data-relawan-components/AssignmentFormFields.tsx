@@ -1,6 +1,7 @@
 import React from "react";
 import { X } from "lucide-react";
 import AutocompleteInput from "../../components/ui/AutocompleteInput";
+import Select from "../../components/ui/Select";
 import type { Assignment } from "../../types/relawan.types";
 import type { AutoOption } from "../../types/common.types";
 
@@ -19,6 +20,17 @@ interface AssignmentFormFieldsProps {
   onKaderChange?: (index: number, val: string) => void;
   onRemove?: (index: number) => void;
 }
+
+const PERAN_OPTIONS = [
+  { label: "-- Pilih Jabatan --", value: "" },
+  { label: "Ketua", value: "Ketua" },
+  { label: "Wakil", value: "Wakil" },
+  { label: "Sekretaris", value: "Sekretaris" },
+  { label: "Bendahara", value: "Bendahara" },
+  { label: "Seksi", value: "Seksi" },
+  { label: "Anggota", value: "Anggota" },
+  { label: "Lainnya", value: "Lainnya" },
+];
 
 export const AssignmentFormFields: React.FC<AssignmentFormFieldsProps> = ({
   assignment,
@@ -127,21 +139,15 @@ export const AssignmentFormFields: React.FC<AssignmentFormFieldsProps> = ({
       {/* Peran / Jabatan */}
       <div className="grid grid-cols-3 gap-4 items-center">
         <label className="text-lg font-medium text-gray-900">Peran/Jabatan</label>
-        <select
-          value={assignment.peran}
-          onChange={(e) => onFieldChange(index, "peran", e.target.value)}
-          disabled={isReadOnly}
-          className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
-        >
-          <option value="">-- Pilih Jabatan --</option>
-          <option value="Ketua">Ketua</option>
-          <option value="Wakil">Wakil</option>
-          <option value="Sekretaris">Sekretaris</option>
-          <option value="Bendahara">Bendahara</option>
-          <option value="Seksi">Seksi</option>
-          <option value="Anggota">Anggota</option>
-          <option value="Lainnya">Lainnya</option>
-        </select>
+        <div className="col-span-2">
+          <Select
+            name={`peran-${index}`}
+            value={assignment.peran}
+            onChange={(e) => onFieldChange(index, "peran", e.target.value)}
+            options={PERAN_OPTIONS}
+            disabled={isReadOnly}
+          />
+        </div>
       </div>
 
       {/* Detail Jabatan */}
