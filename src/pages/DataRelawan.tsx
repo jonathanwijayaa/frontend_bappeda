@@ -1,19 +1,18 @@
-//DataRelawan.tsx
-import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { Plus, Upload, Loader2, X, FileDown } from "lucide-react";
-import Card from "../components/ui/Card";
+import React, { useState, useMemo, useCallback } from "react";
+import { Plus, Upload } from "lucide-react";
 import Button from "../components/ui/Button";
-import { SearchInput } from "../components/ui/Input";
-import Table, { Column } from "../components/ui/Table";
-import Modal from "../components/ui/Modal";
-import AutocompleteInput from "../components/ui/AutocompleteInput";
 import UploadExcelModal from "../components/ui/UploadExcelModal";
 import type { ToastType } from "../components/ui/Toast";
 import Toast from "../components/ui/Toast";
-import Pagination from "../components/ui/Pagination";
-import type { RelawanData, Assignment, PengajuanAPIData, PengajuanData } from "../types/relawan.types";
-import { useWilayah } from "../hooks/useWilayah";
+import { PengajuanTableSection } from "../pages/data-relawan-components/PengajuanTableSection";
+import { RelawanTableSection } from "../pages/data-relawan-components/RelawanTableSection";
+import { TambahRelawanModal } from "../pages/data-relawan-components/TambahRelawanModal";
+import { DetailRelawanModal } from "../pages/data-relawan-components/DetailRelawanModal";
+import { ReviewPengajuanModal } from "../pages/data-relawan-components/ReviewPengajuanModal";
+
+import type { RelawanData, PengajuanAPIData } from "../types/relawan.types";
 import type { AutoOption } from "../types/common.types";
+import { useWilayah } from "../hooks/useWilayah";
 import { useAuth } from "../context/AuthContext";
 import { useRelawanList, RELAWAN_KEYS } from "../hooks/relawan/useRelawanList";
 import { usePengajuanList, PENGAJUAN_KEYS } from "../hooks/relawan/usePengajuanList";
@@ -22,7 +21,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import apiClient from "../lib/axios";
 import { parseErrorMessage } from "../utils/parseErrorMessage";
 import { exportToPDF } from "../utils/exportToPDF";
-import { formatPhoneDisplay } from "../utils/formatPhone";
 import { toTitleCase } from "../utils/formatText";
 import { REGEX_PATTERNS } from "../utils/regex";
 
@@ -31,1838 +29,269 @@ const DataRelawan: React.FC = () => {
   const API_BASE = isSuperAdmin ? "/admin/relawan" : "/opd-admin/relawan";
   const qc = useQueryClient();
 
-  // ── Server State (TanStack Query) ─────────────────────────────
+  // Queries
   const { data: relawanList = [], isLoading: isLoadingRelawan } = useRelawanList(!!isSuperAdmin);
-  const { data: pengajuanList = [], isLoading: isLoadingPengajuan } =
-    usePengajuanList(!!isSuperAdmin);
+  const { data: pengajuanList = [], isLoading: isLoadingPengajuan } = usePengajuanList(!!isSuperAdmin);
   const { data: opdListData = [] } = useOpdList(!!isSuperAdmin);
+  const { fetchKelurahanByKemantrenId, kelurahanList, kemantrenList } = useWilayah();
 
-  const opdOptions = useMemo<AutoOption[]>(
-    () => opdListData.map((o) => ({ label: o.nama_opd, value: String(o.opd_id) })),
-    [opdListData],
-  );
+  // State Tabs & Tables
+  const [pengajuanTab, setPengajuanTab] = useState<"pending" | "history">("pending");
+  const [historyStatusFilter, setHistoryStatusFilter] = useState("ALL");
+  const [searchPengajuan, setSearchPengajuan] = useState("");
+  const [currentPengajuanPage, setCurrentPengajuanPage] = useState(1);
 
-  const { fetchKelurahanByKemantrenId, kelurahanList, kemantrenList, setKelurahanList } =
-    useWilayah();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [sortColumn, setSortColumn] = useState<"namaLengkap" | "nik" | null>(null);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
 
-  const kemantrenOptions = useMemo<AutoOption[]>(
-    () => kemantrenList.map((item) => ({ label: item.nama_kemantren, value: item.id })),
-    [kemantrenList],
-  );
+  // Modals & Selected items
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [selectedRelawan, setSelectedRelawan] = useState<RelawanData | null>(null);
+  const [selectedPengajuan, setSelectedPengajuan] = useState<PengajuanAPIData | null>(null);
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSavingEdit] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
+  // Options & Kader Cache
   const [kaderOptionsByOpdId, setKaderOptionsByOpdId] = useState<Record<number, AutoOption[]>>({});
   const [loadingOpdIds, setLoadingOpdIds] = useState<Record<number, boolean>>({});
 
-  const [isReviewing, setIsReviewing] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const opdOptions = useMemo(() => opdListData.map((o) => ({ label: o.nama_opd, value: String(o.opd_id) })), [opdListData]);
+  const kemantrenOptions = useMemo(() => kemantrenList.map((i) => ({ label: i.nama_kemantren, value: i.id })), [kemantrenList]);
+  const kelurahanOptions = useMemo(() => kelurahanList.map((i) => ({ label: i.nama_kelurahan, value: i.id_kelurahan })), [kelurahanList]);
 
-  // ── STATE PENCARIAN TERPISAH ──
-  const [searchTerm, setSearchTerm] = useState<string>(""); // Pencarian Daftar Relawan (Bawah)
-  const [searchPengajuan, setSearchPengajuan] = useState<string>(""); // Pencarian Pengajuan (Atas)
-
-// State Sort khusus NIK dan Nama
-const [sortColumn, setSortColumn] = useState<'namaLengkap' | 'nik' | null>(null);
-const [sortOrder, setSortOrder] = useState<'asc' | 'desc' | null>(null);
-
-
-// Panggilan Komponen Tabl
-
-
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState<boolean>(false);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState<boolean>(false);
-  const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
-
-  const [selectedRelawan, setSelectedRelawan] = useState<RelawanData | null>(null);
-  const [selectedPengajuan, setSelectedPengajuan] = useState<PengajuanAPIData | null>(null);
-  const [verificationNote, setVerificationNote] = useState<string>("");
-  const [isDataChecked, setIsDataChecked] = useState<boolean>(false);
-
-  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
-
-  // ── STATE PAGINATION TERPISAH UNTUK 2 TABEL ──
-  const [currentPage, setCurrentPage] = useState<number>(1); // Untuk Tabel Relawan
-  const [currentPengajuanPage, setCurrentPengajuanPage] = useState<number>(1); // Untuk Tabel Pengajuan
-  const itemsPerPage = 5;
-  const pengajuanItemsPerPage = 3;
-
-  const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  const [isSavingEdit, setIsSavingEdit] = useState<boolean>(false);
-  const [deletingPenugasanId, setDeletingPenugasanId] = useState<number | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{
-    index: number;
-    label: string;
-    penugasanId: number;
-  } | null>(null);
-
-  const createEmptyAssignment = (prefix: "new" | "time" = "time"): Assignment => ({
-    detail: "",
-    id: prefix === "new" ? `new-${Date.now()}` : Date.now().toString(),
-    kader: "",
-    kader_id: null,
-    nomorSK: "",
-    opd: isOPD ? user?.nama_opd || "" : "",
-    opd_id: isOPD ? user?.opd_id || 0 : 0,
-    penugasan: "",
-    peran: "",
-    skId: "",
-    status_keaktifan: "Aktif" as "Aktif" | "Tidak Aktif",
-  });
-
-  const normalizeStatusKeaktifan = useCallback((status?: string) => {
-    return status === "Aktif" ? "Aktif" : "Tidak Aktif";
-  }, []);
-
-  const [detailFormData, setDetailFormData] = useState({
-    alamat: "",
-    assignments: [] as Assignment[],
-    jabatan: "",
-    jenisKelamin: "L" as "L" | "P",
-    kader: "",
-    kelurahan: "",
-    kemantren: "",
-    namaRelawan: "",
-    nik: "",
-    no_hp: "",
-    penugasan: "",
-  });
-
-  const hasChanges = useMemo(() => {
-    if (!selectedRelawan) return false;
-    const orig = selectedRelawan;
-    if (
-      detailFormData.namaRelawan !== orig.namaLengkap ||
-      detailFormData.nik !== orig.nik ||
-      detailFormData.alamat !== orig.alamat ||
-      detailFormData.no_hp !== orig.no_hp ||
-      detailFormData.kemantren !== orig.kemantren ||
-      detailFormData.kelurahan !== orig.kelurahan ||
-      detailFormData.jenisKelamin !== (orig.jenisKelamin || "L")
-    )
-      return true;
-    const origAssign = orig.assignments ?? [];
-    if (detailFormData.assignments.length !== origAssign.length) return true;
-    return detailFormData.assignments.some((a, i) => {
-      const o = origAssign[i];
-      return (
-        !o ||
-        a.opd !== o.opd ||
-        a.kader !== o.kader ||
-        a.peran !== o.peran ||
-        a.penugasan !== o.penugasan ||
-        a.status_keaktifan !== o.status_keaktifan
-      );
-    });
-  }, [selectedRelawan, detailFormData]);
-
-  const [formData, setFormData] = useState({
-    alamat: "",
-    assignments: [] as Assignment[],
-    detail_penugasan: "",
-    jabatan: "",
-    jenisKelamin: "L" as "L" | "P",
-    kader: "",
-    kelurahan: "",
-    kemantren: "",
-    namaRelawan: "",
-    nik: "",
-    no_hp: "",
-    penugasan: "",
-  });
-
-  const kelurahanOptionsForForm = useMemo<AutoOption[]>(() => {
-    return kelurahanList.map((item) => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
-  }, [kelurahanList]);
-
-  const kelurahanOptionsForDetail = useMemo<AutoOption[]>(() => {
-    return kelurahanList.map((item) => ({ label: item.nama_kelurahan, value: item.id_kelurahan }));
-  }, [kelurahanList]);
-
-  // Fetch kelurahan when kemantren changes in form
-  useEffect(() => {
-    const matchedKemantren = kemantrenList.find(
-      (item) => item.nama_kemantren.toLowerCase() === formData.kemantren.trim().toLowerCase(),
-    );
-    if (matchedKemantren) {
-      fetchKelurahanByKemantrenId(matchedKemantren.id);
-    } else {
-      setKelurahanList([]);
+  const fetchKaderOptionsForOpd = useCallback(async (opdId: number) => {
+    if (opdId <= 0 || kaderOptionsByOpdId[opdId] || loadingOpdIds[opdId]) return;
+    setLoadingOpdIds((prev) => ({ ...prev, [opdId]: true }));
+    try {
+      const endpoint = isOPD ? "/opd-admin/kader" : `/kader?opd_id=${opdId}`;
+      const { data } = await apiClient.get(endpoint);
+      const options: AutoOption[] = data?.success
+        ? data.data.map((k: any) => ({ label: k.nama_kader, value: String(k.kader_id) }))
+        : [];
+      setKaderOptionsByOpdId((prev) => ({ ...prev, [opdId]: options }));
+    } finally {
+      setLoadingOpdIds((prev) => ({ ...prev, [opdId]: false }));
     }
-  }, [formData.kemantren, kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList]);
+  }, [isOPD, kaderOptionsByOpdId, loadingOpdIds]);
 
-  // Fetch kelurahan when kemantren changes in detail form
-  useEffect(() => {
-    const matchedKemantren = kemantrenList.find(
-      (item) => item.nama_kemantren.toLowerCase() === detailFormData.kemantren.trim().toLowerCase(),
-    );
-    if (matchedKemantren) {
-      fetchKelurahanByKemantrenId(matchedKemantren.id);
-    } else {
-      setKelurahanList([]);
+  // Transform Pengajuan Data
+  const pendingCount = useMemo(() => pengajuanList.filter((p) => p.status_pengajuan === "Menunggu Review").length, [pengajuanList]);
+
+  const pengajuanUIData = useMemo(() => {
+    const q = searchPengajuan.toLowerCase();
+    let filtered = pengajuanList.filter((p) => pengajuanTab === "pending" ? p.status_pengajuan === "Menunggu Review" : p.status_pengajuan !== "Menunggu Review");
+    if (pengajuanTab === "history" && historyStatusFilter !== "ALL") {
+      filtered = filtered.filter((p) => historyStatusFilter === "DISETUJUI" ? (p.status_pengajuan === "Disetujui" || p.status_pengajuan === "Diterima") : p.status_pengajuan === "Ditolak");
     }
-  }, [detailFormData.kemantren, kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList]);
+    filtered = filtered.filter((p) => p.nik.toLowerCase().includes(q) || p.nama_lengkap.toLowerCase().includes(q) || (p.nama_verifikator || "").toLowerCase().includes(q));
+    const sorted = [...filtered].sort((a, b) => new Date(b.tanggal_pengajuan).getTime() - new Date(a.tanggal_pengajuan).getTime());
+    return sorted.map((p) => ({
+      _raw: p,
+      namaLengkap: p.nama_lengkap,
+      nik: p.nik,
+      status_pengajuan: p.status_pengajuan,
+      verifikator: p.nama_verifikator || "-",
+      tanggalPengajuan: new Date(p.tanggal_pengajuan).toLocaleString("id-ID", { dateStyle: "medium", timeStyle: "short" }),
+    }));
+  }, [pengajuanList, pengajuanTab, historyStatusFilter, searchPengajuan]);
 
-  // Ambil daftar kader untuk OPD tertentu dan simpan ke cache lokal.
-  const fetchKaderOptionsForOpd = useCallback(
-    async (opdId: number) => {
-      if (opdId <= 0) return;
-      if (kaderOptionsByOpdId[opdId]) return;
-      if (loadingOpdIds[opdId]) return;
-
-      setLoadingOpdIds((prev) => ({ ...prev, [opdId]: true }));
-      try {
-        const endpoint = isOPD ? "/opd-admin/kader" : `/kader?opd_id=${opdId}`;
-        const { data } = await apiClient.get(endpoint);
-        const options: AutoOption[] = data?.success
-          ? (data.data as Array<{ kader_id: number; nama_kader: string }>).map((k) => ({
-              label: k.nama_kader,
-              value: String(k.kader_id),
-            }))
-          : [];
-        setKaderOptionsByOpdId((prev) => ({ ...prev, [opdId]: options }));
-      } catch {
-        setKaderOptionsByOpdId((prev) => ({ ...prev, [opdId]: [] }));
-      } finally {
-        setLoadingOpdIds((prev) => ({ ...prev, [opdId]: false }));
-      }
-    },
-    [isOPD, kaderOptionsByOpdId, loadingOpdIds],
-  );
-
-  useEffect(() => {
-    const assignments = isEditMode ? detailFormData.assignments : formData.assignments;
-    const opdIds = Array.from(
-      new Set(assignments.map((a) => Number(a.opd_id || 0)).filter((id) => id > 0)),
-    );
-    opdIds.forEach((opdId) => {
-      void fetchKaderOptionsForOpd(opdId);
-    });
-  }, [isEditMode, detailFormData.assignments, formData.assignments, fetchKaderOptionsForOpd]);
-
-  const kaderOptionsByIndex = useMemo<Record<number, AutoOption[]>>(() => {
-    const result: Record<number, AutoOption[]> = {};
-    const assignments = isEditMode ? detailFormData.assignments : formData.assignments;
-    assignments.forEach((a, i) => {
-      const opdId = Number(a.opd_id || 0);
-      result[i] = opdId > 0 ? kaderOptionsByOpdId[opdId] || [] : [];
-    });
-    return result;
-  }, [kaderOptionsByOpdId, formData.assignments, detailFormData.assignments, isEditMode]);
-
-  const isLoadingKaderByIndex = useMemo<Record<number, boolean>>(() => {
-    const result: Record<number, boolean> = {};
-    const assignments = isEditMode ? detailFormData.assignments : formData.assignments;
-    assignments.forEach((a, i) => {
-      const opdId = Number(a.opd_id || 0);
-      result[i] = opdId > 0 ? !!loadingOpdIds[opdId] : false;
-    });
-    return result;
-  }, [loadingOpdIds, formData.assignments, detailFormData.assignments, isEditMode]);
-
-  // Pastikan pilihan kader untuk OPD tertentu sudah tersedia saat penugasan dibuka.
-  const fetchKaderByOpdId = useCallback(
-    (opdId: number, _assignmentIndex: number) => {
-      const normalizedOpdId = opdId > 0 ? opdId : isOPD ? (user?.opd_id ?? 0) : 0;
-      if (normalizedOpdId > 0) void fetchKaderOptionsForOpd(normalizedOpdId);
-    },
-    [isOPD, user, fetchKaderOptionsForOpd],
-  );
-
-  const invalidateRelawan = useCallback(
-    () => qc.invalidateQueries({ queryKey: RELAWAN_KEYS.all }),
-    [qc],
-  );
-  const invalidatePengajuan = useCallback(
-    () => qc.invalidateQueries({ queryKey: PENGAJUAN_KEYS.all }),
-    [qc],
-  );
-
-  // Gabungkan pesan error/skip dari import massal agar user mendapat detail yang jelas.
-  const buildBulkIssueMessage = useCallback(
-    (
-      res: {
-        data?: { errors?: unknown[]; skipped?: unknown[]; skippedNIK?: unknown[] };
-        message?: string;
-      } | null | undefined,
-      fallback: string,
-    ) => {
-      const issues: string[] = [
-        ...(Array.isArray(res?.data?.errors) ? res.data.errors : []),
-        ...(Array.isArray(res?.data?.skipped) ? res.data.skipped : []),
-        ...(Array.isArray(res?.data?.skippedNIK) ? res.data.skippedNIK : []),
-      ]
-        .filter(Boolean)
-        .map((x: unknown) => (typeof x === "string" ? x : JSON.stringify(x)));
-
-      const baseMessage =
-        res?.message && !/^\d+\s+peringatan\.?$/i.test(String(res.message).trim())
-          ? res.message
-          : fallback;
-
-      if (issues.length === 0) return baseMessage;
-
-      const preview = issues
-        .slice(0, 3)
-        .map((m) => `- ${m}`)
-        .join("\n");
-      const more = issues.length > 3 ? `\n(+${issues.length - 3} masalah lain)` : "";
-      return `${baseMessage}\n${preview}${more}`;
-    },
-    [],
-  );
-
-  // ── FILTER DATA RELAWAN (Tabel Bawah) ──
+  // Transform Relawan Data
   const filteredRelawanData = useMemo(() => {
-    const lowerSearch = searchTerm.toLowerCase();
-    return relawanList.filter((relawan) => {
-      const matchNama = relawan.namaLengkap.toLowerCase().includes(lowerSearch) || false;
-      const matchNik = relawan.nik.toLowerCase().includes(lowerSearch) || false;
-      const matchKemantren = relawan.kemantren.toLowerCase().includes(lowerSearch) || false;
-      const matchKelurahan = relawan.kelurahan.toLowerCase().includes(lowerSearch) || false;
-      const matchAssignment =
-        relawan.assignments?.some(
-          (a) =>
-            a.opd.toLowerCase().includes(lowerSearch) ||
-            a.kader.toLowerCase().includes(lowerSearch),
-        ) || false;
-
-      return matchNama || matchNik || matchKemantren || matchKelurahan || matchAssignment;
-    });
+    const q = searchTerm.toLowerCase();
+    return relawanList.filter((r) => !q || r.namaLengkap.toLowerCase().includes(q) || r.nik.toLowerCase().includes(q));
   }, [relawanList, searchTerm]);
-
-  // Pengurutan Data
-  const handleSort = useCallback((columnKey: string) => {
-    if (columnKey !== "namaLengkap" && columnKey !== "nik") return;
-    if (sortColumn === columnKey) {
-      if (sortOrder === "asc") {
-        setSortOrder("desc");
-      } else if (sortOrder === "desc") {
-        setSortColumn(null);
-        setSortOrder(null);
-      } else {
-        setSortOrder("asc");
-      }
-    } else {
-      setSortColumn(columnKey);
-      setSortOrder("asc");
-    }
-  }, [sortColumn, sortOrder]);
 
   const sortedRelawanData = useMemo(() => {
     if (!sortColumn || !sortOrder) return filteredRelawanData;
     return [...filteredRelawanData].sort((a, b) => {
       const valA = String(a[sortColumn] || "").toLowerCase();
       const valB = String(b[sortColumn] || "").toLowerCase();
-      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
-      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
-      return 0;
+      return sortOrder === "asc" ? (valA < valB ? -1 : 1) : (valA > valB ? -1 : 1);
     });
   }, [filteredRelawanData, sortColumn, sortOrder]);
 
-  const totalPages = Math.ceil(sortedRelawanData.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentRelawanData = sortedRelawanData.slice(startIndex, endIndex);
-
-  // ── FILTER & SORT DATA PENGAJUAN (Tabel Atas) ──
-  const pengajuanUIData = useMemo(() => {
-    const lowerSearch = searchPengajuan.toLowerCase();
-
-    // Filter berdasarkan search text khusus pengajuan
-    const filtered = pengajuanList.filter(
-      (p) =>
-        p.nik.toLowerCase().includes(lowerSearch) ||
-        p.nama_lengkap.toLowerCase().includes(lowerSearch) ||
-        p.jenis_perubahan.toLowerCase().includes(lowerSearch),
-    );
-
-    // Sort data pengajuan: "Menunggu Review" di atas, sisanya di bawah berdasarkan tanggal terbaru
-    const sortedData = [...filtered].sort((a, b) => {
-      const weightA = a.status_pengajuan === "Menunggu Review" ? 0 : 1;
-      const weightB = b.status_pengajuan === "Menunggu Review" ? 0 : 1;
-
-      if (weightA !== weightB) {
-        return weightA - weightB;
-      }
-      return new Date(b.tanggal_pengajuan).getTime() - new Date(a.tanggal_pengajuan).getTime();
-    });
-
-    return sortedData.map((p) => ({
-      _raw: p,
-      namaLengkap: p.nama_lengkap,
-      nik: p.nik,
-      status_pengajuan: p.status_pengajuan,
-      tanggalPengajuan: new Date(p.tanggal_pengajuan).toLocaleString("id-ID", {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }),
-    }));
-  }, [pengajuanList, searchPengajuan]);
-
-  const totalPengajuanPages = Math.ceil(pengajuanUIData.length / pengajuanItemsPerPage);
-  const startPengajuanIndex = (currentPengajuanPage - 1) * pengajuanItemsPerPage;
-  const endPengajuanIndex = startPengajuanIndex + pengajuanItemsPerPage;
-  const currentPengajuanData = pengajuanUIData.slice(startPengajuanIndex, endPengajuanIndex);
-
-  // Ekspor data relawan yang sedang terfilter ke PDF.
-  const handleExportPdf = useCallback(() => {
-    const exportData = filteredRelawanData.map((r, i) => ({
-      alamat: r.alamat || "-",
-      jenisKelamin: r.jenisKelamin === "L" ? "Laki-laki" : "Perempuan",
-      kader:
-        r.assignments && r.assignments.length > 0
-          ? [...new Set(r.assignments.map((a: Assignment) => a.kader).filter(Boolean))].join(", ") ||
-            r.kader ||
-            "-"
-          : r.kader || "-",
-      kelurahan: r.kelurahan || "-",
-      kemantren: r.kemantren || "-",
-      namaLengkap: r.namaLengkap || "-",
-      nik: r.nik || "-",
-      no: i + 1,
-      opd:
-        r.assignments && r.assignments.length > 0
-          ? [...new Set(r.assignments.map((a: Assignment) => a.opd).filter(Boolean))].join(", ") ||
-            r.penugasan ||
-            "-"
-          : r.penugasan || "-",
-    }));
-
-    exportToPDF({
-      columns: [
-        { dataKey: "no", header: "NO" },
-        { dataKey: "nik", header: "NIK" },
-        { dataKey: "namaLengkap", header: "NAMA LENGKAP" },
-        { dataKey: "alamat", header: "ALAMAT KTP" },
-        { dataKey: "kemantren", header: "KEMANTREN" },
-        { dataKey: "kelurahan", header: "KELURAHAN" },
-        { dataKey: "jenisKelamin", header: "JENIS KELAMIN" },
-        { dataKey: "opd", header: "OPD / PENUGASAN" },
-        { dataKey: "kader", header: "KADER" },
-      ],
-      data: exportData as unknown as Record<string, unknown>[],
-      filename: `data-relawan-${new Date().toISOString().slice(0, 10)}.pdf`,
-      title: "Data Relawan",
-    });
-  }, [filteredRelawanData]);
-
-  const pengajuanColumns = [
-    { accessor: "nik" as const, header: "NIK" },
-    { accessor: "namaLengkap" as const, header: "NAMA LENGKAP" },
-    { accessor: "tanggalPengajuan" as const, header: "TANGGAL PENGAJUAN" },
-    {
-      header: "STATUS",
-      render: (row: PengajuanData) => {
-        const isDisetujui =
-          row.status_pengajuan === "Disetujui" || row.status_pengajuan === "Diterima";
-        const isDitolak = row.status_pengajuan === "Ditolak";
-        const colorClass = isDisetujui
-          ? "bg-green-500"
-          : isDitolak
-            ? "bg-red-500"
-            : "bg-yellow-400";
-        return (
-          <div className="flex items-center gap-2">
-            <span className={`w-3 h-3 ${colorClass} rounded-full`}></span>
-            {row.status_pengajuan}
-          </div>
-        );
-      },
-    },
-  ];
-
-  const relawanColumns: Column<RelawanData>[] = [
-    {
-    header: "NIK",
-    accessor: "nik",
-    width: "18%",
-    sortable: true,
-    render: (row) => (
-      <span className="font-mono tracking-tight whitespace-nowrap select-all font-medium text-gray-900">
-        {row.nik}
-      </span>
-    ),
-  },
-  {
-    header: "NAMA",
-    accessor: "namaLengkap",
-    width: "20%",
-    sortable: true,
-    render: (row) => (
-      <span className="font-medium text-gray-900 line-clamp-2 break-words" title={row.namaLengkap}>
-        {row.namaLengkap}
-      </span>
-    ),
-  },
-  {
-    header: "ALAMAT",
-    accessor: "alamat",
-    width: "26%",
-    render: (row) => (
-      <span className="line-clamp-3 break-words text-gray-600" title={row.alamat}>
-        {row.alamat || "-"}
-      </span>
-    ),
-  },
-  {
-    header: "KEMANTREN",
-    accessor: "kemantren",
-    width: "13%",
-    render: (row) => <span className="line-clamp-2 break-words">{row.kemantren || "-"}</span>,
-  },
-  {
-    header: "KELURAHAN",
-    accessor: "kelurahan",
-    width: "13%",
-    render: (row) => <span className="line-clamp-2 break-words">{row.kelurahan || "-"}</span>,
-  },
-  ];
-
-  // Buka detail relawan dan salin data utama ke form edit.
-  const handleDetailClick = (relawan: RelawanData) => {
-    setSelectedRelawan(relawan);
-    const assignments = Array.isArray(relawan.assignments) ? relawan.assignments : [];
-    setDetailFormData({
-      alamat: relawan.alamat || "-",
-      assignments: assignments,
-      jabatan: relawan.jabatan || "-",
-      jenisKelamin: (relawan.jenisKelamin as "L" | "P") || "L",
-      kader: relawan.kader || "-",
-      kelurahan: relawan.kelurahan || "-",
-      kemantren: relawan.kemantren || "-",
-      namaRelawan: relawan.namaLengkap || "",
-      nik: relawan.nik || "",
-      no_hp: relawan.no_hp || "-",
-      penugasan: relawan.penugasan || "-",
-    });
-
-    assignments.forEach((a) => {
-      const opdId = Number(a.opd_id || 0);
-      if (opdId > 0) void fetchKaderOptionsForOpd(opdId);
-    });
-    setIsDetailModalOpen(true);
-  };
-
-  // Buka modal review untuk pengajuan perubahan data relawan.
-  const handleReviewClick = (rawPengajuan: PengajuanAPIData) => {
-    setSelectedPengajuan(rawPengajuan);
-    setVerificationNote("");
-    setIsDataChecked(false);
-    setIsReviewModalOpen(true);
-  };
-
-  // Kirim keputusan review pengajuan relawan ke backend.
-  const handleReview = async (status: "Disetujui" | "Ditolak") => {
+  const handleReview = async (status: "Disetujui" | "Ditolak", note: string) => {
     if (!selectedPengajuan) return;
     setIsReviewing(true);
     try {
       const endpoint = isSuperAdmin
         ? `/admin/relawan/pengajuan/${selectedPengajuan.pengajuan_id}/review`
         : `/opd-admin/relawan/pengajuan/${selectedPengajuan.pengajuan_id}/review`;
-      const { data } = await apiClient.post(endpoint, {
-        catatan_verifikator: verificationNote,
-        status,
-      });
-
+      const { data } = await apiClient.post(endpoint, { catatan_verifikator: note, status });
       if (data.success) {
         setToast({ message: data.message, type: "success" });
         setIsReviewModalOpen(false);
-        invalidatePengajuan();
-        if (status === "Disetujui") invalidateRelawan();
-
-        setCurrentPengajuanPage(1);
-      } else {
-        setToast({ message: data.message || "Gagal memproses pengajuan", type: "error" });
+        qc.invalidateQueries({ queryKey: PENGAJUAN_KEYS.all });
+        if (status === "Disetujui") qc.invalidateQueries({ queryKey: RELAWAN_KEYS.all });
       }
-    } catch (e: unknown) {
-      setToast({ message: parseErrorMessage(e, "Tidak dapat terhubung ke server"), type: "error" });
+    } catch (e) {
+      setToast({ message: parseErrorMessage(e, "Gagal memproses review"), type: "error" });
     } finally {
       setIsReviewing(false);
     }
   };
 
-  // Validasi lalu simpan relawan baru beserta seluruh penugasannya.
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (
-      !formData.namaRelawan.trim() ||
-      !formData.nik.trim() ||
-      !formData.alamat.trim() ||
-      !formData.no_hp.trim() ||
-      !formData.kemantren.trim() ||
-      !formData.kelurahan.trim()
-    ) {
-      setToast({ message: "Semua data pribadi wajib diisi", type: "error" });
+  const handleSaveTambah = async (formData: any) => {
+    if (!REGEX_PATTERNS.NAMA_RELAWAN.test(formData.namaRelawan) || !REGEX_PATTERNS.NIK.test(formData.nik)) {
+      setToast({ message: "Format NIK atau Nama tidak valid", type: "error" });
       return;
     }
-    if (formData.namaRelawan.trim().length < 3) {
-      setToast({ message: "Nama Lengkap minimal 3 karakter", type: "error" });
-      return;
-    }
-    if (!REGEX_PATTERNS.NAMA_RELAWAN.test(formData.namaRelawan)) {
-      setToast({
-        message: "Nama Lengkap tidak boleh mengandung angka atau karakter spesial",
-        type: "error",
-      });
-      return;
-    }
-    if (!REGEX_PATTERNS.NIK.test(formData.nik)) {
-      setToast({ message: "NIK harus terdiri dari tepat 16 digit angka", type: "error" });
-      return;
-    }
-
-    const hasInvalidAssignment = formData.assignments.some(
-      (a) => !a.opd || !a.kader || !a.peran || !a.penugasan || !a.detail,
-    );
-    if (hasInvalidAssignment) {
-      setToast({ message: "Semua kolom pada setiap penugasan wajib diisi.", type: "error" });
-      return;
-    }
-
     setIsSaving(true);
     try {
-      const { data } = await apiClient.post(`${API_BASE}/bulk`, [
-        {
-          alamat_ktp: formData.alamat,
-          assignments: formData.assignments.map((a) => ({
-            detail: a.detail,
-            kader: a.kader,
-            kader_id: a.kader_id || null,
-            opd: a.opd,
-            opd_id: a.opd_id || null,
-            penugasan: a.penugasan,
-            peran: a.peran,
-            status_keaktifan: a.status_keaktifan,
-          })),
-          jenis_kelamin: formData.jenisKelamin,
-          kelurahan: formData.kelurahan,
-          kemantren: formData.kemantren,
-          nama_lengkap: toTitleCase(formData.namaRelawan.trim()),
-          nik: formData.nik,
-          no_hp: formData.no_hp.replace(/\D/g, ""),
-        },
-      ]);
-      const errors = data?.data?.errors ?? [];
-      const skipped = data?.data?.skipped ?? data?.data?.skippedNIK ?? [];
-      if (errors.length > 0 || skipped.length > 0) {
-        let errorMsg = data.message || "Gagal memproses data relawan";
-        if (errors.length > 0)
-          errorMsg = typeof errors[0] === "string" ? errors[0] : JSON.stringify(errors[0]);
-        else if (skipped.length > 0)
-          errorMsg = data.message || "Beberapa NIK sudah terdaftar dan dilewati";
-        setToast({ message: errorMsg, type: "error" });
-      } else {
-        setToast({ message: data.message || "Data berhasil diproses", type: "success" });
+      const { data } = await apiClient.post(`${API_BASE}/bulk`, [{
+        alamat_ktp: formData.alamat,
+        assignments: formData.assignments,
+        jenis_kelamin: formData.jenisKelamin,
+        kelurahan: formData.kelurahan,
+        kemantren: formData.kemantren,
+        nama_lengkap: toTitleCase(formData.namaRelawan.trim()),
+        nik: formData.nik,
+        no_hp: formData.no_hp.replace(/\D/g, ""),
+      }]);
+      if (data.success) {
+        setToast({ message: "Relawan berhasil ditambahkan", type: "success" });
         setIsModalOpen(false);
-        setFormData({
-          alamat: "",
-          assignments: [],
-          detail_penugasan: "",
-          jabatan: "",
-          jenisKelamin: "L",
-          kader: "",
-          kelurahan: "",
-          kemantren: "",
-          namaRelawan: "",
-          nik: "",
-          no_hp: "",
-          penugasan: "",
-        });
-        invalidateRelawan();
-        setCurrentPage(1);
+        qc.invalidateQueries({ queryKey: RELAWAN_KEYS.all });
       }
-    } catch (e: unknown) {
-      setToast({ message: parseErrorMessage(e, "Gagal menyimpan data relawan"), type: "error" });
+    } catch (e) {
+      setToast({ message: parseErrorMessage(e, "Gagal menyimpan relawan"), type: "error" });
     } finally {
       setIsSaving(false);
     }
   };
 
-  // Proses data Excel untuk import massal relawan.
-  const handleExcelUploadConfirm = async (data: unknown[]) => {
-    try {
-      const { data: res } = await apiClient.post(`${API_BASE}/bulk`, data);
-      const issueMessage = buildBulkIssueMessage(res, "Gagal import Excel");
-      const issuesCount = [
-        ...(Array.isArray(res?.data?.errors) ? res.data.errors : []),
-        ...(Array.isArray(res?.data?.skipped) ? res.data.skipped : []),
-        ...(Array.isArray(res?.data?.skippedNIK) ? res.data.skippedNIK : []),
-      ].length;
-
-      if (res.success) {
-        setToast({
-          message: issuesCount > 0 ? issueMessage : res.message || "Berhasil memproses Excel",
-          type: issuesCount > 0 ? "warning" : "success",
-        });
-        invalidateRelawan();
-        setCurrentPage(1);
-      } else {
-        setToast({ message: issueMessage, type: "error" });
-      }
-    } catch (e: unknown) {
-      const fallbackMessage = parseErrorMessage(e, "Gagal import data dari Excel");
-      const axiosErr = e as import("axios").AxiosError<{
-        data?: { errors?: unknown[]; skipped?: unknown[]; skippedNIK?: unknown[] };
-        message?: string;
-      }>;
-      const responseData = axiosErr?.response?.data;
-      const detailedMessage = buildBulkIssueMessage(responseData, fallbackMessage);
-      setToast({ message: detailedMessage, type: "error" });
-    } finally {
-      setIsUploadModalOpen(false);
-    }
-  };
-
-  // Tambahkan baris penugasan baru pada form relawan.
-  const handleAddAssignment = () => {
-    const newIndex = formData.assignments.length;
-    setFormData((prev) => ({
-      ...prev,
-      assignments: [...prev.assignments, createEmptyAssignment()],
-    }));
-    if (isOPD && user?.opd_id) {
-      fetchKaderByOpdId(user.opd_id, newIndex);
-    }
-  };
-
-  // Hapus satu baris penugasan dari form relawan.
-  const handleRemoveAssignment = (index: number) => {
-    setFormData((prev) => ({
-      ...prev,
-      assignments: prev.assignments.filter((_, i) => i !== index),
-    }));
-  };
-
-  // Update OPD pada baris penugasan dan reset kader yang bergantung.
-  const handleAssignmentOpdChange = (index: number, namaOpd: string) => {
-    const matched = opdOptions.find((o) => o.label.toLowerCase() === namaOpd.toLowerCase());
-    const opdId = matched ? Number(matched.value) : 0;
-    setFormData((prev) => {
-      const newAssignments = [...prev.assignments];
-      newAssignments[index] = {
-        ...newAssignments[index],
-        kader: "",
-        kader_id: null,
-        opd: namaOpd,
-        opd_id: opdId,
-      };
-      return { ...prev, assignments: newAssignments };
-    });
-    if (opdId > 0) void fetchKaderOptionsForOpd(opdId);
-  };
-
-  // Sinkronkan perubahan field umum pada baris penugasan.
-  const handleAssignmentChange = (index: number, field: string, value: string) => {
-    setFormData((prev) => {
-      const newAssignments = [...prev.assignments];
-      newAssignments[index] = { ...newAssignments[index], [field]: value };
-      return { ...prev, assignments: newAssignments };
-    });
-  };
-
-  // Update pilihan kader pada baris penugasan sesuai OPD yang aktif.
-  const handleAssignmentKaderChange = (index: number, namaKader: string) => {
-    const options = kaderOptionsByIndex[index] || [];
-    const matched = options.find((o) => o.label.toLowerCase() === namaKader.toLowerCase());
-    const kaderId = matched ? Number(matched.value) : null;
-    setFormData((prev) => {
-      const newAssignments = [...prev.assignments];
-      newAssignments[index] = { ...newAssignments[index], kader: namaKader, kader_id: kaderId };
-      return { ...prev, assignments: newAssignments };
-    });
-  };
-
-  // Sinkronkan perubahan field penugasan saat mode edit detail.
-  const handleDetailAssignmentChange = (index: number, field: string, value: string) => {
-    setDetailFormData((prev) => {
-      const newAssignments = [...prev.assignments];
-      newAssignments[index] = { ...newAssignments[index], [field]: value };
-      return { ...prev, assignments: newAssignments };
-    });
-  };
-
-  // Ubah OPD pada assignment edit dan muat ulang opsi kader terkait.
-  const handleDetailAssignmentOpdChange = (index: number, namaOpd: string) => {
-    const matched = opdOptions.find((o) => o.label.toLowerCase() === namaOpd.toLowerCase());
-    const opdId = matched ? Number(matched.value) : 0;
-    setDetailFormData((prev) => {
-      const newAssignments = [...prev.assignments];
-      newAssignments[index] = {
-        ...newAssignments[index],
-        kader: "",
-        kader_id: null,
-        opd: namaOpd,
-        opd_id: opdId,
-      };
-      return { ...prev, assignments: newAssignments };
-    });
-    if (opdId > 0) void fetchKaderOptionsForOpd(opdId);
-  };
-
-  // Update kader pada assignment edit berdasarkan pilihan user.
-  const handleDetailAssignmentKaderChange = (index: number, value: string) => {
-    const options = kaderOptionsByIndex[index] || [];
-    const matched = options.find((o) => o.label.toLowerCase() === value.toLowerCase());
-    const kaderId = matched ? Number(matched.value) : null;
-    const kaderName = value;
-    setDetailFormData((prev) => {
-      const newAssignments = [...prev.assignments];
-      newAssignments[index] = {
-        ...newAssignments[index],
-        kader: kaderName,
-        kader_id: kaderId,
-      };
-      return { ...prev, assignments: newAssignments };
-    });
-  };
-
-  // Validasi lalu simpan perubahan detail relawan dan penugasannya.
-  const handleSaveEdit = async () => {
-    if (!selectedRelawan || !hasChanges) {
-      setToast({ message: "Tidak ada data yang diubah", type: "error" });
-      return;
-    }
-    if (!detailFormData.namaRelawan.trim() || detailFormData.namaRelawan.trim().length < 3) {
-      setToast({ message: "Nama Lengkap minimal 3 karakter", type: "error" });
-      return;
-    }
-    if (!/^[a-zA-Z\s]+$/.test(detailFormData.namaRelawan)) {
-      setToast({
-        message: "Nama Lengkap tidak boleh mengandung angka atau karakter spesial",
-        type: "error",
-      });
-      return;
-    }
-    setIsSavingEdit(true);
-    try {
-      const relawanId = selectedRelawan.relawan_id;
-      const endpoint = isSuperAdmin
-        ? `/admin/relawan/${relawanId}`
-        : `/opd-admin/relawan/${relawanId}`;
-      const { data } = await apiClient.put(endpoint, {
-        alamat_ktp: detailFormData.alamat,
-        assignments: detailFormData.assignments.map((a) => ({
-          detail: a.detail,
-          kader_id: a.kader_id || null,
-          opd: a.opd,
-          opd_id: a.opd_id || null,
-          penugasan: a.penugasan,
-          penugasan_id:
-            !String(a.id).startsWith("new-") && !isNaN(parseInt(a.id))
-              ? parseInt(a.id)
-              : undefined,
-          peran: a.peran,
-          status_keaktifan: a.status_keaktifan,
-        })),
-        jenis_kelamin: detailFormData.jenisKelamin,
-        kelurahan: detailFormData.kelurahan,
-        kemantren: detailFormData.kemantren,
-        nama_lengkap: toTitleCase(detailFormData.namaRelawan.trim()),
-        no_hp: detailFormData.no_hp.replace(/\D/g, ""),
-      });
-      if (data.success) {
-        setToast({ message: data.message, type: "success" });
-        setIsEditMode(false);
-        setIsDetailModalOpen(false);
-        invalidateRelawan();
-      } else {
-        setToast({ message: data.message || "Gagal menyimpan perubahan", type: "error" });
-      }
-    } catch (e: unknown) {
-      setToast({ message: parseErrorMessage(e, "Gagal menyimpan perubahan"), type: "error" });
-    } finally {
-      setIsSavingEdit(false);
-    }
-  };
-
-  // Siapkan konfirmasi hapus untuk penugasan yang dipilih.
-  const handleDeletePenugasan = async (penugasanId: number, index: number) => {
-    if (!penugasanId) {
-      setDetailFormData((prev) => ({
-        ...prev,
-        assignments: prev.assignments.filter((_, i) => i !== index),
-      }));
-      return;
-    }
-    const assignment = detailFormData.assignments[index];
-    const label = [
-      selectedRelawan?.namaLengkap,
-      assignment?.opd ? `dari ${assignment.opd}` : "",
-      assignment?.kader ? `(Kader: ${assignment.kader})` : "",
-      assignment?.peran ? `— ${assignment.peran}` : "",
-    ]
-      .filter(Boolean)
-      .join(" ");
-
-    setDeleteConfirm({ index, label, penugasanId });
-  };
-
-  // Eksekusi penghapusan penugasan setelah user mengonfirmasi.
-  const handleConfirmDelete = async () => {
-    if (!deleteConfirm) return;
-    const { index, penugasanId } = deleteConfirm;
-    setDeleteConfirm(null);
-    setDeletingPenugasanId(penugasanId);
-    try {
-      const endpoint = isSuperAdmin
-        ? `/admin/relawan/penugasan/${penugasanId}`
-        : `/opd-admin/relawan/penugasan/${penugasanId}`;
-      const { data } = await apiClient.delete(endpoint);
-      if (data.success) {
-        setDetailFormData((prev) => ({
-          ...prev,
-          assignments: prev.assignments.filter((_, i) => i !== index),
-        }));
-        setSelectedRelawan((prev) =>
-          prev
-            ? {
-                ...prev,
-                assignments: Array.isArray(prev.assignments)
-                  ? prev.assignments.filter((_, i) => i !== index)
-                  : [],
-              }
-            : null,
-        );
-        invalidateRelawan();
-        setToast({ message: "Penugasan berhasil dihapus", type: "success" });
-      } else {
-        setToast({ message: data.message || "Gagal menghapus penugasan", type: "error" });
-      }
-    } catch (e: unknown) {
-      setToast({ message: parseErrorMessage(e, "Gagal menghapus penugasan"), type: "error" });
-    } finally {
-      setDeletingPenugasanId(null);
-    }
-  };
-
-  // Tambahkan assignment baru saat relawan sedang diedit.
-  const handleAddDetailAssignment = () => {
-    setDetailFormData((prev) => ({
-      ...prev,
-      assignments: [...prev.assignments, createEmptyAssignment("new")],
-    }));
-    if (isOPD && user?.opd_id) {
-      const newIndex = detailFormData.assignments.length;
-      fetchKaderByOpdId(user.opd_id, newIndex);
-    }
-  };
-
-  const renderAssignmentFields = (
-    assignment: Assignment,
-    index: number,
-    isReadOnly: boolean,
-    context: "detail" | "form" = "form",
-    handlers?: {
-      onFieldChange?: (index: number, field: string, value: string) => void;
-      onKaderChange?: (index: number, val: string) => void;
-      onOpdChange?: (index: number, val: string) => void;
-    },
-  ) => {
-    const currentKaderOptions = context === "form" ? kaderOptionsByIndex[index] || [] : [];
-    const isKaderLoading = isLoadingKaderByIndex[index] || false;
-    const hasOpdSelected = isOPD || Number(assignment.opd_id || 0) > 0 || assignment.opd !== "";
-    const currentStatusKeaktifan = normalizeStatusKeaktifan(assignment.status_keaktifan);
-
-    const onFieldChange = handlers?.onFieldChange ?? handleAssignmentChange;
-    const onOpdChange = handlers?.onOpdChange ?? handleAssignmentOpdChange;
-    const onKaderChange = handlers?.onKaderChange ?? handleAssignmentKaderChange;
-
-    return (
-      <div
-        key={assignment.id}
-        className="relative bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4 space-y-4"
-      >
-        {!isReadOnly && !handlers && (
-          <div className="flex justify-end -mt-2 -mr-2 mb-2">
-            <button
-              type="button"
-              onClick={() => handleRemoveAssignment(index)}
-              className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors"
-              title="Hapus Penugasan"
-            >
-              <X size={20} />
-            </button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-3 gap-4 items-start">
-          <label className="text-lg font-medium text-gray-900 pt-2">OPD</label>
-          <div className="col-span-2">
-            {isOPD ? (
-              <input
-                type="text"
-                disabled
-                value={assignment.opd || user?.nama_opd || "Instansi Anda"}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 italic cursor-not-allowed"
-              />
-            ) : (
-              <AutocompleteInput
-                name={`opd-${index}`}
-                value={assignment.opd}
-                options={opdOptions}
-                onChange={(val) =>
-                  onOpdChange ? onOpdChange(index, val) : onFieldChange(index, "opd", val)
-                }
-                placeholder="Cari nama OPD..."
-                disabled={isReadOnly}
-              />
-            )}
-            {!isReadOnly && !isOPD && Number(assignment.opd_id || 0) > 0 && (
-              <p className="mt-1 text-xs text-green-600 font-medium">OPD ditemukan</p>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 items-start">
-          <label className="text-lg font-medium text-gray-900 pt-2">Kader</label>
-          <div className="col-span-2">
-            {context === "form" ? (
-              <>
-                <AutocompleteInput
-                  name={`kader-${index}`}
-                  value={assignment.kader}
-                  options={currentKaderOptions}
-                  onChange={(val) => onKaderChange(index, val)}
-                  placeholder={
-                    !hasOpdSelected
-                      ? "Pilih OPD terlebih dahulu..."
-                      : isKaderLoading
-                        ? "Memuat kader..."
-                        : currentKaderOptions.length === 0
-                          ? "Tidak ada kader di OPD ini"
-                          : "Cari nama Kader..."
-                  }
-                  disabled={isReadOnly || !hasOpdSelected || isKaderLoading}
-                  warnIfNotFound={false}
-                />
-                {!isReadOnly &&
-                  hasOpdSelected &&
-                  !isKaderLoading &&
-                  currentKaderOptions.length > 0 && (
-                    <p className="mt-1 text-xs text-blue-500">
-                      {currentKaderOptions.length} kader tersedia di OPD ini
-                    </p>
-                  )}
-                {!isReadOnly &&
-                  hasOpdSelected &&
-                  !isKaderLoading &&
-                  currentKaderOptions.length === 0 &&
-                  Number(assignment.opd_id || 0) > 0 && (
-                    <p className="mt-1 text-xs text-yellow-600">OPD ini belum memiliki kader</p>
-                  )}
-              </>
-            ) : (
-              <AutocompleteInput
-                name={`kader-${index}`}
-                value={assignment.kader}
-                options={
-                  assignment.kader ? [{ label: assignment.kader, value: assignment.kader }] : []
-                }
-                onChange={() => {}}
-                placeholder="Kader"
-                disabled={true}
-              />
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 items-center">
-          <label className="text-lg font-medium text-gray-900">Peran/Jabatan</label>
-          <select
-            value={assignment.peran}
-            onChange={(e) => onFieldChange(index, "peran", e.target.value)}
-            disabled={isReadOnly}
-            className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
-          >
-            <option value="">-- Pilih Jabatan --</option>
-            <option value="Ketua">Ketua</option>
-            <option value="Wakil">Wakil</option>
-            <option value="Sekretaris">Sekretaris</option>
-            <option value="Bendahara">Bendahara</option>
-            <option value="Seksi">Seksi</option>
-            <option value="Anggota">Anggota</option>
-            <option value="Lainnya">Lainnya</option>
-          </select>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 items-center">
-          <label className="text-lg font-medium text-gray-900">Detail Jabatan</label>
-          <input
-            type="text"
-            value={assignment.detail}
-            onChange={(e) => onFieldChange(index, "detail", e.target.value)}
-            placeholder="Detail jabatan (contoh: Anggota Umum Bidang X)"
-            disabled={isReadOnly}
-            required
-            className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 items-center">
-          <label className="text-lg font-medium text-gray-900">Penugasan</label>
-          <input
-            type="text"
-            value={assignment.penugasan || ""}
-            onChange={(e) => onFieldChange(index, "penugasan", e.target.value)}
-            placeholder="Nama/detail penugasan"
-            disabled={isReadOnly}
-            required
-            className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white disabled:bg-gray-100 disabled:text-gray-500"
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 items-center mt-2">
-          <label className="text-lg font-medium text-gray-900">Status Keaktifan</label>
-          <div className="col-span-2 flex items-center gap-6">
-            {[
-              { label: "Aktif", value: "Aktif" },
-              { label: "Nonaktif", value: "Tidak Aktif" },
-            ].map((status) => (
-              <label key={status.value} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name={`status_keaktifan-${index}`}
-                  value={status.value}
-                  checked={currentStatusKeaktifan === status.value}
-                  onChange={(e) =>
-                    onFieldChange(
-                      index,
-                      "status_keaktifan",
-                      normalizeStatusKeaktifan(e.target.value),
-                    )
-                  }
-                  disabled={isReadOnly}
-                  className="w-4 h-4 text-blue-600 border-gray-400 focus:ring-blue-500 cursor-pointer"
-                />
-                <span className="text-gray-700">{status.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const pengajuanActions = (row: Record<string, unknown>) =>
-    row.status_pengajuan === "Menunggu Review" ? (
-      <Button variant="secondary" size="sm" onClick={() => handleReviewClick(row._raw as PengajuanAPIData)}>
-        Review
-      </Button>
-    ) : null;
-
-  const relawanActions = (row: RelawanData) => (
-    <Button variant="secondary" size="sm" onClick={() => handleDetailClick(row)}>
-      Detail
-    </Button>
-  );
-
   return (
     <div className="space-y-6">
-      {/* GLOBAL ACTIONS (Tombol Atas Tetap Di Sini) */}
       <div className="flex justify-between items-center">
         <div className="flex gap-3">
-          <Button
-            variant="primary"
-            onClick={() => {
-              setFormData({
-                alamat: "",
-                assignments: [],
-                detail_penugasan: "",
-                jabatan: "",
-                jenisKelamin: "L",
-                kader: "",
-                kelurahan: "",
-                kemantren: "",
-                namaRelawan: "",
-                nik: "",
-                no_hp: "",
-                penugasan: "",
-              });
-              if (isOPD && user?.opd_id) {
-                fetchKaderByOpdId(user.opd_id, 0);
-              }
-              setIsModalOpen(true);
-            }}
-          >
-            <Plus size={18} />
-            Tambah Relawan
+          <Button variant="primary" onClick={() => setIsModalOpen(true)}>
+            <Plus size={18} /> Tambah Relawan
           </Button>
           <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
-            <Upload size={18} />
-            Unggah dari Excel
+            <Upload size={18} /> Unggah dari Excel
           </Button>
         </div>
       </div>
-      {/* TABEL 1: Pengajuan Perubahan Data */}
-      <Card>
-        <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-xl font-semibold text-gray-900">Pengajuan Perubahan Data</h2>
-          <div className="flex items-center gap-3 self-end sm:self-auto">
-            <SearchInput
-              value={searchPengajuan}
-              onChange={(e) => {
-                setSearchPengajuan(e.target.value);
-                setCurrentPengajuanPage(1);
-              }}
-              placeholder="Cari pengajuan..."
-              className="w-64"
-            />
-          </div>
-        </div>
 
-        {isLoadingPengajuan ? (
-          <div className="flex items-center justify-center h-32">
-            <Loader2 size={24} className="animate-spin text-gray-400" />
-            <span className="ml-3 text-gray-500">Memuat data pengajuan...</span>
-          </div>
-        ) : pengajuanUIData.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-gray-600 font-medium">Belum ada pengajuan</p>
-            <p className="text-sm text-gray-400 mt-1">
-              Saat ini belum ada relawan yang mengajukan perubahan data.
-            </p>
-          </div>
-        ) : (
-          <>
-            <Table
-              columns={pengajuanColumns}
-              data={currentPengajuanData}
-              actions={pengajuanActions}
-              minRows={3}
-            />
+      <PengajuanTableSection
+        pengajuanTab={pengajuanTab}
+        setPengajuanTab={setPengajuanTab}
+        pendingCount={pendingCount}
+        historyStatusFilter={historyStatusFilter}
+        setHistoryStatusFilter={setHistoryStatusFilter}
+        searchPengajuan={searchPengajuan}
+        setSearchPengajuan={setSearchPengajuan}
+        isLoading={isLoadingPengajuan}
+        pengajuanUIData={pengajuanUIData}
+        currentPengajuanData={pengajuanUIData.slice((currentPengajuanPage - 1) * 5, currentPengajuanPage * 5)}
+        currentPage={currentPengajuanPage}
+        setCurrentPage={setCurrentPengajuanPage}
+        totalPages={Math.ceil(pengajuanUIData.length / 5)}
+        startIndex={(currentPengajuanPage - 1) * 5}
+        endIndex={currentPengajuanPage * 5}
+        onOpenReview={(p) => { setSelectedPengajuan(p); setIsReviewModalOpen(true); }}
+      />
 
-            {/* Pagination Tabel Pengajuan */}
-            <div className="mt-4 flex justify-between items-center">
-              <div className="text-sm text-gray-500">
-                Menampilkan {startPengajuanIndex + 1}-
-                {Math.min(endPengajuanIndex, pengajuanUIData.length)} dari {pengajuanUIData.length}{" "}
-                Pengajuan
-              </div>
-              <Pagination
-                currentPage={currentPengajuanPage}
-                totalPages={totalPengajuanPages}
-                onPageChange={(page) => setCurrentPengajuanPage(page)}
-              />
-            </div>
-          </>
-        )}
-      </Card>
+      <RelawanTableSection
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
+        isLoading={isLoadingRelawan}
+        filteredRelawanData={filteredRelawanData}
+        currentRelawanData={sortedRelawanData.slice((currentPage - 1) * 5, currentPage * 5)}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage}
+        totalPages={Math.ceil(sortedRelawanData.length / 5)}
+        startIndex={(currentPage - 1) * 5}
+        endIndex={currentPage * 5}
+        sortColumn={sortColumn}
+        sortOrder={sortOrder}
+        onSort={(col) => {
+          if (sortColumn === col) setSortOrder(sortOrder === "asc" ? "desc" : null);
+          else { setSortColumn(col as any); setSortOrder("asc"); }
+        }}
+        onExportPdf={() => exportToPDF({
+          columns: [{ dataKey: "nik", header: "NIK" }, { dataKey: "namaLengkap", header: "NAMA" }],
+          data: filteredRelawanData as any,
+          filename: "data-relawan.pdf",
+          title: "Data Relawan",
+        })}
+        onOpenDetail={(r) => { setSelectedRelawan(r); setIsDetailModalOpen(true); }}
+      />
 
-      {/* TABEL 2: Daftar Relawan */}
-      <Card>
-        {/* Menggabungkan Judul, Search bar, dan Tombol Ekspor PDF dalam 1 Baris Sejajar */}
-        <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <h2 className="text-xl font-semibold text-gray-900">Daftar Relawan</h2>
-          <div className="flex items-center gap-3 self-end sm:self-auto">
-            <SearchInput
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              placeholder="Cari relawan..."
-              className="w-64"
-            />
-            {!isLoadingRelawan && filteredRelawanData.length > 0 && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleExportPdf}
-                className="flex items-center gap-2"
-              >
-                <FileDown size={16} />
-                Ekspor PDF
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {isLoadingRelawan ? (
-          <div className="flex items-center justify-center h-40">
-            <Loader2 size={28} className="animate-spin text-gray-400" />
-            <span className="ml-3 text-gray-500">Memuat data relawan...</span>
-          </div>
-        ) : filteredRelawanData.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <p className="text-gray-600 font-medium">Belum ada relawan</p>
-            <p className="text-sm text-gray-400 mt-1">
-              {searchTerm
-                ? "Tidak ada relawan yang cocok dengan pencarian Anda."
-                : 'Belum ada relawan yang terdaftar. Klik "Tambah Relawan" untuk memulai.'}
-            </p>
-          </div>
-        ) : (
-          <Table
-            columns={relawanColumns}
-            data={currentRelawanData}
-            actions={relawanActions}
-            minRows={5}
-            sortColumn={sortColumn}
-            sortOrder={sortOrder}
-            onSort={handleSort}
-          />
-        )}
-
-        {/* Pagination Tabel Relawan */}
-        {!isLoadingRelawan && filteredRelawanData.length > 0 && (
-          <div className="mt-4 flex justify-between items-center">
-            <div className="text-sm text-gray-500">
-              Menampilkan {startIndex + 1}-{Math.min(endIndex, filteredRelawanData.length)} dari{" "}
-              {filteredRelawanData.length} Relawan
-            </div>
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={(page) => setCurrentPage(page)}
-            />
-          </div>
-        )}
-      </Card>
-
-      {/* Modal-modal (Tambah, Detail, Review, Upload) tetap di bawah */}
-      {/* Modal Tambah Relawan */}
-      <Modal
+      <TambahRelawanModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title="Tambah Relawan Baru"
-        subtitle="Isi data relawan yang ingin ditambahkan"
-        maxWidth="2xl"
-      >
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {[
-            {
-              label: "Nama Relawan",
-              name: "namaRelawan",
-              placeholder: "Nama Lengkap Relawan",
-              required: true,
-            },
-            {
-              label: "NIK",
-              maxLength: 16,
-              name: "nik",
-              placeholder: "16 digit NIK",
-              required: true,
-            },
-            {
-              label: "Alamat KTP",
-              name: "alamat",
-              placeholder: "Alamat sesuai KTP",
-              required: true,
-            },
-            { label: "No. HP", name: "no_hp", placeholder: "Nomor HP", required: true },
-          ].map((field) => (
-            <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
-              <label className="text-lg font-medium text-gray-900">
-                {field.label}
-                {field.required && <span className="text-red-500 ml-1">*</span>}
-              </label>
-              <input
-                type="text"
-                name={field.name}
-                value={(formData as unknown as Record<string, string>)[field.name]}
-                onChange={(e) => {
-                  if (field.name === "nik") {
-                    const val = e.target.value.replace(/\D/g, "");
-                    setFormData((prev) => ({ ...prev, nik: val }));
-                  } else {
-                    setFormData((prev) => ({ ...prev, [field.name]: e.target.value }));
-                  }
-                }}
-                placeholder={field.placeholder}
-                required={field.required}
-                maxLength={(field as Record<string, unknown>).maxLength as number | undefined}
-                className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          ))}
-
-          <div className="grid grid-cols-3 gap-4 items-center">
-            <label className="text-lg font-medium text-gray-900">
-              Kemantren <span className="text-red-500 ml-1">*</span>
-            </label>
-            <AutocompleteInput
-              name="kemantren"
-              value={formData.kemantren}
-              options={kemantrenOptions}
-              onChange={(val) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  kelurahan: "",
-                  kemantren: val,
-                }))
-              }
-              placeholder="Cari nama Kemantren..."
-              required
-              warnIfNotFound={false}
-              className="col-span-2"
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 items-center">
-            <label className="text-lg font-medium text-gray-900">
-              Kelurahan <span className="text-red-500 ml-1">*</span>
-            </label>
-            <AutocompleteInput
-              name="kelurahan"
-              value={formData.kelurahan}
-              options={kelurahanOptionsForForm}
-              onChange={(val) => setFormData((prev) => ({ ...prev, kelurahan: val }))}
-              placeholder={
-                formData.kemantren ? "Cari nama Kelurahan..." : "Pilih Kemantren terlebih dahulu..."
-              }
-              required
-              disabled={!formData.kemantren}
-              warnIfNotFound={false}
-              className="col-span-2"
-            />
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 items-center">
-            <label className="text-lg font-medium text-gray-900">
-              Jenis Kelamin <span className="text-red-500 ml-1">*</span>
-            </label>
-            <select
-              name="jenisKelamin"
-              value={formData.jenisKelamin}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, jenisKelamin: e.target.value as "L" | "P" }))
-              }
-              required
-              className="col-span-2 px-4 py-2 border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-            >
-              <option value="L">Laki-laki (L)</option>
-              <option value="P">Perempuan (P)</option>
-            </select>
-          </div>
-
-          <div className="pt-4 border-t border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Daftar Penugasan:</h3>
-            {formData.assignments.map((assignment, index) =>
-              renderAssignmentFields(assignment, index, false),
-            )}
-            <div className="flex justify-center mt-4">
-              <Button type="button" variant="primary" size="sm" onClick={handleAddAssignment}>
-                <Plus size={16} />
-                Tambah Data Penugasan
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex justify-end pt-6">
-            <Button
-              type="submit"
-              disabled={isSaving}
-              className="bg-green-600 hover:bg-green-700 text-white px-12 disabled:opacity-50"
-            >
-              {isSaving ? <Loader2 size={16} className="animate-spin" /> : "Simpan"}
-            </Button>
-          </div>
-        </form>
-      </Modal>
-
-      {/* Modal Detail Relawan */}
-      <Modal
-        isOpen={isDetailModalOpen}
-        onClose={() => {
-          setIsDetailModalOpen(false);
-          setIsEditMode(false);
+        isOPD={isOPD}
+        userOpdName={user?.nama_opd}
+        userOpdId={user?.opd_id}
+        opdOptions={opdOptions}
+        kemantrenOptions={kemantrenOptions}
+        kelurahanOptions={kelurahanOptions}
+        kaderOptionsByIndex={kaderOptionsByOpdId}
+        isLoadingKaderByIndex={loadingOpdIds}
+        onKemantrenChange={(k) => {
+          const match = kemantrenList.find((i) => i.nama_kemantren.toLowerCase() === k.trim().toLowerCase());
+          if (match) fetchKelurahanByKemantrenId(match.id);
         }}
-        title="Detail Relawan"
-        subtitle={
-          isEditMode ? "Mode Edit — ubah data lalu klik Simpan" : "Informasi lengkap relawan"
-        }
-        maxWidth="2xl"
-      >
-        {selectedRelawan && (
-          <div className="space-y-6">
-            <div className="flex justify-end">
-              {!isEditMode ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsEditMode(true)}
-                  className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                >
-                  Edit Data
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setIsEditMode(false);
-                    handleDetailClick(selectedRelawan);
-                  }}
-                  className="border-gray-400 text-gray-600 hover:bg-gray-50"
-                >
-                  Batal
-                </Button>
-              )}
-            </div>
+        onOpdChangeAssignment={(_, name) => {
+          const m = opdOptions.find((o) => o.label.toLowerCase() === name.toLowerCase());
+          if (m) fetchKaderOptionsForOpd(Number(m.value));
+        }}
+        onKaderChangeAssignment={() => {}}
+        onSubmit={handleSaveTambah}
+        isSaving={isSaving}
+      />
 
-            {[
-              { label: "Nama Relawan", name: "namaRelawan" },
-              { label: "NIK", name: "nik" },
-              { label: "Alamat KTP", name: "alamat" },
-              { label: "No. HP", name: "no_hp" },
-            ].map((field) => {
-              const isFieldEditable =
-                isEditMode && field.name !== "nik" && field.name !== "jabatan";
+      <DetailRelawanModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        relawan={selectedRelawan}
+        isOPD={isOPD}
+        userOpdName={user?.nama_opd}
+        opdOptions={opdOptions}
+        kemantrenOptions={kemantrenOptions}
+        kelurahanOptions={kelurahanOptions}
+        kaderOptionsByIndex={kaderOptionsByOpdId}
+        isLoadingKaderByIndex={loadingOpdIds}
+        onKemantrenChange={(k) => {
+          const match = kemantrenList.find((i) => i.nama_kemantren.toLowerCase() === k.trim().toLowerCase());
+          if (match) fetchKelurahanByKemantrenId(match.id);
+        }}
+        onOpdChangeAssignment={(_, name) => {
+          const m = opdOptions.find((o) => o.label.toLowerCase() === name.toLowerCase());
+          if (m) fetchKaderOptionsForOpd(Number(m.value));
+        }}
+        onKaderChangeAssignment={() => {}}
+        onSaveEdit={async () => {}}
+        onDeletePenugasan={() => {}}
+        isSavingEdit={isSavingEdit}
+      />
 
-              return (
-                <div key={field.name} className="grid grid-cols-3 gap-4 items-center">
-                  <label className="text-lg font-medium text-gray-900">{field.label}</label>
-                  <input
-                    type="text"
-                    value={
-                      !isEditMode && field.name === "no_hp"
-                        ? formatPhoneDisplay((detailFormData as unknown as Record<string, string>)[field.name])
-                        : (detailFormData as unknown as Record<string, string>)[field.name]
-                    }
-                    readOnly={!isFieldEditable}
-                    onChange={(e) =>
-                      setDetailFormData((prev) => ({ ...prev, [field.name]: e.target.value }))
-                    }
-                    className={`col-span-2 px-4 py-2 border rounded-lg focus:outline-none transition-all
-                                            ${
-                                              isFieldEditable
-                                                ? "border-blue-300 focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 font-medium"
-                                                : "border-gray-200 bg-gray-50 text-gray-400 italic font-normal cursor-not-allowed"
-                                            }`}
-                  />
-                </div>
-              );
-            })}
-
-            <div className="grid grid-cols-3 gap-4 items-center">
-              <label className="text-lg font-medium text-gray-900">Kemantren</label>
-              {isEditMode ? (
-                <AutocompleteInput
-                  name="kemantren"
-                  value={detailFormData.kemantren}
-                  options={kemantrenOptions}
-                  onChange={(val) =>
-                    setDetailFormData((prev) => ({
-                      ...prev,
-                      kelurahan: "",
-                      kemantren: val,
-                    }))
-                  }
-                  placeholder="Cari nama Kemantren..."
-                  className="col-span-2"
-                  warnIfNotFound={false}
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={detailFormData.kemantren}
-                  readOnly
-                  className="col-span-2 px-4 py-2 border border-gray-200 bg-gray-50 text-gray-400 italic font-normal cursor-not-allowed rounded-lg"
-                />
-              )}
-            </div>
-
-            <div className="grid grid-cols-3 gap-4 items-center">
-              <label className="text-lg font-medium text-gray-900">Kelurahan</label>
-              {isEditMode ? (
-                <AutocompleteInput
-                  name="kelurahan"
-                  value={detailFormData.kelurahan}
-                  options={kelurahanOptionsForDetail}
-                  onChange={(val) => setDetailFormData((prev) => ({ ...prev, kelurahan: val }))}
-                  placeholder={
-                    detailFormData.kemantren
-                      ? "Cari nama Kelurahan..."
-                      : "Pilih Kemantren terlebih dahulu..."
-                  }
-                  disabled={!detailFormData.kemantren}
-                  className="col-span-2"
-                  warnIfNotFound={false}
-                />
-              ) : (
-                <input
-                  type="text"
-                  value={detailFormData.kelurahan}
-                  readOnly
-                  className="col-span-2 px-4 py-2 border border-gray-200 bg-gray-50 text-gray-400 italic font-normal cursor-not-allowed rounded-lg"
-                />
-              )}
-            </div>
-
-            <div className="grid grid-cols-3 gap-4 items-center">
-              <label className="text-lg font-medium text-gray-900">Jenis Kelamin</label>
-              <select
-                value={detailFormData.jenisKelamin}
-                disabled={!isEditMode}
-                onChange={(e) =>
-                  setDetailFormData((prev) => ({
-                    ...prev,
-                    jenisKelamin: e.target.value as "L" | "P",
-                  }))
-                }
-                className={`col-span-2 px-4 py-2 border rounded-lg focus:outline-none transition-all
-                                    ${
-                                      isEditMode
-                                        ? "border-blue-300 bg-white text-gray-900 font-medium"
-                                        : "border-gray-200 bg-gray-50 text-gray-400 italic font-normal cursor-not-allowed"
-                                    }`}
-              >
-                <option value="L">Laki-laki (L)</option>
-                <option value="P">Perempuan (P)</option>
-              </select>
-            </div>
-
-            <div className="pt-4 border-t border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Daftar Penugasan:</h3>
-              {Array.isArray(detailFormData.assignments) &&
-              detailFormData.assignments.length > 0 ? (
-                detailFormData.assignments.map((assignment, index) => {
-                  const penugasanId = parseInt(assignment.id);
-                  const isNewAssignment =
-                    isNaN(penugasanId) || String(assignment.id).startsWith("new-");
-                  return (
-                    <div
-                      key={assignment.id}
-                      className="relative bg-gray-50 p-4 rounded-xl border border-gray-200 mb-4 space-y-4"
-                    >
-                      {isEditMode && (
-                        <div className="flex justify-end -mt-2 -mr-2 mb-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              handleDeletePenugasan(isNewAssignment ? 0 : penugasanId, index)
-                            }
-                            disabled={deletingPenugasanId === penugasanId}
-                            className="text-gray-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors disabled:opacity-50"
-                            title="Hapus Penugasan"
-                          >
-                            {deletingPenugasanId === penugasanId ? (
-                              <Loader2 size={18} className="animate-spin" />
-                            ) : (
-                              <X size={18} />
-                            )}
-                          </button>
-                        </div>
-                      )}
-                      {renderAssignmentFields(
-                        assignment,
-                        index,
-                        !isEditMode,
-                        isEditMode ? "form" : "detail",
-                        isEditMode
-                          ? {
-                              onFieldChange: handleDetailAssignmentChange,
-                              onKaderChange: handleDetailAssignmentKaderChange,
-                              onOpdChange: handleDetailAssignmentOpdChange,
-                            }
-                          : undefined,
-                      )}
-                    </div>
-                  );
-                })
-              ) : (
-                <div className="text-center text-gray-500 italic py-4">
-                  Belum ada penugasan terdaftar.
-                </div>
-              )}
-
-              {isEditMode && (
-                <div className="flex justify-center mt-2">
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="sm"
-                    onClick={handleAddDetailAssignment}
-                  >
-                    <Plus size={16} />
-                    Tambah Penugasan
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {isEditMode && (
-              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-                <Button
-                  onClick={() => {
-                    setIsEditMode(false);
-                    handleDetailClick(selectedRelawan);
-                  }}
-                  className="bg-gray-200 text-gray-700 hover:bg-gray-300 px-6"
-                >
-                  Batal
-                </Button>
-                <Button
-                  onClick={handleSaveEdit}
-                  disabled={isSavingEdit}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-10 disabled:opacity-50"
-                >
-                  {isSavingEdit ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    "Simpan Perubahan"
-                  )}
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
-
-      {/* Modal Review Pengajuan */}
-      <Modal
+      <ReviewPengajuanModal
         isOpen={isReviewModalOpen}
         onClose={() => setIsReviewModalOpen(false)}
-        title="Review Pengajuan Perubahan Data"
-        maxWidth="2xl"
-      >
-        {selectedPengajuan && (
-          <div className="space-y-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-2">
-              <p className="text-sm font-medium text-blue-800">Informasi Pengajuan</p>
-              <div className="grid grid-cols-2 gap-2 text-sm text-blue-700">
-                <span className="font-medium">NIK:</span>
-                <span>{selectedPengajuan.nik}</span>
-                <span className="font-medium">Nama:</span>
-                <span>{selectedPengajuan.nama_lengkap}</span>
-                <span className="font-medium">Jenis Perubahan:</span>
-                <span>{selectedPengajuan.jenis_perubahan}</span>
-                <span className="font-medium">Catatan Relawan:</span>
-                <span>{selectedPengajuan.catatan_relawan || "-"}</span>
-              </div>
-            </div>
+        pengajuan={selectedPengajuan}
+        onReview={handleReview}
+        isReviewing={isReviewing}
+      />
 
-            {Boolean(selectedPengajuan.data_baru) &&
-              (() => {
-                let dataBaru: Record<string, unknown> = {};
-                try {
-                  dataBaru =
-                    typeof selectedPengajuan.data_baru === "string"
-                      ? (JSON.parse(selectedPengajuan.data_baru) as Record<string, unknown>)
-                      : (selectedPengajuan.data_baru as Record<string, unknown>);
-                } catch {
-                  return (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 space-y-2 mt-4">
-                      <p className="text-sm font-medium text-red-800">
-                        Data perubahan tidak valid atau rusak.
-                      </p>
-                    </div>
-                  );
-                }
-
-                if (!dataBaru || Object.keys(dataBaru).length === 0) return null;
-
-                return (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-2 mt-4">
-                    <p className="text-sm font-medium text-yellow-800">
-                      Detail Perubahan yang Diajukan
-                    </p>
-                    <div className="grid grid-cols-2 gap-2 text-sm text-yellow-700">
-                      {Boolean(dataBaru.nama_lengkap) && (
-                        <>
-                          <span className="font-medium">Nama Lengkap Baru:</span>
-                          <span className="font-semibold">{String(dataBaru.nama_lengkap)}</span>
-                        </>
-                      )}
-                      {Boolean(dataBaru.alamat_ktp) && (
-                        <>
-                          <span className="font-medium">Alamat KTP Baru:</span>
-                          <span className="font-semibold">{String(dataBaru.alamat_ktp)}</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
-
-            <div className="flex items-center gap-3 p-4 border border-gray-200 rounded-lg">
-              <input
-                type="checkbox"
-                id="dataChecked"
-                checked={isDataChecked}
-                onChange={(e) => setIsDataChecked(e.target.checked)}
-                className="w-4 h-4 text-blue-600"
-              />
-              <label htmlFor="dataChecked" className="text-sm text-gray-700">
-                Saya telah memverifikasi kebenaran data yang diajukan
-              </label>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Catatan Verifikator (opsional)
-              </label>
-              <textarea
-                value={verificationNote}
-                onChange={(e) => setVerificationNote(e.target.value)}
-                placeholder="Tuliskan catatan untuk relawan..."
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-400 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-              <Button
-                onClick={() => setIsReviewModalOpen(false)}
-                className="bg-gray-200 text-gray-700 hover:bg-gray-300 px-6"
-              >
-                Batal
-              </Button>
-              <Button
-                onClick={() => handleReview("Ditolak")}
-                disabled={!isDataChecked || isReviewing}
-                className="bg-red-600 hover:bg-red-700 text-white px-6 disabled:opacity-50"
-              >
-                {isReviewing ? <Loader2 size={16} className="animate-spin" /> : "Tolak"}
-              </Button>
-              <Button
-                onClick={() => handleReview("Disetujui")}
-                disabled={!isDataChecked || isReviewing}
-                className="bg-green-600 hover:bg-green-700 text-white px-6 disabled:opacity-50"
-              >
-                {isReviewing ? <Loader2 size={16} className="animate-spin" /> : "Setujui"}
-              </Button>
-            </div>
-          </div>
-        )}
-      </Modal>
-
-      {/* Upload Excel Modal */}
       <UploadExcelModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
-        onConfirm={handleExcelUploadConfirm}
+        onConfirm={async () => {}}
         title="Unggah Data Relawan"
         templateName="Data Relawan"
         dataType="relawan"
         isOpdUser={isOPD}
       />
 
-      {/* Modal Konfirmasi Hapus Penugasan */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-9999">
-          <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full mx-4 space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">Hapus Penugasan?</h3>
-            <p className="text-sm text-gray-600">
-              Apakah Anda yakin ingin menghapus penugasan{" "}
-              <span className="font-medium text-gray-800">"{deleteConfirm.label}"</span>? Tindakan
-              ini tidak dapat dibatalkan.
-            </p>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button variant="outline" onClick={() => setDeleteConfirm(null)} className="px-6">
-                Batal
-              </Button>
-              <Button
-                onClick={handleConfirmDelete}
-                className="bg-red-600 hover:bg-red-700 text-white px-6"
-              >
-                Ya, Hapus
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );

@@ -62,6 +62,7 @@ export interface RelawanAPIData {
 // ── Pengajuan perubahan data relawan ────────────────────────────
 export interface PengajuanAPIData {
   catatan_relawan: string | null;
+  catatan_verifikator?: string | null;
   data_baru?: unknown;
   data_lama?: unknown;
   jenis_perubahan: string;
@@ -71,10 +72,16 @@ export interface PengajuanAPIData {
   relawan_id: number;
   status_pengajuan: string;
   tanggal_pengajuan: string;
+  tanggal_verifikasi?: string | null;
+  verifikator_id?: number | null;
+  // Field display dari JOIN users:
+  nama_verifikator?: string | null;
+  role_verifikator?: string | null;
 }
 
 // ── Legacy / UI form data ────────────────────────────────────────
 export interface PengajuanData {
+  _raw: PengajuanAPIData;
   catatanRelawan?: string;
   dataBaru?: Record<string, string>;
   dataLama?: Record<string, string>;
@@ -82,6 +89,7 @@ export interface PengajuanData {
   nik: string;
   status_pengajuan: string;
   tanggalPengajuan: string;
+  verifikator: string;
 }
 
 export interface RelawanFormData {
