@@ -287,7 +287,7 @@ const SaranHotline: React.FC = () => {
               : "bg-yellow-50 text-yellow-700 border-yellow-200"
           }`}
         >
-          {row.status === "Selesai" ? "✓ Selesai" : "⏳ Menunggu"}
+          {row.status === "Selesai" ? "✓ Selesai" : "Menunggu"}
         </span>
       ),
     },
