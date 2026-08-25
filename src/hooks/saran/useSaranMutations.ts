@@ -31,10 +31,16 @@ export const useRespondSaran = () => {
       saran_id: number;
       status: "Menunggu" | "Selesai";
     }) =>
-      apiClient.patch(`/saran/admin/${saran_id}/baca`, { catatan_admin, status }).then((r) => {
-        if (!r.data.success) throw new Error(r.data.message);
-        return r.data;
-      }),
+      apiClient
+        .patch(`/saran/admin/${saran_id}/baca`, {
+          catatan_admin,
+          status,
+          status_keaktifan: status,
+        })
+        .then((r) => {
+          if (!r.data.success) throw new Error(r.data.message);
+          return r.data;
+        }),
     onSuccess: () => qc.invalidateQueries({ queryKey: SARAN_KEYS.list() }),
   });
 };

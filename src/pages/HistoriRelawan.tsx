@@ -1,3 +1,4 @@
+// src/pages/HistoriRelawan.tsx
 import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { Loader2, History, Search } from "lucide-react";
 import Card from "../components/ui/Card";
@@ -7,90 +8,21 @@ import Modal from "../components/ui/Modal";
 import Select from "../components/ui/Select";
 import YearPicker from "../components/ui/YearPicker";
 import Pagination from "../components/ui/Pagination";
+import DetailFieldRow from "../components/ui/DetailFieldRow";
 import apiClient from "../lib/axios";
 import { useAuth } from "../context/AuthContext";
+import { useToast } from "../context/ToastContext";
 import type { HistoriRelawanData } from "../types/histori.types";
 import type { AutoOption } from "../types/common.types";
 import { formatPhoneDisplay } from "../utils/formatPhone";
-import type { ToastType } from "../components/ui/Toast";
-import Toast from "../components/ui/Toast";
+import { normalizeRelawanPayload } from "../utils/groupRelawan";
+import { useTableSort } from "../hooks/useTableSort";
 import { useWilayah } from "../hooks/useWilayah";
-
-// ── Tipe untuk baris mentah dari API ─
-interface RawRelawanRow {
-  alamat_ktp?: string;
-  batas_aktif?: string;
-  detail_jabatan?: string;
-  jabatan?: string;
-  jenis_kelamin?: string;
-  kader_id?: number | null;
-  kelurahan?: string;
-  kemantren?: string;
-  nama_kader?: string;
-  nama_lengkap: string;
-  nama_opd?: string;
-  nik: string;
-  no_hp?: string;
-  nomor_sk?: string;
-  opd_id?: number;
-  penugasan?: string;
-  penugasan_id?: number;
-  relawan_id?: number;
-  status_penugasan?: string;
-  tahun?: number | string;
-  tanggal_terbit?: string;
-  user_id?: number;
-}
 
 interface OpdItem {
   nama_opd: string;
 }
 
-// ── Helper: kelompokkan baris flat dari API menjadi per-relawan ─
-const groupRelawanData = (rows: RawRelawanRow[]): HistoriRelawanData[] => {
-  const map = new Map<string, HistoriRelawanData>();
-  rows.forEach((row) => {
-    if (!map.has(row.nik)) {
-      map.set(row.nik, {
-        alamat: row.alamat_ktp || "-",
-        assignments: [],
-        jabatan: row.jabatan || "-",
-        jenisKelamin: row.jenis_kelamin || "L",
-        kader: row.nama_kader || "-",
-        kelurahan: row.kelurahan || "-",
-        kemantren: row.kemantren || "-",
-        namaLengkap: row.nama_lengkap,
-        nik: row.nik,
-        no_hp: row.no_hp || "-",
-        penugasan: row.nama_opd || row.penugasan || "-",
-        relawan_id: row.relawan_id,
-        user_id: row.user_id,
-      });
-    }
-    if (row.nama_opd || row.penugasan || row.nama_kader) {
-      map.get(row.nik)!.assignments.push({
-        batasAktif: row.batas_aktif || "",
-        detail: row.detail_jabatan || "",
-        id: row.penugasan_id?.toString() || Math.random().toString(),
-        kader: row.nama_kader || "",
-        kader_id: row.kader_id || null,
-        nomorSK: row.nomor_sk || "",
-        opd: row.nama_opd || "",
-        opd_id: row.opd_id || 0,
-        penugasan: row.penugasan || "",
-        peran: row.jabatan || "",
-        status_keaktifan: row.status_penugasan || "Aktif",
-        tahun: row.tahun || "",
-        tahunMulai: row.tanggal_terbit ? new Date(row.tanggal_terbit).getFullYear() : null,
-        tahunSelesai: row.batas_aktif ? new Date(row.batas_aktif).getFullYear() : null,
-        tanggalTerbit: row.tanggal_terbit || "",
-      });
-    }
-  });
-  return Array.from(map.values());
-};
-
-// ── Interface Raw Kader dari API ──
 interface RawKader {
   kader_id: number;
   nama_kader: string;
@@ -98,16 +30,15 @@ interface RawKader {
   opd_id?: number;
 }
 
-// ── Component ────────────────────────────────────────────────────
 const HistoriRelawan: React.FC = () => {
-  const { isOPD, isSuperAdmin } = useAuth();
+  const { isOPD, user } = useAuth();
+  const isSuperAdmin = user?.role === "super_admin";
   const API_BASE = isSuperAdmin ? "/admin/relawan" : "/opd-admin/relawan";
 
   const [relawanList, setRelawanList] = useState<HistoriRelawanData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
+  const { showToast } = useToast();
 
-  // Custom Hook Wilayah
   const { fetchKelurahanByKemantrenId, kelurahanList, kemantrenList, setKelurahanList } =
     useWilayah();
 
@@ -120,15 +51,15 @@ const HistoriRelawan: React.FC = () => {
   const [filterTahunAkhir, setFilterTahunAkhir] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
-  // ── Sorting State ─────────────────────────────────────────────
-  const [sortColumn, setSortColumn] = useState<"namaLengkap" | "nik" | null>(null);
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc" | null>(null);
+  // ── Sorting ───────────────────────────────────────────────────
+  const { sortColumn, sortOrder, handleSort, resetSort } = useTableSort<"namaLengkap" | "nik">(
+    ["namaLengkap", "nik"],
+    () => setCurrentPage(1),
+  );
 
-  // ── Dropdown options & raw state ──────────────────────────────
   const [opdOptions, setOpdOptions] = useState<AutoOption[]>([]);
   const [rawKaderList, setRawKaderList] = useState<RawKader[]>([]);
 
-  // ── Transform Options Kemantren & Kelurahan ───────────────────
   const kemantrenOptions = useMemo<AutoOption[]>(
     () => kemantrenList.map((item) => ({ label: item.nama_kemantren, value: item.nama_kemantren })),
     [kemantrenList],
@@ -139,78 +70,78 @@ const HistoriRelawan: React.FC = () => {
     [kelurahanList],
   );
 
-  // ── Filter Opsi Kader Berdasarkan OPD yang Dipilih ────────────
   const kaderOptions = useMemo<AutoOption[]>(() => {
     let list = rawKaderList;
-
     if (filterOpd) {
       list = rawKaderList.filter((k) => k.nama_opd?.toLowerCase() === filterOpd.toLowerCase());
     }
-
     const uniqueNames = Array.from(new Set(list.map((k) => k.nama_kader).filter(Boolean)));
     return uniqueNames.map((nama) => ({ label: nama, value: nama }));
   }, [rawKaderList, filterOpd]);
 
-  // ── Pagination ────────────────────────────────────────────────
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 5;
 
-  // ── Detail modal ──────────────────────────────────────────────
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedRelawan, setSelectedRelawan] = useState<HistoriRelawanData | null>(null);
 
-  // ── Tahun range ───────────────────────────────────────────────
   const currentYear = new Date().getFullYear();
   const maxYearAkhir = currentYear + 10;
   const minYearGlobal = 2000;
   const minYearAkhir = filterTahunAwal ? Number(filterTahunAwal) : minYearGlobal;
 
-  // ── Fetch data relawan ────────────────────────────────────────
+  // ── Fetch data relawan (dengan Safe Guard Payload) ────────────
   const fetchRelawan = useCallback(async () => {
     setIsLoading(true);
     try {
       const { data: result } = await apiClient.get(API_BASE);
       if (result.success) {
-        setRelawanList(groupRelawanData(result.data));
+        setRelawanList(normalizeRelawanPayload(result.data) as unknown as HistoriRelawanData[]);
       } else {
-        setToast({ message: result.message || "Gagal memuat data histori", type: "error" });
+        showToast(result.message || "Gagal memuat data histori", "error");
       }
     } catch {
-      setToast({ message: "Tidak dapat terhubung ke server", type: "error" });
+      showToast("Tidak dapat terhubung ke server", "error");
     } finally {
       setIsLoading(false);
     }
-  }, [API_BASE]);
+  }, [API_BASE, showToast]);
 
-  // ── Fetch OPD & Raw Kader Data ────────────────────────────────
+  // ── Fetch OPD & Raw Kader Data (Bebas 403 Forbidden) ──────────
   useEffect(() => {
     fetchRelawan();
 
-    apiClient
-      .get("/opd")
-      .then((r) => r.data)
-      .then((result) => {
-        if (result.success) {
-          setOpdOptions(
-            result.data.map((o: OpdItem) => ({ label: o.nama_opd, value: o.nama_opd })),
-          );
-        }
-      })
-      .catch(() => undefined);
+    if (isSuperAdmin) {
+      apiClient
+        .get("/opd")
+        .then((r) => r.data)
+        .then((result) => {
+          if (result.success && Array.isArray(result.data)) {
+            setOpdOptions(
+              result.data.map((o: OpdItem) => ({ label: o.nama_opd, value: o.nama_opd }))
+            );
+          }
+        })
+        .catch(() => undefined);
+    } else if (isOPD && user?.nama_opd) {
+      // 2. Untuk OPD, langsung kunci ke nama instansinya sendiri dari AuthContext
+      setOpdOptions([{ label: user.nama_opd, value: user.nama_opd }]);
+      setFilterOpd(user.nama_opd);
+    }
 
+    // 3. Panggil endpoint kader sesuai role
     const kaderEndpoint = isOPD ? "/opd-admin/kader" : "/kader";
     apiClient
       .get(kaderEndpoint)
       .then((r) => r.data)
       .then((result) => {
-        if (result.success) {
+        if (result.success && Array.isArray(result.data)) {
           setRawKaderList(result.data);
         }
       })
       .catch(() => undefined);
-  }, [fetchRelawan, isOPD]);
+  }, [fetchRelawan, isSuperAdmin, isOPD, user?.nama_opd]);
 
-  // ── Fetch Kelurahan berdasarkan Kemantren ─────────────────────
   useEffect(() => {
     const matchedKemantren = kemantrenList.find(
       (item) => item.nama_kemantren.toLowerCase() === filterKemantren.trim().toLowerCase(),
@@ -224,25 +155,19 @@ const HistoriRelawan: React.FC = () => {
     }
   }, [filterKemantren, kemantrenList, fetchKelurahanByKemantrenId, setKelurahanList]);
 
-  // ── Reset Pilihan Kader Jika Kader Tidak Ada di OPD Baru ─────
   const handleOpdChange = (opdValue: string) => {
     setFilterOpd(opdValue);
-
     if (opdValue && filterKader) {
       const isValidForNewOpd = rawKaderList.some(
         (k) =>
           k.nama_opd?.toLowerCase() === opdValue.toLowerCase() &&
           k.nama_kader.toLowerCase() === filterKader.toLowerCase(),
       );
-
-      if (!isValidForNewOpd) {
-        setFilterKader("");
-      }
+      if (!isValidForNewOpd) setFilterKader("");
     }
     setCurrentPage(1);
   };
 
-  // ── Filtering ─────────────────────────────────────────────────
   const filteredData = useMemo(() => {
     const q = searchTerm.toLowerCase();
     return relawanList.filter((relawan) => {
@@ -271,13 +196,10 @@ const HistoriRelawan: React.FC = () => {
         if (!filterTahunAwal && !filterTahunAkhir) return true;
         return relawan.assignments.some((a) => {
           if (!a.tahunMulai && !a.tahunSelesai) return false;
-
           const awal = filterTahunAwal ? Number(filterTahunAwal) : 0;
           const akhir = filterTahunAkhir ? Number(filterTahunAkhir) : 9999;
-
           const skAwal = a.tahunMulai || 0;
           const skAkhir = a.tahunSelesai || 9999;
-
           return skAkhir >= awal && skAwal <= akhir;
         });
       })();
@@ -297,40 +219,20 @@ const HistoriRelawan: React.FC = () => {
     filterTahunAkhir,
   ]);
 
-  // ── Sorting Logic ─────────────────────────────────────────────
-  const handleSort = (columnKey: string) => {
-    if (columnKey !== "namaLengkap" && columnKey !== "nik") return;
-
-    if (sortColumn !== columnKey) {
-      setSortColumn(columnKey as "namaLengkap" | "nik");
-      setSortOrder("asc");
-    } else if (sortOrder === "asc") {
-      setSortOrder("desc");
-    } else {
-      setSortColumn(null);
-      setSortOrder(null);
-    }
-    setCurrentPage(1);
-  };
-
   const sortedAndFilteredHistoriData = useMemo(() => {
     if (!sortColumn || !sortOrder) return filteredData;
-
     return [...filteredData].sort((a, b) => {
       const valA = String(a[sortColumn] || "").toLowerCase();
       const valB = String(b[sortColumn] || "").toLowerCase();
-
       const res = valA.localeCompare(valB, "id", { numeric: true });
       return sortOrder === "asc" ? res : -res;
     });
   }, [filteredData, sortColumn, sortOrder]);
 
-  // ── Pagination Calculation ────────────────────────────────────
   const totalPages = Math.ceil(sortedAndFilteredHistoriData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentData = sortedAndFilteredHistoriData.slice(startIndex, startIndex + itemsPerPage);
 
-  // ── Handlers ──────────────────────────────────────────────────
   const handleYearAwalChange = (year: string) => {
     setFilterTahunAwal(year);
     if (year && filterTahunAkhir && Number(filterTahunAkhir) < Number(year)) {
@@ -345,15 +247,14 @@ const HistoriRelawan: React.FC = () => {
   };
 
   const handleResetFilter = () => {
-    setFilterOpd("");
+    setFilterOpd(isOPD && user?.nama_opd ? user.nama_opd : "");
     setFilterKader("");
     setFilterKemantren("");
     setFilterKelurahan("");
     setFilterTahunAwal("");
     setFilterTahunAkhir("");
     setSearchTerm("");
-    setSortColumn(null);
-    setSortOrder(null);
+    resetSort();
     setCurrentPage(1);
   };
 
@@ -362,7 +263,6 @@ const HistoriRelawan: React.FC = () => {
     setIsDetailModalOpen(true);
   };
 
-  // ── Table Columns ─────────────────────────────────────────────
   const columns: Column<HistoriRelawanData>[] = [
     { accessor: "nik", header: "NIK", width: "16%", sortable: true },
     { accessor: "namaLengkap", header: "NAMA", width: "20%", sortable: true },
@@ -398,29 +298,16 @@ const HistoriRelawan: React.FC = () => {
     </Button>
   );
 
-  const renderFieldRow = (label: string, value: string | undefined) => (
-    <div
-      key={label}
-      className="grid grid-cols-3 gap-4 items-start py-2 border-b border-gray-100 last:border-b-0"
-    >
-      <span className="text-sm font-medium text-gray-500">{label}</span>
-      <span className="col-span-2 text-sm text-gray-900 font-medium break-words">
-        {value || "-"}
-      </span>
-    </div>
-  );
-
   const isActiveFilter =
-    filterOpd ||
-    filterKader ||
-    filterKemantren ||
-    filterKelurahan ||
-    filterTahunAwal ||
-    filterTahunAkhir;
+    (isSuperAdmin && Boolean(filterOpd)) ||
+    Boolean(filterKader) ||
+    Boolean(filterKemantren) ||
+    Boolean(filterKelurahan) ||
+    Boolean(filterTahunAwal) ||
+    Boolean(filterTahunAkhir);
 
   return (
     <div className="space-y-6">
-      {/* ── Filter Bar (Grid 3 x 2) ── */}
       <Card>
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-1">
@@ -429,7 +316,6 @@ const HistoriRelawan: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* Baris 1 - OPD */}
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Nama OPD</label>
               <Select
@@ -442,7 +328,6 @@ const HistoriRelawan: React.FC = () => {
               />
             </div>
 
-            {/* Baris 1 - Kemantren */}
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Kemantren</label>
               <Select
@@ -458,7 +343,6 @@ const HistoriRelawan: React.FC = () => {
               />
             </div>
 
-            {/* Baris 1 - Tahun Awal */}
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Tahun Awal</label>
               <YearPicker
@@ -470,7 +354,6 @@ const HistoriRelawan: React.FC = () => {
               />
             </div>
 
-            {/* Baris 2 - Kader (Bisa dipilih langsung / menyesuaikan OPD) */}
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Nama Kader</label>
               <Select
@@ -491,7 +374,6 @@ const HistoriRelawan: React.FC = () => {
               />
             </div>
 
-            {/* Baris 2 - Kelurahan */}
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Kelurahan</label>
               <Select
@@ -507,7 +389,6 @@ const HistoriRelawan: React.FC = () => {
               />
             </div>
 
-            {/* Baris 2 - Tahun Akhir */}
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1">Tahun Akhir</label>
               <YearPicker
@@ -520,7 +401,6 @@ const HistoriRelawan: React.FC = () => {
             </div>
           </div>
 
-          {/* Reset Filter Button */}
           {isActiveFilter && (
             <div className="flex justify-end pt-1">
               <Button
@@ -535,7 +415,6 @@ const HistoriRelawan: React.FC = () => {
         </div>
       </Card>
 
-      {/* ── Search Bar ── */}
       <div className="relative">
         <Search
           size={16}
@@ -553,7 +432,6 @@ const HistoriRelawan: React.FC = () => {
         />
       </div>
 
-      {/* ── Tabel ── */}
       <Card title="Tabel Riwayat Data Relawan">
         {isLoading ? (
           <div className="flex items-center justify-center h-40">
@@ -598,7 +476,6 @@ const HistoriRelawan: React.FC = () => {
         )}
       </Card>
 
-      {/* ── Detail Modal ── */}
       <Modal
         isOpen={isDetailModalOpen}
         onClose={() => {
@@ -616,16 +493,16 @@ const HistoriRelawan: React.FC = () => {
                 Informasi Pribadi
               </h3>
               <div className="space-y-1">
-                {renderFieldRow("Nama Relawan", selectedRelawan.namaLengkap)}
-                {renderFieldRow("NIK", selectedRelawan.nik)}
-                {renderFieldRow(
-                  "Jenis Kelamin",
-                  selectedRelawan.jenisKelamin === "L" ? "Laki-laki (L)" : "Perempuan (P)",
-                )}
-                {renderFieldRow("Alamat KTP", selectedRelawan.alamat)}
-                {renderFieldRow("No. HP", formatPhoneDisplay(selectedRelawan.no_hp))}
-                {renderFieldRow("Kemantren", selectedRelawan.kemantren)}
-                {renderFieldRow("Kelurahan", selectedRelawan.kelurahan)}
+                <DetailFieldRow label="Nama Relawan" value={selectedRelawan.namaLengkap} />
+                <DetailFieldRow label="NIK" value={selectedRelawan.nik} />
+                <DetailFieldRow
+                  label="Jenis Kelamin"
+                  value={selectedRelawan.jenisKelamin === "L" ? "Laki-laki (L)" : "Perempuan (P)"}
+                />
+                <DetailFieldRow label="Alamat KTP" value={selectedRelawan.alamat} />
+                <DetailFieldRow label="No. HP" value={formatPhoneDisplay(selectedRelawan.no_hp)} />
+                <DetailFieldRow label="Kemantren" value={selectedRelawan.kemantren} />
+                <DetailFieldRow label="Kelurahan" value={selectedRelawan.kelurahan} />
               </div>
             </div>
 
@@ -656,39 +533,45 @@ const HistoriRelawan: React.FC = () => {
                         </span>
                       </div>
                       <div className="space-y-1">
-                        {renderFieldRow("OPD", assignment.opd)}
-                        {renderFieldRow("Kader", assignment.kader)}
-                        {renderFieldRow("Peran / Jabatan", assignment.peran)}
-                        {renderFieldRow("Detail Jabatan", assignment.detail)}
-                        {renderFieldRow("Penugasan", assignment.penugasan)}
-                        {assignment.tahun
-                          ? renderFieldRow("Tahun", String(assignment.tahun))
-                          : null}
-                        {assignment.nomorSK ? renderFieldRow("Nomor SK", assignment.nomorSK) : null}
-                        {assignment.nomorSK
-                          ? renderFieldRow(
-                              "Tanggal Terbit",
+                        <DetailFieldRow label="OPD" value={assignment.opd} />
+                        <DetailFieldRow label="Kader" value={assignment.kader} />
+                        <DetailFieldRow label="Peran / Jabatan" value={assignment.peran} />
+                        <DetailFieldRow label="Detail Jabatan" value={assignment.detail} />
+                        <DetailFieldRow label="Penugasan" value={assignment.penugasan} />
+                        {assignment.tahun ? (
+                          <DetailFieldRow label="Tahun" value={String(assignment.tahun)} />
+                        ) : null}
+                        {assignment.nomorSK ? (
+                          <DetailFieldRow label="Nomor SK" value={assignment.nomorSK} />
+                        ) : null}
+                        {assignment.nomorSK ? (
+                          <DetailFieldRow
+                            label="Tanggal Terbit"
+                            value={
                               assignment.tanggalTerbit
                                 ? new Date(assignment.tanggalTerbit).toLocaleDateString("id-ID", {
                                     day: "numeric",
                                     month: "long",
                                     year: "numeric",
                                   })
-                                : "-",
-                            )
-                          : null}
-                        {assignment.nomorSK
-                          ? renderFieldRow(
-                              "Batas Aktif",
+                                : "-"
+                            }
+                          />
+                        ) : null}
+                        {assignment.nomorSK ? (
+                          <DetailFieldRow
+                            label="Batas Aktif"
+                            value={
                               assignment.batasAktif
                                 ? new Date(assignment.batasAktif).toLocaleDateString("id-ID", {
                                     day: "numeric",
                                     month: "long",
                                     year: "numeric",
                                   })
-                                : "-",
-                            )
-                          : null}
+                                : "-"
+                            }
+                          />
+                        ) : null}
                       </div>
                     </div>
                   ))}
@@ -702,8 +585,6 @@ const HistoriRelawan: React.FC = () => {
           </div>
         )}
       </Modal>
-
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 };
