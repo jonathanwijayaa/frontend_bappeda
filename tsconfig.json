@@ -6,9 +6,7 @@
     "module": "ESNext",
     "skipLibCheck": true,
     "ignoreDeprecations": "5.0",
-    "baseUrl": ".",
     "allowJs": true,
-    /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
@@ -19,7 +17,7 @@
     "strictNullChecks": true,
     "strict": true,
     "paths": {
-      "@/helpers/*": ["src/helpers/*"]
+      "@/helpers/*": ["./src/helpers/*"]
     },
     "noUnusedLocals": true,
     "noUnusedParameters": true,
