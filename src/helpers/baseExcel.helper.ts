@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import { buildOPDData } from "@/helpers/formOPD.helper";
 import { buildKaderData } from "@/helpers/formKader.helper";
 import { buildRelawanData } from "@/helpers/formRelawan.helper";
