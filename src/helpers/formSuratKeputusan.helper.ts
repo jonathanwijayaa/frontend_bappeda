@@ -77,9 +77,43 @@ async function ensureTextboxValue(
   await expect(locator).toHaveValue(expectedValue);
 }
 
-async function ensureFileUploaded(){
+async function ensureFileUploaded(
+  page: Page,
+  fileInput: Locator,
+  filePath: string,
+  maxRetry = 3,
+): Promise<void> {
+  const fileName = path.basename(filePath);
 
+  for (let i = 0; i < maxRetry; i++) {
+    const attachedFiles = await fileInput.evaluate((el: HTMLInputElement) =>
+      Array.from(el.files ?? []).map((f) => f.name),
+    );
+
+    if (attachedFiles.includes(fileName)) {
+      return;
+    }
+
+    await fileInput.setInputFiles(filePath);
   }
+
+  // Verifikasi akhir: kalau setelah maxRetry masih belum ke-attach, test langsung gagal di sini
+  await expect
+    .poll(() =>
+      fileInput.evaluate((el: HTMLInputElement) => Array.from(el.files ?? []).map((f) => f.name)),
+    )
+    .toContain(fileName);
+
+  // TODO: ganti/tambahkan baris di bawah ini sesuai indikator sukses upload
+  // yang beneran muncul di UI kamu (mis. nama file tampil sebagai preview,
+  // progress bar selesai, atau teks konfirmasi seperti pola "✓ ..." di atas)
+  await expect(
+    page
+      .locator("div")
+      .filter({ hasText: /^Sample_SK\.pdf\(6\.09 KB\)$/ })
+      .first(),
+  ).toBeVisible({ timeout: 30000 });
+}
 // ========= UNDER CONSTRUCTION =========
 
 export const buildSKData = (): SKData => {
@@ -133,7 +167,7 @@ export const fillSKForm = async ({ data, page }: IFillSKForm) => ({
     }
 
     await expect(kader).toBeChecked();
-    // await ensureFileUploaded();
+    await ensureFileUploaded(page, page.locator("input[type='file']"), data.FILE);
   },
   async fillNoSK() {
     await page.getByRole("textbox", { name: "/123/BPBD/2026" }).fill(data["NO SK"]);
