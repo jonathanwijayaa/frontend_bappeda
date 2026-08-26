@@ -1,6 +1,6 @@
+import { roles } from "@/tests/daftar kader/daftarKader.spec";
 import { faker } from "@faker-js/faker";
 import { Page } from "@playwright/test";
-import { roles } from "src/tests/daftar kader/daftarKader.spec";
 
 const OPD_LIST = [
   "Opd Demo",

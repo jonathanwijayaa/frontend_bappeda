@@ -17,7 +17,8 @@
     "strictNullChecks": true,
     "strict": true,
     "paths": {
-      "@/helpers/*": ["./src/helpers/*"]
+      "@/helpers/*": ["./src/helpers/*"],
+      "@/tests/*": ["./src/tests/*"]
     },
     "noUnusedLocals": true,
     "noUnusedParameters": true,
