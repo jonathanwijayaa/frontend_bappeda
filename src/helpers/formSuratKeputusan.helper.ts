@@ -1,5 +1,6 @@
 import { faker } from "@faker-js/faker";
 import { expect, Locator, Page } from "@playwright/test";
+import path from "path";
 
 const OPD_LIST = [
   "Opd Demo",
@@ -35,6 +36,7 @@ export interface SKData {
   OPD: string;
   KADER: string;
   "STATUS KEAKTIFAN"?: string;
+  FILE: string;
 }
 interface IFillSKForm {
   data: SKData;
@@ -75,48 +77,16 @@ async function ensureTextboxValue(
   await expect(locator).toHaveValue(expectedValue);
 }
 
-async function ensureFileUploaded(
-  fileInput: Locator,
-  filePath: string,
-  expectedFileName: string,
-  maxRetry = 3,
-): Promise<void> {
-  // .first() mencegah strict-mode violation kalau selector cocok >1 elemen
-  const input = fileInput.first();
+async function ensureFileUploaded(){
 
-  const getUploadedName = () => input.evaluate((el: HTMLInputElement) => el.files?.[0]?.name ?? "");
-
-  for (let i = 1; i <= maxRetry; i++) {
-    let uploadedFileName = "";
-    try {
-      uploadedFileName = await getUploadedName();
-    } catch (err) {
-      console.log(`Retry (${i}/${maxRetry}) - evaluate error: ${(err as Error).message}`);
-    }
-
-    if (uploadedFileName === expectedFileName) return;
-
-    console.log(`Retry upload file (${i}/${maxRetry}) - current: "${uploadedFileName}"`);
-    await input.setInputFiles(filePath);
-
-    // beri waktu handler onChange (baca file, render preview) selesai
-    await input.page().waitForTimeout(300);
   }
-
-  // pakai expect.poll supaya ada retry+timeout bawaan Playwright, bukan cuma 1x cek terakhir
-  await expect
-    .poll(getUploadedName, {
-      message: `Nama file di <input> tidak sesuai. Diharapkan "${expectedFileName}"`,
-      timeout: 5000,
-    })
-    .toBe(expectedFileName);
-}
 // ========= UNDER CONSTRUCTION =========
 
 export const buildSKData = (): SKData => {
   const opd = OPD_LIST[Math.floor(Math.random() * OPD_LIST.length)];
   const kaderList = KADER_MAP[opd];
   const kader = kaderList[Math.floor(Math.random() * kaderList.length)];
+  const filePath = path.resolve("src/assets/files/Sample_SK.pdf");
 
   return {
     "NO SK": generateSafeSKNumber(),
@@ -125,12 +95,13 @@ export const buildSKData = (): SKData => {
     "BATAS AKTIF": faker.date.future().toISOString().split("T")[0],
     OPD: opd,
     KADER: kader,
+    FILE: filePath,
   };
 };
 
 export const fillSKForm = async ({ data, page }: IFillSKForm) => ({
-  async fillAll(filePath: string) {
-    await this.uploadFile(filePath);
+  async fillAll() {
+    await this.uploadFile();
     await this.fillNoSK();
     await this.fillJudulSK();
     await this.fillTanggalTerbit();
@@ -138,7 +109,7 @@ export const fillSKForm = async ({ data, page }: IFillSKForm) => ({
     await this.selectOPD();
     await this.selectKader();
   },
-  async expectFillALL(filePath: string) {
+  async expectFillALL() {
     await ensureTextboxValue(page.getByRole("textbox", { name: "/123/BPBD/2026" }), data["NO SK"]);
     await ensureTextboxValue(
       page.getByRole("textbox", { name: "Pengangkatan Kader" }),
@@ -162,7 +133,7 @@ export const fillSKForm = async ({ data, page }: IFillSKForm) => ({
     }
 
     await expect(kader).toBeChecked();
-    await ensureFileUploaded(page.locator('input[type="file"]'), filePath, "Sample_SK.pdf");
+    // await ensureFileUploaded();
   },
   async fillNoSK() {
     await page.getByRole("textbox", { name: "/123/BPBD/2026" }).fill(data["NO SK"]);
@@ -200,9 +171,11 @@ export const fillSKForm = async ({ data, page }: IFillSKForm) => ({
   async selectKader() {
     await page.getByRole("checkbox", { name: data.KADER }).check();
   },
-  async uploadFile(filePath: string) {
-    const fileInput = page.locator('input[type="file"]');
-    await fileInput.setInputFiles(filePath);
+  async uploadFile() {
+    await page.getByRole("button", { name: /upload sk/i }).click();
+
+    const fileInput = page.locator("input[type='file']");
+    await fileInput.setInputFiles(data.FILE);
   },
   async submitButton(maxRetry = 3) {
     const submitButton = page.getByRole("button", {

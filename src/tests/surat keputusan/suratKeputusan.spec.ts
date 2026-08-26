@@ -27,16 +27,12 @@ for (const { label, creds } of roles) {
 
     // TCSK.1 Upload SK PDF
     test(`TCSK.1 ${label} uploads a Surat Keputusan (SK) file`, async ({ page }) => {
-      const filePath = path.resolve("src/assets/files/Sample_SK.pdf");
-
-      await page.getByRole("button", { name: /upload sk/i }).click();
-
       const skData = buildSKData();
 
       const form = await fillSKForm({ data: skData, page });
 
-      await form.fillAll(filePath);
-      await form.expectFillALL(filePath);
+      await form.fillAll();
+      await form.expectFillALL();
       await form.submitButton();
 
       await expect(page.getByText(/berhasil|success/i)).toBeVisible();
