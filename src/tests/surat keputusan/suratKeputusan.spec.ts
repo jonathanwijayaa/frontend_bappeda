@@ -31,6 +31,8 @@ for (const { label, creds } of roles) {
 
       const form = await fillSKForm({ data: skData, page });
 
+      await page.getByRole("button", { name: /upload sk/i }).click();
+
       await form.fillAll();
       await form.expectFillALL();
       await form.submitButton();

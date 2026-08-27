@@ -104,9 +104,6 @@ async function ensureFileUploaded(
     )
     .toContain(fileName);
 
-  // TODO: ganti/tambahkan baris di bawah ini sesuai indikator sukses upload
-  // yang beneran muncul di UI kamu (mis. nama file tampil sebagai preview,
-  // progress bar selesai, atau teks konfirmasi seperti pola "✓ ..." di atas)
   await expect(
     page
       .locator("div")
@@ -114,7 +111,6 @@ async function ensureFileUploaded(
       .first(),
   ).toBeVisible({ timeout: 30000 });
 }
-// ========= UNDER CONSTRUCTION =========
 
 export const buildSKData = (): SKData => {
   const opd = OPD_LIST[Math.floor(Math.random() * OPD_LIST.length)];
@@ -155,13 +151,11 @@ export const fillSKForm = async ({ data, page }: IFillSKForm) => ({
     if (!(await page.getByText("✓ OPD valid dipilih").isVisible())) {
       await this.selectOPD();
     }
-
     await expect(page.getByText("✓ OPD valid dipilih")).toBeVisible();
 
     const kader = page.getByRole("checkbox", {
       name: data.KADER,
     });
-
     if (!(await kader.isChecked())) {
       await kader.check();
     }
@@ -206,7 +200,7 @@ export const fillSKForm = async ({ data, page }: IFillSKForm) => ({
     await page.getByRole("checkbox", { name: data.KADER }).check();
   },
   async uploadFile() {
-    await page.getByRole("button", { name: /upload sk/i }).click();
+    await page.getByText("Tarik & lepas file PDF di sini").click();
 
     const fileInput = page.locator("input[type='file']");
     await fileInput.setInputFiles(data.FILE);
@@ -249,9 +243,7 @@ export const selectOPD = async ({ data, page }: IFillSKForm) => {
     name: "Ketik nama OPD...",
   });
   await textbox.click();
-  await textbox.pressSequentially(data.OPD, {
-    delay: 80,
-  });
+  await textbox.pressSequentially(data.OPD);
   const option = page.getByRole("listitem").filter({ hasText: data.OPD });
   await expect(option).toBeVisible({
     timeout: 30000,
