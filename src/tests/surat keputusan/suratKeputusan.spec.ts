@@ -4,7 +4,7 @@ import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { expect, test } from "@playwright/test";
 import path from "path";
 
-const roles = [
+export const roles = [
   { label: "Super Admin", creds: credentials.superAdmin },
   { label: "OPD", creds: credentials.opd },
 ] as const;
@@ -29,7 +29,11 @@ for (const { label, creds } of roles) {
     test(`TCSK.1 ${label} uploads a Surat Keputusan (SK) file`, async ({ page }) => {
       const skData = buildSKData();
 
-      const form = await fillSKForm({ data: skData, page });
+      const form = await fillSKForm({
+        data: skData,
+        page,
+        isSuperAdmin: label === "Super Admin",
+      });
 
       await page.getByRole("button", { name: /upload sk/i }).click();
 
@@ -76,7 +80,9 @@ for (const { label, creds } of roles) {
           await searchInput.press("Enter");
 
           if (["TCSK.7", "TCSK.8"].includes(searchCase.id)) {
-            await expect(page.getByText(/tidak ada data|no data/i)).toBeVisible();
+            await expect(
+              page.getByText(/tidak ada data|no data|Belum ada Surat Keputusan/i),
+            ).toBeVisible();
           } else {
             await expect(page.getByRole("table")).toBeVisible();
           }
@@ -102,6 +108,12 @@ for (const { label, creds } of roles) {
           .first()
           .click();
         await expect(page.getByRole("heading", { name: /detail surat keputusan/i })).toBeVisible();
+        await expect(
+          page
+            .locator("div")
+            .filter({ hasText: /^Memuat detail\.\.\.$/ })
+            .nth(1),
+        ).not.toBeVisible();
       });
 
       // TCSK.10

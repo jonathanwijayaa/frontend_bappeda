@@ -41,6 +41,7 @@ export interface SKData {
 interface IFillSKForm {
   data: SKData;
   page: Page;
+  isSuperAdmin: boolean;
 }
 function generateSafeSKTitle(): string {
   const skTitle = faker.company.name();
@@ -129,14 +130,16 @@ export const buildSKData = (): SKData => {
   };
 };
 
-export const fillSKForm = async ({ data, page }: IFillSKForm) => ({
+export const fillSKForm = async ({ data, page, isSuperAdmin }: IFillSKForm) => ({
   async fillAll() {
     await this.uploadFile();
     await this.fillNoSK();
     await this.fillJudulSK();
     await this.fillTanggalTerbit();
     await this.fillBatasAktif();
-    await this.selectOPD();
+    if (isSuperAdmin) {
+      await this.selectOPD();
+    }
     await this.selectKader();
   },
   async expectFillALL() {
@@ -148,10 +151,14 @@ export const fillSKForm = async ({ data, page }: IFillSKForm) => ({
     await ensureTextboxValue(page.getByRole("textbox").nth(3), data["TANGGAL TERBIT"]);
     await ensureTextboxValue(page.getByRole("textbox").nth(4), data["BATAS AKTIF"]);
 
-    if (!(await page.getByText("✓ OPD valid dipilih").isVisible())) {
-      await this.selectOPD();
+    if (isSuperAdmin) {
+      await expect(page.getByRole("textbox").nth(5)).toHaveValue(data.OPD);
+    } else {
+      if (!(await page.getByText("✓ OPD valid dipilih").isVisible())) {
+        await this.selectOPD();
+      }
+      await expect(page.getByText("✓ OPD valid dipilih")).toBeVisible();
     }
-    await expect(page.getByText("✓ OPD valid dipilih")).toBeVisible();
 
     const kader = page.getByRole("checkbox", {
       name: data.KADER,
@@ -180,9 +187,7 @@ export const fillSKForm = async ({ data, page }: IFillSKForm) => ({
     expect(page.getByRole("textbox").nth(4)).toHaveValue(data["BATAS AKTIF"]);
   },
   async selectOPD() {
-    const textbox = page.getByRole("textbox", {
-      name: "Ketik nama OPD...",
-    });
+    const textbox = page.getByRole("textbox").nth(5);
     await textbox.click();
     await textbox.pressSequentially(data.OPD, {
       delay: 80,
@@ -197,7 +202,13 @@ export const fillSKForm = async ({ data, page }: IFillSKForm) => ({
     });
   },
   async selectKader() {
-    await page.getByRole("checkbox", { name: data.KADER }).check();
+    if (isSuperAdmin) {
+      const OPDValue = await page.getByRole("textbox").nth(5).inputValue();
+      if (OPDValue !== data.OPD) {
+        data.OPD = OPDValue;
+      }
+    }
+    await page.getByRole("textbox", { name: /memuat kader/i }).fill(data.KADER);
   },
   async uploadFile() {
     await page.getByText("Tarik & lepas file PDF di sini").click();
@@ -239,9 +250,7 @@ export const selectKader = async ({ data, page }: IFillSKForm) => {
 };
 
 export const selectOPD = async ({ data, page }: IFillSKForm) => {
-  const textbox = page.getByRole("textbox", {
-    name: "Ketik nama OPD...",
-  });
+  const textbox = page.getByRole("textbox").nth(5);
   await textbox.click();
   await textbox.pressSequentially(data.OPD);
   const option = page.getByRole("listitem").filter({ hasText: data.OPD });
