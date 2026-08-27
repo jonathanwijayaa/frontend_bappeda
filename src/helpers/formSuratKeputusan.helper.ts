@@ -13,7 +13,7 @@ const OPD_LIST = [
 ];
 
 const KADER_MAP: Record<string, string[]> = {
-  "Opd Demo": ["Kader Dana West", "Demo Kader"],
+  "Opd Demo": ["Demo Kader"],
 
   "Dinas Kesehatan (Dinkes)": ["KADER KESEHATAN"],
 
