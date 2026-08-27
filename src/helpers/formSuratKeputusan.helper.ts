@@ -57,6 +57,19 @@ function generateSafeSKNumber(): string {
   return `${skNumber}/${skSubNumber}/${skOpd}/${currentYear}`;
 }
 
+function findKaderListForOPD(opdText: string): string[] {
+  const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  const normalized = normalize(opdText);
+
+  const matchedKey = Object.keys(KADER_MAP).find((key) => normalize(key) === normalized);
+
+  if (!matchedKey) {
+    throw new Error(`Tidak ditemukan daftar Kader untuk OPD: "${opdText}"`);
+  }
+
+  return KADER_MAP[matchedKey];
+}
+
 async function ensureTextboxValue(
   locator: Locator,
   expectedValue: string,
@@ -203,12 +216,20 @@ export const fillSKForm = async ({ data, page, isSuperAdmin }: IFillSKForm) => (
   },
   async selectKader() {
     if (isSuperAdmin) {
-      const OPDValue = await page.getByRole("textbox").nth(5).inputValue();
+      const opdTextbox = page.getByRole("textbox").nth(5);
+
+      await expect.poll(() => opdTextbox.inputValue(), { timeout: 10000 }).not.toBe("");
+
+      const OPDValue = await opdTextbox.inputValue();
+
       if (OPDValue !== data.OPD) {
+        const kaderList = findKaderListForOPD(OPDValue);
         data.OPD = OPDValue;
+        data.KADER = faker.helpers.arrayElement(kaderList);
       }
     }
-    await page.getByRole("textbox", { name: /memuat kader/i }).fill(data.KADER);
+
+    await page.getByRole("checkbox", { name: data.KADER }).check();
   },
   async uploadFile() {
     await page.getByText("Tarik & lepas file PDF di sini").click();
@@ -242,17 +263,30 @@ export const fillSKForm = async ({ data, page, isSuperAdmin }: IFillSKForm) => (
   },
 });
 
-export const selectKader = async ({ data, page }: IFillSKForm) => {
-  await page
-    .getByRole("textbox", { name: /memuat kader/i })
-    .or(page.getByRole("textbox", { name: "Cari nama Kader..." }))
-    .fill(data.KADER);
+export const selectKader = async ({ data, page, isSuperAdmin }: IFillSKForm) => {
+  if (isSuperAdmin) {
+    const opdTextbox = page.getByRole("textbox").nth(5);
+
+    await expect.poll(() => opdTextbox.inputValue(), { timeout: 10000 }).not.toBe("");
+
+    const OPDValue = await opdTextbox.inputValue();
+
+    if (OPDValue !== data.OPD) {
+      const kaderList = findKaderListForOPD(OPDValue);
+      data.OPD = OPDValue;
+      data.KADER = faker.helpers.arrayElement(kaderList);
+    }
+  }
+
+  await page.getByRole("checkbox", { name: data.KADER }).check();
 };
 
 export const selectOPD = async ({ data, page }: IFillSKForm) => {
   const textbox = page.getByRole("textbox").nth(5);
   await textbox.click();
-  await textbox.pressSequentially(data.OPD);
+  await textbox.pressSequentially(data.OPD, {
+    delay: 80,
+  });
   const option = page.getByRole("listitem").filter({ hasText: data.OPD });
   await expect(option).toBeVisible({
     timeout: 30000,
