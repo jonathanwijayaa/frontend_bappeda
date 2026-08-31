@@ -1,4 +1,3 @@
-// formSuratKeputusan.helper.ts
 import { faker } from "@faker-js/faker";
 import { expect, Locator, Page } from "@playwright/test";
 import path from "path";

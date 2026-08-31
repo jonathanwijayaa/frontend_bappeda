@@ -1,4 +1,3 @@
-// suratKeputusan.spec.ts
 import { credentials } from "@/helpers/credentials.helper";
 import { buildSKData, fillSKForm } from "@/helpers/formSuratKeputusan.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
@@ -124,9 +123,13 @@ for (const { label, creds } of roles) {
 
       // TCSK.11
       test(`TCSK.11 ${label} accesses the Surat Keputusan file`, async ({ page }) => {
-        await page.getByRole("link", { name: /lihat sk|buka sk/i }).click();
+        await page.locator(".text-gray-400.hover\\:text-gray-600").first().click();
+        await page.getByRole("button").nth(5).click();
 
-        await expect(page).toHaveURL(/sk|pdf|dokumen/);
+        await expect(page.getByRole("heading", { name: "Preview Surat Keputusan" })).toBeVisible();
+        await expect(
+          page.locator('iframe[title="PDF Preview"]').contentFrame().locator("html"),
+        ).toBeVisible();
       });
     });
 
