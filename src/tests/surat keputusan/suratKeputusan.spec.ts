@@ -1,3 +1,4 @@
+// suratKeputusan.spec.ts
 import { credentials } from "@/helpers/credentials.helper";
 import { buildSKData, fillSKForm } from "@/helpers/formSuratKeputusan.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";

@@ -1,3 +1,4 @@
+// formSuratKeputusan.helper.ts
 import { faker } from "@faker-js/faker";
 import { expect, Locator, Page } from "@playwright/test";
 import path from "path";
@@ -13,7 +14,7 @@ const OPD_LIST = [
 ];
 
 const KADER_MAP: Record<string, string[]> = {
-  "Opd Demo": ["Demo Kader"],
+  "Opd Demo": ["Demo Kader", "Kader Caroline Weimann", "Kader Yvonne Keeling"],
 
   "Dinas Kesehatan (Dinkes)": ["KADER KESEHATAN"],
 
@@ -166,12 +167,14 @@ export const fillSKForm = async ({ data, page, isSuperAdmin }: IFillSKForm) => (
 
     if (isSuperAdmin) {
       await expect(page.getByRole("textbox").nth(5)).toHaveValue(data.OPD);
-    } else {
-      if (!(await page.getByText("✓ OPD valid dipilih").isVisible())) {
-        await this.selectOPD();
-      }
       await expect(page.getByText("✓ OPD valid dipilih")).toBeVisible();
     }
+    // } else {
+    //   if (!(await page.getByText("✓ OPD valid dipilih").isVisible())) {
+    //     await this.selectOPD();
+    //   }
+    //   await expect(page.getByText("✓ OPD valid dipilih")).toBeVisible();
+    // }
 
     const kader = page.getByRole("checkbox", {
       name: data.KADER,
@@ -215,21 +218,19 @@ export const fillSKForm = async ({ data, page, isSuperAdmin }: IFillSKForm) => (
     });
   },
   async selectKader() {
-    if (isSuperAdmin) {
-      const opdTextbox = page.getByRole("textbox").nth(5);
+    const opdTextbox = page.getByRole("textbox").nth(5);
+    await expect.poll(() => opdTextbox.inputValue(), { timeout: 10000 }).not.toBe("");
 
-      await expect.poll(() => opdTextbox.inputValue(), { timeout: 10000 }).not.toBe("");
-
-      const OPDValue = await opdTextbox.inputValue();
-
-      if (OPDValue !== data.OPD) {
-        const kaderList = findKaderListForOPD(OPDValue);
-        data.OPD = OPDValue;
-        data.KADER = faker.helpers.arrayElement(kaderList);
-      }
+    const OPDValue = await opdTextbox.inputValue();
+    if (OPDValue !== data.OPD) {
+      const kaderList = findKaderListForOPD(OPDValue);
+      data.OPD = OPDValue;
+      data.KADER = faker.helpers.arrayElement(kaderList);
     }
 
-    await page.getByRole("checkbox", { name: data.KADER }).check();
+    const kaderCheckbox = page.getByRole("checkbox", { name: data.KADER });
+    await expect(kaderCheckbox).toBeVisible({ timeout: 10000 });
+    await kaderCheckbox.check();
   },
   async uploadFile() {
     await page.getByText("Tarik & lepas file PDF di sini").click();
@@ -266,11 +267,9 @@ export const fillSKForm = async ({ data, page, isSuperAdmin }: IFillSKForm) => (
 export const selectKader = async ({ data, page, isSuperAdmin }: IFillSKForm) => {
   if (isSuperAdmin) {
     const opdTextbox = page.getByRole("textbox").nth(5);
-
     await expect.poll(() => opdTextbox.inputValue(), { timeout: 10000 }).not.toBe("");
 
     const OPDValue = await opdTextbox.inputValue();
-
     if (OPDValue !== data.OPD) {
       const kaderList = findKaderListForOPD(OPDValue);
       data.OPD = OPDValue;
@@ -278,7 +277,9 @@ export const selectKader = async ({ data, page, isSuperAdmin }: IFillSKForm) => 
     }
   }
 
-  await page.getByRole("checkbox", { name: data.KADER }).check();
+  const kaderCheckbox = page.getByRole("checkbox", { name: data.KADER });
+  await expect(kaderCheckbox).toBeVisible({ timeout: 10000 });
+  await kaderCheckbox.check();
 };
 
 export const selectOPD = async ({ data, page }: IFillSKForm) => {
