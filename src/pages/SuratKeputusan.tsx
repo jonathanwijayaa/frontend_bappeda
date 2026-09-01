@@ -47,14 +47,14 @@ const SuratKeputusan: React.FC = () => {
   const { data: selectedSK, isLoading: isLoadingDetail } = useSkDetail(selectedSkId);
   const { data: pdfBase64 } = useSkPdf(previewSkId);
 
-  // ── Filter & Pagination ────────────────────────────────────
+// ── Filter & Pagination ────────────────────────────────────
   const filteredData = useMemo(
     () =>
       skList.filter(
         (sk) =>
-          sk.nomor_sk.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (sk.nomor_sk || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
           (sk.judul_sk || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-          sk.nama_opd.toLowerCase().includes(searchTerm.toLowerCase()),
+          (sk.nama_opd || "").toLowerCase().includes(searchTerm.toLowerCase()),
       ),
     [skList, searchTerm],
   );
