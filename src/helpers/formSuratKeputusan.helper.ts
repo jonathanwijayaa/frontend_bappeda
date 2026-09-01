@@ -209,11 +209,11 @@ export const fillSKForm = async ({ data, page, isSuperAdmin }: IFillSKForm) => (
     });
     const option = page.getByRole("listitem").filter({ hasText: data.OPD });
     await expect(option).toBeVisible({
-      timeout: 30000,
+      timeout: 10000,
     });
     await option.click();
     await expect(page.getByText("✓ OPD valid dipilih")).toBeVisible({
-      timeout: 30000,
+      timeout: 10000,
     });
   },
   async selectKader() {
