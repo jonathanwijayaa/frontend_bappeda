@@ -75,12 +75,12 @@ const DataRelawan: React.FC = () => {
   const kelurahanOptions = useMemo(() => kelurahanList.map((i) => ({ label: i.nama_kelurahan, value: i.id_kelurahan })), [kelurahanList]);
 
   const fetchKaderOptionsForOpd = useCallback(async (opdId: number, assignmentIndex: number) => {
-    if (opdId <= 0) return;
+    if (opdId <= 0 && !isOPD) return;
     // Mark loading for this index
     setLoadingByIndex((prev) => ({ ...prev, [assignmentIndex]: true }));
     try {
       // Use cached result if available
-      if (kaderOptionsByOpdId[opdId]) {
+      if (opdId > 0 && kaderOptionsByOpdId[opdId]) {
         setKaderOptionsByIndex((prev) => ({ ...prev, [assignmentIndex]: kaderOptionsByOpdId[opdId] }));
         return;
       }
@@ -89,7 +89,9 @@ const DataRelawan: React.FC = () => {
       const options: AutoOption[] = data?.success
         ? data.data.map((k: any) => ({ label: k.nama_kader, value: String(k.kader_id) }))
         : [];
-      setKaderOptionsByOpdId((prev) => ({ ...prev, [opdId]: options }));
+      if (opdId > 0) {
+        setKaderOptionsByOpdId((prev) => ({ ...prev, [opdId]: options }));
+      }
       setKaderOptionsByIndex((prev) => ({ ...prev, [assignmentIndex]: options }));
     } finally {
       setLoadingByIndex((prev) => ({ ...prev, [assignmentIndex]: false }));
@@ -303,8 +305,16 @@ const DataRelawan: React.FC = () => {
           if (match) fetchKelurahanByKemantrenId(match.id);
         }}
         onOpdChangeAssignment={(index, name) => {
-          const m = opdOptions.find((o) => o.label.toLowerCase() === name.toLowerCase());
-          if (m) fetchKaderOptionsForOpd(Number(m.value), index);
+          if (isOPD) {
+            fetchKaderOptionsForOpd(user?.opd_id || 1, index);
+          } else {
+            const m = opdOptions.find((o) => o.label.toLowerCase() === name.toLowerCase());
+            if (m) {
+              fetchKaderOptionsForOpd(Number(m.value), index);
+            } else {
+              setKaderOptionsByIndex((prev) => ({ ...prev, [index]: [] }));
+            }
+          }
         }}
         onKaderChangeAssignment={() => {}}
         onSubmit={handleSaveTambah}
@@ -331,8 +341,16 @@ const DataRelawan: React.FC = () => {
           if (match) fetchKelurahanByKemantrenId(match.id);
         }}
         onOpdChangeAssignment={(index, name) => {
-          const m = opdOptions.find((o) => o.label.toLowerCase() === name.toLowerCase());
-          if (m) fetchKaderOptionsForOpd(Number(m.value), index);
+          if (isOPD) {
+            fetchKaderOptionsForOpd(user?.opd_id || 1, index);
+          } else {
+            const m = opdOptions.find((o) => o.label.toLowerCase() === name.toLowerCase());
+            if (m) {
+              fetchKaderOptionsForOpd(Number(m.value), index);
+            } else {
+              setKaderOptionsByIndex((prev) => ({ ...prev, [index]: [] }));
+            }
+          }
         }}
         onKaderChangeAssignment={() => {}}
         onSaveEdit={handleSaveEdit}

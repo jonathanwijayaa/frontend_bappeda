@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Plus, Loader2 } from "lucide-react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
@@ -59,7 +59,26 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
     no_hp: "",
   });
 
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        alamat: "",
+        assignments: [],
+        jenisKelamin: "L",
+        kelurahan: "",
+        kemantren: "",
+        namaRelawan: "",
+        nik: "",
+        no_hp: "",
+      });
+    }
+  }, [isOpen]);
+
   const handleAddAssignment = () => {
+    const newIndex = formData.assignments.length;
+    const newOpdName = isOPD ? userOpdName || "" : "";
+    const newOpdId = isOPD ? userOpdId || 0 : 0;
+
     setFormData((prev) => ({
       ...prev,
       assignments: [
@@ -70,8 +89,8 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
           kader: "",
           kader_id: null,
           nomorSK: "",
-          opd: isOPD ? userOpdName || "" : "",
-          opd_id: isOPD ? userOpdId || 0 : 0,
+          opd: newOpdName,
+          opd_id: newOpdId,
           penugasan: "",
           peran: "",
           skId: "",
@@ -79,6 +98,10 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
         },
       ],
     }));
+
+    if (isOPD || newOpdName) {
+      onOpdChangeAssignment(newIndex, newOpdName);
+    }
   };
 
   const handleRemoveAssignment = (index: number) => {
@@ -94,6 +117,43 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
       newAssigns[index] = { ...newAssigns[index], [field]: value };
       return { ...prev, assignments: newAssigns };
     });
+  };
+
+  const handleOpdChange = (index: number, opdName: string) => {
+    const match = opdOptions.find((o) => o.label.toLowerCase() === opdName.toLowerCase());
+    const opdId = match ? Number(match.value) : 0;
+
+    setFormData((prev) => {
+      const newAssigns = [...prev.assignments];
+      newAssigns[index] = {
+        ...newAssigns[index],
+        opd: opdName,
+        opd_id: opdId,
+        kader: "",
+        kader_id: null,
+      };
+      return { ...prev, assignments: newAssigns };
+    });
+
+    onOpdChangeAssignment(index, opdName);
+  };
+
+  const handleKaderChange = (index: number, kaderName: string) => {
+    const kaderOpts = kaderOptionsByIndex[index] || [];
+    const match = kaderOpts.find((k) => k.label.toLowerCase() === kaderName.toLowerCase());
+    const kaderId = match ? Number(match.value) : null;
+
+    setFormData((prev) => {
+      const newAssigns = [...prev.assignments];
+      newAssigns[index] = {
+        ...newAssigns[index],
+        kader: kaderName,
+        kader_id: kaderId,
+      };
+      return { ...prev, assignments: newAssigns };
+    });
+
+    onKaderChangeAssignment(index, kaderName);
   };
 
   return (
@@ -207,8 +267,8 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
               kaderOptions={kaderOptionsByIndex[index] || []}
               isKaderLoading={isLoadingKaderByIndex[index] || false}
               onFieldChange={handleFieldChange}
-              onOpdChange={onOpdChangeAssignment}
-              onKaderChange={onKaderChangeAssignment}
+              onOpdChange={handleOpdChange}
+              onKaderChange={handleKaderChange}
               onRemove={handleRemoveAssignment}
             />
           ))}
