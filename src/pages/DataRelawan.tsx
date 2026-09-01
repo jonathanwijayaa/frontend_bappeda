@@ -105,7 +105,7 @@ const DataRelawan: React.FC = () => {
     if (pengajuanTab === "history" && historyStatusFilter !== "ALL") {
       filtered = filtered.filter((p) => historyStatusFilter === "DISETUJUI" ? (p.status_pengajuan === "Disetujui" || p.status_pengajuan === "Diterima") : p.status_pengajuan === "Ditolak");
     }
-    filtered = filtered.filter((p) => p.nik.toLowerCase().includes(q) || p.nama_lengkap.toLowerCase().includes(q) || (p.nama_verifikator || "").toLowerCase().includes(q));
+    filtered = filtered.filter((p) => (p.nik || "").toLowerCase().includes(q) || (p.nama_lengkap || "").toLowerCase().includes(q) || (p.nama_verifikator || "").toLowerCase().includes(q));
     const sorted = [...filtered].sort((a, b) => new Date(b.tanggal_pengajuan).getTime() - new Date(a.tanggal_pengajuan).getTime());
     return sorted.map((p) => ({
       _raw: p,
@@ -125,7 +125,7 @@ const DataRelawan: React.FC = () => {
   // Transform Relawan Data
   const filteredRelawanData = useMemo(() => {
     const q = searchTerm.toLowerCase();
-    return relawanList.filter((r) => !q || r.namaLengkap.toLowerCase().includes(q) || r.nik.toLowerCase().includes(q));
+    return relawanList.filter((r) => !q || (r.namaLengkap || "").toLowerCase().includes(q) || (r.nik || "").toLowerCase().includes(q));
   }, [relawanList, searchTerm]);
 
   const sortedRelawanData = useMemo(() => {
