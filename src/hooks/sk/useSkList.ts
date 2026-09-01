@@ -1,6 +1,5 @@
 /**
  * hooks/sk/useSkList.ts
- * Fetch daftar Surat Keputusan dan detail SK per id.
  */
 import { useQuery } from "@tanstack/react-query";
 import apiClient from "../../lib/axios";
@@ -18,7 +17,8 @@ export const SK_KEYS = {
 export const useSkList = () => {
   const { user } = useAuth();
   const role = user?.role || "super_admin";
-  const endpoint = role === "opd" ? "/opd-admin/sk" : "/admin/sk";
+  
+  const endpoint = "/admin/sk";
 
   return useQuery({
     queryFn: async (): Promise<SKData[]> => {
@@ -31,14 +31,16 @@ export const useSkList = () => {
 };
 
 /** Fetch detail SK — hanya diaktifkan jika sk_id > 0 */
-// Ambil detail SK saat user membuka modal detail.
 export const useSkDetail = (sk_id: number) => {
   const { user } = useAuth();
   const role = user?.role || "super_admin";
-  const endpoint = role === "opd" ? `/opd-admin/sk/${sk_id}` : `/admin/sk/${sk_id}`;
+  
+  // PERBAIKAN: Selalu gunakan /admin/sk
+  const endpoint = `/admin/sk/${sk_id}`;
 
   return useQuery({
     enabled: sk_id > 0,
+    retry: false,
     queryFn: async (): Promise<SKDetail> => {
       const { data } = await apiClient.get(endpoint);
       if (!data.success) throw new Error(data.message || "Gagal memuat detail SK");
@@ -49,21 +51,22 @@ export const useSkDetail = (sk_id: number) => {
 };
 
 /** Fetch PDF base64 dari SK — hanya diaktifkan jika sk_id > 0 */
-// Ambil URL/path PDF SK untuk modal preview.
 export const useSkPdf = (sk_id: number) => {
   const { user } = useAuth();
   const role = user?.role || "super_admin";
-  const endpoint = role === "opd" ? `/opd-admin/sk/${sk_id}/pdf` : `/admin/sk/${sk_id}/pdf`;
+  
+  // PERBAIKAN: Selalu gunakan /admin/sk
+  const endpoint = `/admin/sk/${sk_id}/pdf`;
 
   return useQuery({
     enabled: sk_id > 0,
+    retry: false,
     queryFn: async (): Promise<string> => {
       const { data } = await apiClient.get(endpoint);
       if (!data.success) throw new Error("Gagal memuat PDF");
       return data.data.file_path as string;
     },
     queryKey: SK_KEYS.pdf(sk_id, role),
-    // PDF tidak perlu stale/refetch agresif
     staleTime: 10 * 60 * 1000,
   });
 };
