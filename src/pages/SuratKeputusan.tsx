@@ -15,7 +15,7 @@ import { parseErrorMessage } from "../utils/parseErrorMessage";
 import { useAuth } from "../context/AuthContext";
 import type { SKData, SKDetail, ErrorHint } from "../types";
 import { useSkList, useSkDetail, useSkPdf } from "../hooks/sk/useSkList";
-import { useCreateSk, useToggleSkStatus } from "../hooks/sk/useSkMutations";
+import { useCreateSk, useToggleSkStatus, useDeleteSk } from "../hooks/sk/useSkMutations";
 
 const SuratKeputusan: React.FC = () => {
   const { isOPD, isSuperAdmin, user } = useAuth();
@@ -24,6 +24,7 @@ const SuratKeputusan: React.FC = () => {
   const { data: skList = [], isLoading } = useSkList();
   const createSk = useCreateSk();
   const toggleSkStatus = useToggleSkStatus();
+  const deleteSk = useDeleteSk();
 
   // ── UI State ──────────────────────────────────────────────
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -38,6 +39,8 @@ const SuratKeputusan: React.FC = () => {
   const [errorHint, setErrorHint] = useState<ErrorHint | null>(null);
   const [isConfirmSkOpen, setIsConfirmSkOpen] = useState<boolean>(false);
   const [selectedSkForToggle, setSelectedSkForToggle] = useState<SKData | null>(null);
+  const [isConfirmDeleteSkOpen, setIsConfirmDeleteSkOpen] = useState<boolean>(false);
+  const [selectedSkForDelete, setSelectedSkForDelete] = useState<SKData | SKDetail | null>(null);
   const itemsPerPage = 5;
 
   // ── Lazy query — hanya aktif saat modal detail terbuka ────
@@ -163,6 +166,29 @@ const SuratKeputusan: React.FC = () => {
           setToast({ message: d.message || "Status SK berhasil diubah", type: "success" }),
       },
     );
+  };
+
+  // Siapkan konfirmasi hapus SK.
+  const handleDeleteSkClick = (sk: SKData | SKDetail) => {
+    setSelectedSkForDelete(sk);
+    setIsConfirmDeleteSkOpen(true);
+  };
+
+  // Hapus SK setelah konfirmasi.
+  const handleConfirmDeleteSk = () => {
+    if (!selectedSkForDelete) return;
+    deleteSk.mutate(selectedSkForDelete.sk_id, {
+      onError: (e: unknown) =>
+        setToast({ message: parseErrorMessage(e, "Gagal menghapus SK"), type: "error" }),
+      onSettled: () => {
+        setIsConfirmDeleteSkOpen(false);
+        setSelectedSkForDelete(null);
+        setIsDetailModalOpen(false);
+        setSelectedSkId(0);
+      },
+      onSuccess: (d) =>
+        setToast({ message: d.message || "SK berhasil dihapus", type: "success" }),
+    });
   };
 
   // Ekspor daftar SK yang sedang terfilter ke PDF.
@@ -502,6 +528,13 @@ const SuratKeputusan: React.FC = () => {
                     Tutup
                   </Button>
                   <Button
+                    variant="danger"
+                    onClick={() => handleDeleteSkClick(selectedSK)}
+                    disabled={deleteSk.isPending}
+                  >
+                    Hapus SK
+                  </Button>
+                  <Button
                     variant={selectedSK.status_keaktifan === "Aktif" ? "danger" : "secondary"}
                     onClick={() => handleToggleSkStatus(selectedSK)}
                     disabled={toggleSkStatus.isPending}
@@ -630,6 +663,58 @@ const SuratKeputusan: React.FC = () => {
                   <Loader2 size={16} className="animate-spin" />
                 ) : (
                   "Lanjutkan"
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Confirmation Modal — Delete SK */}
+      <Modal
+        isOpen={isConfirmDeleteSkOpen}
+        onClose={() => {
+          setIsConfirmDeleteSkOpen(false);
+          setSelectedSkForDelete(null);
+        }}
+        title="Konfirmasi Hapus SK"
+        subtitle="Tindakan ini tidak dapat dibatalkan!"
+        maxWidth="md"
+        showCloseButton={false}
+      >
+        {selectedSkForDelete && (
+          <div className="space-y-6">
+            <div className="text-center py-4">
+              <p className="text-lg text-gray-700">
+                Anda akan <span className="font-semibold text-red-600">menghapus permanen</span>{" "}
+                SK{" "}
+                <span className="font-semibold">{selectedSkForDelete.nomor_sk}</span>.
+              </p>
+              <p className="text-sm text-gray-500 mt-2">
+                Semua data relawan yang terkait akan dilepas dari SK ini.
+              </p>
+            </div>
+            <div className="flex justify-center gap-4 pt-6">
+              <Button
+                type="button"
+                onClick={() => {
+                  setIsConfirmDeleteSkOpen(false);
+                  setSelectedSkForDelete(null);
+                }}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-8"
+              >
+                Batal
+              </Button>
+              <Button
+                type="button"
+                onClick={handleConfirmDeleteSk}
+                disabled={deleteSk.isPending}
+                className="bg-red-600 hover:bg-red-700 text-white px-8"
+              >
+                {deleteSk.isPending ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  "Hapus Permanen"
                 )}
               </Button>
             </div>

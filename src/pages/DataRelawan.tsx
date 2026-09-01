@@ -23,6 +23,7 @@ import { parseErrorMessage } from "../utils/parseErrorMessage";
 import { exportToPDF } from "../utils/exportToPDF";
 import { toTitleCase } from "../utils/formatText";
 import { REGEX_PATTERNS } from "../utils/regex";
+import { useUpdateRelawan, useDeletePenugasan } from "../hooks/relawan/useRelawanMutations";
 
 const DataRelawan: React.FC = () => {
   const { isOPD, isSuperAdmin, user } = useAuth();
@@ -55,31 +56,45 @@ const DataRelawan: React.FC = () => {
   const [selectedPengajuan, setSelectedPengajuan] = useState<PengajuanAPIData | null>(null);
   const [isReviewing, setIsReviewing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isSavingEdit] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
 
+  // Mutations
+  const updateRelawan = useUpdateRelawan(!!isSuperAdmin);
+  const deletePenugasan = useDeletePenugasan(!!isSuperAdmin);
+
   // Options & Kader Cache
+  // kaderOptionsByOpdId: keyed by opd_id (for caching)
   const [kaderOptionsByOpdId, setKaderOptionsByOpdId] = useState<Record<number, AutoOption[]>>({});
-  const [loadingOpdIds, setLoadingOpdIds] = useState<Record<number, boolean>>({});
+  // kaderOptionsByIndex: keyed by assignment index (used in forms), reset on each modal open
+  const [kaderOptionsByIndex, setKaderOptionsByIndex] = useState<Record<number, AutoOption[]>>({});
+  const [loadingByIndex, setLoadingByIndex] = useState<Record<number, boolean>>({});
 
   const opdOptions = useMemo(() => opdListData.map((o) => ({ label: o.nama_opd, value: String(o.opd_id) })), [opdListData]);
   const kemantrenOptions = useMemo(() => kemantrenList.map((i) => ({ label: i.nama_kemantren, value: i.id })), [kemantrenList]);
   const kelurahanOptions = useMemo(() => kelurahanList.map((i) => ({ label: i.nama_kelurahan, value: i.id_kelurahan })), [kelurahanList]);
 
-  const fetchKaderOptionsForOpd = useCallback(async (opdId: number) => {
-    if (opdId <= 0 || kaderOptionsByOpdId[opdId] || loadingOpdIds[opdId]) return;
-    setLoadingOpdIds((prev) => ({ ...prev, [opdId]: true }));
+  const fetchKaderOptionsForOpd = useCallback(async (opdId: number, assignmentIndex: number) => {
+    if (opdId <= 0) return;
+    // Mark loading for this index
+    setLoadingByIndex((prev) => ({ ...prev, [assignmentIndex]: true }));
     try {
+      // Use cached result if available
+      if (kaderOptionsByOpdId[opdId]) {
+        setKaderOptionsByIndex((prev) => ({ ...prev, [assignmentIndex]: kaderOptionsByOpdId[opdId] }));
+        return;
+      }
       const endpoint = isOPD ? "/opd-admin/kader" : `/kader?opd_id=${opdId}`;
       const { data } = await apiClient.get(endpoint);
       const options: AutoOption[] = data?.success
         ? data.data.map((k: any) => ({ label: k.nama_kader, value: String(k.kader_id) }))
         : [];
       setKaderOptionsByOpdId((prev) => ({ ...prev, [opdId]: options }));
+      setKaderOptionsByIndex((prev) => ({ ...prev, [assignmentIndex]: options }));
     } finally {
-      setLoadingOpdIds((prev) => ({ ...prev, [opdId]: false }));
+      setLoadingByIndex((prev) => ({ ...prev, [assignmentIndex]: false }));
     }
-  }, [isOPD, kaderOptionsByOpdId, loadingOpdIds]);
+  }, [isOPD, kaderOptionsByOpdId]);
 
   // Transform Pengajuan Data
   const pendingCount = useMemo(() => pengajuanList.filter((p) => p.status_pengajuan === "Menunggu Review").length, [pengajuanList]);
@@ -172,6 +187,44 @@ const DataRelawan: React.FC = () => {
     }
   };
 
+  const handleSaveEdit = async (detailFormData: any) => {
+    if (!selectedRelawan || !selectedRelawan.relawan_id) return;
+    setIsSavingEdit(true);
+    try {
+      const payload = {
+        alamat_ktp: detailFormData.alamat,
+        assignments: detailFormData.assignments,
+        jenis_kelamin: detailFormData.jenisKelamin,
+        kelurahan: detailFormData.kelurahan,
+        kemantren: detailFormData.kemantren,
+        nama_lengkap: toTitleCase(detailFormData.namaRelawan.trim()),
+        no_hp: detailFormData.no_hp.replace(/\D/g, ""),
+      };
+      await updateRelawan.mutateAsync({ relawan_id: selectedRelawan.relawan_id, payload });
+      setToast({ message: "Data relawan berhasil diperbarui", type: "success" });
+      setIsDetailModalOpen(false);
+      qc.invalidateQueries({ queryKey: RELAWAN_KEYS.all });
+    } catch (e) {
+      setToast({ message: parseErrorMessage(e, "Gagal menyimpan perubahan"), type: "error" });
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleDeletePenugasan = async (penugasanId: number, _index: number) => {
+    if (!penugasanId || penugasanId <= 0) {
+      // Penugasan baru (belum tersimpan di DB), cukup hapus dari state lokal
+      return;
+    }
+    try {
+      await deletePenugasan.mutateAsync(String(penugasanId));
+      setToast({ message: "Penugasan berhasil dihapus", type: "success" });
+      qc.invalidateQueries({ queryKey: RELAWAN_KEYS.all });
+    } catch (e) {
+      setToast({ message: parseErrorMessage(e, "Gagal menghapus penugasan"), type: "error" });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -232,22 +285,26 @@ const DataRelawan: React.FC = () => {
 
       <TambahRelawanModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setKaderOptionsByIndex({});
+          setLoadingByIndex({});
+        }}
         isOPD={isOPD}
         userOpdName={user?.nama_opd}
         userOpdId={user?.opd_id}
         opdOptions={opdOptions}
         kemantrenOptions={kemantrenOptions}
         kelurahanOptions={kelurahanOptions}
-        kaderOptionsByIndex={kaderOptionsByOpdId}
-        isLoadingKaderByIndex={loadingOpdIds}
+        kaderOptionsByIndex={kaderOptionsByIndex}
+        isLoadingKaderByIndex={loadingByIndex}
         onKemantrenChange={(k) => {
           const match = kemantrenList.find((i) => i.nama_kemantren.toLowerCase() === k.trim().toLowerCase());
           if (match) fetchKelurahanByKemantrenId(match.id);
         }}
-        onOpdChangeAssignment={(_, name) => {
+        onOpdChangeAssignment={(index, name) => {
           const m = opdOptions.find((o) => o.label.toLowerCase() === name.toLowerCase());
-          if (m) fetchKaderOptionsForOpd(Number(m.value));
+          if (m) fetchKaderOptionsForOpd(Number(m.value), index);
         }}
         onKaderChangeAssignment={() => {}}
         onSubmit={handleSaveTambah}
@@ -256,26 +313,30 @@ const DataRelawan: React.FC = () => {
 
       <DetailRelawanModal
         isOpen={isDetailModalOpen}
-        onClose={() => setIsDetailModalOpen(false)}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setKaderOptionsByIndex({});
+          setLoadingByIndex({});
+        }}
         relawan={selectedRelawan}
         isOPD={isOPD}
         userOpdName={user?.nama_opd}
         opdOptions={opdOptions}
         kemantrenOptions={kemantrenOptions}
         kelurahanOptions={kelurahanOptions}
-        kaderOptionsByIndex={kaderOptionsByOpdId}
-        isLoadingKaderByIndex={loadingOpdIds}
+        kaderOptionsByIndex={kaderOptionsByIndex}
+        isLoadingKaderByIndex={loadingByIndex}
         onKemantrenChange={(k) => {
           const match = kemantrenList.find((i) => i.nama_kemantren.toLowerCase() === k.trim().toLowerCase());
           if (match) fetchKelurahanByKemantrenId(match.id);
         }}
-        onOpdChangeAssignment={(_, name) => {
+        onOpdChangeAssignment={(index, name) => {
           const m = opdOptions.find((o) => o.label.toLowerCase() === name.toLowerCase());
-          if (m) fetchKaderOptionsForOpd(Number(m.value));
+          if (m) fetchKaderOptionsForOpd(Number(m.value), index);
         }}
         onKaderChangeAssignment={() => {}}
-        onSaveEdit={async () => {}}
-        onDeletePenugasan={() => {}}
+        onSaveEdit={handleSaveEdit}
+        onDeletePenugasan={handleDeletePenugasan}
         isSavingEdit={isSavingEdit}
       />
 
