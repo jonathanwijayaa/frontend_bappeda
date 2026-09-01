@@ -65,9 +65,10 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
 
   useEffect(() => {
     if (relawan) {
+      const assigns = Array.isArray(relawan.assignments) ? relawan.assignments : [];
       setDetailFormData({
         alamat: relawan.alamat || "-",
-        assignments: Array.isArray(relawan.assignments) ? relawan.assignments : [],
+        assignments: assigns,
         jenisKelamin: (relawan.jenisKelamin as "L" | "P") || "L",
         kelurahan: relawan.kelurahan || "-",
         kemantren: relawan.kemantren || "-",
@@ -76,8 +77,52 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
         no_hp: relawan.no_hp || "-",
       });
       setIsEditMode(false);
+
+      // Pre-fetch kader options for each assignment
+      assigns.forEach((assign, idx) => {
+        if (assign.opd || isOPD) {
+          onOpdChangeAssignment(idx, assign.opd || userOpdName || "");
+        }
+      });
     }
-  }, [relawan]);
+  }, [relawan, isOPD, userOpdName, onOpdChangeAssignment]);
+
+  const handleOpdChange = (index: number, opdName: string) => {
+    const match = opdOptions.find((o) => o.label.toLowerCase() === opdName.toLowerCase());
+    const opdId = match ? Number(match.value) : 0;
+
+    setDetailFormData((prev) => {
+      const newAssigns = [...prev.assignments];
+      newAssigns[index] = {
+        ...newAssigns[index],
+        opd: opdName,
+        opd_id: opdId,
+        kader: "",
+        kader_id: null,
+      };
+      return { ...prev, assignments: newAssigns };
+    });
+
+    onOpdChangeAssignment(index, opdName);
+  };
+
+  const handleKaderChange = (index: number, kaderName: string) => {
+    const kaderOpts = kaderOptionsByIndex[index] || [];
+    const match = kaderOpts.find((k) => k.label.toLowerCase() === kaderName.toLowerCase());
+    const kaderId = match ? Number(match.value) : null;
+
+    setDetailFormData((prev) => {
+      const newAssigns = [...prev.assignments];
+      newAssigns[index] = {
+        ...newAssigns[index],
+        kader: kaderName,
+        kader_id: kaderId,
+      };
+      return { ...prev, assignments: newAssigns };
+    });
+
+    onKaderChangeAssignment(index, kaderName);
+  };
 
   if (!relawan) return null;
 
@@ -215,8 +260,8 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
                 newAssigns[i] = { ...newAssigns[i], [f]: val };
                 setDetailFormData((prev) => ({ ...prev, assignments: newAssigns }));
               }}
-              onOpdChange={onOpdChangeAssignment}
-              onKaderChange={onKaderChangeAssignment}
+              onOpdChange={handleOpdChange}
+              onKaderChange={handleKaderChange}
               onRemove={() => onDeletePenugasan(parseInt(assignment.id) || 0, index)}
             />
           ))}

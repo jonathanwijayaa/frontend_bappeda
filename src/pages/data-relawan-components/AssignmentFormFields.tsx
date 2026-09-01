@@ -81,9 +81,10 @@ export const AssignmentFormFields: React.FC<AssignmentFormFieldsProps> = ({
               name={`opd-${index}`}
               value={assignment.opd}
               options={opdOptions}
-              onChange={(val) =>
-                onOpdChange ? onOpdChange(index, val) : onFieldChange(index, "opd", val)
-              }
+              onChange={(val) => {
+                onFieldChange(index, "opd", val);
+                if (onOpdChange) onOpdChange(index, val);
+              }}
               placeholder="Cari nama OPD..."
               disabled={isReadOnly}
             />
@@ -104,7 +105,10 @@ export const AssignmentFormFields: React.FC<AssignmentFormFieldsProps> = ({
                 name={`kader-${index}`}
                 value={assignment.kader}
                 options={kaderOptions}
-                onChange={(val) => onKaderChange && onKaderChange(index, val)}
+                onChange={(val) => {
+                  onFieldChange(index, "kader", val);
+                  if (onKaderChange) onKaderChange(index, val);
+                }}
                 placeholder={
                   !hasOpdSelected
                     ? "Pilih OPD terlebih dahulu..."
