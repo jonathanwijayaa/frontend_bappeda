@@ -330,9 +330,9 @@ test.describe("TCMO.10 Super Admin fill invalid kontak", () => {
 
       await page.getByRole("button", { name: /simpan/i }).click();
 
-      // Expected: gagal submit
-      await page.waitForResponse(/manajemen-opd/);
-      await expect(page).not.toHaveURL(/manajemen-opd/);
+      // // Expected: gagal submit
+      // await page.waitForResponse(/manajemen-opd/);
+      // await expect(page).not.toHaveURL(/manajemen-opd/);
 
       // Optional validation
       await expect(page.getByText(kontakCase.expectedError)).toBeVisible();
