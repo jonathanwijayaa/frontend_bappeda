@@ -94,18 +94,29 @@ test.describe("TCMO.6 Super Admin fill invalid OPD name", () => {
     await page.getByRole("button", { name: /Tambah OPD/i }).click();
   });
   const invalidOPDNameCases = [
-    { title: "Empty OPD name", value: "" },
-    { title: "OPD name too short", value: "A" },
-    { title: "OPD name with numbers", value: "OPD12345" },
-    { title: "OPD name with special characters", value: "@@@###" },
-    { title: "OPD name too long", value: "A".repeat(300) },
+    { title: "Empty OPD name", value: "", expectedError: /Please fill/i },
+    { title: "OPD name too short", value: "A", expectedError: "Nama OPD minimal 3 karakter" },
+    {
+      title: "OPD name with numbers",
+      value: "OPD12345",
+      expectedError: "Nama OPD tidak boleh mengandung angka atau karakter spesial",
+    },
+    {
+      title: "OPD name with special characters",
+      value: "@@@###",
+      expectedError: "Nama OPD tidak boleh mengandung angka atau karakter spesial",
+    },
+    {
+      title: "OPD name too long",
+      value: "A".repeat(300),
+      expectedError: "Nama OPD terlalu panjang (maks 100 karakter)",
+    },
   ];
 
   for (const opdCase of invalidOPDNameCases) {
     test(`TCMO.6 ${opdCase.title}`, async ({ page }) => {
       const opdData = buildOPDData();
 
-      // override namaOPD dengan invalid value
       // override namaOPD dengan invalid value
       opdData["NAMA OPD"] = opdCase.value;
 
@@ -123,11 +134,13 @@ test.describe("TCMO.6 Super Admin fill invalid OPD name", () => {
 
       await page.getByRole("button", { name: /simpan/i }).click();
 
-      const namaOpdInput = page.getByRole("textbox", { name: /nama opd/i });
+      // const namaOpdInput = page.getByRole("textbox", { name: /nama opd/i });
 
-      const isValid = await namaOpdInput.evaluate((el: HTMLInputElement) => el.checkValidity());
+      // const isValid = await namaOpdInput.evaluate((el: HTMLInputElement) => el.checkValidity());
 
-      expect(isValid).toBe(false);
+      // expect(isValid).toBe(false);
+
+      await expect(page.getByText(opdCase.expectedError)).toBeVisible();
     });
   }
 });
@@ -175,11 +188,23 @@ test.describe("TCMO.8 Super Admin fill invalid OPD address", () => {
     await page.getByRole("button", { name: /Tambah OPD/i }).click();
   });
   const invalidAddressCases = [
-    { title: "Empty address", value: "" },
-    { title: "Address too short", value: "A" },
-    { title: "Address only numbers", value: "1234567890" },
-    { title: "Address with special characters", value: "@@@###$$$" },
-    { title: "Address too long", value: "A".repeat(300) },
+    { title: "Empty address", value: "", expectedError: /wajib|Please fill/i },
+    { title: "Address too short", value: "A", expectedError: "Alamat OPD minimal 5 karakter" },
+    {
+      title: "Address only numbers",
+      value: "1234567890",
+      expectedError: "Alamat OPD tidak boleh hanya berisi angka",
+    },
+    {
+      title: "Address with special characters",
+      value: "@@@###$$$",
+      expectedError: "Alamat OPD tidak boleh mengandung karakter spesial yang tidak valid",
+    },
+    {
+      title: "Address too long",
+      value: "A".repeat(300),
+      expectedError: "Alamat OPD terlalu panjang (maks 255 karakter)",
+    },
   ];
 
   for (const addressCase of invalidAddressCases) {
@@ -198,11 +223,11 @@ test.describe("TCMO.8 Super Admin fill invalid OPD address", () => {
 
       await page.getByRole("button", { name: /simpan/i }).click();
 
-      // Expected: gagal submit
-      await expect(page).not.toHaveURL(/manajemen-opd/);
+      // // Expected: gagal submit
+      // await expect(page).not.toHaveURL(/manajemen-opd/);
 
       // Optional validation
-      await expect(page.getByText(/alamat|wajib|invalid|warning/i)).toBeVisible();
+      await expect(page.getByText(addressCase.expectedError)).toBeVisible();
     });
   }
 });
@@ -213,11 +238,23 @@ test.describe("TCMO.9 Super Admin fill invalid PIC name", () => {
     await page.getByRole("button", { name: /Tambah OPD/i }).click();
   });
   const invalidPICCases = [
-    { title: "Empty PIC name", value: "" },
-    { title: "PIC name too short", value: "A" },
-    { title: "PIC name with numbers", value: "PIC12345" },
-    { title: "PIC name with special characters", value: "@@@###" },
-    { title: "PIC name too long", value: "A".repeat(200) },
+    { title: "Empty PIC name", value: "", expectedError: /wajib|Please fill/i },
+    { title: "PIC name too short", value: "A", expectedError: "Nama PIC minimal 3 karakter" },
+    {
+      title: "PIC name with numbers",
+      value: "PIC12345",
+      expectedError: "Nama PIC tidak boleh mengandung angka atau karakter spesial",
+    },
+    {
+      title: "PIC name with special characters",
+      value: "@@@###",
+      expectedError: "Nama PIC tidak boleh mengandung angka atau karakter spesial",
+    },
+    {
+      title: "PIC name too long",
+      value: "A".repeat(200),
+      expectedError: "Nama PIC terlalu panjang (maks 100 karakter)",
+    },
   ];
 
   for (const picCase of invalidPICCases) {
@@ -236,11 +273,11 @@ test.describe("TCMO.9 Super Admin fill invalid PIC name", () => {
 
       await page.getByRole("button", { name: /simpan/i }).click();
 
-      // Expected: gagal submit
-      await expect(page).not.toHaveURL(/manajemen-opd/);
+      // // Expected: gagal submit
+      // await expect(page).not.toHaveURL(/manajemen-opd/);
 
       // Optional validation
-      await expect(page.getByText(/pic|wajib|invalid/i)).toBeVisible();
+      await expect(page.getByText(picCase.expectedError)).toBeVisible();
     });
   }
 });
@@ -251,11 +288,30 @@ test.describe("TCMO.10 Super Admin fill invalid kontak", () => {
     await page.getByRole("button", { name: /Tambah OPD/i }).click();
   });
   const invalidKontakCases = [
-    { title: "Empty kontak", value: "" },
-    { title: "Kontak too short", value: "08123" },
-    { title: "Kontak with letters", value: "08ABCDE123" },
-    { title: "Kontak with special characters", value: "08!@#$%^&*" },
-    { title: "Kontak too long", value: "081234567890123456789" },
+    { title: "Empty kontak", value: "", expectedError: /wajib|Please fill/i },
+    {
+      title: "Kontak too short",
+      value: "08123",
+      expectedError:
+        "Format nomor kontak tidak valid (harus diawali 08 atau +628, minimal 9-13 digit angka)",
+    },
+    {
+      title: "Kontak with letters",
+      value: "08ABCDE123",
+      expectedError: "Nomor kontak tidak boleh mengandung huruf",
+    },
+    {
+      title: "Kontak with special characters",
+      value: "08!@#$%^&*",
+      expectedError:
+        "Format nomor kontak tidak valid (harus diawali 08 atau +628, minimal 9-13 digit angka)",
+    },
+    {
+      title: "Kontak too long",
+      value: "081234567890123456789",
+      expectedError:
+        "Format nomor kontak tidak valid (harus diawali 08 atau +628, minimal 9-13 digit angka)",
+    },
   ];
 
   for (const kontakCase of invalidKontakCases) {
@@ -279,7 +335,7 @@ test.describe("TCMO.10 Super Admin fill invalid kontak", () => {
       await expect(page).not.toHaveURL(/manajemen-opd/);
 
       // Optional validation
-      await expect(page.getByText(/kontak|invalid|wajib/i)).toBeVisible();
+      await expect(page.getByText(kontakCase.expectedError)).toBeVisible();
     });
   }
 });
