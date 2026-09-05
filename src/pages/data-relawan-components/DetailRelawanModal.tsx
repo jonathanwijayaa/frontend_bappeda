@@ -119,7 +119,7 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
         }
       });
     }
-  }, [relawan, isOPD, userOpdName, onOpdChangeAssignment]);
+  }, [relawan, isOPD, userOpdName]);
 
   const handleOpdChange = (index: number, opdName: string) => {
     const match = opdOptions.find((o) => o.label.toLowerCase() === opdName.toLowerCase());
@@ -177,6 +177,7 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
         )}
         <div className="flex justify-end">
           <Button
+            type="button"
             variant="outline"
             size="sm"
             onClick={() => {
