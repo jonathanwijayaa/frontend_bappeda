@@ -287,8 +287,9 @@ const DaftarKader: React.FC = () => {
     }
 
     // C. Cek Duplikasi Nama Kader
+    const lowerNormalizedName = normalizedNamaKader.toLowerCase();
     const isDuplicate = kaderList.some(
-      (k) => (k.nama_kader || "").toLowerCase() === normalizedNamaKader.toLowerCase(),
+      (k) => (k.nama_kader || "").trim().toLowerCase() === lowerNormalizedName,
     );
     if (isDuplicate) {
       setToast({ message: "Nama Kader sudah terdaftar", type: "error" });
