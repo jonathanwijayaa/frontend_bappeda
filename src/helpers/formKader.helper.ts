@@ -3,12 +3,12 @@ import { expect, Locator, Page } from "@playwright/test";
 
 const OPD_LIST = [
   "Opd Demo",
-  "Dinas Kesehatan (Dinkes)",
+  "Dinas Kesehatan",
   "Dinas Perhubungan",
-  // "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
+  "Dinas Sosial Tenaga Kerja dan Transmigrasi",
   "Dinas Pariwisata",
   "Dinas Kebudayaan",
-  "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)",
+  "Dinas Pemberdayaan Perempuan Perlindungan Anak Pengendalian Penduduk dan Keluarga Berencana",
 ];
 
 const KEMANTREN_LIST = [

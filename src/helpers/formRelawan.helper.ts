@@ -3,29 +3,32 @@ import { expect, Locator, Page } from "@playwright/test";
 
 const OPD_LIST = [
   "Opd Demo",
-  "Dinas Kesehatan (Dinkes)",
+  "Dinas Kesehatan",
   "Dinas Perhubungan",
-  "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
+  "Dinas Sosial Tenaga Kerja dan Transmigrasi",
   "Dinas Pariwisata",
   "Dinas Kebudayaan",
-  "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)",
+  "Dinas Pemberdayaan Perempuan Perlindungan Anak Pengendalian Penduduk dan Keluarga Berencana",
 ];
 
 const KADER_MAP: Record<string, string[]> = {
   "Opd Demo": ["Demo Kader", "Kader Caroline Weimann", "Kader Yvonne Keeling"],
 
-  "Dinas Kesehatan (Dinkes)": ["KADER KESEHATAN"],
+  "Dinas Kesehatan": ["KADER KESEHATAN"],
 
-  "Dinas Perhubungan": ["Kader Perhubungan C", "Kader Perhubungan C1"],
+  "Dinas Perhubungan": ["Kader Perhubungan C", "Kader Perhubungan D"],
 
-  "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)": ["PORDAM", "TAGANA", "IPSM"],
+  "Dinas Sosial Tenaga Kerja dan Transmigrasi": ["PORDAM", "TAGANA", "IPSM"],
 
-  "Dinas Pariwisata": ["Kader Pariwisata 1"],
+  "Dinas Pariwisata": ["Kader Pariwisata"],
 
-  "Dinas Kebudayaan": ["Kader Kebudayaan 1", "Kader Kebudayaan 2"],
+  "Dinas Kebudayaan": ["Kader Kebudayaan A", "Kader Kebudayaan B"],
 
-  "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)":
-    ["SIGRAK", "POSYANDU", "PKK"],
+  "Dinas Pemberdayaan Perempuan Perlindungan Anak Pengendalian Penduduk dan Keluarga Berencana": [
+    "SIGRAK",
+    "POSYANDU",
+    "PKK",
+  ],
 };
 
 const KEMANTREN_LIST = [
