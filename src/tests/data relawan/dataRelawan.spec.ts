@@ -63,7 +63,7 @@ for (const { label, creds } of roles) {
         await expect(page.getByRole("textbox", { name: "Nama lengkap" })).toHaveValue(
           relawanData["NAMA LENGKAP"],
         );
-        await expect(page.getByRole("textbox", { name: "NIK" })).toHaveValue(relawanData.NIK);
+        await expect(page.getByRole("textbox", { name: "digit NIK" })).toHaveValue(relawanData.NIK);
         await expect(page.getByRole("textbox", { name: "Alamat" })).toHaveValue(relawanData.ALAMAT);
         await expect(page.getByRole("textbox", { name: "Nomor HP" })).toHaveValue(
           relawanData["NO HP"],
@@ -119,12 +119,14 @@ for (const { label, creds } of roles) {
           {
             title: "Name with numbers",
             value: "Relawan12345",
-            expectedMessage: /tidak boleh mengandung angka atau karakter spesial/i,
+            expectedMessage:
+              /Format nama relawan tidak valid (hanya huruf, spasi, titik, koma, petik)/i,
           },
           {
             title: "Name with special characters",
             value: "@@@###",
-            expectedMessage: /tidak boleh mengandung angka atau karakter spesial/i,
+            expectedMessage:
+              /Format nama relawan tidak valid (hanya huruf, spasi, titik, koma, petik)/i,
           },
           {
             title: "Name too long",

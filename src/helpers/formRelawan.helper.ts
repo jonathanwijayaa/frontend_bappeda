@@ -4,10 +4,10 @@ import { expect, Locator, Page } from "@playwright/test";
 const OPD_LIST = [
   "Opd Demo",
   "Dinas Kesehatan",
-  "Dinas Perhubungan",
+  // "Dinas Perhubungan",
   "Dinas Sosial Tenaga Kerja dan Transmigrasi",
-  "Dinas Pariwisata",
-  "Dinas Kebudayaan",
+  // "Dinas Pariwisata",
+  // "Dinas Kebudayaan",
   "Dinas Pemberdayaan Perempuan Perlindungan Anak Pengendalian Penduduk dan Keluarga Berencana",
 ];
 
@@ -203,8 +203,17 @@ export const fillRelawanForm = async ({ data, page, isSuperAdmin }: IFillRelawan
       .fill(data["DETAIL JABATAN"]);
   },
   async fillJabatan() {
-    await page.getByRole("combobox").nth(1).selectOption(data.JABATAN);
+    if (await page.getByRole("button", { name: "-- Pilih Jabatan --" }).isVisible()) {
+      await page.getByRole("button", { name: "-- Pilih Jabatan --" }).click();
+      await page.getByRole("button", { name: data.JABATAN }).click();
+      return;
+    } else if (await page.getByRole("combobox").nth(1).isVisible()) {
+      await page.getByRole("combobox").nth(1).click();
+      await page.getByRole("combobox").nth(1).selectOption(data.JABATAN);
+      return;
+    }
   },
+
   async fillJenisKelamin() {
     await page.getByRole("button", { name: "Laki-laki (L)" }).click();
     if (data["JENIS KELAMIN"] === "Laki-laki (L)") {
