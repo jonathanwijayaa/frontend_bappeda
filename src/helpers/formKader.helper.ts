@@ -178,7 +178,7 @@ export const fillKaderForm = async ({ data, page, isSuperAdmin, TCDK }: IFillKad
     const textbox = page.getByRole("textbox", { name: /Ketik nama OPD/i });
     await textbox.click();
     await textbox.pressSequentially(data.OPD, { delay: 80 });
-    const option = page.getByRole("listitem").filter({ hasText: data.OPD });
+    const option = page.getByRole("listitem").filter({ hasText: data.OPD }).first();
     await expect(option).toBeVisible({
       timeout: 10000,
     });
