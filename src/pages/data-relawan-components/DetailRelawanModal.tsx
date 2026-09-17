@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import Select from "../../components/ui/Select";
@@ -8,6 +8,7 @@ import { AssignmentFormFields } from "./AssignmentFormFields";
 import type { RelawanData, Assignment } from "../../types/relawan.types";
 import type { AutoOption } from "../../types/common.types";
 import { formatPhoneDisplay } from "../../utils/formatPhone";
+import { REGEX_PATTERNS } from "../../utils/regex";
 
 interface DetailRelawanModalProps {
   isOpen: boolean;
@@ -52,6 +53,7 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
   isSavingEdit,
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [detailFormData, setDetailFormData] = useState({
     alamat: "",
     assignments: [] as Assignment[],
@@ -63,11 +65,44 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
     no_hp: "",
   });
 
+  const validateEditForm = (): string | null => {
+    const nama = detailFormData.namaRelawan.trim();
+    if (!nama) return "Nama Relawan wajib diisi";
+    if (nama.length < 3) return "Nama Relawan minimal 3 karakter";
+    if (!REGEX_PATTERNS.NAMA_RELAWAN.test(nama)) {
+      return "Format nama relawan tidak valid (hanya huruf, spasi, titik, koma, petik)";
+    }
+
+    const alamat = detailFormData.alamat.trim();
+    if (alamat && alamat !== "-") {
+      if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(alamat)) {
+        return "Alamat tidak boleh hanya berupa angka";
+      }
+      if (!REGEX_PATTERNS.ALAMAT_VALID.test(alamat)) {
+        return "Alamat mengandung karakter tidak valid";
+      }
+    }
+
+    const rawHp = detailFormData.no_hp.trim();
+    if (rawHp && rawHp !== "-") {
+      const cleanHp = rawHp.replace(/[\s-]/g, "");
+      if (REGEX_PATTERNS.HAS_LETTERS.test(cleanHp)) {
+        return "Nomor HP tidak boleh mengandung huruf";
+      }
+      if (!REGEX_PATTERNS.NO_HP.test(cleanHp)) {
+        return "Format Nomor HP tidak valid (harus diawali 08 atau +628, 9-13 digit angka)";
+      }
+    }
+
+    return null;
+  };
+
   useEffect(() => {
     if (relawan) {
+      const assigns = Array.isArray(relawan.assignments) ? relawan.assignments : [];
       setDetailFormData({
         alamat: relawan.alamat || "-",
-        assignments: Array.isArray(relawan.assignments) ? relawan.assignments : [],
+        assignments: assigns,
         jenisKelamin: (relawan.jenisKelamin as "L" | "P") || "L",
         kelurahan: relawan.kelurahan || "-",
         kemantren: relawan.kemantren || "-",
@@ -76,8 +111,52 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
         no_hp: relawan.no_hp || "-",
       });
       setIsEditMode(false);
+
+      // Pre-fetch kader options for each assignment
+      assigns.forEach((assign, idx) => {
+        if (assign.opd || isOPD) {
+          onOpdChangeAssignment(idx, assign.opd || userOpdName || "");
+        }
+      });
     }
-  }, [relawan]);
+  }, [relawan, isOPD, userOpdName]);
+
+  const handleOpdChange = (index: number, opdName: string) => {
+    const match = opdOptions.find((o) => o.label.toLowerCase() === opdName.toLowerCase());
+    const opdId = match ? Number(match.value) : 0;
+
+    setDetailFormData((prev) => {
+      const newAssigns = [...prev.assignments];
+      newAssigns[index] = {
+        ...newAssigns[index],
+        opd: opdName,
+        opd_id: opdId,
+        kader: "",
+        kader_id: null,
+      };
+      return { ...prev, assignments: newAssigns };
+    });
+
+    onOpdChangeAssignment(index, opdName);
+  };
+
+  const handleKaderChange = (index: number, kaderName: string) => {
+    const kaderOpts = kaderOptionsByIndex[index] || [];
+    const match = kaderOpts.find((k) => k.label.toLowerCase() === kaderName.toLowerCase());
+    const kaderId = match ? Number(match.value) : null;
+
+    setDetailFormData((prev) => {
+      const newAssigns = [...prev.assignments];
+      newAssigns[index] = {
+        ...newAssigns[index],
+        kader: kaderName,
+        kader_id: kaderId,
+      };
+      return { ...prev, assignments: newAssigns };
+    });
+
+    onKaderChangeAssignment(index, kaderName);
+  };
 
   if (!relawan) return null;
 
@@ -90,11 +169,21 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
       maxWidth="2xl"
     >
       <div className="space-y-6">
+        {errorMsg && (
+          <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-sm text-red-700">
+            <AlertCircle size={16} className="text-red-500 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
         <div className="flex justify-end">
           <Button
+            type="button"
             variant="outline"
             size="sm"
-            onClick={() => setIsEditMode(!isEditMode)}
+            onClick={() => {
+              setErrorMsg(null);
+              setIsEditMode(!isEditMode);
+            }}
             className={isEditMode ? "border-gray-400 text-gray-600" : "border-blue-500 text-blue-600"}
           >
             {isEditMode ? "Batal" : "Edit Data"}
@@ -215,8 +304,8 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
                 newAssigns[i] = { ...newAssigns[i], [f]: val };
                 setDetailFormData((prev) => ({ ...prev, assignments: newAssigns }));
               }}
-              onOpdChange={onOpdChangeAssignment}
-              onKaderChange={onKaderChangeAssignment}
+              onOpdChange={handleOpdChange}
+              onKaderChange={handleKaderChange}
               onRemove={() => onDeletePenugasan(parseInt(assignment.id) || 0, index)}
             />
           ))}
@@ -231,7 +320,15 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
               Batal
             </Button>
             <Button
-              onClick={() => void onSaveEdit(detailFormData)}
+              onClick={() => {
+                const err = validateEditForm();
+                if (err) {
+                  setErrorMsg(err);
+                  return;
+                }
+                setErrorMsg(null);
+                void onSaveEdit(detailFormData);
+              }}
               disabled={isSavingEdit}
               className="bg-blue-600 hover:bg-blue-700 text-white px-10 disabled:opacity-50"
             >

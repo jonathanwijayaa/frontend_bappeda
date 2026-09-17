@@ -105,7 +105,7 @@ const DaftarKader: React.FC = () => {
     const lowerSearch = searchTerm.toLowerCase();
     return kaderList.filter(
       (k) =>
-        k.nama_kader.toLowerCase().includes(lowerSearch) ||
+        k.nama_kader || "".toLowerCase().includes(lowerSearch) ||
         (k.nama_opd || "").toLowerCase().includes(lowerSearch) ||
         (k.pic_nama || "").toLowerCase().includes(lowerSearch) ||
         (k.pic_nik || "").toLowerCase().includes(lowerSearch) ||
@@ -287,8 +287,9 @@ const DaftarKader: React.FC = () => {
     }
 
     // C. Cek Duplikasi Nama Kader
+    const lowerNormalizedName = normalizedNamaKader.toLowerCase();
     const isDuplicate = kaderList.some(
-      (k) => k.nama_kader.toLowerCase() === normalizedNamaKader.toLowerCase(),
+      (k) => (k.nama_kader || "").trim().toLowerCase() === lowerNormalizedName,
     );
     if (isDuplicate) {
       setToast({ message: "Nama Kader sudah terdaftar", type: "error" });
@@ -440,7 +441,7 @@ const DaftarKader: React.FC = () => {
     const isDuplicate = kaderList.some(
       (k) =>
         k.kader_id !== selectedKader.kader_id &&
-        k.nama_kader.toLowerCase() === normalizedNamaKader.toLowerCase(),
+        (k.nama_kader || "").toLowerCase() === normalizedNamaKader.toLowerCase(),
     );
     if (isDuplicate) {
       setToast({ message: "Nama Kader sudah terdaftar", type: "error" });

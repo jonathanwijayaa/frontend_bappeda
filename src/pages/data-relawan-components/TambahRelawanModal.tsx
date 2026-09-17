@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Plus, Loader2 } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Plus, Loader2, AlertCircle } from "lucide-react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import Select from "../../components/ui/Select";
@@ -7,6 +7,7 @@ import AutocompleteInput from "../../components/ui/AutocompleteInput";
 import { AssignmentFormFields } from "./AssignmentFormFields";
 import type { Assignment } from "../../types/relawan.types";
 import type { AutoOption } from "../../types/common.types";
+import { REGEX_PATTERNS } from "../../utils/regex";
 
 interface TambahRelawanModalProps {
   isOpen: boolean;
@@ -58,8 +59,68 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
     nik: "",
     no_hp: "",
   });
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const validateForm = (): string | null => {
+    const nama = formData.namaRelawan.trim();
+    if (!nama) return "Nama Relawan wajib diisi";
+    if (nama.length < 3) return "Nama Relawan minimal 3 karakter";
+    if (!REGEX_PATTERNS.NAMA_RELAWAN.test(nama)) {
+      return "Format nama relawan tidak valid (hanya huruf, spasi, titik, koma, petik)";
+    }
+
+    const nik = formData.nik.trim();
+    if (!nik) return "NIK wajib diisi";
+    if (!REGEX_PATTERNS.NIK.test(nik)) {
+      return "NIK harus tepat 16 digit angka";
+    }
+
+    const alamat = formData.alamat.trim();
+    if (!alamat) return "Alamat KTP wajib diisi";
+    if (alamat.length < 5) return "Alamat minimal 5 karakter";
+    if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(alamat)) {
+      return "Alamat tidak boleh hanya berupa angka";
+    }
+    if (!REGEX_PATTERNS.ALAMAT_VALID.test(alamat)) {
+      return "Alamat mengandung karakter tidak valid";
+    }
+
+    const rawHp = formData.no_hp.trim();
+    if (!rawHp) return "Nomor HP wajib diisi";
+    const cleanHp = rawHp.replace(/[\s-]/g, "");
+    if (REGEX_PATTERNS.HAS_LETTERS.test(cleanHp)) {
+      return "Nomor HP tidak boleh mengandung huruf";
+    }
+    if (!REGEX_PATTERNS.NO_HP.test(cleanHp)) {
+      return "Format Nomor HP tidak valid (harus diawali 08 atau +628, 9-13 digit angka)";
+    }
+
+    if (!formData.kemantren.trim()) return "Kemantren wajib dipilih";
+    if (!formData.kelurahan.trim()) return "Kelurahan wajib dipilih";
+
+    return null;
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        alamat: "",
+        assignments: [],
+        jenisKelamin: "L",
+        kelurahan: "",
+        kemantren: "",
+        namaRelawan: "",
+        nik: "",
+        no_hp: "",
+      });
+    }
+  }, [isOpen]);
 
   const handleAddAssignment = () => {
+    const newIndex = formData.assignments.length;
+    const newOpdName = isOPD ? userOpdName || "" : "";
+    const newOpdId = isOPD ? userOpdId || 0 : 0;
+
     setFormData((prev) => ({
       ...prev,
       assignments: [
@@ -70,8 +131,8 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
           kader: "",
           kader_id: null,
           nomorSK: "",
-          opd: isOPD ? userOpdName || "" : "",
-          opd_id: isOPD ? userOpdId || 0 : 0,
+          opd: newOpdName,
+          opd_id: newOpdId,
           penugasan: "",
           peran: "",
           skId: "",
@@ -79,6 +140,10 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
         },
       ],
     }));
+
+    if (isOPD || newOpdName) {
+      onOpdChangeAssignment(newIndex, newOpdName);
+    }
   };
 
   const handleRemoveAssignment = (index: number) => {
@@ -96,6 +161,43 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
     });
   };
 
+  const handleOpdChange = (index: number, opdName: string) => {
+    const match = opdOptions.find((o) => o.label.toLowerCase() === opdName.toLowerCase());
+    const opdId = match ? Number(match.value) : 0;
+
+    setFormData((prev) => {
+      const newAssigns = [...prev.assignments];
+      newAssigns[index] = {
+        ...newAssigns[index],
+        opd: opdName,
+        opd_id: opdId,
+        kader: "",
+        kader_id: null,
+      };
+      return { ...prev, assignments: newAssigns };
+    });
+
+    onOpdChangeAssignment(index, opdName);
+  };
+
+  const handleKaderChange = (index: number, kaderName: string) => {
+    const kaderOpts = kaderOptionsByIndex[index] || [];
+    const match = kaderOpts.find((k) => k.label.toLowerCase() === kaderName.toLowerCase());
+    const kaderId = match ? Number(match.value) : null;
+
+    setFormData((prev) => {
+      const newAssigns = [...prev.assignments];
+      newAssigns[index] = {
+        ...newAssigns[index],
+        kader: kaderName,
+        kader_id: kaderId,
+      };
+      return { ...prev, assignments: newAssigns };
+    });
+
+    onKaderChangeAssignment(index, kaderName);
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -104,9 +206,21 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
       subtitle="Isi data relawan yang ingin ditambahkan"
       maxWidth="2xl"
     >
+      {errorMsg && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-sm text-red-700">
+          <AlertCircle size={16} className="text-red-500 shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          const err = validateForm();
+          if (err) {
+            setErrorMsg(err);
+            return;
+          }
+          setErrorMsg(null);
           void onSubmit(formData);
         }}
         className="space-y-6"
@@ -207,8 +321,8 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
               kaderOptions={kaderOptionsByIndex[index] || []}
               isKaderLoading={isLoadingKaderByIndex[index] || false}
               onFieldChange={handleFieldChange}
-              onOpdChange={onOpdChangeAssignment}
-              onKaderChange={onKaderChangeAssignment}
+              onOpdChange={handleOpdChange}
+              onKaderChange={handleKaderChange}
               onRemove={handleRemoveAssignment}
             />
           ))}
