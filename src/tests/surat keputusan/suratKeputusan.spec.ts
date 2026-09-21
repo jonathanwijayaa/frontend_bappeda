@@ -62,30 +62,112 @@ for (const { label, creds } of roles) {
 
     // TCSK.3-8 Search Bar
     test.describe(`TCSK.3-8 ${label} Search Bar`, () => {
-      const searchCases = [
-        { id: "TCSK.3.0", title: "input keyword in search bar a OPD", keyword: "Opd Demo" },
-        { id: "TCSK.3.1", title: "input keyword search bar a Judul SK", keyword: "Sk Demo" },
-        { id: "TCSK.3.2", title: "input keyword search bar a NO SK", keyword: "000/000/Demo/2025" },
-        { id: "TCSK.4", title: "input with upper case", keyword: "OPD DEMO" },
-        { id: "TCSK.5", title: "input with lower case", keyword: "opd demo" },
-        { id: "TCSK.6", title: "input with specific word", keyword: "000/000" },
-        { id: "TCSK.7", title: "input with random keyword", keyword: "xqz99randomkeyword" },
-        { id: "TCSK.8", title: "input with special characters", keyword: "@#$%^&*()" },
+      // Kata kunci untuk kasus "ada hasil" diambil dari baris pertama tabel
+      // (kolom NOMOR SK / JUDUL SK / OPD), supaya test tidak bergantung pada
+      // data seed tertentu yang bisa saja sudah tidak ada di database.
+      const searchCases: {
+        id: string;
+        title: string;
+        expectNoData: boolean;
+        keyword?: string;
+        source?: "NOMOR SK" | "JUDUL SK" | "OPD";
+        transform?: (value: string) => string;
+      }[] = [
+        {
+          id: "TCSK.3.0",
+          title: "input keyword in search bar a OPD",
+          expectNoData: false,
+          source: "OPD",
+        },
+        {
+          id: "TCSK.3.1",
+          title: "input keyword search bar a Judul SK",
+          expectNoData: false,
+          source: "JUDUL SK",
+        },
+        {
+          id: "TCSK.3.2",
+          title: "input keyword search bar a NO SK",
+          expectNoData: false,
+          source: "NOMOR SK",
+        },
+        {
+          id: "TCSK.4",
+          title: "input with upper case",
+          expectNoData: false,
+          source: "OPD",
+          transform: (value) => value.toUpperCase(),
+        },
+        {
+          id: "TCSK.5",
+          title: "input with lower case",
+          expectNoData: false,
+          source: "OPD",
+          transform: (value) => value.toLowerCase(),
+        },
+        {
+          id: "TCSK.6",
+          title: "input with specific word",
+          expectNoData: false,
+          source: "NOMOR SK",
+          // Sebagian nomor SK saja, mis. "271/161" dari "271/161/Dinas X/2026"
+          transform: (value) => value.split("/").slice(0, 2).join("/"),
+        },
+        {
+          id: "TCSK.7",
+          title: "input with random keyword",
+          keyword: "xqz99randomkeyword",
+          expectNoData: true,
+        },
+        {
+          id: "TCSK.8",
+          title: "input with special characters",
+          keyword: "@#$%^&*()",
+          expectNoData: true,
+        },
       ];
+
+      const KOLOM_TABEL = ["NOMOR SK", "JUDUL SK", "OPD"] as const;
 
       for (const searchCase of searchCases) {
         test(`${searchCase.id} ${label} ${searchCase.title}`, async ({ page }) => {
+          const table = page.getByRole("table");
           const searchInput = page.getByPlaceholder(/cari/i);
-          await searchInput.fill(searchCase.keyword);
+
+          let keyword = searchCase.keyword ?? "";
+
+          if (searchCase.source) {
+            await expect(table).toBeVisible();
+
+            const cellText = await table
+              .getByRole("row")
+              .nth(1)
+              .getByRole("cell")
+              .nth(KOLOM_TABEL.indexOf(searchCase.source))
+              .textContent();
+
+            keyword = (cellText ?? "").trim();
+            expect(keyword, `Kolom ${searchCase.source} baris pertama kosong`).not.toBe("");
+            keyword = searchCase.transform ? searchCase.transform(keyword) : keyword;
+          }
+
+          await searchInput.fill(keyword);
           await searchInput.press("Enter");
 
-          if (["TCSK.7", "TCSK.8"].includes(searchCase.id)) {
+          if (searchCase.expectNoData) {
             await expect(
               page.getByText(/tidak ada data|no data|Belum ada Surat Keputusan/i),
             ).toBeVisible();
-          } else {
-            await expect(page.getByRole("table")).toBeVisible();
+            return;
           }
+
+          await expect(table).toBeVisible();
+
+          // hasText dengan string: pencocokan substring & tidak peka huruf besar/kecil
+          const matchingRows = table.getByRole("row").filter({ hasText: keyword });
+
+          await expect(matchingRows.first()).toBeVisible();
+          expect(await matchingRows.count()).toBeGreaterThan(0);
         });
       }
     });

@@ -4,30 +4,14 @@ import path from "path";
 
 const OPD_LIST = [
   "Opd Demo",
-  "Dinas Kesehatan (Dinkes)",
+  "Dinas Kesehatan",
   "Dinas Perhubungan",
-  "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
+  "Dinas Sosial Tenaga Kerja dan Transmigrasi",
   "Dinas Pariwisata",
   "Dinas Kebudayaan",
-  "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)",
+  "Dinas Pemberdayaan Perempuan Perlindungan Anak Pengendalian Penduduk dan Keluarga Berencana",
 ];
 
-const KADER_MAP: Record<string, string[]> = {
-  "Opd Demo": ["Demo Kader", "Kader Caroline Weimann", "Kader Yvonne Keeling"],
-
-  "Dinas Kesehatan (Dinkes)": ["KADER KESEHATAN"],
-
-  "Dinas Perhubungan": ["Kader Perhubungan C", "Kader Perhubungan C1"],
-
-  "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)": ["PORDAM", "TAGANA", "IPSM"],
-
-  "Dinas Pariwisata": ["Kader Pariwisata 1"],
-
-  "Dinas Kebudayaan": ["Kader Kebudayaan 1", "Kader Kebudayaan 2"],
-
-  "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)":
-    ["SIGRAK", "POSYANDU", "PKK"],
-};
 export interface SKData {
   "NO SK": string;
   "JUDUL SK": string;
@@ -38,11 +22,45 @@ export interface SKData {
   "STATUS KEAKTIFAN"?: string;
   FILE: string;
 }
+
 interface IFillSKForm {
   data: SKData;
   page: Page;
   isSuperAdmin: boolean;
 }
+
+// ── Locator form upload SK ────────────────────────────────────────────────
+// Label pada form tidak terhubung ke input-nya (tanpa htmlFor/id), dan untuk
+// role OPD field OPD dikunci (disabled) tanpa placeholder sehingga tidak punya
+// accessible name. Karena itu field dicari lewat struktur:
+// <label>X</label> -> elemen berikutnya. Locator berbasis indeks (nth) dihindari
+// karena urutannya berubah tergantung role dan isi halaman di balik modal.
+const fieldWrapper = (page: Page, label: string) =>
+  page
+    .locator(`xpath=//label[normalize-space(text())="${label}"]/following-sibling::*[1]`)
+    .first();
+
+const fieldInput = (page: Page, label: string) =>
+  fieldWrapper(page, label).locator("xpath=descendant-or-self::input").first();
+
+export const noSKField = (page: Page) => page.getByPlaceholder("800/123/BPBD/2026");
+export const judulSKField = (page: Page) => page.getByPlaceholder("Pengangkatan Kader");
+export const tanggalTerbitField = (page: Page) => fieldInput(page, "Tanggal Terbit");
+export const batasAktifField = (page: Page) => fieldInput(page, "Batas Aktif");
+
+// Berlaku untuk super admin (autocomplete) maupun OPD (input terkunci)
+export const opdField = (page: Page) => fieldInput(page, "OPD");
+
+const opdOptions = (page: Page) => fieldWrapper(page, "OPD").getByRole("listitem");
+
+// Label pembungkus tiap checkbox kader, termasuk "Pilih Semua (N kader)"
+const kaderLabels = (page: Page) =>
+  page.locator("label").filter({ has: page.locator("input[type='checkbox']") });
+
+// Cocokkan teks secara persis supaya nama mirip (mis. "PKK" vs "PKK RW") tidak salah pilih
+const exactText = (value: string) =>
+  new RegExp(`^\\s*${value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "i");
+
 function generateSafeSKTitle(): string {
   const skTitle = faker.company.name();
   return skTitle.replace(/[^a-zA-Z\s]/g, "").trim();
@@ -55,19 +73,6 @@ function generateSafeSKNumber(): string {
   const skOpd = OPD_LIST[Math.floor(Math.random() * OPD_LIST.length)];
   const currentYear = new Date().getFullYear();
   return `${skNumber}/${skSubNumber}/${skOpd}/${currentYear}`;
-}
-
-function findKaderListForOPD(opdText: string): string[] {
-  const normalize = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
-  const normalized = normalize(opdText);
-
-  const matchedKey = Object.keys(KADER_MAP).find((key) => normalize(key) === normalized);
-
-  if (!matchedKey) {
-    throw new Error(`Tidak ditemukan daftar Kader untuk OPD: "${opdText}"`);
-  }
-
-  return KADER_MAP[matchedKey];
 }
 
 async function ensureTextboxValue(
@@ -84,52 +89,118 @@ async function ensureTextboxValue(
     }
 
     await locator.click();
-    await locator.clear();
+    await locator.fill("");
     await locator.fill(expectedValue);
   }
 
   await expect(locator).toHaveValue(expectedValue);
 }
 
-async function ensureFileUploaded(
+/**
+ * Melampirkan file PDF dan memastikan file benar-benar masuk ke state komponen.
+ *
+ * Komponen memakai react-dropzone: file yang tampil berasal dari state React,
+ * bukan dari FileList input. Kalau form ter-reset, FileList bisa tetap terisi
+ * padahal state-nya sudah kosong — karena itu yang diperiksa adalah nama file
+ * yang tampil di modal, dan input dikosongkan dulu supaya event change terpicu.
+ */
+export async function ensureFileAttached(
   page: Page,
-  fileInput: Locator,
   filePath: string,
   maxRetry = 3,
 ): Promise<void> {
-  const fileName = path.basename(filePath);
+  const fileInput = page.locator("input[type='file']");
+  const fileChip = page.getByText(path.basename(filePath), { exact: true });
 
-  for (let i = 0; i < maxRetry; i++) {
-    const attachedFiles = await fileInput.evaluate((el: HTMLInputElement) =>
-      Array.from(el.files ?? []).map((f) => f.name),
-    );
+  for (let attempt = 1; attempt <= maxRetry; attempt++) {
+    if (await fileChip.isVisible()) return;
 
-    if (attachedFiles.includes(fileName)) {
-      return;
-    }
-
+    await fileInput.setInputFiles([]);
     await fileInput.setInputFiles(filePath);
+
+    try {
+      await expect(fileChip).toBeVisible({ timeout: 5000 });
+      return;
+    } catch (error) {
+      if (attempt === maxRetry) {
+        throw error;
+      }
+      console.log(`File SK belum terlampir, ulangi (${attempt}/${maxRetry})`);
+    }
+  }
+}
+
+/**
+ * Memilih OPD pada autocomplete (khusus super admin).
+ *
+ * AutocompleteInput hanya memfilter saat teks diketik, jadi bila daftar OPD
+ * baru selesai dimuat setelah pengetikan, dropdown tetap kosong — pengetikan
+ * diulang sampai opsinya muncul.
+ */
+export async function selectOPDOption(page: Page, opd: string, maxRetry = 3): Promise<void> {
+  const textbox = opdField(page);
+  const option = opdOptions(page).filter({ hasText: exactText(opd) });
+
+  for (let attempt = 1; attempt <= maxRetry; attempt++) {
+    try {
+      await textbox.click();
+      await textbox.fill("");
+      await textbox.pressSequentially(opd, { delay: 80 });
+
+      await expect(option.first()).toBeVisible({ timeout: 5000 });
+      await option.first().click();
+      await expect(page.getByText("✓ OPD valid dipilih")).toBeVisible({ timeout: 10000 });
+      return;
+    } catch (error) {
+      if (attempt === maxRetry) {
+        throw error;
+      }
+      console.log(`Opsi OPD "${opd}" belum muncul, ulangi (${attempt}/${maxRetry})`);
+    }
+  }
+}
+
+/**
+ * Mengambil nama kader yang benar-benar tersedia untuk OPD yang aktif di form.
+ * Daftar kader mengikuti OPD, jadi tidak boleh ditebak dari data hasil generate.
+ */
+export async function pickKaderFromForm(page: Page): Promise<string> {
+  const labels = kaderLabels(page);
+
+  try {
+    // Checkbox baru muncul setelah daftar kader milik OPD selesai dimuat
+    await expect(labels.first()).toBeVisible({ timeout: 15000 });
+  } catch {
+    throw new Error(
+      `Tidak ada checkbox kader pada OPD "${await opdField(page).inputValue()}". ` +
+        "OPD tersebut kemungkinan belum memiliki kader terdaftar.",
+    );
   }
 
-  // Verifikasi akhir: kalau setelah maxRetry masih belum ke-attach, test langsung gagal di sini
-  await expect
-    .poll(() =>
-      fileInput.evaluate((el: HTMLInputElement) => Array.from(el.files ?? []).map((f) => f.name)),
-    )
-    .toContain(fileName);
+  const kaderList = (await labels.allInnerTexts())
+    .map((text) => text.trim())
+    // Baris pertama adalah "Pilih Semua (N kader)", bukan nama kader
+    .filter((text) => text && !/^pilih semua/i.test(text));
 
-  await expect(
-    page
-      .locator("div")
-      .filter({ hasText: /^Sample_SK\.pdf\(6\.09 KB\)$/ })
-      .first(),
-  ).toBeVisible({ timeout: 30000 });
+  if (kaderList.length === 0) {
+    throw new Error("Tidak ada opsi kader pada OPD yang aktif di form SK");
+  }
+
+  return faker.helpers.arrayElement(kaderList);
+}
+
+/** Menyelaraskan data OPD & KADER dengan isi form (OPD menentukan daftar kadernya). */
+export async function syncKaderWithForm(page: Page, data: SKData): Promise<SKData> {
+  await expect.poll(() => opdField(page).inputValue(), { timeout: 15000 }).not.toBe("");
+
+  data.OPD = (await opdField(page).inputValue()).trim();
+  data.KADER = await pickKaderFromForm(page);
+
+  return data;
 }
 
 export const buildSKData = (): SKData => {
   const opd = OPD_LIST[Math.floor(Math.random() * OPD_LIST.length)];
-  const kaderList = KADER_MAP[opd];
-  const kader = kaderList[Math.floor(Math.random() * kaderList.length)];
   const filePath = path.resolve("src/assets/files/Sample_SK.pdf");
 
   return {
@@ -138,7 +209,8 @@ export const buildSKData = (): SKData => {
     "TANGGAL TERBIT": faker.date.past().toISOString().split("T")[0],
     "BATAS AKTIF": faker.date.future().toISOString().split("T")[0],
     OPD: opd,
-    KADER: kader,
+    // Diisi dari form saat selectKader(), karena daftar kader mengikuti OPD
+    KADER: "",
     FILE: filePath,
   };
 };
@@ -155,144 +227,134 @@ export const fillSKForm = async ({ data, page, isSuperAdmin }: IFillSKForm) => (
     }
     await this.selectKader();
   },
-  async expectFillALL() {
-    await ensureTextboxValue(page.getByRole("textbox", { name: "/123/BPBD/2026" }), data["NO SK"]);
-    await ensureTextboxValue(
-      page.getByRole("textbox", { name: "Pengangkatan Kader" }),
-      data["JUDUL SK"],
-    );
-    await ensureTextboxValue(page.getByRole("textbox").nth(3), data["TANGGAL TERBIT"]);
-    await ensureTextboxValue(page.getByRole("textbox").nth(4), data["BATAS AKTIF"]);
 
+  async expectFillALL() {
+    await ensureTextboxValue(noSKField(page), data["NO SK"]);
+    await ensureTextboxValue(judulSKField(page), data["JUDUL SK"]);
+    await ensureTextboxValue(tanggalTerbitField(page), data["TANGGAL TERBIT"]);
+    await ensureTextboxValue(batasAktifField(page), data["BATAS AKTIF"]);
+
+    await expect(opdField(page)).toHaveValue(data.OPD);
     if (isSuperAdmin) {
-      await expect(page.getByRole("textbox").nth(5)).toHaveValue(data.OPD);
       await expect(page.getByText("✓ OPD valid dipilih")).toBeVisible();
     }
-    // } else {
-    //   if (!(await page.getByText("✓ OPD valid dipilih").isVisible())) {
-    //     await this.selectOPD();
-    //   }
-    //   await expect(page.getByText("✓ OPD valid dipilih")).toBeVisible();
-    // }
 
-    const kader = page.getByRole("checkbox", {
-      name: data.KADER,
-    });
+    const kader = page.getByRole("checkbox", { name: exactText(data.KADER) });
     if (!(await kader.isChecked())) {
       await kader.check();
     }
-
     await expect(kader).toBeChecked();
-    await ensureFileUploaded(page, page.locator("input[type='file']"), data.FILE);
-  },
-  async fillNoSK() {
-    await page.getByRole("textbox", { name: "/123/BPBD/2026" }).fill(data["NO SK"]);
-    expect(page.getByRole("textbox", { name: "/123/BPBD/2026" })).toHaveValue(data["NO SK"]);
-  },
-  async fillJudulSK() {
-    await page.getByRole("textbox", { name: "Pengangkatan Kader" }).fill(data["JUDUL SK"]);
-    expect(page.getByRole("textbox", { name: "Pengangkatan Kader" })).toHaveValue(data["JUDUL SK"]);
-  },
-  async fillTanggalTerbit() {
-    await page.getByRole("textbox").nth(3).fill(data["TANGGAL TERBIT"]);
-    expect(page.getByRole("textbox").nth(3)).toHaveValue(data["TANGGAL TERBIT"]);
-  },
-  async fillBatasAktif() {
-    await page.getByRole("textbox").nth(4).fill(data["BATAS AKTIF"]);
-    expect(page.getByRole("textbox").nth(4)).toHaveValue(data["BATAS AKTIF"]);
-  },
-  async selectOPD() {
-    const textbox = page.getByRole("textbox").nth(5);
-    await textbox.click();
-    await textbox.pressSequentially(data.OPD, {
-      delay: 80,
-    });
-    const option = page.getByRole("listitem").filter({ hasText: data.OPD });
-    await expect(option).toBeVisible({
-      timeout: 10000,
-    });
-    await option.click();
-    await expect(page.getByText("✓ OPD valid dipilih")).toBeVisible({
-      timeout: 10000,
-    });
-  },
-  async selectKader() {
-    const opdTextbox = page.getByRole("textbox").nth(5);
-    await expect.poll(() => opdTextbox.inputValue(), { timeout: 10000 }).not.toBe("");
 
-    const OPDValue = await opdTextbox.inputValue();
-    if (OPDValue !== data.OPD) {
-      const kaderList = findKaderListForOPD(OPDValue);
-      data.OPD = OPDValue;
-      data.KADER = faker.helpers.arrayElement(kaderList);
+    // File diperiksa paling akhir: state file paling rentan hilang saat form re-render
+    await ensureFileAttached(page, data.FILE);
+  },
+
+  async fillNoSK() {
+    await noSKField(page).fill(data["NO SK"]);
+    await expect(noSKField(page)).toHaveValue(data["NO SK"]);
+  },
+
+  async fillJudulSK() {
+    await judulSKField(page).fill(data["JUDUL SK"]);
+    await expect(judulSKField(page)).toHaveValue(data["JUDUL SK"]);
+  },
+
+  async fillTanggalTerbit() {
+    await tanggalTerbitField(page).fill(data["TANGGAL TERBIT"]);
+    await expect(tanggalTerbitField(page)).toHaveValue(data["TANGGAL TERBIT"]);
+  },
+
+  async fillBatasAktif() {
+    await batasAktifField(page).fill(data["BATAS AKTIF"]);
+    await expect(batasAktifField(page)).toHaveValue(data["BATAS AKTIF"]);
+  },
+
+  async selectOPD() {
+    // Role selain super admin: field OPD terkunci ke instansi user
+    if (!(await opdField(page).isEditable())) {
+      data.OPD = (await opdField(page).inputValue()).trim();
+      return;
     }
 
-    const kaderCheckbox = page.getByRole("checkbox", { name: data.KADER });
-    await expect(kaderCheckbox).toBeVisible({ timeout: 10000 });
-    await kaderCheckbox.check();
+    await selectOPDOption(page, data.OPD);
   },
+
+  async selectKader() {
+    await syncKaderWithForm(page, data);
+
+    const checkbox = page.getByRole("checkbox", { name: exactText(data.KADER) });
+    await checkbox.check();
+    await expect(checkbox).toBeChecked();
+  },
+
   async uploadFile() {
-    await page.getByText("Tarik & lepas file PDF di sini").click();
-
-    const fileInput = page.locator("input[type='file']");
-    await fileInput.setInputFiles(data.FILE);
+    await ensureFileAttached(page, data.FILE);
   },
-  async submitButton(maxRetry = 3) {
-    const submitButton = page.getByRole("button", {
-      name: "Unggah SK",
-    });
 
-    for (let i = 1; i <= maxRetry; i++) {
-      try {
+  async submitButton(maxRetry = 3) {
+    const submitButton = page.getByRole("button", { name: "Unggah SK" });
+
+    // Form menolak lewat alert() bawaan browser; pesannya ditangkap supaya
+    // kegagalan menyebutkan field mana yang kosong, bukan sekadar "tombol masih tampil"
+    const alerts: string[] = [];
+    const onDialog = (dialog: { message: () => string; dismiss: () => Promise<void> }) => {
+      alerts.push(dialog.message());
+      void dialog.dismiss();
+    };
+    page.on("dialog", onDialog);
+
+    try {
+      for (let i = 1; i <= maxRetry; i++) {
+        alerts.length = 0;
         await submitButton.click();
 
-        // Tunggu sampai tombol hilang/disabled
-        await expect(submitButton).toBeHidden({
-          timeout: 3000,
-        });
+        try {
+          // Tunggu sampai tombol hilang/disabled
+          await expect(submitButton).toBeHidden({ timeout: 5000 });
+          return;
+        } catch (error) {
+          if (i === maxRetry) {
+            throw alerts.length > 0
+              ? new Error(`Form SK ditolak aplikasi: ${alerts.join(" | ")}`)
+              : error;
+          }
 
-        return;
-      } catch (error) {
-        console.log(`Retry submit (${i}/${maxRetry})`);
+          // Form bisa ter-reset sendiri saat halaman induk re-render,
+          // sehingga isian hilang tepat sebelum submit → isi ulang lalu coba lagi
+          if (alerts.some((message) => /masih kosong/i.test(message))) {
+            console.log(`Form ter-reset sebelum submit, isi ulang (${i}/${maxRetry})`);
+            await this.fillAll();
+            await this.expectFillALL();
+            continue;
+          }
 
-        if (i === maxRetry) {
-          throw error;
+          if (alerts.length > 0) {
+            throw new Error(`Form SK ditolak aplikasi: ${alerts.join(" | ")}`);
+          }
+
+          console.log(`Retry submit (${i}/${maxRetry})`);
         }
       }
+    } finally {
+      page.off("dialog", onDialog);
     }
   },
 });
 
-export const selectKader = async ({ data, page, isSuperAdmin }: IFillSKForm) => {
-  if (isSuperAdmin) {
-    const opdTextbox = page.getByRole("textbox").nth(5);
-    await expect.poll(() => opdTextbox.inputValue(), { timeout: 10000 }).not.toBe("");
+export const selectKader = async ({ data, page }: IFillSKForm) => {
+  await syncKaderWithForm(page, data);
 
-    const OPDValue = await opdTextbox.inputValue();
-    if (OPDValue !== data.OPD) {
-      const kaderList = findKaderListForOPD(OPDValue);
-      data.OPD = OPDValue;
-      data.KADER = faker.helpers.arrayElement(kaderList);
-    }
-  }
-
-  const kaderCheckbox = page.getByRole("checkbox", { name: data.KADER });
-  await expect(kaderCheckbox).toBeVisible({ timeout: 10000 });
-  await kaderCheckbox.check();
+  const checkbox = page.getByRole("checkbox", { name: exactText(data.KADER) });
+  await checkbox.check();
+  await expect(checkbox).toBeChecked();
 };
 
 export const selectOPD = async ({ data, page }: IFillSKForm) => {
-  const textbox = page.getByRole("textbox").nth(5);
-  await textbox.click();
-  await textbox.pressSequentially(data.OPD, {
-    delay: 80,
-  });
-  const option = page.getByRole("listitem").filter({ hasText: data.OPD });
-  await expect(option).toBeVisible({
-    timeout: 30000,
-  });
-  await option.click();
-  await expect(page.getByText("✓ OPD valid dipilih")).toBeVisible({
-    timeout: 30000,
-  });
+  // Role selain super admin: field terkunci, jadi data yang menyesuaikan form
+  if (!(await opdField(page).isEditable())) {
+    data.OPD = (await opdField(page).inputValue()).trim();
+    return;
+  }
+
+  await selectOPDOption(page, data.OPD);
 };

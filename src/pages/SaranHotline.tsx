@@ -412,6 +412,15 @@ const SaranHotline: React.FC = () => {
                 {item.value}
                 <ExternalLink size={14} className="ml-1" />
               </a>
+            ) : item.label === "Telepon" ? (
+              // Nomor telepon dibuat sebagai tautan tel: supaya bisa langsung
+              // ditelepon dari perangkat, sejajar dengan tautan WhatsApp
+              <a
+                href={`tel:${item.value.replace(/[^\d+]/g, "")}`}
+                className="text-base font-semibold text-gray-800 hover:text-gray-900 hover:underline w-fit block"
+              >
+                {item.value}
+              </a>
             ) : (
               <p className="text-base font-semibold text-gray-800">{item.value}</p>
             )}

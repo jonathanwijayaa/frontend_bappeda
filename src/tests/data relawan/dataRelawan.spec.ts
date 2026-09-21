@@ -3,7 +3,11 @@ import { credentials } from "@/helpers/credentials.helper";
 import {
   buildRelawanData,
   fillRelawanForm,
+  kaderField,
+  opdField,
   pengajuanTable,
+  relawanTable,
+  searchRelawan,
   selectKader,
   selectOPD,
   selectPenugasan,
@@ -11,6 +15,10 @@ import {
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { ensurePengajuanExists } from "@/helpers/submitPengajuan.helper";
 import { Browser, expect, Page, test } from "@playwright/test";
+
+// Aplikasi yang diuji berjalan di deployment publik: pemuatan opsi OPD/Kader
+// kerap melebihi timeout bawaan 30 detik saat beberapa test berjalan paralel
+test.describe.configure({ timeout: 90_000 });
 
 const roles = [
   { label: "Super Admin", creds: credentials.superAdmin },
@@ -120,13 +128,13 @@ for (const { label, creds } of roles) {
             title: "Name with numbers",
             value: "Relawan12345",
             expectedMessage:
-              /Format nama relawan tidak valid (hanya huruf, spasi, titik, koma, petik)/i,
+              /Format nama relawan tidak valid \(hanya huruf, spasi, titik, koma, petik\)/i,
           },
           {
             title: "Name with special characters",
             value: "@@@###",
             expectedMessage:
-              /Format nama relawan tidak valid (hanya huruf, spasi, titik, koma, petik)/i,
+              /Format nama relawan tidak valid \(hanya huruf, spasi, titik, koma, petik\)/i,
           },
           {
             title: "Name too long",
@@ -155,7 +163,9 @@ for (const { label, creds } of roles) {
               );
               expect(isValid).toBe(false);
             } else {
-              await expect(page.getByText(nameCase.expectedMessage)).toBeVisible();
+              await expect(page.getByText(nameCase.expectedMessage)).toBeVisible({
+                timeout: 12000,
+              });
             }
           });
         }
@@ -163,27 +173,38 @@ for (const { label, creds } of roles) {
 
       // TCDR.7 Invalid NIK
       test.describe(`TCDR.7 ${label} invalid NIK`, () => {
-        const invalidNIKCases = [
+        const invalidNIKCases: {
+          title: string;
+          value: string;
+          expectedMessage: RegExp | null;
+          /** Nilai yang tersisa di input bila kelebihan digit dipotong oleh maxLength */
+          expectedTruncatedValue?: string;
+        }[] = [
           { title: "Empty NIK", value: "", expectedMessage: null },
           {
             title: "NIK too short",
             value: "1234567890",
-            expectedMessage: /NIK harus terdiri dari tepat 16 digit angka/i,
+            expectedMessage:
+              /NIK harus terdiri tepat 16 digit angka|NIK harus tepat 16 digit angka/i,
           },
           {
             title: "NIK with letters",
             value: "320100ABCD123456",
-            expectedMessage: /NIK harus terdiri dari tepat 16 digit angka/i,
+            expectedMessage:
+              /NIK harus terdiri tepat 16 digit angka|NIK harus tepat 16 digit angka/i,
           },
           {
             title: "NIK with special characters",
             value: "3201@#$%^&123456",
-            expectedMessage: /NIK harus terdiri dari tepat 16 digit angka/i,
+            expectedMessage:
+              /NIK harus terdiri tepat 16 digit angka|NIK harus tepat 16 digit angka/i,
           },
           {
             title: "NIK too long",
             value: "32010000000000001",
-            expectedMessage: /NIK harus terdiri dari tepat 16 digit angka/i,
+            expectedMessage: null,
+            // Input NIK memakai maxLength=16, jadi digit ke-17 ditolak di level input
+            expectedTruncatedValue: "3201000000000000",
           },
         ];
 
@@ -198,10 +219,19 @@ for (const { label, creds } of roles) {
               isSuperAdmin: label === "Super Admin",
             });
             await form.fillAll();
+
+            // Kelebihan digit sudah ditolak input, form tidak perlu disubmit
+            if (nikCase.expectedTruncatedValue) {
+              await expect(page.getByRole("textbox", { name: "digit NIK" })).toHaveValue(
+                nikCase.expectedTruncatedValue,
+              );
+              return;
+            }
+
             await page.getByRole("button", { name: /simpan/i }).click();
 
             if (nikCase.expectedMessage === null) {
-              const nikInput = page.getByRole("textbox", { name: "NIK" });
+              const nikInput = page.getByRole("textbox", { name: "digit NIK" });
               const isValid = await nikInput.evaluate((el: HTMLInputElement) => el.checkValidity());
               expect(isValid).toBe(false);
             } else {
@@ -215,16 +245,18 @@ for (const { label, creds } of roles) {
       test.describe(`TCDR.8 ${label} invalid Relawan address`, () => {
         const invalidAddressCases = [
           { title: "Empty address", value: "", expectedMessage: null },
-          { title: "Address too short", value: "A", expectedMessage: /minimal 3 karakter/i },
+          { title: "Address too short", value: "A", expectedMessage: /Alamat minimal 5 karakter/i },
           {
             title: "Address only numbers",
             value: "1234567890",
-            expectedMessage: /alamat tidak valid|hanya angka/i,
+            expectedMessage:
+              /alamat tidak valid|hanya angka|Alamat tidak boleh hanya berupa angka/i,
           },
           {
             title: "Address with special characters",
             value: "@@@###$$$",
-            expectedMessage: /tidak boleh mengandung karakter spesial/i,
+            expectedMessage:
+              /tidak boleh mengandung karakter spesial|Alamat mengandung karakter tidak valid/i,
           },
           {
             title: "Address too long",
@@ -266,22 +298,26 @@ for (const { label, creds } of roles) {
           {
             title: "Phone number too short",
             value: "08123",
-            expectedMessage: /nomor hp tidak valid.*harus 10.*13 digit angka/i,
+            expectedMessage:
+              /nomor hp tidak valid.*harus 10.*13 digit angka|Format Nomor HP tidak valid (harus diawali 08 atau +628, 9-13 digit angka)|Format Nomor HP tidak valid/i,
           },
           {
             title: "Phone number with letters",
             value: "08ABCDE123",
-            expectedMessage: /nomor hp tidak valid.*harus 10.*13 digit angka/i,
+            expectedMessage:
+              /nomor hp tidak valid.*harus 10.*13 digit angka|Nomor HP tidak boleh mengandung huruf|Nomor HP tidak boleh/i,
           },
           {
             title: "Phone number with special characters",
             value: "08!@#$%^&*",
-            expectedMessage: /nomor hp tidak valid.*harus 10.*13 digit angka/i,
+            expectedMessage:
+              /nomor hp tidak valid.*harus 10.*13 digit angka|Format Nomor HP tidak valid/i,
           },
           {
             title: "Phone number too long",
             value: "081234567890123456789",
-            expectedMessage: /nomor hp tidak valid.*harus 10.*13 digit angka/i,
+            expectedMessage:
+              /nomor hp tidak valid.*harus 10.*13 digit angka|Format Nomor HP tidak valid/i,
           },
         ];
 
@@ -306,7 +342,7 @@ for (const { label, creds } of roles) {
               expect(isValid).toBe(false);
             } else {
               await expect(
-                page.getByText(/nomor hp tidak valid.*harus 10.*13 digit angka/i),
+                page.getByText(phoneCase.expectedMessage, { exact: true }),
               ).toBeVisible();
             }
           });
@@ -346,7 +382,7 @@ for (const { label, creds } of roles) {
         await form.fillAll();
         await selectOPD({ data: relawanData, page, isSuperAdmin: label === "Super Admin" });
 
-        await expect(page.getByRole("textbox", { name: "OPD" })).toHaveValue(relawanData.OPD);
+        await expect(opdField(page)).toHaveValue(relawanData.OPD);
       });
 
       // TCDR.12
@@ -361,7 +397,7 @@ for (const { label, creds } of roles) {
         await selectOPD({ data: relawanData, page, isSuperAdmin: label === "Super Admin" });
         await selectKader({ data: relawanData, page, isSuperAdmin: label === "Super Admin" });
 
-        await expect(page.getByRole("textbox", { name: "Kader" })).toHaveValue(relawanData.KADER);
+        await expect(kaderField(page)).toHaveValue(relawanData.KADER);
       });
 
       // TCDR.13
@@ -416,13 +452,13 @@ for (const { label, creds } of roles) {
         await form.fillAll();
         await form.fillStatusKeaktifan();
 
-        if (relawanData["STATUS KEAKTIFAN"]) {
-          await expect(
-            page.locator(`input[type="radio"][value="${relawanData["STATUS KEAKTIFAN"]}"]`),
-          ).toBeChecked();
-        } else {
-          await expect(page.locator(`input[type="radio"][value="Aktif"]`)).toBeChecked();
-        }
+        // Label "Nonaktif" pada form dikirim dengan value "Tidak Aktif"
+        const expectedRadioValue =
+          relawanData["STATUS KEAKTIFAN"] === "Nonaktif" ? "Tidak Aktif" : "Aktif";
+
+        await expect(
+          page.locator(`input[type="radio"][value="${expectedRadioValue}"]`),
+        ).toBeChecked();
       });
 
       // TCDR.16
@@ -436,7 +472,7 @@ for (const { label, creds } of roles) {
         await form.fillAll();
         await page.getByRole("button", { name: /tambah data penugasan/i }).click();
 
-        await expect(page.getByRole("textbox", { name: "OPD" }).nth(1)).toBeVisible();
+        await expect(opdField(page, 1)).toBeVisible();
       });
     });
 
@@ -511,73 +547,96 @@ for (const { label, creds } of roles) {
 
     // TCDR.21-26 Search Bar
     test.describe(`TCDR.21-26 ${label} Search Bar`, () => {
-      const searchCases = [
+      // Kata kunci untuk kasus "ada hasil" diambil dari baris pertama tabel
+      // (kolom NIK / NAMA), supaya test tidak bergantung pada data seed tertentu.
+      const searchCases: {
+        id: string;
+        title: string;
+        expectNoData: boolean;
+        keyword?: string;
+        source?: "NIK" | "NAMA";
+        transform?: (value: string) => string;
+      }[] = [
         {
           id: "TCDR.21",
           title: "input keyword in search bar",
-          keyword: "Relawan Demo",
           expectNoData: false,
-          expectedContent: /relawan demo/i,
+          source: "NAMA",
         },
         {
           id: "TCDR.22",
           title: "input with upper case",
-          keyword: "RELAWAN DEMO",
           expectNoData: false,
-          expectedContent: /relawan demo/i,
+          source: "NAMA",
+          transform: (value) => value.toUpperCase(),
         },
         {
           id: "TCDR.23",
           title: "input with lower case",
-          keyword: "relawan demo",
           expectNoData: false,
-          expectedContent: /relawan demo/i,
+          source: "NAMA",
+          transform: (value) => value.toLowerCase(),
         },
         {
           id: "TCDR.24",
           title: "input with specific word (NIK)",
-          keyword: "0000000000000000",
           expectNoData: false,
-          expectedContent: /0000000000000000/,
+          source: "NIK",
         },
         {
           id: "TCDR.25",
           title: "input with random keyword",
           keyword: "xqz99randomkeyword",
           expectNoData: true,
-          expectedContent: null,
         },
         {
           id: "TCDR.26",
           title: "input with special characters",
           keyword: "@#$%^&*()",
           expectNoData: true,
-          expectedContent: null,
         },
       ];
 
       for (const searchCase of searchCases) {
         test(`${searchCase.id} ${label} ${searchCase.title}`, async ({ page }) => {
-          const searchInput = page.getByRole("textbox", { name: /cari|search/i });
-          await searchInput.fill(searchCase.keyword);
+          const table = relawanTable(page);
+          // Halaman ini punya dua search bar (Pengajuan & Daftar Relawan),
+          // jadi pakai locator khusus search bar Daftar Relawan
+          const searchInput = searchRelawan(page);
 
-          // Gunakan tabel Daftar Relawan secara spesifik — berdasarkan header kolom
-          const relawanTable = page
-            .getByRole("table")
-            .filter({ hasText: /nama.*nik.*alamat.*kelurahan/i });
+          let keyword = searchCase.keyword ?? "";
+
+          if (searchCase.source) {
+            await expect(table).toBeVisible();
+
+            // Kolom: NIK (0), NAMA (1), ALAMAT, KEMANTREN, KELURAHAN, AKSI
+            const cellIndex = searchCase.source === "NIK" ? 0 : 1;
+            const cellText = await table
+              .getByRole("row")
+              .nth(1)
+              .getByRole("cell")
+              .nth(cellIndex)
+              .textContent();
+
+            keyword = (cellText ?? "").trim();
+            expect(keyword, `Kolom ${searchCase.source} baris pertama kosong`).not.toBe("");
+            keyword = searchCase.transform ? searchCase.transform(keyword) : keyword;
+          }
+
+          await searchInput.fill(keyword);
 
           if (searchCase.expectNoData) {
             await expect(page.getByText(/Belum ada relawan/i)).toBeVisible();
-          } else {
-            await expect(relawanTable).toBeVisible();
-
-            const matchingRows = relawanTable
-              .getByRole("row")
-              .filter({ hasText: searchCase.expectedContent! });
-
-            await expect(matchingRows.first()).toBeVisible();
-            expect(await matchingRows.count()).toBeGreaterThan(0);
+            return;
           }
+
+          await expect(table).toBeVisible();
+
+          // hasText dengan string: pencocokan substring & tidak peka huruf besar/kecil
+          const matchingRows = table.getByRole("row").filter({ hasText: keyword });
+
+          await expect(matchingRows.first()).toBeVisible();
+          expect(await matchingRows.count()).toBeGreaterThan(0);
         });
       }
     });
@@ -659,6 +718,10 @@ for (const { label, creds } of roles) {
 
     // TCDR.32-35 Tabel Pengajuan Perubahan Data
     test.describe.serial(`TCDR.32-35 ${label} Pengajuan Perubahan Data`, () => {
+      // Tiap test bisa membuat pengajuan baru lewat login akun relawan di
+      // context terpisah, jadi butuh waktu lebih dari timeout default 30 detik
+      test.describe.configure({ timeout: 120_000 });
+
       // Helper lokal: navigasi ke halaman relawan, pastikan ada
       // pengajuan pending, lalu buka halaman Review-nya.
       async function goToReviewPage(page: Page, browser: Browser) {

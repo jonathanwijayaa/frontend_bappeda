@@ -49,6 +49,13 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
     tanggalTerbit: "",
   });
 
+  // Dipakai sebagai dependency useEffect dalam bentuk nilai primitif.
+  // Prop userOpdData dikirim sebagai object literal oleh pemanggil, sehingga
+  // referensinya berubah setiap parent re-render — kalau dipakai langsung
+  // sebagai dependency, form yang sedang diisi akan ter-reset di tengah jalan.
+  const userOpdId = userOpdData?.id;
+  const userOpdName = userOpdData?.name;
+
   // Reset dan atur nilai awal saat modal terbuka
   useEffect(() => {
     if (isOpen) {
@@ -57,8 +64,8 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
         judulSK: "",
         nomorSK: "",
         // Jika isOPD, langsung kunci id dan namanya dari props userOpdData
-        opd_id: isOPD && userOpdData?.id ? String(userOpdData.id) : "",
-        opd_name: isOPD && userOpdData?.name ? userOpdData.name : "",
+        opd_id: isOPD && userOpdId ? String(userOpdId) : "",
+        opd_name: isOPD && userOpdName ? userOpdName : "",
         tanggalTerbit: "",
       });
       setFile(null);
@@ -84,7 +91,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
           .catch(() => console.error("Gagal mengambil daftar OPD"));
       }
     }
-  }, [isOpen, isOPD, userOpdData]);
+  }, [isOpen, isOPD, userOpdId, userOpdName]);
 
   // === useEffect: Fetch Kader berdasarkan OPD ===
   useEffect(() => {
