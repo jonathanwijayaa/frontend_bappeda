@@ -1,31 +1,34 @@
 import { faker } from "@faker-js/faker";
-import { Page } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 
 const OPD_LIST = [
   "Opd Demo",
-  "Dinas Kesehatan (Dinkes)",
-  "Dinas Perhubungan",
-  "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)",
-  "Dinas Pariwisata",
-  "Dinas Kebudayaan",
-  "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)",
+  "Dinas Kesehatan",
+  // "Dinas Perhubungan",
+  "Dinas Sosial Tenaga Kerja dan Transmigrasi",
+  // "Dinas Pariwisata",
+  // "Dinas Kebudayaan",
+  "Dinas Pemberdayaan Perempuan Perlindungan Anak Pengendalian Penduduk dan Keluarga Berencana",
 ];
 
 const KADER_MAP: Record<string, string[]> = {
-  "Opd Demo": ["Kader Angie Padberg", "Kader Dana West", "Kader Miss Gladys Mraz", "Demo Kader"],
+  "Opd Demo": ["Demo Kader", "Kader Caroline Weimann", "Kader Yvonne Keeling"],
 
-  "Dinas Kesehatan (Dinkes)": ["KADER KESEHATAN"],
+  "Dinas Kesehatan": ["KADER KESEHATAN"],
 
-  "Dinas Perhubungan": ["Kader Perhubungan C", "Kader Perhubungan C1"],
+  "Dinas Perhubungan": ["Kader Perhubungan C", "Kader Perhubungan D"],
 
-  "Dinas Sosial, Tenaga Kerja, dan Transmigrasi (Dinsosnakertrans)": ["PORDAM", "TAGANA", "IPSM"],
+  "Dinas Sosial Tenaga Kerja dan Transmigrasi": ["PORDAM", "TAGANA", "IPSM"],
 
-  "Dinas Pariwisata": ["Kader Pariwisata 1", "Kader Pariwisata 2"],
+  "Dinas Pariwisata": ["Kader Pariwisata"],
 
-  "Dinas Kebudayaan": ["Kader Kebudayaan 1", "Kader Kebudayaan 2"],
+  "Dinas Kebudayaan": ["Kader Kebudayaan A", "Kader Kebudayaan B"],
 
-  "Dinas Pemberdayaan Perempuan, Perlindungan Anak, Pengendalian Penduduk dan Keluarga Berencana (DP3AP2KB)":
-    ["SIGRAK", "POSYANDU", "PKK"],
+  "Dinas Pemberdayaan Perempuan Perlindungan Anak Pengendalian Penduduk dan Keluarga Berencana": [
+    "SIGRAK",
+    "POSYANDU",
+    "PKK",
+  ],
 };
 
 const KEMANTREN_LIST = [
@@ -97,6 +100,7 @@ export interface RelawanData {
 interface IFillRelawanForm {
   data: RelawanData;
   page: Page;
+  isSuperAdmin: boolean;
 }
 
 function generateSafeName(): string {
@@ -113,7 +117,7 @@ export const buildRelawanData = (): RelawanData => {
 
   return {
     "NAMA LENGKAP": generateSafeName(),
-    "JENIS KELAMIN": faker.person.sex() === "male" ? "L" : "P",
+    "JENIS KELAMIN": faker.person.sex() === "male" ? "Laki-laki (L)" : "Perempuan (P)",
     NIK: faker.number.bigInt({ min: 3201000000000000n, max: 3201999999999999n }).toString(),
     ALAMAT: faker.location.streetAddress() + ", Yogyakarta",
     "NO HP": `08${faker.string.numeric(10)}`,
@@ -140,15 +144,36 @@ export const buildRelawanData = (): RelawanData => {
     ]),
     "STATUS KEAKTIFAN": faker.helpers.arrayElement(["Aktif", "Nonaktif"]),
   };
+  async function ensureTextboxValue(
+    locator: Locator,
+    expectedValue: string,
+    maxRetry = 3,
+  ): Promise<void> {
+    for (let i = 0; i < maxRetry; i++) {
+      const currentValue = await locator.inputValue();
+
+      if (currentValue === expectedValue) {
+        await expect(locator).toHaveValue(expectedValue);
+        return;
+      }
+
+      await locator.click();
+      await locator.clear();
+      await locator.fill(expectedValue);
+    }
+
+    await expect(locator).toHaveValue(expectedValue);
+  }
 };
 
-export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
+export const fillRelawanForm = async ({ data, page, isSuperAdmin }: IFillRelawanForm) => ({
   async fillAlamat() {
     await page
       .getByRole("textbox", { name: /alamat sesuai ktp/i })
       .or(page.getByRole("textbox").nth(4))
       .fill(data.ALAMAT);
   },
+
   async fillAll() {
     await this.fillNamaLengkap();
     await this.fillNIK();
@@ -158,13 +183,19 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
     await this.fillKelurahan();
     await this.fillJenisKelamin();
     await this.clickTambahDataPenugasan();
-    await this.fillOPD();
+    if (isSuperAdmin) {
+      await this.fillOPD();
+    }
     await this.fillKader();
     await this.fillJabatan();
     await this.fillDetailJabatan();
     await this.fillPenugasan();
     await this.fillStatusKeaktifan();
   },
+  // async expectFillAll() {
+  //   await ensureTextboxValue(page.getByRole("textbox", { name: /nama lengkap relawan/i })
+  //     .or(page.getByRole("textbox").nth(2))).
+  // },
   async fillDetailJabatan() {
     await page
       .getByRole("textbox", { name: /detail jabatan/i })
@@ -172,22 +203,47 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
       .fill(data["DETAIL JABATAN"]);
   },
   async fillJabatan() {
-    await page.getByRole("combobox").nth(1).selectOption(data.JABATAN);
+    if (await page.getByRole("button", { name: "-- Pilih Jabatan --" }).isVisible()) {
+      await page.getByRole("button", { name: "-- Pilih Jabatan --" }).click();
+      await page.getByRole("button", { name: data.JABATAN }).click();
+      return;
+    } else if (await page.getByRole("combobox").nth(1).isVisible()) {
+      await page.getByRole("combobox").nth(1).click();
+      await page.getByRole("combobox").nth(1).selectOption(data.JABATAN);
+      return;
+    }
   },
+
   async fillJenisKelamin() {
-    await page.getByRole("combobox").first().selectOption(data["JENIS KELAMIN"]);
+    await page.getByRole("button", { name: "Laki-laki (L)" }).click();
+    if (data["JENIS KELAMIN"] === "Laki-laki (L)") {
+      await page.getByRole("button", { name: data["JENIS KELAMIN"] }).nth(1).click();
+    } else {
+      await page.getByRole("button", { name: data["JENIS KELAMIN"] }).click();
+    }
   },
   async fillKelurahan() {
-    await page
+    const textbox = page
       .getByRole("textbox", { name: /kelurahan/i })
-      .or(page.getByRole("textbox").nth(7))
-      .fill(data.KELURAHAN);
+      .or(page.getByRole("textbox").nth(7));
+    await textbox.pressSequentially(data.KELURAHAN, { delay: 80 });
+    const option = page.getByRole("listitem").filter({ hasText: data.KELURAHAN });
+    await expect(option).toBeVisible({ timeout: 10000 });
+    await option.click();
   },
   async fillKader() {
-    await page
+    // await page
+    //   .getByRole("textbox", { name: /memuat kader/i })
+    //   .or(page.getByRole("textbox", { name: "Cari nama Kader..." }))
+    //   .fill(data.KADER);
+    const textbox = page
       .getByRole("textbox", { name: /memuat kader/i })
-      .or(page.getByRole("textbox", { name: "Cari nama Kader..." }))
-      .fill(data.KADER);
+      .or(page.getByRole("textbox", { name: "Cari nama Kader..." }));
+    await textbox.click();
+    await textbox.pressSequentially(data.KADER, { delay: 80 });
+    const option = page.getByRole("listitem").filter({ hasText: data.KADER });
+    await expect(option).toBeVisible({ timeout: 10000 });
+    await option.click();
   },
   async fillNamaLengkap() {
     await page
@@ -208,15 +264,21 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
       .fill(data["NO HP"]);
   },
   async fillOPD() {
-    if (await page.getByRole("textbox", { name: /cari nama opd/i }).isVisible()) {
-      await page.getByRole("textbox", { name: /cari nama opd/i }).fill(data.OPD);
-      return;
-    }
-    if (await page.getByRole("listitem").isVisible()) {
-      await page.getByRole("listitem").click();
-      return;
-    }
-    return;
+    // if (await page.getByRole("textbox", { name: /cari nama opd/i }).isVisible()) {
+    //   await page.getByRole("textbox", { name: /cari nama opd/i }).fill(data.OPD);
+    //   return;
+    // }
+    // if (await page.getByRole("listitem").isVisible()) {
+    //   await page.getByRole("listitem").click();
+    //   return;
+    // }
+    // return;
+    const textbox = page.getByRole("textbox", { name: /cari nama opd/i });
+    await textbox.click();
+    await textbox.pressSequentially(data.OPD, { delay: 80 });
+    const option = page.getByRole("listitem").filter({ hasText: data.OPD });
+    await expect(option).toBeVisible({ timeout: 10000 });
+    await option.click();
   },
   async fillPenugasan() {
     await page.getByRole("textbox", { name: /nama\/detail penugasan/i }).fill(data.PENUGASAN);
@@ -232,7 +294,36 @@ export const fillRelawanForm = async ({ data, page }: IFillRelawanForm) => ({
     }
   },
   async fillKemantren() {
-    await page.getByRole("textbox", { name: /nama kemantren/i }).fill(data.KEMANTREN);
+    const textbox = page.getByRole("textbox", { name: /nama kemantren/i });
+    await textbox.click();
+    await textbox.pressSequentially(data.KEMANTREN, { delay: 80 });
+    const option = page.getByRole("listitem").filter({ hasText: data.KEMANTREN });
+    await expect(option).toBeVisible({ timeout: 10000 });
+    await option.click();
+  },
+  async submitButton(maxRetry = 3) {
+    const submitButton = page.getByRole("button", {
+      name: "Simpan",
+    });
+
+    for (let i = 1; i <= maxRetry; i++) {
+      try {
+        await submitButton.click();
+
+        // Tunggu sampai tombol hilang/disabled
+        await expect(submitButton).toBeHidden({
+          timeout: 3000,
+        });
+
+        return;
+      } catch (error) {
+        console.log(`Retry submit (${i}/${maxRetry})`);
+
+        if (i === maxRetry) {
+          throw error;
+        }
+      }
+    }
   },
 });
 

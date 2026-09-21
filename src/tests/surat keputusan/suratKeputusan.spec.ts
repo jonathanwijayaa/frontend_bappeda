@@ -1,9 +1,10 @@
 import { credentials } from "@/helpers/credentials.helper";
+import { buildSKData, fillSKForm } from "@/helpers/formSuratKeputusan.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { expect, test } from "@playwright/test";
 import path from "path";
 
-const roles = [
+export const roles = [
   { label: "Super Admin", creds: credentials.superAdmin },
   { label: "OPD", creds: credentials.opd },
 ] as const;
@@ -20,20 +21,25 @@ for (const { label, creds } of roles) {
       });
 
       await expect(page).toHaveURL(/dashboard/);
-      await page.getByRole("link", { name: /surat keputusan/i }).click();
+      await page.getByRole("link", { name: "Surat Keputusan" }).click();
       await expect(page).toHaveURL(/surat-keputusan/);
     });
 
     // TCSK.1 Upload SK PDF
     test(`TCSK.1 ${label} uploads a Surat Keputusan (SK) file`, async ({ page }) => {
-      const filePath = path.resolve("src/assets/files/Sample_SK.pdf");
+      const skData = buildSKData();
+
+      const form = await fillSKForm({
+        data: skData,
+        page,
+        isSuperAdmin: label === "Super Admin",
+      });
 
       await page.getByRole("button", { name: /upload sk/i }).click();
 
-      const fileInput = page.locator("input[type='file']");
-      await fileInput.setInputFiles(filePath);
-
-      await page.getByRole("button", { name: /simpan|upload|lanjutkan|Unggah SK/i }).click();
+      await form.fillAll();
+      await form.expectFillALL();
+      await form.submitButton();
 
       await expect(page.getByText(/berhasil|success/i)).toBeVisible();
     });
@@ -49,16 +55,20 @@ for (const { label, creds } of roles) {
 
       await page.getByRole("button", { name: /batal/i }).click();
 
-      await expect(page.getByRole("heading", { name: /surat keputusan/i })).toBeVisible();
+      await expect(
+        page.getByRole("heading", { name: "Surat Keputusan", exact: true }),
+      ).toBeVisible();
     });
 
     // TCSK.3-8 Search Bar
     test.describe(`TCSK.3-8 ${label} Search Bar`, () => {
       const searchCases = [
-        { id: "TCSK.3", title: "input keyword in search bar", keyword: "Dinas Sosial" },
-        { id: "TCSK.4", title: "input with upper case", keyword: "DINAS SOSIAL" },
-        { id: "TCSK.5", title: "input with lower case", keyword: "dinas sosial" },
-        { id: "TCSK.6", title: "input with specific word", keyword: "800/123" },
+        { id: "TCSK.3.0", title: "input keyword in search bar a OPD", keyword: "Opd Demo" },
+        { id: "TCSK.3.1", title: "input keyword search bar a Judul SK", keyword: "Sk Demo" },
+        { id: "TCSK.3.2", title: "input keyword search bar a NO SK", keyword: "000/000/Demo/2025" },
+        { id: "TCSK.4", title: "input with upper case", keyword: "OPD DEMO" },
+        { id: "TCSK.5", title: "input with lower case", keyword: "opd demo" },
+        { id: "TCSK.6", title: "input with specific word", keyword: "000/000" },
         { id: "TCSK.7", title: "input with random keyword", keyword: "xqz99randomkeyword" },
         { id: "TCSK.8", title: "input with special characters", keyword: "@#$%^&*()" },
       ];
@@ -70,7 +80,9 @@ for (const { label, creds } of roles) {
           await searchInput.press("Enter");
 
           if (["TCSK.7", "TCSK.8"].includes(searchCase.id)) {
-            await expect(page.getByText(/tidak ada data|no data/i)).toBeVisible();
+            await expect(
+              page.getByText(/tidak ada data|no data|Belum ada Surat Keputusan/i),
+            ).toBeVisible();
           } else {
             await expect(page.getByRole("table")).toBeVisible();
           }
@@ -96,6 +108,12 @@ for (const { label, creds } of roles) {
           .first()
           .click();
         await expect(page.getByRole("heading", { name: /detail surat keputusan/i })).toBeVisible();
+        await expect(
+          page
+            .locator("div")
+            .filter({ hasText: /^Memuat detail\.\.\.$/ })
+            .nth(1),
+        ).not.toBeVisible();
       });
 
       // TCSK.10
@@ -105,9 +123,13 @@ for (const { label, creds } of roles) {
 
       // TCSK.11
       test(`TCSK.11 ${label} accesses the Surat Keputusan file`, async ({ page }) => {
-        await page.getByRole("link", { name: /lihat sk|buka sk/i }).click();
+        await page.locator(".text-gray-400.hover\\:text-gray-600").first().click();
+        await page.getByRole("button").nth(5).click();
 
-        await expect(page).toHaveURL(/sk|pdf|dokumen/);
+        await expect(page.getByRole("heading", { name: "Preview Surat Keputusan" })).toBeVisible();
+        await expect(
+          page.locator('iframe[title="PDF Preview"]').contentFrame().locator("html"),
+        ).toBeVisible();
       });
     });
 

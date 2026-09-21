@@ -53,13 +53,17 @@ for (const { label, creds } of roles) {
       // TCDR.3
       test(`TCDR.3 ${label} fill tambah Relawan data form`, async ({ page }) => {
         const relawanData = buildRelawanData();
-        const form = await fillRelawanForm({ data: relawanData, page });
+        const form = await fillRelawanForm({
+          data: relawanData,
+          page,
+          isSuperAdmin: label === "Super Admin",
+        });
         await form.fillAll();
 
         await expect(page.getByRole("textbox", { name: "Nama lengkap" })).toHaveValue(
           relawanData["NAMA LENGKAP"],
         );
-        await expect(page.getByRole("textbox", { name: "NIK" })).toHaveValue(relawanData.NIK);
+        await expect(page.getByRole("textbox", { name: "digit NIK" })).toHaveValue(relawanData.NIK);
         await expect(page.getByRole("textbox", { name: "Alamat" })).toHaveValue(relawanData.ALAMAT);
         await expect(page.getByRole("textbox", { name: "Nomor HP" })).toHaveValue(
           relawanData["NO HP"],
@@ -69,7 +73,11 @@ for (const { label, creds } of roles) {
       // TCDR.4
       test(`TCDR.4 ${label} save new Relawan form`, async ({ page }) => {
         const relawanData = buildRelawanData();
-        const form = await fillRelawanForm({ data: relawanData, page });
+        const form = await fillRelawanForm({
+          data: relawanData,
+          page,
+          isSuperAdmin: label === "Super Admin",
+        });
         await form.fillAll();
 
         await page.getByRole("button", { name: /simpan/i }).click();
@@ -84,7 +92,11 @@ for (const { label, creds } of roles) {
       // TCDR.5
       test(`TCDR.5 ${label} cancel new Relawan form`, async ({ page }) => {
         const relawanData = buildRelawanData();
-        const form = await fillRelawanForm({ data: relawanData, page });
+        const form = await fillRelawanForm({
+          data: relawanData,
+          page,
+          isSuperAdmin: label === "Super Admin",
+        });
         await form.fillAll();
 
         await page.getByRole("button").filter({ hasText: /^$/ }).nth(2).click();
@@ -107,12 +119,14 @@ for (const { label, creds } of roles) {
           {
             title: "Name with numbers",
             value: "Relawan12345",
-            expectedMessage: /tidak boleh mengandung angka atau karakter spesial/i,
+            expectedMessage:
+              /Format nama relawan tidak valid (hanya huruf, spasi, titik, koma, petik)/i,
           },
           {
             title: "Name with special characters",
             value: "@@@###",
-            expectedMessage: /tidak boleh mengandung angka atau karakter spesial/i,
+            expectedMessage:
+              /Format nama relawan tidak valid (hanya huruf, spasi, titik, koma, petik)/i,
           },
           {
             title: "Name too long",
@@ -126,7 +140,11 @@ for (const { label, creds } of roles) {
             const relawanData = buildRelawanData();
             relawanData["NAMA LENGKAP"] = nameCase.value;
 
-            const form = await fillRelawanForm({ data: relawanData, page });
+            const form = await fillRelawanForm({
+              data: relawanData,
+              page,
+              isSuperAdmin: label === "Super Admin",
+            });
             await form.fillAll();
             await page.getByRole("button", { name: /simpan/i }).click();
 
@@ -174,7 +192,11 @@ for (const { label, creds } of roles) {
             const relawanData = buildRelawanData();
             relawanData.NIK = nikCase.value;
 
-            const form = await fillRelawanForm({ data: relawanData, page });
+            const form = await fillRelawanForm({
+              data: relawanData,
+              page,
+              isSuperAdmin: label === "Super Admin",
+            });
             await form.fillAll();
             await page.getByRole("button", { name: /simpan/i }).click();
 
@@ -216,7 +238,11 @@ for (const { label, creds } of roles) {
             const relawanData = buildRelawanData();
             relawanData.ALAMAT = addressCase.value;
 
-            const form = await fillRelawanForm({ data: relawanData, page });
+            const form = await fillRelawanForm({
+              data: relawanData,
+              page,
+              isSuperAdmin: label === "Super Admin",
+            });
             await form.fillAll();
             await page.getByRole("button", { name: /simpan/i }).click();
 
@@ -264,7 +290,11 @@ for (const { label, creds } of roles) {
             const relawanData = buildRelawanData();
             relawanData["NO HP"] = phoneCase.value;
 
-            const form = await fillRelawanForm({ data: relawanData, page });
+            const form = await fillRelawanForm({
+              data: relawanData,
+              page,
+              isSuperAdmin: label === "Super Admin",
+            });
             await form.fillAll();
             await page.getByRole("button", { name: /simpan/i }).click();
 
@@ -293,7 +323,11 @@ for (const { label, creds } of roles) {
       // TCDR.10
       test(`TCDR.10 ${label} fill Penugasan form`, async ({ page }) => {
         const relawanData = buildRelawanData();
-        const form = await fillRelawanForm({ data: relawanData, page });
+        const form = await fillRelawanForm({
+          data: relawanData,
+          page,
+          isSuperAdmin: label === "Super Admin",
+        });
         await form.fillAll();
 
         await expect(page.getByRole("textbox", { name: "Penugasan" })).toHaveValue(
@@ -304,9 +338,13 @@ for (const { label, creds } of roles) {
       // TCDR.11
       test(`TCDR.11 ${label} select OPD on Penugasan form`, async ({ page }) => {
         const relawanData = buildRelawanData();
-        const form = await fillRelawanForm({ data: relawanData, page });
+        const form = await fillRelawanForm({
+          data: relawanData,
+          page,
+          isSuperAdmin: label === "Super Admin",
+        });
         await form.fillAll();
-        await selectOPD({ data: relawanData, page });
+        await selectOPD({ data: relawanData, page, isSuperAdmin: label === "Super Admin" });
 
         await expect(page.getByRole("textbox", { name: "OPD" })).toHaveValue(relawanData.OPD);
       });
@@ -314,10 +352,14 @@ for (const { label, creds } of roles) {
       // TCDR.12
       test(`TCDR.12 ${label} select Kader on Penugasan form`, async ({ page }) => {
         const relawanData = buildRelawanData();
-        const form = await fillRelawanForm({ data: relawanData, page });
+        const form = await fillRelawanForm({
+          data: relawanData,
+          page,
+          isSuperAdmin: label === "Super Admin",
+        });
         await form.fillAll();
-        await selectOPD({ data: relawanData, page });
-        await selectKader({ data: relawanData, page });
+        await selectOPD({ data: relawanData, page, isSuperAdmin: label === "Super Admin" });
+        await selectKader({ data: relawanData, page, isSuperAdmin: label === "Super Admin" });
 
         await expect(page.getByRole("textbox", { name: "Kader" })).toHaveValue(relawanData.KADER);
       });
@@ -325,9 +367,13 @@ for (const { label, creds } of roles) {
       // TCDR.13
       test(`TCDR.13 ${label} select Peran on Penugasan form`, async ({ page }) => {
         const relawanData = buildRelawanData();
-        const form = await fillRelawanForm({ data: relawanData, page });
+        const form = await fillRelawanForm({
+          data: relawanData,
+          page,
+          isSuperAdmin: label === "Super Admin",
+        });
         await form.fillAll();
-        await selectPenugasan({ data: relawanData, page });
+        await selectPenugasan({ data: relawanData, page, isSuperAdmin: label === "Super Admin" });
 
         await expect(page.getByRole("textbox", { name: "Penugasan" })).toHaveValue(
           relawanData.PENUGASAN,
@@ -362,7 +408,11 @@ for (const { label, creds } of roles) {
       // TCDR.15
       test(`TCDR.15 ${label} select status keaktifan`, async ({ page }) => {
         const relawanData = buildRelawanData();
-        const form = await fillRelawanForm({ data: relawanData, page });
+        const form = await fillRelawanForm({
+          data: relawanData,
+          page,
+          isSuperAdmin: label === "Super Admin",
+        });
         await form.fillAll();
         await form.fillStatusKeaktifan();
 
@@ -378,7 +428,11 @@ for (const { label, creds } of roles) {
       // TCDR.16
       test(`TCDR.16 ${label} add more data penugasan`, async ({ page }) => {
         const relawanData = buildRelawanData();
-        const form = await fillRelawanForm({ data: relawanData, page });
+        const form = await fillRelawanForm({
+          data: relawanData,
+          page,
+          isSuperAdmin: label === "Super Admin",
+        });
         await form.fillAll();
         await page.getByRole("button", { name: /tambah data penugasan/i }).click();
 
@@ -548,7 +602,11 @@ for (const { label, creds } of roles) {
 
         await page.getByRole("button", { name: /edit/i }).click();
 
-        const form = await fillRelawanForm({ data: relawanData, page });
+        const form = await fillRelawanForm({
+          data: relawanData,
+          page,
+          isSuperAdmin: label === "Super Admin",
+        });
         await form.fillNamaLengkap();
         await form.fillAlamat();
         await form.fillNoHP();
@@ -563,9 +621,9 @@ for (const { label, creds } of roles) {
         await page.getByRole("button", { name: /edit/i }).click();
 
         const relawanData = buildRelawanData();
-        await selectOPD({ data: relawanData, page });
-        await selectKader({ data: relawanData, page });
-        await selectPenugasan({ data: relawanData, page });
+        await selectOPD({ data: relawanData, page, isSuperAdmin: label === "Super Admin" });
+        await selectKader({ data: relawanData, page, isSuperAdmin: label === "Super Admin" });
+        await selectPenugasan({ data: relawanData, page, isSuperAdmin: label === "Super Admin" });
 
         await page.getByRole("button", { name: /simpan/i }).click();
 

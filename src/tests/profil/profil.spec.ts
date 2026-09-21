@@ -28,7 +28,7 @@ for (const { label, creds } of roles) {
 
       // Akses profil via avatar/nama di kanan atas
       await page.getByRole("button", { name: new RegExp(label, "i") }).click();
-      await expect(page).toHaveURL(/profil/);
+      await expect(page).toHaveURL(/edit profil/);
     });
 
     // TCP.1 Change Profile Picture
@@ -97,7 +97,7 @@ for (const { label, creds } of roles) {
 
         await page.getByRole("button", { name: /batal|cancel/i }).click();
 
-        await expect(page).toHaveURL(/profil/);
+        await expect(page).toHaveURL(/edit profil/);
         await expect(page.getByText("Nama Yang Tidak Disimpan")).not.toBeVisible();
       });
     });

@@ -4,7 +4,7 @@ import { buildKaderData, fillKaderForm } from "@/helpers/formKader.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { expect, test } from "@playwright/test";
 
-const roles = [
+export const roles = [
   { label: "Super Admin", creds: credentials.superAdmin, isSuperAdmin: true },
   { label: "OPD", creds: credentials.opd, isSuperAdmin: false },
 ] as const;
@@ -44,10 +44,16 @@ for (const { label, creds, isSuperAdmin } of roles) {
       // TCDK.3
       test(`TCDK.3 ${label} fill tambah data form`, async ({ page }) => {
         const kaderData = buildKaderData();
-        const form = await fillKaderForm({ data: kaderData, page });
+        const form = await fillKaderForm({
+          data: kaderData,
+          page,
+          isSuperAdmin: label === "Super Admin",
+          TCDK: "TCDK.3",
+        });
 
-        // Super Admin wajib isi OPD, OPD tidak perlu
-        isSuperAdmin ? await form.fillAllSuperAdmin() : await form.fillAllOPD();
+        await form.fillAll();
+        // await form.expectFillALL();
+        // await form.submitButton();
 
         await expect(page.getByRole("textbox", { name: /Nama Kader/i })).toHaveValue(
           kaderData["NAMA KADER"],
@@ -72,11 +78,15 @@ for (const { label, creds, isSuperAdmin } of roles) {
       // TCDK.4
       test(`TCDK.4 ${label} save new Kader form`, async ({ page }) => {
         const kaderData = buildKaderData();
-        const form = await fillKaderForm({ data: kaderData, page });
+        const form = await fillKaderForm({
+          data: kaderData,
+          page,
+          isSuperAdmin: label === "Super Admin",
+          TCDK: "TCDK.4",
+        });
 
-        isSuperAdmin ? await form.fillAllSuperAdmin() : await form.fillAllOPD();
-        await page.waitForTimeout(10000);
-        await form.submit();
+        await form.fillAll();
+        await form.submitButton();
 
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();
       });
@@ -84,10 +94,15 @@ for (const { label, creds, isSuperAdmin } of roles) {
       // TCDK.5
       test(`TCDK.5 ${label} cancel new Kader form`, async ({ page }) => {
         const kaderData = buildKaderData();
-        const form = await fillKaderForm({ data: kaderData, page });
+        const form = await fillKaderForm({
+          data: kaderData,
+          page,
+          isSuperAdmin: label === "Super Admin",
+          TCDK: "TCDK.5",
+        });
 
-        isSuperAdmin ? await form.fillAllSuperAdmin() : await form.fillAllOPD();
-        await form.cancel();
+        await form.fillAll();
+        await form.cancelButton();
 
         await expect(page).toHaveURL(/daftar-kader/);
       });
@@ -126,9 +141,14 @@ for (const { label, creds, isSuperAdmin } of roles) {
             const kaderData = buildKaderData();
             kaderData["NAMA KADER"] = kaderCase.value;
 
-            const form = await fillKaderForm({ data: kaderData, page });
-            isSuperAdmin ? await form.fillAllSuperAdmin() : await form.fillAllOPD();
-            await form.submit();
+            const form = await fillKaderForm({
+              data: kaderData,
+              page,
+              isSuperAdmin: label === "Super Admin",
+              TCDK: "TCDK.6",
+            });
+            await form.fillAll();
+            await form.submitButton();
 
             if (kaderCase.expectedMessage === null) {
               const namaKaderInput = page.getByRole("textbox", { name: /Nama Kader/i });
@@ -170,9 +190,14 @@ for (const { label, creds, isSuperAdmin } of roles) {
             const kaderData = buildKaderData();
             kaderData.PIC = picCase.value;
 
-            const form = await fillKaderForm({ data: kaderData, page });
-            isSuperAdmin ? await form.fillAllSuperAdmin() : await form.fillAllOPD();
-            await form.submit();
+            const form = await fillKaderForm({
+              data: kaderData,
+              page,
+              isSuperAdmin: label === "Super Admin",
+              TCDK: "TCDK.8",
+            });
+            await form.fillAll();
+            await form.submitButton();
 
             if (picCase.expectedMessage === null) {
               const picInput = page.getByRole("textbox", { name: /Nama Person in Charge/i });
@@ -192,22 +217,22 @@ for (const { label, creds, isSuperAdmin } of roles) {
           {
             title: "Kontak too short",
             value: "08123",
-            expectedMessage: /nomor hp pic tidak valid.*harus 10.*13 digit angka/i,
+            expectedMessage: /nomor telepon pic terlalu pendek/i,
           },
           {
             title: "Kontak with letters",
             value: "08ABCDE123",
-            expectedMessage: /nomor hp pic tidak valid.*harus 10.*13 digit angka/i,
+            expectedMessage: /nomor telepon pic tidak boleh mengandung huruf/i,
           },
           {
             title: "Kontak with special characters",
             value: "08!@#$%^&*",
-            expectedMessage: /nomor hp pic tidak valid.*harus 10.*13 digit angka/i,
+            expectedMessage: /nomor telepon pic tidak boleh mengandung karakter spesial/i,
           },
           {
             title: "Kontak too long",
             value: "081234567890123456789",
-            expectedMessage: /nomor hp pic tidak valid.*harus 10.*13 digit angka/i,
+            expectedMessage: /nomor telepon pic terlalu panjang/i,
           },
         ];
 
@@ -216,9 +241,14 @@ for (const { label, creds, isSuperAdmin } of roles) {
             const kaderData = buildKaderData();
             kaderData["NO HP"] = kontakCase.value;
 
-            const form = await fillKaderForm({ data: kaderData, page });
-            isSuperAdmin ? await form.fillAllSuperAdmin() : await form.fillAllOPD();
-            await form.submit();
+            const form = await fillKaderForm({
+              data: kaderData,
+              page,
+              isSuperAdmin: label === "Super Admin",
+              TCDK: "TCDK.9",
+            });
+            await form.fillAll();
+            await form.submitButton();
 
             if (kontakCase.expectedMessage === null) {
               const kontakInput = page.getByRole("textbox", { name: /Nomor HP/i });
@@ -228,7 +258,7 @@ for (const { label, creds, isSuperAdmin } of roles) {
               expect(isValid).toBe(false);
             } else {
               await expect(
-                page.getByText(/nomor hp pic tidak valid.*harus 10.*13 digit angka/i),
+                page.getByText(kontakCase.expectedMessage, { exact: true }),
               ).toBeVisible();
             }
           });
