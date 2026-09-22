@@ -16,6 +16,13 @@ import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { ensurePengajuanExists } from "@/helpers/submitPengajuan.helper";
 import { Browser, expect, Page, test } from "@playwright/test";
 
+// Tombol tutup (X) pada header modal tidak punya accessible name,
+// jadi dicari lewat strukturnya: <h2>judul</h2> -> parent -> button
+const modalCloseButton = (page: Page, judul: string) =>
+  page
+    .locator(`xpath=//h2[normalize-space(text())="${judul}"]/parent::div/following-sibling::button`)
+    .first();
+
 // Aplikasi yang diuji berjalan di deployment publik: pemuatan opsi OPD/Kader
 // kerap melebihi timeout bawaan 30 detik saat beberapa test berjalan paralel
 test.describe.configure({ timeout: 90_000 });
@@ -107,9 +114,12 @@ for (const { label, creds } of roles) {
         });
         await form.fillAll();
 
-        await page.getByRole("button").filter({ hasText: /^$/ }).nth(2).click();
+        // Modal ini tidak punya tombol "Batal"; pembatalan lewat tombol X di
+        // header. Dulu diklik lewat indeks tombol tanpa teks ke-3 di halaman,
+        // lalu memeriksa URL yang memang tidak pernah berubah.
+        await modalCloseButton(page, "Tambah Relawan Baru").click();
 
-        await expect(page).toHaveURL(/relawan/);
+        await expect(page.getByRole("heading", { name: "Tambah Relawan Baru" })).toBeHidden();
       });
     });
 
@@ -499,20 +509,24 @@ for (const { label, creds } of roles) {
 
       await page.getByRole("button", { name: /unggah dari excel/i }).click();
 
-      const fileInput = page.locator("input[type='file']");
-      const saveButton = page.getByRole("button", { name: /data/i });
-      await fileInput.setInputFiles(filePath);
+      await page.locator("input[type='file']").setInputFiles(filePath);
       await page.getByRole("button", { name: /lanjutkan/i }).click();
-      await page.waitForTimeout(5000);
-      if (await saveButton.isEnabled()) {
-        await saveButton.click();
-        await expect(page.getByText(/error|invalid/i)).toBeVisible();
-      }
 
-      await expect(saveButton).toBeDisabled();
+      // Seluruh baris ditolak: tidak ada data bersih untuk disimpan
+      await expect(page.getByRole("heading", { name: "Data Bersih (0)" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Data Kotor (3)" })).toBeVisible();
+
+      // Tombol simpan berubah jadi "Tidak Ada Data Bersih" dan tidak bisa diklik
       await expect(
-        page.locator(".border.rounded-lg.overflow-y-auto.flex-1.bg-white.border-red-200"),
-      ).toBeVisible();
+        page.getByRole("button", { name: /simpan data bersih|tidak ada data bersih/i }),
+      ).toBeDisabled();
+
+      // Tiap baris bermasalah didaftar beserta keterangan masalahnya
+      const barisKotor = page
+        .locator('xpath=//h3[starts-with(normalize-space(.), "Data Kotor")]/following::table[1]')
+        .locator("tbody tr");
+      await expect(barisKotor).toHaveCount(3);
+      await expect(barisKotor.first().getByRole("listitem").first()).toBeVisible();
     });
 
     // TCDR.19 Download Template Excel
@@ -521,7 +535,9 @@ for (const { label, creds } of roles) {
 
       await page.getByRole("link", { name: "Unduh Templat Excel Data" }).click();
 
-      await expect(page).toHaveURL(/excel|template|dokumen|download/);
+      // Tautannya mengarah ke halaman Dokumen tempat seluruh template disimpan
+      await expect(page).toHaveURL(/dokumen/);
+      await expect(page.getByRole("heading", { name: "Format Excel Data Relawan" })).toBeVisible();
     });
 
     // TCDR.20 Cancel Upload Excel
@@ -533,16 +549,10 @@ for (const { label, creds } of roles) {
       const fileInput = page.locator("input[type='file']");
       await fileInput.setInputFiles(filePath);
 
-      await page.getByRole("button").filter({ hasText: /^$/ }).nth(2).click();
+      await modalCloseButton(page, "Unggah Data Relawan").click();
 
+      await expect(page.getByRole("heading", { name: "Unggah Data Relawan" })).toBeHidden();
       await expect(page.getByRole("main")).toBeVisible();
-      await expect(
-        page
-          .locator("div")
-          .filter({ hasText: /^Unggah Data Relawan$/ })
-          .first(),
-      ).not.toBeVisible();
-      await expect(page.locator(".px-6.py-6")).not.toBeVisible();
     });
 
     // TCDR.21-26 Search Bar
