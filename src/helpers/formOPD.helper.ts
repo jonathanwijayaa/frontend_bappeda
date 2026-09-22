@@ -48,7 +48,4 @@ export const fillOPDForm = async ({ data, page }: IFillOPDForm) => ({
   async fillNIKPIC() {
     await page.getByRole("textbox", { name: "digit NIK PIC" }).fill(data["NIK PIC"]);
   },
-  async cancel() {
-    await page.getByRole("button").filter({ hasText: /^$/ }).nth(2).click();
-  },
 });
