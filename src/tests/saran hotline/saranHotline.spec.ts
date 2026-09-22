@@ -49,6 +49,13 @@ for (const { label, creds, menu } of roles) {
 
       await expect(page).toHaveURL(/dashboard|profil-relawan/);
       await navigateToSaranHotline(page, menu);
+
+      // Nama & No. Telepon diisi otomatis dari profil, tetapi data profilnya
+      // bisa datang belakangan dan mengisi ulang field yang sedang kosong
+      // (`prev.noTelepon || autoNoHp`). Kalau test mengosongkan field sebelum
+      // itu, isiannya tertimpa lagi dan saran malah terkirim. Jadi ditunggu
+      // sampai prefill selesai — kedua akun uji punya nomor HP di profilnya.
+      await expect(teleponField(page)).not.toHaveValue("", { timeout: 15_000 });
     });
 
     // TCSH.1-2 Hotline
