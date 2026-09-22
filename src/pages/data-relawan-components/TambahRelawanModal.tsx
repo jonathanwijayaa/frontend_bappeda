@@ -65,6 +65,8 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
     const nama = formData.namaRelawan.trim();
     if (!nama) return "Nama Relawan wajib diisi";
     if (nama.length < 3) return "Nama Relawan minimal 3 karakter";
+    // Kolom users.nama_lengkap pada database dibatasi 100 karakter
+    if (nama.length > 100) return "Nama Relawan terlalu panjang (maks 100 karakter)";
     if (!REGEX_PATTERNS.NAMA_RELAWAN.test(nama)) {
       return "Format nama relawan tidak valid (hanya huruf, spasi, titik, koma, petik)";
     }
@@ -78,6 +80,8 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
     const alamat = formData.alamat.trim();
     if (!alamat) return "Alamat KTP wajib diisi";
     if (alamat.length < 5) return "Alamat minimal 5 karakter";
+    // Samakan dengan batas alamat pada impor Excel (UploadExcelModal)
+    if (alamat.length > 100) return "Alamat terlalu panjang (maks 100 karakter)";
     if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(alamat)) {
       return "Alamat tidak boleh hanya berupa angka";
     }
