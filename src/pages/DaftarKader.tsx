@@ -105,7 +105,7 @@ const DaftarKader: React.FC = () => {
     const lowerSearch = searchTerm.toLowerCase();
     return kaderList.filter(
       (k) =>
-        k.nama_kader || "".toLowerCase().includes(lowerSearch) ||
+        (k.nama_kader || "").toLowerCase().includes(lowerSearch) ||
         (k.nama_opd || "").toLowerCase().includes(lowerSearch) ||
         (k.pic_nama || "").toLowerCase().includes(lowerSearch) ||
         (k.pic_nik || "").toLowerCase().includes(lowerSearch) ||
