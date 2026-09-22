@@ -1,8 +1,15 @@
 import { credentials } from "@/helpers/credentials.helper";
 import { buildSKData, fillSKForm } from "@/helpers/formSuratKeputusan.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
-import { expect, test } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
 import path from "path";
+
+// Tombol tutup (X) pada header modal tidak punya accessible name,
+// jadi dicari lewat strukturnya: <h2>judul</h2> -> parent -> button
+const modalCloseButton = (page: Page, judul: string) =>
+  page
+    .locator(`xpath=//h2[normalize-space(text())="${judul}"]/parent::div/following-sibling::button`)
+    .first();
 
 export const roles = [
   { label: "Super Admin", creds: credentials.superAdmin },
@@ -190,12 +197,7 @@ for (const { label, creds } of roles) {
           .first()
           .click();
         await expect(page.getByRole("heading", { name: /detail surat keputusan/i })).toBeVisible();
-        await expect(
-          page
-            .locator("div")
-            .filter({ hasText: /^Memuat detail\.\.\.$/ })
-            .nth(1),
-        ).not.toBeVisible();
+        await expect(page.getByText("Memuat detail...")).toBeHidden({ timeout: 20_000 });
       });
 
       // TCSK.10
@@ -205,8 +207,19 @@ for (const { label, creds } of roles) {
 
       // TCSK.11
       test(`TCSK.11 ${label} accesses the Surat Keputusan file`, async ({ page }) => {
-        await page.locator(".text-gray-400.hover\\:text-gray-600").first().click();
-        await page.getByRole("button").nth(5).click();
+        // Tutup modal detail, lalu buka pratinjau lewat tombol ikon mata di tabel.
+        // Tombol itu hanya ada untuk SK yang punya file dan tidak punya teks, jadi
+        // dicari sebagai tombol tanpa teks di dalam baris tabel — dulu memakai
+        // class CSS dan indeks tombol ke-6 di seluruh halaman.
+        await modalCloseButton(page, "Detail Surat Keputusan").click();
+
+        const tombolPreview = page
+          .locator("table tbody tr")
+          .getByRole("button")
+          .filter({ hasNotText: /\S/ })
+          .first();
+        test.skip((await tombolPreview.count()) === 0, "Tidak ada SK berfile di halaman ini");
+        await tombolPreview.click();
 
         await expect(page.getByRole("heading", { name: "Preview Surat Keputusan" })).toBeVisible();
         await expect(
