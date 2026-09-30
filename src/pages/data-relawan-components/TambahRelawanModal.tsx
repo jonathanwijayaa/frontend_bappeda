@@ -80,8 +80,7 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
     const alamat = formData.alamat.trim();
     if (!alamat) return "Alamat KTP wajib diisi";
     if (alamat.length < 5) return "Alamat minimal 5 karakter";
-    // Samakan dengan batas alamat pada impor Excel (UploadExcelModal)
-    if (alamat.length > 100) return "Alamat terlalu panjang (maks 100 karakter)";
+    if (alamat.length > 255) return "Alamat terlalu panjang (maksimal 255 karakter)";
     if (REGEX_PATTERNS.ALAMAT_ANGKA_SAJA.test(alamat)) {
       return "Alamat tidak boleh hanya berupa angka";
     }
