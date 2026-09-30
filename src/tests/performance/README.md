@@ -6,10 +6,11 @@ mengubah data** (basis data tidak tercemar).
 
 ## Isi folder
 
-| Berkas                | Alat                             | Kegunaan                                                           |
-| --------------------- | -------------------------------- | ------------------------------------------------------------------ |
-| `loadTesting.spec.ts` | Playwright (`APIRequestContext`) | Load test ringan dalam ekosistem yang sama dengan suite E2E.       |
-| `k6/loadTest.k6.js`   | k6                               | Pembanding yang lebih tepat secara metodologis untuk beban tinggi. |
+| Berkas                  | Alat                             | Kegunaan                                                                  |
+| ----------------------- | -------------------------------- | ------------------------------------------------------------------------- |
+| `loadTesting.spec.ts`   | Playwright (`APIRequestContext`) | Load test ringan LT.1–LT.7 dalam ekosistem yang sama dengan suite E2E.    |
+| `loadTestCases.spec.ts` | Playwright (`APIRequestContext`) | Satu test per test case TCLT.01–TCLT.23 di sheet "Load Testing Test Case". |
+| `k6/loadTest.k6.js`     | k6                               | Test case TCLT.01–TCLT.23 yang sama, untuk beban tinggi yang akurat.      |
 
 ## Kenapa dua alat?
 
@@ -54,6 +55,13 @@ LOAD_TOTAL=300 LOAD_CONCURRENCY=30 npx playwright test performance/loadTesting.s
 Hasil diekspor otomatis ke `test-results/load-testing/load-results-<timestamp>.json`
 dan `.csv`, plus tabel ringkasan lintas-skenario di konsol.
 
+Test case TCLT (skala `LT_VU_SCALE`/`LT_TIME_SCALE`, default 0.05; hasil di
+`test-results/load-testing/tclt-results-<timestamp>.json`):
+
+```bash
+npx playwright test performance/loadTestCases.spec.ts --project=chromium -g "TCLT.03"
+```
+
 ### Environment variable
 
 | Variabel                 | Default                     | Keterangan                                  |
@@ -76,14 +84,33 @@ dan `.csv`, plus tabel ringkasan lintas-skenario di konsol.
 Pasang k6 lebih dulu (`winget install k6.k6` atau `choco install k6`), lalu:
 
 ```bash
+# satu test case
+k6 run -e TC=TCLT.03 src/tests/performance/k6/loadTest.k6.js
+
+# semua test case yang bisa dijalankan, berurutan (~18 menit pada skala default)
 k6 run src/tests/performance/k6/loadTest.k6.js
 
-# ekspor ringkasan ke JSON
-k6 run --summary-export=test-results/load-testing/k6-summary.json \
-       src/tests/performance/k6/loadTest.k6.js
+# sesuai rancangan penuh (disarankan ke backend lokal)
+k6 run -e VU_SCALE=1 -e TIME_SCALE=1 -e VITE_API_URL=http://localhost:3000/api \
+       -e TC=TCLT.02 src/tests/performance/k6/loadTest.k6.js
 ```
 
-Env k6: `VITE_API_URL`, `SA_NIK`, `SA_PASS`, `LOGIN_VUS`, `READ_VUS`, `SPIKE_VUS`.
+Setiap TCLT menjadi satu skenario `ramping-vus` dengan VU, ramp-up, durasi,
+step stress, dan fase spike sesuai sheet. Kriteria Expected Result dipasang
+sebagai threshold per skenario (`p(90)`, `http_req_failed`, `checks`).
+TCLT.06, TCLT.07 (Sign Up) dan TCLT.18 (unggah foto profil) tidak dibuatkan
+skenario karena fiturnya tidak ada di aplikasi.
+
+| Variabel                  | Default                                        | Keterangan                              |
+| ------------------------- | ---------------------------------------------- | --------------------------------------- |
+| `TC`                      | semua                                          | Daftar TC dipisah koma, mis. `TCLT.01,TCLT.03` |
+| `VU_SCALE`                | 0.05                                           | Pengali jumlah VU                       |
+| `TIME_SCALE`              | 0.05                                           | Pengali ramp-up dan durasi              |
+| `THINK_S`                 | 1                                              | Think time per iterasi VU (detik)       |
+| `VITE_API_URL`            | deployment                                     | Base URL backend                        |
+| `LOAD_BASE_URL`           | deployment                                     | Base URL frontend (TCLT.01/02)          |
+| `SA_NIK`/`SA_PASS`, `OPD_NIK`/`OPD_PASS`, `REL_NIK`/`REL_PASS` | akun uji | Kredensial per peran |
+| `OUT`                     | `test-results/load-testing/k6-tclt-summary.json` | Berkas ringkasan JSON                 |
 
 ## Catatan hasil
 
