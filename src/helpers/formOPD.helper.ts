@@ -15,7 +15,10 @@ interface IFillOPDForm {
 }
 function generateSafeOPDName(): string {
   const opdName = faker.company.name();
-  return opdName.replace(/[^a-zA-Z\s]/g, "").trim();
+  return opdName
+    .replace(/[^a-zA-Z\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 export const buildOPDData = (): OPDData => ({
   "NAMA OPD": `OPD ${generateSafeOPDName()}`,
