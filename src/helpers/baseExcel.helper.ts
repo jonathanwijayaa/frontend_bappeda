@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 import { buildOPDData } from "@/helpers/formOPD.helper";
 import { buildKaderData } from "@/helpers/formKader.helper";
 import { buildRelawanData } from "@/helpers/formRelawan.helper";
@@ -118,7 +120,15 @@ export function generateRelawanExcel(options?: GenerateOptions) {
         PENUGASAN: "",
       };
     }
-    return buildRelawanData();
+
+    const relawan = buildRelawanData();
+
+    // Importer Excel hanya menerima "Laki-Laki", "Perempuan", "L", atau "P",
+    // sedangkan buildRelawanData() memakai label tombol form ("Laki-laki (L)")
+    return {
+      ...relawan,
+      "JENIS KELAMIN": relawan["JENIS KELAMIN"].includes("(L)") ? "L" : "P",
+    };
   });
 
   const worksheet = XLSX.utils.json_to_sheet(data);

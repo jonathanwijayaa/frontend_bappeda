@@ -9,23 +9,22 @@ export interface OPDData {
   "NIK PIC": string;
   KONTAK: string;
 }
-
 interface IFillOPDForm {
   data: OPDData;
   page: Page;
 }
-
+function generateSafeOPDName(): string {
+  const opdName = faker.company.name();
+  return opdName.replace(/[^a-zA-Z\s]/g, "").trim();
+}
 export const buildOPDData = (): OPDData => ({
-  "NAMA OPD": `OPD ${faker.company.name()}`,
+  "NAMA OPD": `OPD ${generateSafeOPDName()}`,
   STATUS: "Aktif",
   ALAMAT: faker.location.streetAddress() + ", Yogyakarta",
   PIC: faker.person.fullName(),
-  "NIK PIC": faker.number
-    .bigInt({ min: 1000000000000000n, max: 9999999999999999n })
-    .toString(),
+  "NIK PIC": faker.number.bigInt({ min: 1000000000000000n, max: 9999999999999999n }).toString(),
   KONTAK: `08${faker.string.numeric(10)}`,
 });
-
 export const fillOPDForm = async ({ data, page }: IFillOPDForm) => ({
   async fillAlamat() {
     await page.getByRole("textbox", { name: "Alamat OPD" }).fill(data.ALAMAT);
@@ -38,23 +37,15 @@ export const fillOPDForm = async ({ data, page }: IFillOPDForm) => ({
     await this.fillNIKPIC();
   },
   async fillKontak() {
-    await page
-      .getByRole("textbox", { name: "Nomor telepon / email" })
-      .fill(data.KONTAK);
+    await page.getByRole("textbox", { name: "Nomor telepon / email" }).fill(data.KONTAK);
   },
   async fillNamaOPD() {
-    await page
-      .getByRole("textbox", { name: "Nama Dinas / OPD" })
-      .fill(data["NAMA OPD"]);
+    await page.getByRole("textbox", { name: "Nama Dinas / OPD" }).fill(data["NAMA OPD"]);
   },
   async fillPIC() {
-    await page
-      .getByRole("textbox", { name: "Penanggung jawab" })
-      .fill(data.PIC);
+    await page.getByRole("textbox", { name: "Penanggung jawab" }).fill(data.PIC);
   },
   async fillNIKPIC() {
-    await page
-      .getByRole("textbox", { name: "digit NIK PIC" })
-      .fill(data["NIK PIC"]);
+    await page.getByRole("textbox", { name: "digit NIK PIC" }).fill(data["NIK PIC"]);
   },
 });

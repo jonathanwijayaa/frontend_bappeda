@@ -65,7 +65,8 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
     const nama = formData.namaRelawan.trim();
     if (!nama) return "Nama Relawan wajib diisi";
     if (nama.length < 3) return "Nama Relawan minimal 3 karakter";
-    if (nama.length > 100) return "Nama Relawan terlalu panjang (maksimal 100 karakter)";
+    // Kolom users.nama_lengkap pada database dibatasi 100 karakter
+    if (nama.length > 100) return "Nama Relawan terlalu panjang (maks 100 karakter)";
     if (!REGEX_PATTERNS.NAMA_RELAWAN.test(nama)) {
       return "Format nama relawan tidak valid (hanya huruf, spasi, titik, koma, petik)";
     }

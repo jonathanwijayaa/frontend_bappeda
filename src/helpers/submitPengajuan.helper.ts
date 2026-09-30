@@ -94,30 +94,41 @@ export async function submitPengajuanPerubahan(
  * @param page    - Page Super Admin / OPD yang sudah login & berada di /relawan
  * @param browser - Playwright Browser instance untuk membuka context relawan
  */
-export async function ensurePengajuanExists(page: Page, browser: Browser): Promise<void> {
-  await page.reload();
-  await page.waitForLoadState("networkidle");
-
+export async function ensurePengajuanExists(
+  page: Page,
+  browser: Browser,
+  maxRetry = 3,
+): Promise<void> {
   const pengajuanTableLocator = page
     .getByRole("table")
     .filter({ hasText: /nik.*nama lengkap.*tanggal pengajuan.*status.*aksi/i });
 
-  // Cek apakah ada baris dengan status Menunggu / Pending
-  const tableVisible = await pengajuanTableLocator.isVisible();
-  const pendingCount = tableVisible
-    ? await pengajuanTableLocator
-        .getByRole("row")
-        .filter({ hasText: /menunggu|pending/i })
-        .count()
-    : 0;
-
-  if (pendingCount === 0) {
-    // Tidak ada pengajuan → buat dulu lewat akun relawan
-    await submitPengajuanPerubahan(browser);
-
-    // Reload halaman utama dan tunggu data masuk
+  // Hitung baris berstatus Menunggu / Pending setelah halaman dimuat ulang
+  const countPending = async (): Promise<number> => {
     await page.reload();
     await page.waitForLoadState("networkidle");
-    await page.waitForTimeout(2_000);
+
+    if (!(await pengajuanTableLocator.isVisible())) return 0;
+
+    return pengajuanTableLocator
+      .getByRole("row")
+      .filter({ hasText: /menunggu|pending/i })
+      .count();
+  };
+
+  for (let attempt = 1; attempt <= maxRetry; attempt++) {
+    if ((await countPending()) > 0) return;
+
+    // Belum ada pengajuan → buat lewat akun relawan.
+    // Pengajuan bisa saja keburu diproses worker lain, jadi diulang bila perlu.
+    await submitPengajuanPerubahan(browser);
+  }
+
+  if ((await countPending()) === 0) {
+    throw new Error(
+      "Pengajuan berhasil dibuat lewat akun relawan tetapi tidak muncul sebagai 'Menunggu'. " +
+        `Pastikan relawan uji (NIK ${credentials.relawan.NIK}) terdaftar pada OPD milik akun yang sedang login — ` +
+        "admin OPD hanya melihat pengajuan dari relawan di instansinya.",
+    );
   }
 }
