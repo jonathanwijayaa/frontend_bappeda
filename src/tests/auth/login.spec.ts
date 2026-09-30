@@ -39,6 +39,18 @@ test.beforeEach(async ({ page }) => {
   await expect(nikField(page)).toBeVisible();
 });
 
+// TCL.0 Akses website
+test("TCL.0 Super Admin/OPD/Relawan access Website", async ({ page }) => {
+  const response = await page.goto(BASE_URL);
+
+  // Website dapat dijangkau dan halaman awalnya adalah form login
+  expect(response?.ok()).toBeTruthy();
+  await expect(page.getByRole("heading", { name: "Selamat Datang" })).toBeVisible();
+  await expect(nikField(page)).toBeVisible();
+  await expect(passwordField(page)).toBeVisible();
+  await expect(masukButton(page)).toBeVisible();
+});
+
 // TCL.1 Login dengan kredensial valid
 test.describe("TCL.1 Login BAPPEDA", () => {
   const validCases = [

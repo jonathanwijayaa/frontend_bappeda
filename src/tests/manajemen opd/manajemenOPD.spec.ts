@@ -462,3 +462,221 @@ test("TCMO.14 Super Admin cancel upload OPD data excel", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Unggah Data OPD" })).toBeHidden();
   await expect(page.getByRole("heading", { name: "Manajemen OPD" })).toBeVisible();
 });
+
+// ── Tabel Daftar OPD (TCMO.15, TCMO.24–33) ────────────────────────────────
+// Kolom tabel: 1 Nama OPD, 2 Status, 3 Alamat, 4 PIC, 5 Kontak, 6 Aksi.
+const KOLOM = { alamat: 3, kontak: 5, nama: 1, pic: 4, status: 2 };
+
+// Table menyisipkan baris kosong (satu <td> ber-colSpan) untuk menjaga tinggi
+// tabel, jadi baris data dikenali dari kolomnya yang lebih dari satu.
+const barisData = (page: Page) => page.locator("table tbody tr:has(td:nth-child(2))");
+
+const nilaiKolom = async (page: Page, kolom: number) =>
+  (await barisData(page).locator(`td:nth-child(${kolom})`).allInnerTexts()).map((teks) =>
+    teks.trim(),
+  );
+
+const searchField = (page: Page) => page.getByPlaceholder("Cari");
+const infoJumlah = (page: Page) => page.getByText(/Menampilkan \d+-\d+ dari \d+ OPD/);
+const totalOPD = async (page: Page) =>
+  Number((await infoJumlah(page).innerText()).match(/dari (\d+)/)![1]);
+const emptyState = (page: Page) => page.getByText("Belum ada OPD", { exact: true });
+
+// Input pada modal Detail OPD tidak punya placeholder/label terhubung,
+// jadi dikenali lewat atribut name-nya
+const detailInput = (page: Page, name: string) => page.locator(`input[name="${name}"]`).first();
+
+const tungguTabel = async (page: Page) => {
+  await expect(barisData(page).first()).toBeVisible({ timeout: 20_000 });
+};
+
+// TCMO.15, TCMO.24–28 Search Bar
+test.describe("TCMO.15 & TCMO.24-28 Super Admin Search Bar", () => {
+  test.beforeEach(async ({ page }) => {
+    await tungguTabel(page);
+  });
+
+  // Kata kunci diambil dari baris pertama tabel supaya tidak bergantung
+  // pada data seed tertentu yang bisa berubah.
+  const searchCases = [
+    {
+      adaHasil: true,
+      id: "TCMO.15",
+      kata: (nama: string) => nama,
+      title: "input keyword in search bar",
+    },
+    {
+      adaHasil: true,
+      id: "TCMO.24",
+      kata: (nama: string) => nama.toUpperCase(),
+      title: "input with upper case",
+    },
+    {
+      adaHasil: true,
+      id: "TCMO.25",
+      kata: (nama: string) => nama.toLowerCase(),
+      title: "input with lower case",
+    },
+    {
+      adaHasil: true,
+      id: "TCMO.26",
+      kata: () => "Dinas",
+      title: "input with specific word (OPD name)",
+    },
+    { adaHasil: false, id: "TCMO.27", kata: () => "abcdxyz", title: "input with random keyword" },
+    {
+      adaHasil: false,
+      id: "TCMO.28",
+      kata: () => "@#$%^&",
+      title: "input with special characters",
+    },
+  ];
+
+  for (const searchCase of searchCases) {
+    test(`${searchCase.id} Super Admin ${searchCase.title}`, async ({ page }) => {
+      const totalAwal = await totalOPD(page);
+      const keyword = searchCase.kata((await nilaiKolom(page, KOLOM.nama))[0]);
+
+      // Pencarian berjalan saat mengetik (onChange), bukan saat menekan Enter
+      await searchField(page).fill(keyword);
+
+      if (!searchCase.adaHasil) {
+        await expect(emptyState(page)).toBeVisible();
+        await expect(page.getByText(/tidak ada opd yang cocok dengan pencarian/i)).toBeVisible();
+        await expect(page.getByRole("table")).toBeHidden();
+        return;
+      }
+
+      await expect(barisData(page).first()).toBeVisible();
+      expect(await totalOPD(page)).toBeLessThanOrEqual(totalAwal);
+
+      // Setiap baris hasil harus mengandung kata kunci (pencarian tidak peka huruf besar/kecil)
+      const nama = await nilaiKolom(page, KOLOM.nama);
+      const alamat = await nilaiKolom(page, KOLOM.alamat);
+      const pic = await nilaiKolom(page, KOLOM.pic);
+      const kontak = await nilaiKolom(page, KOLOM.kontak);
+      for (let i = 0; i < nama.length; i++) {
+        expect(`${nama[i]} ${alamat[i]} ${pic[i]} ${kontak[i]}`.toLowerCase()).toContain(
+          keyword.toLowerCase(),
+        );
+      }
+    });
+  }
+});
+
+// TCMO.29 Export Daftar OPD
+test("TCMO.29 Super Admin export Daftar OPD tabel", async ({ page }) => {
+  await tungguTabel(page);
+
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: "Ekspor PDF" }).click(),
+  ]);
+
+  expect(download.suggestedFilename()).toMatch(/^manajemen-opd-\d{4}-\d{2}-\d{2}\.pdf$/);
+  await expect(page.getByText(/berhasil diekspor/i)).toBeVisible();
+});
+
+// TCMO.30 Akses detail OPD
+test("TCMO.30 Super Admin access OPD's detail", async ({ page }) => {
+  await tungguTabel(page);
+  const nama = (await nilaiKolom(page, KOLOM.nama))[0];
+  const kontak = (await nilaiKolom(page, KOLOM.kontak))[0];
+
+  await barisData(page).first().getByRole("button", { name: "Detail" }).click();
+
+  await expect(page.getByRole("heading", { name: "Detail OPD" })).toBeVisible();
+  await expect(detailInput(page, "nama_opd")).toHaveValue(nama);
+  await expect(detailInput(page, "kontak")).toHaveValue(kontak);
+  await expect(page.getByText("Tanggal Dibuat")).toBeVisible();
+
+  // Tombol simpan baru aktif setelah ada perubahan (perubahan tidak disimpan)
+  const simpan = page.getByRole("button", { name: "Simpan" });
+  await expect(simpan).toBeDisabled();
+  await detailInput(page, "alamat").fill("Jl. Uji Perubahan Detail No. 1, Yogyakarta");
+  await expect(simpan).toBeEnabled();
+});
+
+// TCMO.31–32 Nonaktif / batal nonaktif OPD
+test.describe("TCMO.31-32 Super Admin Toggle Status OPD", () => {
+  // TCMO.31 Nonaktifkan OPD, lalu aktifkan kembali.
+  // Memakai OPD uji yang dibuat di test ini sendiri, supaya OPD yang dipakai
+  // akun/test lain (mis. "Opd Demo") tidak ikut dinonaktifkan.
+  test("TCMO.31 Super Admin Nonaktif OPD", async ({ page }) => {
+    test.setTimeout(90_000);
+
+    const opdData = buildOPDData();
+    await page.getByRole("button", { name: /Tambah OPD/i }).click();
+    const form = await fillOPDForm({ data: opdData, page });
+    await form.fillAll();
+    await page.getByRole("button", { name: /simpan/i }).click();
+    await expect(page.getByRole("heading", { name: "Tambah OPD Baru" })).toBeHidden();
+
+    await searchField(page).fill(opdData["NAMA OPD"]);
+    const baris = barisData(page).first();
+    await expect(baris).toBeVisible();
+    await expect(baris.locator(`td:nth-child(${KOLOM.status})`)).toHaveText("Aktif");
+
+    // Nonaktifkan
+    await baris.getByRole("button", { name: "Nonaktif" }).click();
+    await expect(page.getByRole("heading", { name: "Konfirmasi" })).toBeVisible();
+    await expect(page.getByText(/yakin ingin menonaktifkan opd ini/i)).toBeVisible();
+    await page.getByRole("button", { name: "Lanjutkan" }).click();
+
+    await expect(page.getByRole("heading", { name: "Konfirmasi" })).toBeHidden();
+    await expect(baris.locator(`td:nth-child(${KOLOM.status})`)).toHaveText("Tidak Aktif", {
+      timeout: 20_000,
+    });
+
+    // Kembalikan ke status aktif supaya data uji tetap bersih
+    await baris.getByRole("button", { name: "Aktifkan" }).click();
+    await page.getByRole("button", { name: "Lanjutkan" }).click();
+    await expect(baris.locator(`td:nth-child(${KOLOM.status})`)).toHaveText("Aktif", {
+      timeout: 20_000,
+    });
+  });
+
+  // TCMO.32 Batalkan nonaktif OPD
+  test("TCMO.32 Super Admin cancel Nonaktif OPD", async ({ page }) => {
+    await tungguTabel(page);
+
+    // Baris dikunci lewat pencarian nama agar tidak bergeser bila ada OPD baru
+    const nama = (await nilaiKolom(page, KOLOM.nama))[0];
+    await searchField(page).fill(nama);
+    const baris = barisData(page).first();
+    const statusAwal = (await baris.locator(`td:nth-child(${KOLOM.status})`).innerText()).trim();
+    const tombolToggle = statusAwal === "Aktif" ? "Nonaktif" : "Aktifkan";
+
+    await baris.getByRole("button", { name: tombolToggle }).click();
+    await expect(page.getByRole("heading", { name: "Konfirmasi" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Batal" }).click();
+
+    // Dialog tertutup dan status OPD tidak berubah
+    await expect(page.getByRole("heading", { name: "Konfirmasi" })).toBeHidden();
+    await expect(baris.locator(`td:nth-child(${KOLOM.status})`)).toHaveText(statusAwal);
+  });
+});
+
+// TCMO.33 Pagination
+test("TCMO.33 Super Admin open next OPD tabel", async ({ page }) => {
+  await tungguTabel(page);
+  const total = await totalOPD(page);
+  test.skip(total <= 5, "Data OPD kurang dari dua halaman, pagination tidak relevan");
+
+  await expect(barisData(page)).toHaveCount(5);
+  await expect(infoJumlah(page)).toHaveText(new RegExp(`Menampilkan 1-5 dari ${total} OPD`));
+  await expect(page.getByRole("button", { name: "Sebelumnya" })).toBeDisabled();
+
+  const halamanSatu = await nilaiKolom(page, KOLOM.nama);
+
+  await page.getByRole("button", { name: "Selanjutnya" }).click();
+
+  await expect(infoJumlah(page)).toHaveText(new RegExp(`Menampilkan 6-\\d+ dari ${total} OPD`));
+  expect(await nilaiKolom(page, KOLOM.nama)).not.toEqual(halamanSatu);
+
+  await page.getByRole("button", { name: "Sebelumnya" }).click();
+
+  await expect(infoJumlah(page)).toHaveText(new RegExp(`Menampilkan 1-5 dari ${total} OPD`));
+  expect(await nilaiKolom(page, KOLOM.nama)).toEqual(halamanSatu);
+});
