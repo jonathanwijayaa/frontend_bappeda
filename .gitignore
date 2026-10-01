@@ -6,6 +6,14 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+log-1-worker.txt
+log-10-worker.txt
+hasil-eksekusi-table-4-9.md
+results-1-worker.json
+results-10-worker.json
+hasil-eksekusi-tabel-4-9.md
+riwayat-git-pengujian.md
+screenshots.zip
 
 # Dependencies
 node_modules
@@ -47,8 +55,14 @@ node_modules/
 /playwright/.cache/
 .env.bappeda
 src/assets/files/*.xlsx
+report-10-worker/
+report-1-worker/
+
 
 # Playwright
 /test-results/
 /playwright/.auth/
 71220880_File Kode Program.zip
+playwright-report/
+playwright-report-lama/
+screenshots/

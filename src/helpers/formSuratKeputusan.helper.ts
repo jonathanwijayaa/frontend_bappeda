@@ -63,7 +63,11 @@ const exactText = (value: string) =>
 
 function generateSafeSKTitle(): string {
   const skTitle = faker.company.name();
-  return skTitle.replace(/[^a-zA-Z\s]/g, "").trim();
+  // Rapatkan spasi ganda sisa tanda baca (mis. "Hills - Smith")
+  return skTitle
+    .replace(/[^a-zA-Z\s]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 // With format example "800/123/BPBD/YYYY"

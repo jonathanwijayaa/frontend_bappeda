@@ -45,7 +45,6 @@ const KEMANTREN_LIST = [
   "Pakualaman",
   "Tegalrejo",
   "Umbulharjo",
-  "Wirobrajan",
 ];
 
 const KELURAHAN_MAP: Record<string, string[]> = {
