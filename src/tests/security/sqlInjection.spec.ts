@@ -1,6 +1,7 @@
 import { credentials } from "@/helpers/credentials.helper";
 import { fillKaderForm } from "@/helpers/formKader.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { clickThink, fillThink, LOAD_TIME } from "@/helpers/timing.helper";
 import { expect, Page, Response, test } from "@playwright/test";
 
 /**
@@ -18,8 +19,6 @@ import { expect, Page, Response, test } from "@playwright/test";
  *   3. Server tidak jebol       — tidak ada respons 5xx; query diperlakukan
  *                                 sebagai data (parameterized), bukan perintah.
  */
-test.describe.configure({ timeout: 90_000 });
-
 const BASE_URL = "https://frontend-bappeda.vercel.app/";
 
 // Payload SQLi klasik: auth-bypass, komentar, tautologi, union, stacked query,
@@ -72,9 +71,9 @@ test.describe("TCSQL.1 Login form resists SQL injection", () => {
       const monitor = pantauServerError(page);
       await page.goto(BASE_URL);
 
-      await nikField(page).fill(payload);
-      await passwordField(page).fill(payload);
-      await masukButton(page).click();
+      await fillThink(nikField(page), payload);
+      await fillThink(passwordField(page), payload);
+      await clickThink(masukButton(page));
 
       // 1. Tidak boleh berhasil masuk — tetap di halaman login
       await expect(page).not.toHaveURL(/dashboard|profil-relawan/);
@@ -106,9 +105,9 @@ test.describe("TCSQL.1 Login form resists SQL injection", () => {
     const monitor = pantauServerError(page);
     await page.goto(BASE_URL);
 
-    await nikField(page).fill(credentials.superAdmin.NIK);
-    await passwordField(page).fill("' OR '1'='1' --");
-    await masukButton(page).click();
+    await fillThink(nikField(page), credentials.superAdmin.NIK);
+    await fillThink(passwordField(page), "' OR '1'='1' --");
+    await clickThink(masukButton(page));
 
     await expect(page).not.toHaveURL(/dashboard/);
     // Password salah ditolak wajar, bukan menembus otentikasi
@@ -151,9 +150,9 @@ for (const target of searchTargets) {
     });
     await expect(page).toHaveURL(/dashboard/);
 
-    await page.getByRole("link", { name: target.link, exact: true }).click();
+    await clickThink(page.getByRole("link", { name: target.link, exact: true }));
     await expect(page).toHaveURL(target.url);
-    await expect(page.getByText(target.loading)).toBeHidden({ timeout: 30_000 });
+    await expect(page.getByText(target.loading)).toBeHidden({ timeout: LOAD_TIME });
 
     const searchInput = page.getByPlaceholder(/cari/i).first();
     // Baris data dikenali dari kolomnya yang utuh (baris kosong pengisi tinggi
@@ -162,7 +161,7 @@ for (const target of searchTargets) {
     const barisAwal = await barisData.count();
 
     for (const payload of SQLI_PAYLOADS) {
-      await searchInput.fill(payload);
+      await fillThink(searchInput, payload);
       // Aplikasi tetap berfungsi (tidak crash / blank)
       await expect(page.getByRole("main")).toBeVisible();
       await expect(searchInput).toHaveValue(payload);
@@ -199,10 +198,10 @@ test("TCSQL.3 Tambah Kader form resists SQL injection in the name field", async 
   });
   await expect(page).toHaveURL(/dashboard/);
 
-  await page.getByRole("link", { name: "Kader", exact: true }).click();
-  await expect(page.getByText(/memuat data kader/i)).toBeHidden({ timeout: 30_000 });
+  await clickThink(page.getByRole("link", { name: "Kader", exact: true }));
+  await expect(page.getByText(/memuat data kader/i)).toBeHidden({ timeout: LOAD_TIME });
 
-  await page.getByRole("button", { name: "Tambah Kader Baru", exact: true }).click();
+  await clickThink(page.getByRole("button", { name: "Tambah Kader Baru", exact: true }));
   await expect(page.getByRole("heading", { name: "Tambah Kader Baru" })).toBeVisible();
 
   // Isi form dengan data valid dulu, lalu ganti Nama Kader dengan payload SQLi

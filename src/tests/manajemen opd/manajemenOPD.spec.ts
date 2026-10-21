@@ -2,6 +2,7 @@ import { generateOPDExcel } from "@/helpers/baseExcel.helper";
 import { credentials } from "@/helpers/credentials.helper";
 import { buildOPDData, fillOPDForm } from "@/helpers/formOPD.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { clickThink, fillThink, LOAD_TIME, uploadThink } from "@/helpers/timing.helper";
 import { expect, Page, test } from "@playwright/test";
 
 /**
@@ -34,7 +35,7 @@ test.beforeEach(async ({ page }) => {
   });
 
   await expect(page).toHaveURL(/dashboard/);
-  await page.getByRole("link", { name: /manajemen opd/i }).click();
+  await clickThink(page.getByRole("link", { name: /manajemen opd/i }));
 });
 
 // TCMO.1 Access Manajemen OPD
@@ -44,14 +45,14 @@ test("TCMO.1 Super Admin access Manajemen OPD page", async ({ page }) => {
 
 // TCMO.2 Click Tambah OPD
 test("TCMO.2 Super Admin click Tambah OPD button", async ({ page }) => {
-  await page.getByRole("button", { name: /Tambah OPD/i }).click();
+  await clickThink(page.getByRole("button", { name: /Tambah OPD/i }));
 
   await expect(page.getByRole("heading", { name: "Tambah OPD Baru" })).toBeVisible();
 });
 
 test.describe("TCMO.3-5 Fill Form Add OPD", () => {
   test.beforeEach(async ({ page }) => {
-    await page.getByRole("button", { name: /Tambah OPD/i }).click();
+    await clickThink(page.getByRole("button", { name: /Tambah OPD/i }));
   });
 
   // TCMO.3
@@ -86,13 +87,13 @@ test.describe("TCMO.3-5 Fill Form Add OPD", () => {
 
     await form.fillAll();
 
-    await page.getByRole("button", { name: /simpan/i }).click();
+    await clickThink(page.getByRole("button", { name: /simpan/i }));
 
     // Notifikasi berhasil hilang otomatis setelah beberapa detik, jadi yang
     // diperiksa adalah hasilnya: modal tertutup dan datanya ada di daftar
     await expect(page.getByRole("heading", { name: "Tambah OPD Baru" })).toBeHidden();
 
-    await page.getByPlaceholder(/cari/i).fill(opdData["NAMA OPD"]);
+    await fillThink(page.getByPlaceholder(/cari/i), opdData["NAMA OPD"]);
     await expect(
       page.getByRole("row").filter({ hasText: opdData["NAMA OPD"] }).first(),
     ).toBeVisible();
@@ -109,7 +110,7 @@ test.describe("TCMO.3-5 Fill Form Add OPD", () => {
 
     await form.fillAll();
 
-    await page.getByRole("button", { name: /batal/i }).click();
+    await clickThink(page.getByRole("button", { name: /batal/i }));
 
     // Form harus benar-benar tertutup, bukan sekadar URL tidak berubah
     await expect(page.getByRole("heading", { name: "Tambah OPD Baru" })).toBeHidden();
@@ -120,7 +121,7 @@ test.describe("TCMO.3-5 Fill Form Add OPD", () => {
 // TCMO.6 Invalid OPD Name
 test.describe("TCMO.6 Super Admin fill invalid OPD name", () => {
   test.beforeEach(async ({ page }) => {
-    await page.getByRole("button", { name: /Tambah OPD/i }).click();
+    await clickThink(page.getByRole("button", { name: /Tambah OPD/i }));
   });
   const invalidOPDNameCases: {
     title: string;
@@ -162,7 +163,7 @@ test.describe("TCMO.6 Super Admin fill invalid OPD name", () => {
 
       await form.fillAll();
 
-      await page.getByRole("button", { name: /simpan/i }).click();
+      await clickThink(page.getByRole("button", { name: /simpan/i }));
 
       if (opdCase.rejectedByBrowser) {
         await expectFieldRejectedByBrowser(page, "Nama Dinas / OPD");
@@ -178,7 +179,7 @@ test.describe("TCMO.6 Super Admin fill invalid OPD name", () => {
 // // TCMO.7 Invalid Status
 // test.describe("TCMO.7 Super Admin fill invalid Status", () => {
 // test.beforeEach(async ({ page }) => {
-//   await page.getByRole("button", { name: /Tambah OPD/i }).click();
+//   await clickThink(page.getByRole("button", { name: /Tambah OPD/i }));
 // });
 //   const invalidStatusCases = [
 //     { title: "Status empty", value: "" },
@@ -200,7 +201,7 @@ test.describe("TCMO.6 Super Admin fill invalid OPD name", () => {
 //         await page.getByLabel(/status/i).selectOption({ label: statusCase.value });
 //       }
 
-//       await page.getByRole("button", { name: /simpan/i }).click();
+//       await clickThink(page.getByRole("button", { name: /simpan/i }));
 
 //       // Expected result: gagal submit
 //       await expect(page).not.toHaveURL(/manajemen-opd/);
@@ -214,7 +215,7 @@ test.describe("TCMO.6 Super Admin fill invalid OPD name", () => {
 // TCMO.8 Invalid Address
 test.describe("TCMO.8 Super Admin fill invalid OPD address", () => {
   test.beforeEach(async ({ page }) => {
-    await page.getByRole("button", { name: /Tambah OPD/i }).click();
+    await clickThink(page.getByRole("button", { name: /Tambah OPD/i }));
   });
   const invalidAddressCases: {
     title: string;
@@ -255,7 +256,7 @@ test.describe("TCMO.8 Super Admin fill invalid OPD address", () => {
 
       await form.fillAll();
 
-      await page.getByRole("button", { name: /simpan/i }).click();
+      await clickThink(page.getByRole("button", { name: /simpan/i }));
 
       if (addressCase.rejectedByBrowser) {
         await expectFieldRejectedByBrowser(page, "Alamat OPD");
@@ -270,7 +271,7 @@ test.describe("TCMO.8 Super Admin fill invalid OPD address", () => {
 // TCMO.9 Invalid PIC Name
 test.describe("TCMO.9 Super Admin fill invalid PIC name", () => {
   test.beforeEach(async ({ page }) => {
-    await page.getByRole("button", { name: /Tambah OPD/i }).click();
+    await clickThink(page.getByRole("button", { name: /Tambah OPD/i }));
   });
   const invalidPICCases: {
     title: string;
@@ -311,7 +312,7 @@ test.describe("TCMO.9 Super Admin fill invalid PIC name", () => {
 
       await form.fillAll();
 
-      await page.getByRole("button", { name: /simpan/i }).click();
+      await clickThink(page.getByRole("button", { name: /simpan/i }));
 
       if (picCase.rejectedByBrowser) {
         await expectFieldRejectedByBrowser(page, "Penanggung jawab");
@@ -326,7 +327,7 @@ test.describe("TCMO.9 Super Admin fill invalid PIC name", () => {
 // TCMO.10 Invalid Kontak
 test.describe("TCMO.10 Super Admin fill invalid kontak", () => {
   test.beforeEach(async ({ page }) => {
-    await page.getByRole("button", { name: /Tambah OPD/i }).click();
+    await clickThink(page.getByRole("button", { name: /Tambah OPD/i }));
   });
   const invalidKontakCases: {
     title: string;
@@ -374,7 +375,7 @@ test.describe("TCMO.10 Super Admin fill invalid kontak", () => {
 
       await form.fillAll();
 
-      await page.getByRole("button", { name: /simpan/i }).click();
+      await clickThink(page.getByRole("button", { name: /simpan/i }));
 
       if (kontakCase.rejectedByBrowser) {
         await expectFieldRejectedByBrowser(page, "Nomor telepon / email");
@@ -390,16 +391,16 @@ test.describe("TCMO.10 Super Admin fill invalid kontak", () => {
 test("TCMO.11 Super Admin upload OPD excel file", async ({ page }) => {
   const filePath = generateOPDExcel({ type: "valid", total: 5 });
 
-  await page.getByRole("button", { name: "Unggah dari Excel" }).click();
+  await clickThink(page.getByRole("button", { name: "Unggah dari Excel" }));
 
   const fileInput = page.locator("input[type='file']");
-  await fileInput.setInputFiles(filePath);
-  await page.getByRole("button", { name: "Lanjutkan" }).click();
+  await uploadThink(fileInput, filePath);
+  await clickThink(page.getByRole("button", { name: "Lanjutkan" }));
 
   // Dipastikan dulu semua baris lolos validasi, supaya kegagalan data
   // tidak terbaca sebagai kegagalan proses simpan
   await expect(page.getByRole("heading", { name: "Data Kotor (0)" })).toBeVisible();
-  await page.getByRole("button", { name: "Simpan Data Bersih" }).click();
+  await clickThink(page.getByRole("button", { name: "Simpan Data Bersih" }));
 
   await expect(page.getByText(/berhasil|success/i)).toBeVisible();
 });
@@ -409,11 +410,11 @@ test("TCMO.12 Super Admin upload invalid template excel OPD data", async ({ page
   const totalBarisInvalid = 3;
   const filePath = generateOPDExcel({ type: "invalid", total: totalBarisInvalid });
 
-  await page.getByRole("button", { name: "Unggah dari Excel" }).click();
+  await clickThink(page.getByRole("button", { name: "Unggah dari Excel" }));
 
   const fileInput = page.locator("input[type='file']");
-  await fileInput.setInputFiles(filePath);
-  await page.getByRole("button", { name: "Lanjutkan" }).click();
+  await uploadThink(fileInput, filePath);
+  await clickThink(page.getByRole("button", { name: "Lanjutkan" }));
 
   // Seluruh baris ditolak: tidak ada data bersih untuk disimpan
   await expect(page.getByRole("heading", { name: "Data Bersih (0)" })).toBeVisible();
@@ -439,9 +440,9 @@ test("TCMO.12 Super Admin upload invalid template excel OPD data", async ({ page
 
 // TCMO.13 Download Template Excel
 test("TCMO.13 Super Admin click Template Excel Data OPD hyperlink", async ({ page }) => {
-  await page.getByRole("button", { name: "Unggah dari Excel" }).click();
+  await clickThink(page.getByRole("button", { name: "Unggah dari Excel" }));
 
-  await page.getByRole("link", { name: /templat excel data opd/i }).click();
+  await clickThink(page.getByRole("link", { name: /templat excel data opd/i }));
 
   await expect(page).toHaveURL(/excel|template|dokumen|download/);
 });
@@ -450,12 +451,12 @@ test("TCMO.13 Super Admin click Template Excel Data OPD hyperlink", async ({ pag
 test("TCMO.14 Super Admin cancel upload OPD data excel", async ({ page }) => {
   const filePath = generateOPDExcel({ type: "valid", total: 1 });
 
-  await page.getByRole("button", { name: "Unggah dari Excel" }).click();
+  await clickThink(page.getByRole("button", { name: "Unggah dari Excel" }));
 
   const fileInput = page.locator("input[type='file']");
-  await fileInput.setInputFiles(filePath);
+  await uploadThink(fileInput, filePath);
 
-  await modalCloseButton(page, "Unggah Data OPD").click();
+  await clickThink(modalCloseButton(page, "Unggah Data OPD"));
 
   // Modal harus tertutup — sebelumnya hanya memeriksa judul halaman,
   // yang tetap terlihat di belakang modal sehingga selalu lolos
@@ -487,7 +488,7 @@ const emptyState = (page: Page) => page.getByText("Belum ada OPD", { exact: true
 const detailInput = (page: Page, name: string) => page.locator(`input[name="${name}"]`).first();
 
 const tungguTabel = async (page: Page) => {
-  await expect(barisData(page).first()).toBeVisible({ timeout: 20_000 });
+  await expect(barisData(page).first()).toBeVisible({ timeout: LOAD_TIME });
 };
 
 // TCMO.15, TCMO.24–28 Search Bar
@@ -538,7 +539,7 @@ test.describe("TCMO.15 & TCMO.24-28 Super Admin Search Bar", () => {
       const keyword = searchCase.kata((await nilaiKolom(page, KOLOM.nama))[0]);
 
       // Pencarian berjalan saat mengetik (onChange), bukan saat menekan Enter
-      await searchField(page).fill(keyword);
+      await fillThink(searchField(page), keyword);
 
       if (!searchCase.adaHasil) {
         await expect(emptyState(page)).toBeVisible();
@@ -569,8 +570,8 @@ test("TCMO.29 Super Admin export Daftar OPD tabel", async ({ page }) => {
   await tungguTabel(page);
 
   const [download] = await Promise.all([
-    page.waitForEvent("download"),
-    page.getByRole("button", { name: "Ekspor PDF" }).click(),
+    page.waitForEvent("download", { timeout: LOAD_TIME }),
+    clickThink(page.getByRole("button", { name: "Ekspor PDF" })),
   ]);
 
   expect(download.suggestedFilename()).toMatch(/^manajemen-opd-\d{4}-\d{2}-\d{2}\.pdf$/);
@@ -583,7 +584,7 @@ test("TCMO.30 Super Admin access OPD's detail", async ({ page }) => {
   const nama = (await nilaiKolom(page, KOLOM.nama))[0];
   const kontak = (await nilaiKolom(page, KOLOM.kontak))[0];
 
-  await barisData(page).first().getByRole("button", { name: "Detail" }).click();
+  await clickThink(barisData(page).first().getByRole("button", { name: "Detail" }));
 
   await expect(page.getByRole("heading", { name: "Detail OPD" })).toBeVisible();
   await expect(detailInput(page, "nama_opd")).toHaveValue(nama);
@@ -593,7 +594,7 @@ test("TCMO.30 Super Admin access OPD's detail", async ({ page }) => {
   // Tombol simpan baru aktif setelah ada perubahan (perubahan tidak disimpan)
   const simpan = page.getByRole("button", { name: "Simpan" });
   await expect(simpan).toBeDisabled();
-  await detailInput(page, "alamat").fill("Jl. Uji Perubahan Detail No. 1, Yogyakarta");
+  await fillThink(detailInput(page, "alamat"), "Jl. Uji Perubahan Detail No. 1, Yogyakarta");
   await expect(simpan).toBeEnabled();
 });
 
@@ -603,36 +604,34 @@ test.describe("TCMO.31-32 Super Admin Toggle Status OPD", () => {
   // Memakai OPD uji yang dibuat di test ini sendiri, supaya OPD yang dipakai
   // akun/test lain (mis. "Opd Demo") tidak ikut dinonaktifkan.
   test("TCMO.31 Super Admin Nonaktif OPD", async ({ page }) => {
-    test.setTimeout(90_000);
-
     const opdData = buildOPDData();
-    await page.getByRole("button", { name: /Tambah OPD/i }).click();
+    await clickThink(page.getByRole("button", { name: /Tambah OPD/i }));
     const form = await fillOPDForm({ data: opdData, page });
     await form.fillAll();
-    await page.getByRole("button", { name: /simpan/i }).click();
+    await clickThink(page.getByRole("button", { name: /simpan/i }));
     await expect(page.getByRole("heading", { name: "Tambah OPD Baru" })).toBeHidden();
 
-    await searchField(page).fill(opdData["NAMA OPD"]);
+    await fillThink(searchField(page), opdData["NAMA OPD"]);
     const baris = barisData(page).first();
     await expect(baris).toBeVisible();
     await expect(baris.locator(`td:nth-child(${KOLOM.status})`)).toHaveText("Aktif");
 
     // Nonaktifkan
-    await baris.getByRole("button", { name: "Nonaktif" }).click();
+    await clickThink(baris.getByRole("button", { name: "Nonaktif" }));
     await expect(page.getByRole("heading", { name: "Konfirmasi" })).toBeVisible();
     await expect(page.getByText(/yakin ingin menonaktifkan opd ini/i)).toBeVisible();
-    await page.getByRole("button", { name: "Lanjutkan" }).click();
+    await clickThink(page.getByRole("button", { name: "Lanjutkan" }));
 
     await expect(page.getByRole("heading", { name: "Konfirmasi" })).toBeHidden();
     await expect(baris.locator(`td:nth-child(${KOLOM.status})`)).toHaveText("Tidak Aktif", {
-      timeout: 20_000,
+      timeout: LOAD_TIME,
     });
 
     // Kembalikan ke status aktif supaya data uji tetap bersih
-    await baris.getByRole("button", { name: "Aktifkan" }).click();
-    await page.getByRole("button", { name: "Lanjutkan" }).click();
+    await clickThink(baris.getByRole("button", { name: "Aktifkan" }));
+    await clickThink(page.getByRole("button", { name: "Lanjutkan" }));
     await expect(baris.locator(`td:nth-child(${KOLOM.status})`)).toHaveText("Aktif", {
-      timeout: 20_000,
+      timeout: LOAD_TIME,
     });
   });
 
@@ -642,15 +641,15 @@ test.describe("TCMO.31-32 Super Admin Toggle Status OPD", () => {
 
     // Baris dikunci lewat pencarian nama agar tidak bergeser bila ada OPD baru
     const nama = (await nilaiKolom(page, KOLOM.nama))[0];
-    await searchField(page).fill(nama);
+    await fillThink(searchField(page), nama);
     const baris = barisData(page).first();
     const statusAwal = (await baris.locator(`td:nth-child(${KOLOM.status})`).innerText()).trim();
     const tombolToggle = statusAwal === "Aktif" ? "Nonaktif" : "Aktifkan";
 
-    await baris.getByRole("button", { name: tombolToggle }).click();
+    await clickThink(baris.getByRole("button", { name: tombolToggle }));
     await expect(page.getByRole("heading", { name: "Konfirmasi" })).toBeVisible();
 
-    await page.getByRole("button", { name: "Batal" }).click();
+    await clickThink(page.getByRole("button", { name: "Batal" }));
 
     // Dialog tertutup dan status OPD tidak berubah
     await expect(page.getByRole("heading", { name: "Konfirmasi" })).toBeHidden();
@@ -670,12 +669,12 @@ test("TCMO.33 Super Admin open next OPD tabel", async ({ page }) => {
 
   const halamanSatu = await nilaiKolom(page, KOLOM.nama);
 
-  await page.getByRole("button", { name: "Selanjutnya" }).click();
+  await clickThink(page.getByRole("button", { name: "Selanjutnya" }));
 
   await expect(infoJumlah(page)).toHaveText(new RegExp(`Menampilkan 6-\\d+ dari ${total} OPD`));
   expect(await nilaiKolom(page, KOLOM.nama)).not.toEqual(halamanSatu);
 
-  await page.getByRole("button", { name: "Sebelumnya" }).click();
+  await clickThink(page.getByRole("button", { name: "Sebelumnya" }));
 
   await expect(infoJumlah(page)).toHaveText(new RegExp(`Menampilkan 1-5 dari ${total} OPD`));
   expect(await nilaiKolom(page, KOLOM.nama)).toEqual(halamanSatu);

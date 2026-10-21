@@ -2,6 +2,8 @@
 
 import { defineConfig, devices } from "@playwright/test";
 
+import { LOAD_TIME, TEST_TIMEOUT } from "./src/helpers/timing.helper";
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -14,6 +16,10 @@ import { defineConfig, devices } from "@playwright/test";
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
+  /* Penantian assertion (expect) dibatasi LOAD_TIME, lihat timing.helper.ts */
+  expect: {
+    timeout: LOAD_TIME,
+  },
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Run tests in files in parallel */
@@ -58,11 +64,17 @@ export default defineConfig({
   ],
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: "html",
-  /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  /* Tanpa pengulangan: kegagalan tidak boleh tersamarkan oleh retry */
+  retries: 0,
   testDir: "./src/tests",
+  /* Batas waktu satu test, sudah memperhitungkan think time (lihat TEST_TIMEOUT) */
+  timeout: TEST_TIMEOUT,
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
+    /* Aksi & navigasi dibatasi LOAD_TIME */
+    actionTimeout: LOAD_TIME,
+    navigationTimeout: LOAD_TIME,
+
     /* Base URL to use in actions like `await page.goto('')`. */
     // baseURL: 'http://localhost:3000',
 

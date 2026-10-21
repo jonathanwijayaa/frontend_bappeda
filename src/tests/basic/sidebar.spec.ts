@@ -1,5 +1,6 @@
 import { credentials } from "@/helpers/credentials.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { clickThink } from "@/helpers/timing.helper";
 import { expect, Locator, Page, test } from "@playwright/test";
 
 const roles = [
@@ -65,11 +66,11 @@ for (const role of roles) {
       await expect(bar).toHaveClass(/w-64/);
 
       // Ciutkan → lebar berubah ke w-28
-      await toggle.click();
+      await clickThink(toggle);
       await expect(bar).toHaveClass(/w-28/);
 
       // Bentangkan kembali → lebar kembali ke w-64
-      await toggle.click();
+      await clickThink(toggle);
       await expect(bar).toHaveClass(/w-64/);
     });
 
@@ -78,7 +79,7 @@ for (const role of roles) {
       const bar = sidebar(page);
 
       await expect(bar).toHaveClass(/w-64/);
-      await toggleButton(page).click();
+      await clickThink(toggleButton(page));
       await expect(bar).toHaveClass(/w-28/);
 
       // Reload — status ciut harus tetap dipertahankan
@@ -86,7 +87,7 @@ for (const role of roles) {
       await expect(sidebar(page)).toHaveClass(/w-28/);
 
       // Kembalikan ke bentang agar tidak memengaruhi kondisi berikutnya
-      await toggleButton(page).click();
+      await clickThink(toggleButton(page));
       await expect(sidebar(page)).toHaveClass(/w-64/);
     });
 
@@ -102,7 +103,7 @@ for (const role of roles) {
       ];
 
       for (const target of targets) {
-        await page.getByRole("link", { name: target.label, exact: true }).click();
+        await clickThink(page.getByRole("link", { name: target.label, exact: true }));
         await expect(page).toHaveURL(target.url);
       }
     });

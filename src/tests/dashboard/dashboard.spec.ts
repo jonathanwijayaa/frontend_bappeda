@@ -1,5 +1,13 @@
 import { credentials } from "@/helpers/credentials.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import {
+  clickThink,
+  hoverThink,
+  LOAD_TIME,
+  pesanLoadTime,
+  think,
+  waitLoaded,
+} from "@/helpers/timing.helper";
 import { expect, Locator, Page, test } from "@playwright/test";
 
 // Dashboard hanya tersedia untuk Super Admin dan OPD.
@@ -58,47 +66,34 @@ const chartOrEmptyState = (body: Locator) =>
   body.locator(".recharts-surface").or(body.getByText(/belum ada data|belum tersedia/i));
 
 /**
- * Mengarahkan kursor ke cincin donut.
+ * Mengarahkan kursor ke sektor pertama cincin donut (satu kali, tanpa ulang).
  *
  * Sektor donut ber-animasi saat dirender, sehingga locator.hover() menunggu
- * elemen "stabil" sampai timeout. Karena itu kursor digerakkan langsung ke
- * titik pada cincin (di antara innerRadius dan outerRadius), lalu diulang
- * sampai tooltip berisi teks.
+ * elemen "stabil". Recharts baru merender label persentase setelah animasi
+ * selesai, dan label itu diletakkan tepat di sudut tengah (midAngle) sektornya
+ * pada pertengahan cincin (lihat DonutChart.tsx). Jadi: tunggu label tampil
+ * (maks LOAD_TIME), lalu gerakkan kursor sedikit di bawah label pertama —
+ * masih di dalam sektor, tetapi tidak menimpa teks label — dan tunggu tooltip
+ * berisi teks (maks LOAD_TIME).
  */
-const hoverDonutRing = async (page: Page, body: Locator, maxRetry = 8) => {
-  const pie = body.locator(".recharts-pie").first();
-  await expect(pie).toBeVisible();
+const hoverDonutRing = async (page: Page, body: Locator) => {
+  const label = body.locator(".recharts-pie-labels text").first();
+  await waitLoaded(label, "animasi donut selesai (label persentase tampil)");
+
+  const box = await label.boundingBox();
+  expect(box, "Posisi label sektor donut tidak terbaca").not.toBeNull();
+
+  await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2 + 12);
+  await think(page);
 
   const tooltip = chartTooltip(body);
-  // Arah jam 12, 3, 6, dan 9 supaya kursor tidak jatuh di celah antar sektor
-  const arahCincin = [
-    { dx: 0, dy: -0.8 },
-    { dx: 0.8, dy: 0 },
-    { dx: 0, dy: 0.8 },
-    { dx: -0.8, dy: 0 },
-  ];
-
-  for (let attempt = 0; attempt < maxRetry; attempt++) {
-    const box = await pie.boundingBox();
-
-    if (box) {
-      const radius = Math.min(box.width, box.height) / 2;
-      const { dx, dy } = arahCincin[attempt % arahCincin.length];
-
-      await page.mouse.move(
-        box.x + box.width / 2 + dx * radius,
-        box.y + box.height / 2 + dy * radius,
-      );
-      await page.waitForTimeout(300);
-
-      // Tooltip baru dipasang ke DOM setelah sektor pertama kali aktif
-      if ((await tooltip.count()) > 0 && (await tooltip.innerText()).trim() !== "") return;
-    }
-
-    await page.waitForTimeout(300);
-  }
-
-  throw new Error("Tooltip donut tidak muncul setelah kursor diarahkan ke cincin");
+  // Tooltip baru dipasang ke DOM setelah sektor pertama kali aktif
+  await expect
+    .poll(async () => ((await tooltip.count()) > 0 ? (await tooltip.innerText()).trim() : ""), {
+      message: pesanLoadTime("tooltip donut berisi teks setelah kursor diarahkan ke sektor"),
+      timeout: LOAD_TIME,
+    })
+    .not.toBe("");
 };
 
 for (const role of roles) {
@@ -114,7 +109,7 @@ for (const role of roles) {
 
       await expect(page).toHaveURL(/dashboard/);
       // Dashboard menunggu beberapa request statistik sebelum kontennya tampil
-      await expect(page.getByText(/memuat data dashboard/i)).toBeHidden({ timeout: 30000 });
+      await expect(page.getByText(/memuat data dashboard/i)).toBeHidden({ timeout: LOAD_TIME });
     });
 
     // TCD.1 Access Dashboard
@@ -128,7 +123,7 @@ for (const role of roles) {
       const bar = body.locator(".recharts-bar-rectangle").first();
 
       await expect(bar).toBeVisible();
-      await bar.hover();
+      await hoverThink(bar);
 
       // Tooltip berisi nama kategori dan jumlahnya
       const tooltip = chartTooltip(body);
@@ -193,10 +188,10 @@ for (const role of roles) {
       const bars = mainChartBody(page).locator(".recharts-bar-rectangle");
       expect(await bars.count()).toBe(10);
 
-      await filterButton.click();
-      await page.getByRole("button", { name: /^Semua Data \(\d+\)$/ }).click();
+      await clickThink(filterButton);
+      await clickThink(page.getByRole("button", { name: /^Semua Data \(\d+\)$/ }));
 
-      await expect.poll(() => bars.count(), { timeout: 10000 }).toBeGreaterThan(10);
+      await expect.poll(() => bars.count(), { timeout: LOAD_TIME }).toBeGreaterThan(10);
     });
 
     // TCD.8 Leaderboard Relawan dengan Penugasan Terbanyak
@@ -258,7 +253,7 @@ test("TCD.12 Dashboard shows an error state when the data fails to load", async 
   // Pesan mengikuti penyebab kegagalan (mis. "Network Error" dari request yang gagal)
   await expect(
     page.getByText(/network error|tidak dapat terhubung|gagal memuat|tidak tersedia/i),
-  ).toBeVisible({ timeout: 30000 });
+  ).toBeVisible({ timeout: LOAD_TIME });
   await expect(page.getByRole("button", { name: /coba lagi/i })).toBeVisible();
   // Konten dashboard tidak boleh ikut tampil saat datanya gagal dimuat
   await expect(page.getByText("Total Relawan Aktif", { exact: true })).toBeHidden();

@@ -1,6 +1,16 @@
 import { faker } from "@faker-js/faker";
 import { expect, Page } from "@playwright/test";
 
+import {
+  clickThink,
+  fillThink,
+  LOAD_TIME,
+  pesanLoadTime,
+  selectThink,
+  typeThink,
+  waitLoaded,
+} from "@/helpers/timing.helper";
+
 const OPD_LIST = [
   "Opd Demo",
   "Dinas Kesehatan",
@@ -112,41 +122,23 @@ const exactText = (value: string) =>
 /**
  * Pilih satu opsi pada AutocompleteInput.
  *
- * Opsi diambil dari API, sedangkan komponen hanya memfilter saat teks diketik —
- * jika data baru tiba setelah pengetikan selesai, dropdown tetap kosong.
- * Karena itu pengetikan diulang selama opsi yang dicari belum muncul.
+ * Opsi diambil dari API, sedangkan komponen hanya memfilter saat teks diketik.
+ * Pengetikan dilakukan SEKALI (tanpa percobaan ulang): bila opsi yang dicari
+ * tidak muncul dalam LOAD_TIME, itu kegagalan valid — data opsi terlambat
+ * atau tidak tersedia bagi pengguna.
  */
-const selectAutocompleteOption = async (
-  page: Page,
-  label: string,
-  value: string,
-  index = 0,
-  options: { maxRetry?: number; onRetry?: () => Promise<void> } = {},
-) => {
-  const { maxRetry = 3, onRetry } = options;
+const selectAutocompleteOption = async (page: Page, label: string, value: string, index = 0) => {
   const textbox = fieldInput(page, label, index);
   const option = fieldOptions(page, label, index).filter({ hasText: exactText(value) });
 
-  for (let attempt = 1; attempt <= maxRetry; attempt++) {
-    try {
-      // Field masih disabled selama opsinya dimuat ("Memuat kader...")
-      await expect(textbox).toBeEnabled({ timeout: 10000 });
-      await textbox.click();
-      await textbox.fill("");
-      await textbox.pressSequentially(value, { delay: 80 });
+  // Field masih disabled selama opsinya dimuat ("Memuat kader...")
+  await waitLoaded(textbox, `field ${label} aktif`, "enabled");
+  await clickThink(textbox);
+  await textbox.fill("");
+  await typeThink(textbox, value);
 
-      await expect(option.first()).toBeVisible({ timeout: 5000 });
-      await option.first().click();
-      return;
-    } catch (error) {
-      if (attempt === maxRetry) {
-        throw error;
-      }
-
-      console.log(`Opsi "${value}" pada field ${label} belum siap, ulangi (${attempt}/${maxRetry})`);
-      await onRetry?.();
-    }
-  }
+  await waitLoaded(option.first(), `opsi ${label} "${value}" muncul di daftar`);
+  await clickThink(option.first());
 };
 
 export interface RelawanData {
@@ -179,11 +171,11 @@ interface IFillRelawanForm {
 export const readOPDFromForm = async (page: Page, index = 0): Promise<string> => {
   const field = opdField(page, index);
 
-  await expect(field).toBeVisible({ timeout: 10000 });
+  await waitLoaded(field, "field OPD pada blok penugasan tampil");
   await expect
     .poll(async () => (await field.inputValue()).trim(), {
-      message: "Field OPD pada blok penugasan tidak pernah terisi",
-      timeout: 10000,
+      message: pesanLoadTime("field OPD pada blok penugasan terisi"),
+      timeout: LOAD_TIME,
     })
     .not.toBe("");
 
@@ -200,22 +192,24 @@ export const pickKaderFromForm = async (page: Page, index = 0): Promise<string> 
 
   try {
     // Field kader baru aktif setelah opsi kader milik OPD selesai dimuat
-    await expect(field).toBeEnabled({ timeout: 15000 });
+    await expect(field).toBeEnabled({ timeout: LOAD_TIME });
   } catch {
     const placeholder = await field.getAttribute("placeholder");
     throw new Error(
-      `Field Kader tidak aktif (placeholder: "${placeholder}"). ` +
-        `OPD "${await readOPDFromForm(page, index)}" kemungkinan belum memiliki kader.`,
+      pesanLoadTime(
+        `field Kader tidak aktif (placeholder: "${placeholder}"). ` +
+          `OPD "${await readOPDFromForm(page, index)}" kemungkinan belum memiliki kader.`,
+      ),
     );
   }
 
   // Dikosongkan dulu: dropdown memfilter berdasarkan teks yang ada, sehingga
   // field yang sudah terisi (form edit) bisa tidak menampilkan opsi apa pun
-  await field.click();
+  await clickThink(field);
   await field.fill("");
 
   const options = fieldOptions(page, "Kader", index);
-  await expect(options.first()).toBeVisible({ timeout: 10000 });
+  await waitLoaded(options.first(), "daftar opsi Kader muncul");
 
   const kaderList = (await options.allTextContents())
     .map((text: string) => text.trim())
@@ -284,10 +278,12 @@ export const buildRelawanData = (): RelawanData => {
 
 export const fillRelawanForm = async ({ data, page, isSuperAdmin }: IFillRelawanForm) => ({
   async fillAlamat() {
-    await page
-      .getByRole("textbox", { name: /alamat sesuai ktp/i })
-      .or(page.getByRole("textbox").nth(4))
-      .fill(data.ALAMAT);
+    await fillThink(
+      page
+        .getByRole("textbox", { name: /alamat sesuai ktp/i })
+        .or(page.getByRole("textbox").nth(4)),
+      data.ALAMAT,
+    );
   },
 
   async fillAll() {
@@ -317,26 +313,26 @@ export const fillRelawanForm = async ({ data, page, isSuperAdmin }: IFillRelawan
   //     .or(page.getByRole("textbox").nth(2))).
   // },
   async fillDetailJabatan() {
-    await fieldInput(page, "Detail Jabatan").fill(data["DETAIL JABATAN"]);
+    await fillThink(fieldInput(page, "Detail Jabatan"), data["DETAIL JABATAN"]);
   },
   async fillJabatan() {
     if (await page.getByRole("button", { name: "-- Pilih Jabatan --" }).isVisible()) {
-      await page.getByRole("button", { name: "-- Pilih Jabatan --" }).click();
-      await page.getByRole("button", { name: data.JABATAN }).click();
+      await clickThink(page.getByRole("button", { name: "-- Pilih Jabatan --" }));
+      await clickThink(page.getByRole("button", { name: data.JABATAN }));
       return;
     } else if (await page.getByRole("combobox").nth(1).isVisible()) {
-      await page.getByRole("combobox").nth(1).click();
-      await page.getByRole("combobox").nth(1).selectOption(data.JABATAN);
+      await clickThink(page.getByRole("combobox").nth(1));
+      await selectThink(page.getByRole("combobox").nth(1), data.JABATAN);
       return;
     }
   },
 
   async fillJenisKelamin() {
-    await page.getByRole("button", { name: "Laki-laki (L)" }).click();
+    await clickThink(page.getByRole("button", { name: "Laki-laki (L)" }));
     if (data["JENIS KELAMIN"] === "Laki-laki (L)") {
-      await page.getByRole("button", { name: data["JENIS KELAMIN"] }).nth(1).click();
+      await clickThink(page.getByRole("button", { name: data["JENIS KELAMIN"] }).nth(1));
     } else {
-      await page.getByRole("button", { name: data["JENIS KELAMIN"] }).click();
+      await clickThink(page.getByRole("button", { name: data["JENIS KELAMIN"] }));
     }
   },
   async fillKelurahan() {
@@ -347,32 +343,27 @@ export const fillRelawanForm = async ({ data, page, isSuperAdmin }: IFillRelawan
     await syncOPDFromForm(page, data);
   },
   async fillKader() {
-    await selectAutocompleteOption(page, "Kader", data.KADER, 0, {
-      // Opsi kader kadang gagal/lambat dimuat; memilih ulang OPD memicu pemuatan ulang
-      onRetry: async () => {
-        if (await opdField(page).isEditable()) {
-          await selectAutocompleteOption(page, "OPD", data.OPD);
-        }
-      },
-    });
+    await selectAutocompleteOption(page, "Kader", data.KADER);
   },
   async fillNamaLengkap() {
-    await page
-      .getByRole("textbox", { name: /nama lengkap relawan/i })
-      .or(page.getByRole("textbox").nth(2))
-      .fill(data["NAMA LENGKAP"]);
+    await fillThink(
+      page
+        .getByRole("textbox", { name: /nama lengkap relawan/i })
+        .or(page.getByRole("textbox").nth(2)),
+      data["NAMA LENGKAP"],
+    );
   },
   async fillNIK() {
-    await page
-      .getByRole("textbox", { name: /^nik$/i })
-      .or(page.getByRole("textbox").nth(3))
-      .fill(data.NIK);
+    await fillThink(
+      page.getByRole("textbox", { name: /^nik$/i }).or(page.getByRole("textbox").nth(3)),
+      data.NIK,
+    );
   },
   async fillNoHP() {
-    await page
-      .getByRole("textbox", { name: /nomor hp/i })
-      .or(page.getByRole("textbox").nth(5))
-      .fill(data["NO HP"]);
+    await fillThink(
+      page.getByRole("textbox", { name: /nomor hp/i }).or(page.getByRole("textbox").nth(5)),
+      data["NO HP"],
+    );
   },
   async fillOPD() {
     const textbox = opdField(page);
@@ -386,49 +377,34 @@ export const fillRelawanForm = async ({ data, page, isSuperAdmin }: IFillRelawan
     await selectAutocompleteOption(page, "OPD", data.OPD);
   },
   async fillPenugasan() {
-    await fieldInput(page, "Penugasan").fill(data.PENUGASAN);
+    await fillThink(fieldInput(page, "Penugasan"), data.PENUGASAN);
   },
   async clickTambahDataPenugasan() {
-    await page.getByRole("button", { name: "Tambah Data Penugasan" }).click();
+    await clickThink(page.getByRole("button", { name: "Tambah Data Penugasan" }));
   },
   async fillStatusKeaktifan() {
     if (data["STATUS KEAKTIFAN"] === "Nonaktif") {
-      await page.getByRole("radio", { name: "Nonaktif" }).click();
+      await clickThink(page.getByRole("radio", { name: "Nonaktif" }));
     } else {
-      await page.getByRole("radio", { name: "Aktif", exact: true }).click();
+      await clickThink(page.getByRole("radio", { name: "Aktif", exact: true }));
     }
   },
   async fillKemantren() {
     const textbox = page.getByRole("textbox", { name: /nama kemantren/i });
-    await textbox.click();
-    await textbox.pressSequentially(data.KEMANTREN, { delay: 80 });
+    await clickThink(textbox);
+    await typeThink(textbox, data.KEMANTREN);
     const option = page.getByRole("listitem").filter({ hasText: data.KEMANTREN });
-    await expect(option).toBeVisible({ timeout: 10000 });
-    await option.click();
+    await waitLoaded(option, `opsi Kemantren "${data.KEMANTREN}" muncul di daftar`);
+    await clickThink(option);
   },
-  async submitButton(maxRetry = 3) {
+  /** Satu kali klik Simpan, lalu tunggu form tertutup (maks LOAD_TIME), tanpa percobaan ulang. */
+  async submitButton() {
     const submitButton = page.getByRole("button", {
       name: "Simpan",
     });
 
-    for (let i = 1; i <= maxRetry; i++) {
-      try {
-        await submitButton.click();
-
-        // Tunggu sampai tombol hilang/disabled
-        await expect(submitButton).toBeHidden({
-          timeout: 3000,
-        });
-
-        return;
-      } catch (error) {
-        console.log(`Retry submit (${i}/${maxRetry})`);
-
-        if (i === maxRetry) {
-          throw error;
-        }
-      }
-    }
+    await clickThink(submitButton);
+    await waitLoaded(submitButton, "form relawan tertutup setelah simpan", "hidden");
   },
 });
 
@@ -445,16 +421,10 @@ export const selectOPD = async ({ data, page, isSuperAdmin }: IFillRelawanForm) 
 };
 
 export const selectKader = async ({ data, page }: IFillRelawanForm) => {
-  await selectAutocompleteOption(page, "Kader", data.KADER, 0, {
-    onRetry: async () => {
-      if (await opdField(page).isEditable()) {
-        await selectAutocompleteOption(page, "OPD", data.OPD);
-      }
-    },
-  });
+  await selectAutocompleteOption(page, "Kader", data.KADER);
 };
 
 export const selectPenugasan = async ({ data, page }: IFillRelawanForm) => {
   // Relawan bisa punya lebih dari satu blok penugasan, isi blok pertama saja
-  await fieldInput(page, "Penugasan").fill(data.PENUGASAN);
+  await fillThink(fieldInput(page, "Penugasan"), data.PENUGASAN);
 };

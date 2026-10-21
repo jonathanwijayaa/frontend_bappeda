@@ -1,5 +1,6 @@
 import { credentials } from "@/helpers/credentials.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { clickThink, fillThink, LOAD_TIME, waitLoaded, waitUrl } from "@/helpers/timing.helper";
 import { faker } from "@faker-js/faker";
 import type { Browser, Page } from "@playwright/test";
 
@@ -32,12 +33,12 @@ export async function submitPengajuanPerubahan(
     });
 
     // Relawan diarahkan ke /profil-relawan (bukan /dashboard)
-    await relawanPage.waitForURL(/profil-relawan/, { timeout: 15_000 });
+    await waitUrl(relawanPage, /profil-relawan/, "relawan diarahkan ke /profil-relawan");
 
     // 2. Buka form pengajuan perubahan data
-    await relawanPage
-      .getByRole("button", { name: /ajukan pembaruan|edit profil|ubah data/i })
-      .click();
+    await clickThink(
+      relawanPage.getByRole("button", { name: /ajukan pembaruan|edit profil|ubah data/i }),
+    );
 
     // 3. Isi minimal satu field yang berubah agar form valid
     const newAlamat = data?.alamat ?? `${faker.location.streetAddress()}, Yogyakarta`;
@@ -50,35 +51,38 @@ export async function submitPengajuanPerubahan(
 
     if (await alasanInput.isVisible()) {
       await alasanInput.clear();
-      await alasanInput.fill(newAlasan);
+      await fillThink(alasanInput, newAlasan);
     }
 
     if (await alamatInput.isVisible()) {
       await alamatInput.clear();
-      await alamatInput.fill(newAlamat);
+      await fillThink(alamatInput, newAlamat);
     }
 
     if (await noHPInput.isVisible()) {
       await noHPInput.clear();
-      await noHPInput.fill(newNoHP);
+      await fillThink(noHPInput, newNoHP);
     }
 
     // 4. Submit
-    await relawanPage.getByRole("button", { name: "Ajukan", exact: true }).click();
+    await clickThink(relawanPage.getByRole("button", { name: "Ajukan", exact: true }));
 
     // 5. Submit Konfirmasi
-    await relawanPage.getByRole("button", { name: "Ya, Ajukan" }).click();
+    await clickThink(relawanPage.getByRole("button", { name: "Ya, Ajukan" }));
 
-    // 6. Tunggu konfirmasi sukses (maks 10 detik)
-    await relawanPage
-      .getByText(/berhasil.*dikirim|success/i)
-      .or(relawanPage.getByRole("alert").filter({ hasText: /berhasil.*dikirim|success/i }))
-      .or(
-        relawanPage.getByText(
-          "Pengajuan perubahan data berhasil dikirim dan sedang menunggu review Admin.",
-        ),
-      )
-      .waitFor({ timeout: 10_000 });
+    // 6. Tunggu konfirmasi sukses (maks LOAD_TIME)
+    await waitLoaded(
+      relawanPage
+        .getByText(/berhasil.*dikirim|success/i)
+        .or(relawanPage.getByRole("alert").filter({ hasText: /berhasil.*dikirim|success/i }))
+        .or(
+          relawanPage.getByText(
+            "Pengajuan perubahan data berhasil dikirim dan sedang menunggu review Admin.",
+          ),
+        )
+        .first(),
+      "notifikasi pengajuan berhasil dikirim tampil",
+    );
   } finally {
     await relawanContext.close();
   }
@@ -106,7 +110,7 @@ export async function ensurePengajuanExists(
   // Hitung baris berstatus Menunggu / Pending setelah halaman dimuat ulang
   const countPending = async (): Promise<number> => {
     await page.reload();
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: LOAD_TIME });
 
     if (!(await pengajuanTableLocator.isVisible())) return 0;
 

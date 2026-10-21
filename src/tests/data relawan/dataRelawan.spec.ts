@@ -14,6 +14,13 @@ import {
 } from "@/helpers/formRelawan.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
 import { ensurePengajuanExists } from "@/helpers/submitPengajuan.helper";
+import {
+  clickThink,
+  fillThink,
+  LOAD_TIME,
+  SERIAL_TEST_TIMEOUT,
+  uploadThink,
+} from "@/helpers/timing.helper";
 import { Browser, expect, Page, test } from "@playwright/test";
 
 // Tombol tutup (X) pada header modal tidak punya accessible name,
@@ -22,10 +29,6 @@ const modalCloseButton = (page: Page, judul: string) =>
   page
     .locator(`xpath=//h2[normalize-space(text())="${judul}"]/parent::div/following-sibling::button`)
     .first();
-
-// Aplikasi yang diuji berjalan di deployment publik: pemuatan opsi OPD/Kader
-// kerap melebihi timeout bawaan 30 detik saat beberapa test berjalan paralel
-test.describe.configure({ timeout: 90_000 });
 
 const roles = [
   { label: "Super Admin", creds: credentials.superAdmin },
@@ -43,8 +46,8 @@ for (const { label, creds } of roles) {
         password: creds.password,
       });
 
-      await expect(page).toHaveURL(/dashboard/, { timeout: 10000 });
-      await page.getByRole("link", { name: "Relawan", exact: true }).click();
+      await expect(page).toHaveURL(/dashboard/, { timeout: LOAD_TIME });
+      await clickThink(page.getByRole("link", { name: "Relawan", exact: true }));
     });
 
     // TCDR.1
@@ -54,7 +57,7 @@ for (const { label, creds } of roles) {
 
     // TCDR.2
     test(`TCDR.2 ${label} click Ajukan Relawan Baru button`, async ({ page }) => {
-      await page.getByRole("button", { name: /Tambah Relawan/i }).click();
+      await clickThink(page.getByRole("button", { name: /Tambah Relawan/i }));
 
       await expect(page.getByRole("heading", { name: "Tambah Relawan Baru" })).toBeVisible();
     });
@@ -62,7 +65,7 @@ for (const { label, creds } of roles) {
     // TCDR.3-5 Fill Form
     test.describe(`TCDR.3-5 ${label} Fill Form Add Relawan`, () => {
       test.beforeEach(async ({ page }) => {
-        await page.getByRole("button", { name: /Tambah Relawan/i }).click();
+        await clickThink(page.getByRole("button", { name: /Tambah Relawan/i }));
       });
 
       // TCDR.3
@@ -95,7 +98,7 @@ for (const { label, creds } of roles) {
         });
         await form.fillAll();
 
-        await page.getByRole("button", { name: /simpan/i }).click();
+        await clickThink(page.getByRole("button", { name: /simpan/i }));
 
         await expect(
           page.getByText(
@@ -117,7 +120,7 @@ for (const { label, creds } of roles) {
         // Modal ini tidak punya tombol "Batal"; pembatalan lewat tombol X di
         // header. Dulu diklik lewat indeks tombol tanpa teks ke-3 di halaman,
         // lalu memeriksa URL yang memang tidak pernah berubah.
-        await modalCloseButton(page, "Tambah Relawan Baru").click();
+        await clickThink(modalCloseButton(page, "Tambah Relawan Baru"));
 
         await expect(page.getByRole("heading", { name: "Tambah Relawan Baru" })).toBeHidden();
       });
@@ -126,7 +129,7 @@ for (const { label, creds } of roles) {
     // TCDR.6-9 Invalid Form
     test.describe(`TCDR.6-9 ${label} Fill Form Invalid`, () => {
       test.beforeEach(async ({ page }) => {
-        await page.getByRole("button", { name: /Tambah Relawan/i }).click();
+        await clickThink(page.getByRole("button", { name: /Tambah Relawan/i }));
       });
 
       // TCDR.6 Invalid Relawan Name
@@ -164,7 +167,7 @@ for (const { label, creds } of roles) {
               isSuperAdmin: label === "Super Admin",
             });
             await form.fillAll();
-            await page.getByRole("button", { name: /simpan/i }).click();
+            await clickThink(page.getByRole("button", { name: /simpan/i }));
 
             if (nameCase.expectedMessage === null) {
               const namaInput = page.getByRole("textbox", { name: "Nama lengkap" });
@@ -174,7 +177,7 @@ for (const { label, creds } of roles) {
               expect(isValid).toBe(false);
             } else {
               await expect(page.getByText(nameCase.expectedMessage)).toBeVisible({
-                timeout: 12000,
+                timeout: LOAD_TIME,
               });
             }
           });
@@ -238,7 +241,7 @@ for (const { label, creds } of roles) {
               return;
             }
 
-            await page.getByRole("button", { name: /simpan/i }).click();
+            await clickThink(page.getByRole("button", { name: /simpan/i }));
 
             if (nikCase.expectedMessage === null) {
               const nikInput = page.getByRole("textbox", { name: "digit NIK" });
@@ -286,7 +289,7 @@ for (const { label, creds } of roles) {
               isSuperAdmin: label === "Super Admin",
             });
             await form.fillAll();
-            await page.getByRole("button", { name: /simpan/i }).click();
+            await clickThink(page.getByRole("button", { name: /simpan/i }));
 
             if (addressCase.expectedMessage === null) {
               const alamatInput = page.getByRole("textbox", { name: "Alamat sesuai KTP" });
@@ -342,7 +345,7 @@ for (const { label, creds } of roles) {
               isSuperAdmin: label === "Super Admin",
             });
             await form.fillAll();
-            await page.getByRole("button", { name: /simpan/i }).click();
+            await clickThink(page.getByRole("button", { name: /simpan/i }));
 
             if (phoneCase.expectedMessage === null) {
               const phoneInput = page.getByRole("textbox", { name: "Nomor HP" });
@@ -363,7 +366,7 @@ for (const { label, creds } of roles) {
     // TCDR.10-16 Penugasan Form
     test.describe(`TCDR.10-16 ${label} Penugasan Form`, () => {
       test.beforeEach(async ({ page }) => {
-        await page.getByRole("button", { name: /Tambah Relawan/i }).click();
+        await clickThink(page.getByRole("button", { name: /Tambah Relawan/i }));
       });
 
       // TCDR.10
@@ -443,7 +446,7 @@ for (const { label, creds } of roles) {
 
       //       await page.getByRole("textbox", { name: /nomor sk/i }).fill(skCase.value);
 
-      //       await page.getByRole("button", { name: /simpan/i }).click();
+      //       await clickThink(page.getByRole("button", { name: /simpan/i }));
 
       //       await expect(page).not.toHaveURL(/data-relawan/);
       //       await expect(page.getByText(/sk|nomor|wajib|invalid/i)).toBeVisible();
@@ -480,7 +483,7 @@ for (const { label, creds } of roles) {
           isSuperAdmin: label === "Super Admin",
         });
         await form.fillAll();
-        await page.getByRole("button", { name: /tambah data penugasan/i }).click();
+        await clickThink(page.getByRole("button", { name: /tambah data penugasan/i }));
 
         await expect(opdField(page, 1)).toBeVisible();
       });
@@ -490,13 +493,13 @@ for (const { label, creds } of roles) {
     test(`TCDR.17 ${label} upload Relawan data excel file`, async ({ page }) => {
       const filePath = generateRelawanExcel({ type: "valid", total: 5 });
 
-      await page.getByRole("button", { name: /unggah dari excel/i }).click();
+      await clickThink(page.getByRole("button", { name: /unggah dari excel/i }));
 
       const fileInput = page.locator("input[type='file']");
-      await fileInput.setInputFiles(filePath);
-      await page.getByRole("button", { name: /lanjutkan/i }).click();
+      await uploadThink(fileInput, filePath);
+      await clickThink(page.getByRole("button", { name: /lanjutkan/i }));
       await expect(page.getByRole("heading", { name: "Data Kotor (0)" })).toBeVisible();
-      await page.getByRole("button", { name: /simpan data bersih/i }).click();
+      await clickThink(page.getByRole("button", { name: /simpan data bersih/i }));
 
       await expect(
         page.getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i),
@@ -507,10 +510,10 @@ for (const { label, creds } of roles) {
     test(`TCDR.18 ${label} upload invalid template excel Relawan data`, async ({ page }) => {
       const filePath = generateRelawanExcel({ type: "invalid", total: 3 });
 
-      await page.getByRole("button", { name: /unggah dari excel/i }).click();
+      await clickThink(page.getByRole("button", { name: /unggah dari excel/i }));
 
-      await page.locator("input[type='file']").setInputFiles(filePath);
-      await page.getByRole("button", { name: /lanjutkan/i }).click();
+      await uploadThink(page.locator("input[type='file']"), filePath);
+      await clickThink(page.getByRole("button", { name: /lanjutkan/i }));
 
       // Seluruh baris ditolak: tidak ada data bersih untuk disimpan
       await expect(page.getByRole("heading", { name: "Data Bersih (0)" })).toBeVisible();
@@ -531,9 +534,9 @@ for (const { label, creds } of roles) {
 
     // TCDR.19 Download Template Excel
     test(`TCDR.19 ${label} click Templat Excel Relawan Kader hyperlink`, async ({ page }) => {
-      await page.getByRole("button", { name: /unggah dari excel/i }).click();
+      await clickThink(page.getByRole("button", { name: /unggah dari excel/i }));
 
-      await page.getByRole("link", { name: "Unduh Templat Excel Data" }).click();
+      await clickThink(page.getByRole("link", { name: "Unduh Templat Excel Data" }));
 
       // Tautannya mengarah ke halaman Dokumen tempat seluruh template disimpan
       await expect(page).toHaveURL(/dokumen/);
@@ -544,12 +547,12 @@ for (const { label, creds } of roles) {
     test(`TCDR.20 ${label} cancel upload Relawan data excel`, async ({ page }) => {
       const filePath = generateRelawanExcel({ type: "valid", total: 1 });
 
-      await page.getByRole("button", { name: /unggah dari excel/i }).click();
+      await clickThink(page.getByRole("button", { name: /unggah dari excel/i }));
 
       const fileInput = page.locator("input[type='file']");
-      await fileInput.setInputFiles(filePath);
+      await uploadThink(fileInput, filePath);
 
-      await modalCloseButton(page, "Unggah Data Relawan").click();
+      await clickThink(modalCloseButton(page, "Unggah Data Relawan"));
 
       await expect(page.getByRole("heading", { name: "Unggah Data Relawan" })).toBeHidden();
       await expect(page.getByRole("main")).toBeVisible();
@@ -633,7 +636,7 @@ for (const { label, creds } of roles) {
             keyword = searchCase.transform ? searchCase.transform(keyword) : keyword;
           }
 
-          await searchInput.fill(keyword);
+          await fillThink(searchInput, keyword);
 
           if (searchCase.expectNoData) {
             await expect(page.getByText(/Belum ada relawan/i)).toBeVisible();
@@ -653,7 +656,7 @@ for (const { label, creds } of roles) {
 
     // TCDR.27 Access Relawan Detail
     test(`TCDR.27 ${label} access Relawan detail`, async ({ page }) => {
-      await page.getByRole("button", { name: "Detail" }).first().click();
+      await clickThink(page.getByRole("button", { name: "Detail" }).first());
 
       await expect(page.getByRole("heading", { name: /detail relawan/i })).toBeVisible();
     });
@@ -661,7 +664,7 @@ for (const { label, creds } of roles) {
     // TCDR.28-31 Detail Page
     test.describe(`TCDR.28-31 ${label} Detail Relawan`, () => {
       test.beforeEach(async ({ page }) => {
-        await page.getByRole("button", { name: "Detail" }).first().click();
+        await clickThink(page.getByRole("button", { name: "Detail" }).first());
         await expect(page.getByRole("heading", { name: /detail relawan/i })).toBeVisible();
       });
 
@@ -669,7 +672,7 @@ for (const { label, creds } of roles) {
       test(`TCDR.28 ${label} edit Relawan detail form`, async ({ page }) => {
         const relawanData = buildRelawanData();
 
-        await page.getByRole("button", { name: /edit/i }).click();
+        await clickThink(page.getByRole("button", { name: /edit/i }));
 
         const form = await fillRelawanForm({
           data: relawanData,
@@ -680,21 +683,21 @@ for (const { label, creds } of roles) {
         await form.fillAlamat();
         await form.fillNoHP();
 
-        await page.getByRole("button", { name: /simpan/i }).click();
+        await clickThink(page.getByRole("button", { name: /simpan/i }));
 
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();
       });
 
       // TCDR.29
       test(`TCDR.29 ${label} edit Relawan penugasan detail form`, async ({ page }) => {
-        await page.getByRole("button", { name: /edit/i }).click();
+        await clickThink(page.getByRole("button", { name: /edit/i }));
 
         const relawanData = buildRelawanData();
         await selectOPD({ data: relawanData, page, isSuperAdmin: label === "Super Admin" });
         await selectKader({ data: relawanData, page, isSuperAdmin: label === "Super Admin" });
         await selectPenugasan({ data: relawanData, page, isSuperAdmin: label === "Super Admin" });
 
-        await page.getByRole("button", { name: /simpan/i }).click();
+        await clickThink(page.getByRole("button", { name: /simpan/i }));
 
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();
       });
@@ -729,14 +732,14 @@ for (const { label, creds } of roles) {
     // TCDR.32-35 Tabel Pengajuan Perubahan Data
     test.describe.serial(`TCDR.32-35 ${label} Pengajuan Perubahan Data`, () => {
       // Tiap test bisa membuat pengajuan baru lewat login akun relawan di
-      // context terpisah, jadi butuh waktu lebih dari timeout default 30 detik
-      test.describe.configure({ timeout: 120_000 });
+      // context terpisah, jadi butuh waktu lebih dari TEST_TIMEOUT biasa
+      test.describe.configure({ timeout: SERIAL_TEST_TIMEOUT });
 
       // Helper lokal: navigasi ke halaman relawan, pastikan ada
       // pengajuan pending, lalu buka halaman Review-nya.
       async function goToReviewPage(page: Page, browser: Browser) {
         // Kembali ke halaman Data Relawan dulu (kalau sudah berpindah)
-        await page.getByRole("link", { name: "Relawan", exact: true }).click();
+        await clickThink(page.getByRole("link", { name: "Relawan", exact: true }));
         await expect(page).toHaveURL(/relawan/);
 
         // Pastikan ada pengajuan pending — buat baru jika perlu
@@ -747,15 +750,16 @@ for (const { label, creds } of roles) {
         await expect(pengajuanTable(page)).toBeVisible();
 
         // Buka Review pada baris pertama yang berstatus Menunggu
-        await pengajuanTable(page)
-          .getByRole("row")
-          .filter({ hasText: /menunggu|pending/i })
-          .first()
-          .getByRole("button", { name: /review/i })
-          .click();
+        await clickThink(
+          pengajuanTable(page)
+            .getByRole("row")
+            .filter({ hasText: /menunggu|pending/i })
+            .first()
+            .getByRole("button", { name: /review/i }),
+        );
 
         // Centang checkbox konfirmasi verifikasi
-        await page.getByRole("checkbox", { name: /saya telah memverifikasi/i }).click();
+        await clickThink(page.getByRole("checkbox", { name: /saya telah memverifikasi/i }));
       }
 
       // TCDR.32 — Akses halaman Review
@@ -773,10 +777,7 @@ for (const { label, creds } of roles) {
         // tapi untuk keamanan kita pastikan lagi ada yang pending.
         await goToReviewPage(page, browser);
 
-        await page
-          .getByRole("button", { name: /setuju|terima|accept/i })
-          .first()
-          .click();
+        await clickThink(page.getByRole("button", { name: /setuju|terima|accept/i }).first());
 
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();
       });
@@ -785,10 +786,7 @@ for (const { label, creds } of roles) {
       test(`TCDR.34 ${label} decline Pengajuan perubahan data`, async ({ page, browser }) => {
         await goToReviewPage(page, browser);
 
-        await page
-          .getByRole("button", { name: /tolak|decline/i })
-          .first()
-          .click();
+        await clickThink(page.getByRole("button", { name: /tolak|decline/i }).first());
 
         await expect(
           page
@@ -804,14 +802,12 @@ for (const { label, creds } of roles) {
       }) => {
         await goToReviewPage(page, browser);
 
-        await page
-          .getByRole("button", { name: /tolak|decline/i })
-          .first()
-          .click();
+        await clickThink(page.getByRole("button", { name: /tolak|decline/i }).first());
 
-        await page
-          .getByRole("textbox", { name: /catatan|notes/i })
-          .fill("Catatan verifikasi dari " + label);
+        await fillThink(
+          page.getByRole("textbox", { name: /catatan|notes/i }),
+          "Catatan verifikasi dari " + label,
+        );
 
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();
       });

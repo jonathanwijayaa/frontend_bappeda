@@ -1,5 +1,6 @@
 import { credentials } from "@/helpers/credentials.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { clickThink, fillThink, LOAD_TIME } from "@/helpers/timing.helper";
 import { faker } from "@faker-js/faker";
 import { expect, Page, test } from "@playwright/test";
 
@@ -14,10 +15,10 @@ const roles = [
 async function navigateToSaranHotline(page: Page, menu: "sidebar" | "hamburger") {
   if (menu === "hamburger") {
     // Relawan memakai menu hamburger, dan item menunya berupa <button>, bukan <a>
-    await page.getByRole("button", { name: "Menu", exact: true }).click();
-    await page.getByRole("button", { name: /saran.*hotline/i }).click();
+    await clickThink(page.getByRole("button", { name: "Menu", exact: true }));
+    await clickThink(page.getByRole("button", { name: /saran.*hotline/i }));
   } else {
-    await page.getByRole("link", { name: /saran.*hotline/i }).click();
+    await clickThink(page.getByRole("link", { name: /saran.*hotline/i }));
   }
 
   await expect(page).toHaveURL(/saran-hotline/);
@@ -55,7 +56,7 @@ for (const { label, creds, menu } of roles) {
       // (`prev.noTelepon || autoNoHp`). Kalau test mengosongkan field sebelum
       // itu, isiannya tertimpa lagi dan saran malah terkirim. Jadi ditunggu
       // sampai prefill selesai — kedua akun uji punya nomor HP di profilnya.
-      await expect(teleponField(page)).not.toHaveValue("", { timeout: 15_000 });
+      await expect(teleponField(page)).not.toHaveValue("", { timeout: LOAD_TIME });
     });
 
     // TCSH.1-2 Hotline
@@ -85,16 +86,17 @@ for (const { label, creds, menu } of roles) {
     // TCSH.3-4 Kirim Saran Form
     test.describe(`TCSH.3-4 ${label} Kirim Saran Form`, () => {
       test(`TCSH.3 ${label} fills out the suggestion form and submits it`, async ({ page }) => {
-        await namaField(page).fill(
+        await fillThink(
+          namaField(page),
           faker.person
             .fullName()
             .replace(/[^a-zA-Z\s]/g, "")
             .trim(),
         );
-        await teleponField(page).fill(`08${faker.string.numeric(10)}`);
-        await saranField(page).fill(faker.lorem.sentences(2));
+        await fillThink(teleponField(page), `08${faker.string.numeric(10)}`);
+        await fillThink(saranField(page), faker.lorem.sentences(2));
 
-        await kirimSaranButton(page).click();
+        await clickThink(kirimSaranButton(page));
 
         await expect(page.getByText(/berhasil|terima kasih|success/i)).toBeVisible();
       });
@@ -132,16 +134,17 @@ for (const { label, creds, menu } of roles) {
 
         for (const phoneCase of invalidPhoneCases) {
           test(`TCSH.4 ${phoneCase.title}`, async ({ page }) => {
-            await namaField(page).fill(
+            await fillThink(
+              namaField(page),
               faker.person
                 .fullName()
                 .replace(/[^a-zA-Z\s]/g, "")
                 .trim(),
             );
-            await teleponField(page).fill(phoneCase.value);
-            await saranField(page).fill(faker.lorem.sentence());
+            await fillThink(teleponField(page), phoneCase.value);
+            await fillThink(saranField(page), faker.lorem.sentence());
 
-            await kirimSaranButton(page).click();
+            await clickThink(kirimSaranButton(page));
 
             await expect(page.getByText(phoneCase.expectedMessage)).toBeVisible();
             // Saran tidak boleh ikut terkirim saat nomor telepon tidak valid

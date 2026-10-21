@@ -1,9 +1,7 @@
 import { credentials } from "@/helpers/credentials.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { clickThink, fillThink, LOAD_TIME } from "@/helpers/timing.helper";
 import { expect, Page, test } from "@playwright/test";
-
-// Halaman memuat 200 log sekaligus lalu memfilter di sisi klien.
-test.describe.configure({ timeout: 90_000 });
 
 const BASE_URL = "https://frontend-bappeda.vercel.app/";
 
@@ -28,13 +26,13 @@ const selectPopup = (page: Page) => page.locator("[data-select-popup]");
 // Popup ditutup lewat mousedown di luar. Judul header dipakai karena letaknya
 // di atas baris filter, jadi tidak pernah tertutup popup.
 const tutupPopup = (page: Page) =>
-  page.getByRole("heading", { name: "Log / Aktifitas", exact: true }).click();
+  clickThink(page.getByRole("heading", { name: "Log / Aktifitas", exact: true }));
 
 const exactText = (value: string) =>
   new RegExp(`^\\s*${value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*$`, "i");
 
 const bacaOpsiFilter = async (page: Page, trigger: ReturnType<typeof filterAksi>) => {
-  await trigger.click();
+  await clickThink(trigger);
   await expect(selectPopup(page)).toBeVisible();
 
   const opsi = (await selectPopup(page).locator("button").allInnerTexts()).map((t) => t.trim());
@@ -44,14 +42,15 @@ const bacaOpsiFilter = async (page: Page, trigger: ReturnType<typeof filterAksi>
 };
 
 const pilihFilter = async (page: Page, trigger: ReturnType<typeof filterAksi>, nilai: string) => {
-  await trigger.click();
+  await clickThink(trigger);
   await expect(selectPopup(page)).toBeVisible();
 
-  await selectPopup(page)
-    .locator("button")
-    .filter({ hasText: exactText(nilai) })
-    .first()
-    .click();
+  await clickThink(
+    selectPopup(page)
+      .locator("button")
+      .filter({ hasText: exactText(nilai) })
+      .first(),
+  );
 
   await expect(selectPopup(page)).toBeHidden();
   await expect(trigger).toHaveText(exactText(nilai));
@@ -100,10 +99,9 @@ const detailCloseButton = (page: Page) =>
     .first();
 
 const bukaDetail = async (page: Page, indeksBaris = 0) => {
-  await barisData(page)
-    .nth(indeksBaris)
-    .getByRole("button", { name: "Lihat Detail Perubahan" })
-    .click();
+  await clickThink(
+    barisData(page).nth(indeksBaris).getByRole("button", { name: "Lihat Detail Perubahan" }),
+  );
   await expect(page.getByRole("heading", { name: JUDUL_DETAIL })).toBeVisible();
 };
 
@@ -137,10 +135,10 @@ test.describe("Log Aktifitas - Super Admin", () => {
 
     // Menu sidebar bertuliskan "Log Aktivitas" (dengan v), sedangkan rutenya
     // "/log-aktifitas" (dengan f).
-    await page.getByRole("link", { name: "Log Aktivitas" }).click();
+    await clickThink(page.getByRole("link", { name: "Log Aktivitas" }));
     await expect(page).toHaveURL(/log-aktifitas/);
 
-    await expect(page.getByText(/memuat log aktivitas/i)).toBeHidden({ timeout: 30_000 });
+    await expect(page.getByText(/memuat log aktivitas/i)).toBeHidden({ timeout: LOAD_TIME });
     await expect(barisData(page).first()).toBeVisible();
   });
 
@@ -253,7 +251,7 @@ test.describe("Log Aktifitas - Super Admin", () => {
         const keyword = searchCase.kata(baris);
 
         // Pencarian berjalan saat mengetik (onChange), bukan saat menekan Enter
-        await searchField(page).fill(keyword);
+        await fillThink(searchField(page), keyword);
 
         if (!searchCase.adaHasil) {
           await expect(emptyState(page)).toBeVisible();
@@ -326,12 +324,12 @@ test.describe("Log Aktifitas - Super Admin", () => {
       (teks) => !/^(Pilih\.\.\.|Semua Aksi)$/.test(teks),
     )[0];
     await pilihFilter(page, filterAksi(page), aksi);
-    await searchField(page).fill((await nilaiKolom(page, "tabel"))[0]);
+    await fillThink(searchField(page), (await nilaiKolom(page, "tabel"))[0]);
 
     expect(await jumlahHasil(page)).toBeLessThan(totalAwal);
 
     await pilihFilter(page, filterAksi(page), "Semua Aksi");
-    await searchField(page).fill("");
+    await fillThink(searchField(page), "");
 
     await expect(filterAksi(page)).toHaveText(/semua aksi/i);
     expect(await jumlahHasil(page)).toBe(totalAwal);
@@ -349,13 +347,13 @@ test.describe("Log Aktifitas - Super Admin", () => {
     await expect(infoHalaman(page)).toHaveText(new RegExp(`Menampilkan 1-5 dari ${total} log`));
     await expect(page.getByRole("button", { name: "Sebelumnya" })).toBeDisabled();
 
-    await page.getByRole("button", { name: "Selanjutnya" }).click();
+    await clickThink(page.getByRole("button", { name: "Selanjutnya" }));
 
     await expect(infoHalaman(page)).toHaveText(new RegExp(`Menampilkan 6-10 dari ${total} log`));
     await expect(page.getByRole("button", { name: "Sebelumnya" })).toBeEnabled();
     await expect(barisData(page)).toHaveCount(5);
 
-    await page.getByRole("button", { name: "Sebelumnya" }).click();
+    await clickThink(page.getByRole("button", { name: "Sebelumnya" }));
 
     await expect(infoHalaman(page)).toHaveText(new RegExp(`Menampilkan 1-5 dari ${total} log`));
     await expect(page.getByRole("button", { name: "Sebelumnya" })).toBeDisabled();
@@ -394,7 +392,7 @@ test.describe("Log Aktifitas - Super Admin", () => {
           : "Detail Data";
     await expect(detailModal(page).getByRole("heading", { name: judulDetail })).toBeVisible();
 
-    await page.getByRole("button", { name: "Tutup" }).click();
+    await clickThink(page.getByRole("button", { name: "Tutup" }));
     await expect(page.getByRole("heading", { name: JUDUL_DETAIL })).toBeHidden();
   });
 
@@ -402,7 +400,7 @@ test.describe("Log Aktifitas - Super Admin", () => {
   test("TCLA.17 Super Admin closes the log detail with the X button", async ({ page }) => {
     await bukaDetail(page);
 
-    await detailCloseButton(page).click();
+    await clickThink(detailCloseButton(page));
 
     await expect(page.getByRole("heading", { name: JUDUL_DETAIL })).toBeHidden();
     await expect(page.getByRole("table")).toBeVisible();
@@ -437,7 +435,7 @@ test.describe("Log Aktifitas - Super Admin", () => {
       "API /admin/logs tidak mengirim field nik, sehingga kolom NIK selalu kosong",
     );
 
-    await searchField(page).fill(nikTerisi!);
+    await fillThink(searchField(page), nikTerisi!);
 
     await expect(barisData(page).first()).toBeVisible();
     for (const sel of await nilaiKolom(page, "nik")) {
@@ -450,7 +448,7 @@ test.describe("Log Aktifitas - Super Admin", () => {
     await page.route("**/admin/logs*", (route) => route.abort());
     await page.reload();
 
-    await expect(page.getByText(/memuat log aktivitas/i)).toBeHidden({ timeout: 30_000 });
+    await expect(page.getByText(/memuat log aktivitas/i)).toBeHidden({ timeout: LOAD_TIME });
 
     // Belum ada tampilan error khusus; halaman jatuh ke tampilan "tidak ada log"
     await expect(emptyState(page)).toBeVisible();
