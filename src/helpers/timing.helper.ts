@@ -79,9 +79,15 @@ export const fillThink = async (locator: Locator, value: string) => {
   await think(locator.page());
 };
 
-/** Mengetik per karakter (dipakai field autocomplete yang memfilter saat diketik). */
+/**
+ * Mengetik per karakter (dipakai field autocomplete yang memfilter saat diketik).
+ *
+ * Durasi mengetik itu sendiri (jumlah karakter × delay) adalah perilaku pengguna,
+ * bukan waktu tunggu aplikasi, sehingga tidak boleh menghabiskan LOAD_TIME.
+ * Contoh: nama OPD 90 karakter × 80 ms = 7,2 s hanya untuk mengetik.
+ */
 export const typeThink = async (locator: Locator, value: string, delay = 80) => {
-  await locator.pressSequentially(value, { delay });
+  await locator.pressSequentially(value, { delay, timeout: LOAD_TIME + value.length * delay });
   await think(locator.page());
 };
 
