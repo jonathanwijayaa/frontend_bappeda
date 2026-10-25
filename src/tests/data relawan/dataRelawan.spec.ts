@@ -802,12 +802,14 @@ for (const { label, creds } of roles) {
       }) => {
         await goToReviewPage(page, browser);
 
-        await clickThink(page.getByRole("button", { name: /tolak|decline/i }).first());
-
+        // Field "Catatan Verifikator" ada di halaman Review, sebelum tombol
+        // Tolak; klik Tolak langsung mengirim penolakan.
         await fillThink(
           page.getByRole("textbox", { name: /catatan|notes/i }),
           "Catatan verifikasi dari " + label,
         );
+
+        await clickThink(page.getByRole("button", { name: /tolak|decline/i }).first());
 
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();
       });
