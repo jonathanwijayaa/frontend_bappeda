@@ -2,7 +2,15 @@
 
 import { defineConfig, devices } from "@playwright/test";
 
-import { LOAD_TIME, TEST_TIMEOUT } from "./src/helpers/timing.helper";
+/*
+ * Nilai waktu pengujian. HARUS sama dengan src/helpers/timing.helper.ts
+ * (LOAD_TIME & TEST_TIMEOUT, beserta dasar acuannya). Tidak di-import dari
+ * sana karena config ini milik tsconfig.node.json (project composite):
+ * meng-import file dari src/ membuat file itu wajib terdaftar di project
+ * node dan bentrok dengan project utama (error TS6305).
+ */
+const LOAD_TIME = Number(process.env.LOAD_TIME_MS ?? 10000);
+const TEST_TIMEOUT = 120_000;
 
 /**
  * Read environment variables from file.

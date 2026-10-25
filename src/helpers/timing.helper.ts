@@ -36,6 +36,7 @@ export const THINK_TIME = Number(process.env.THINK_TIME_MS ?? 1200);
  * aksi + think time.
  *
  * Bisa ditimpa lewat env LOAD_TIME_MS.
+ * Nilai yang sama ditulis ulang di playwright.config.ts (lihat catatan di sana).
  */
 export const LOAD_TIME = Number(process.env.LOAD_TIME_MS ?? 10000);
 
