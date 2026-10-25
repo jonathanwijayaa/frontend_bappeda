@@ -4,6 +4,16 @@ import { clickThink, fillThink, LOAD_TIME, waitLoaded, waitUrl } from "@/helpers
 import { faker } from "@faker-js/faker";
 import type { Browser, Page } from "@playwright/test";
 
+// Field pada modal pengajuan. Label tidak terhubung ke input (tanpa htmlFor),
+// dan placeholder-nya diisi data profil saat ini, jadi keduanya tidak bisa
+// dipakai sebagai locator. Field diambil dari elemen tepat setelah label-nya
+// (sama dengan modalField di profil.spec.ts).
+const modalField = (page: Page, label: string) =>
+  page
+    .locator(`xpath=//label[starts-with(normalize-space(.), "${label}")]/following-sibling::*[1]`)
+    .locator("xpath=descendant-or-self::*[self::input or self::textarea]")
+    .first();
+
 export interface PengajuanPerubahanData {
   alamat?: string;
   noHP?: string;
@@ -39,33 +49,26 @@ export async function submitPengajuanPerubahan(
     await clickThink(
       relawanPage.getByRole("button", { name: /ajukan pembaruan|edit profil|ubah data/i }),
     );
+    await waitLoaded(
+      relawanPage.getByRole("heading", { name: "Ajukan Pembaruan Data" }),
+      "modal Ajukan Pembaruan Data tampil",
+    );
 
     // 3. Isi minimal satu field yang berubah agar form valid
     const newAlamat = data?.alamat ?? `${faker.location.streetAddress()}, Yogyakarta`;
     const newNoHP = data?.noHP ?? `08${faker.string.numeric(10)}`;
     const newAlasan = faker.lorem.sentence();
 
-    const alamatInput = relawanPage.getByRole("textbox", { name: /alamat/i });
-    const noHPInput = relawanPage.getByRole("textbox", { name: /nomor hp/i });
-    const alasanInput = relawanPage.getByRole("textbox", { name: "Tuliskan alasan mengapa data" });
-
-    if (await alasanInput.isVisible()) {
-      await alasanInput.clear();
-      await fillThink(alasanInput, newAlasan);
-    }
-
-    if (await alamatInput.isVisible()) {
-      await alamatInput.clear();
-      await fillThink(alamatInput, newAlamat);
-    }
-
-    if (await noHPInput.isVisible()) {
-      await noHPInput.clear();
-      await fillThink(noHPInput, newNoHP);
-    }
+    await fillThink(modalField(relawanPage, "Alamat Baru"), newAlamat);
+    await fillThink(modalField(relawanPage, "No. HP Baru"), newNoHP);
+    await fillThink(modalField(relawanPage, "Catatan / Alasan Perubahan"), newAlasan);
 
     // 4. Submit
     await clickThink(relawanPage.getByRole("button", { name: "Ajukan", exact: true }));
+    await waitLoaded(
+      relawanPage.getByRole("heading", { name: "Konfirmasi Pengajuan" }),
+      "dialog Konfirmasi Pengajuan tampil",
+    );
 
     // 5. Submit Konfirmasi
     await clickThink(relawanPage.getByRole("button", { name: "Ya, Ajukan" }));
