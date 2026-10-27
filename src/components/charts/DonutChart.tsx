@@ -14,6 +14,15 @@ interface ChartDataItem {
   value: number;
 }
 
+interface LabelProps {
+  cx: number;
+  cy: number;
+  innerRadius: number;
+  midAngle: number;
+  outerRadius: number;
+  percent: number;
+}
+
 interface DonutChartProps {
   colors?: Record<string, string> | string[];
   data: ChartDataItem[];
@@ -35,7 +44,7 @@ const DonutChart: React.FC<DonutChartProps> = ({
   };
 
   const getFillColor = (entry: ChartDataItem, index: number) => {
-    const label = entry[nameKey];
+    const label = String(entry[nameKey]);
     if (colors && !Array.isArray(colors)) return colors[label] || "#8884d8";
     if (GENDER_COLOR_MAP[label]) return GENDER_COLOR_MAP[label];
     if (colors && Array.isArray(colors)) return colors[index % colors.length];
@@ -50,7 +59,7 @@ const DonutChart: React.FC<DonutChartProps> = ({
     midAngle,
     outerRadius,
     percent,
-  }: unknown) => {
+  }: LabelProps) => {
     const RADIAN = Math.PI / 180;
     // Atur radius agar teks berada sedikit di luar atau pas di tengah slice
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -73,12 +82,12 @@ const DonutChart: React.FC<DonutChartProps> = ({
   };
 
   // 2. Fungsi untuk kustomisasi teks Legenda (Nama + Value)
-  const renderLegendText = (value: string, entry: unknown) => {
+  const renderLegendText = (value: string, entry: { payload?: { value?: number } }) => {
     const { payload } = entry;
     // Mencari nilai asli dari data berdasarkan nama di legenda
     return (
       <span style={{ color: "#374151", fontWeight: 500, marginLeft: "5px" }}>
-        {value} ({payload.value})
+        {value} ({payload?.value})
       </span>
     );
   };

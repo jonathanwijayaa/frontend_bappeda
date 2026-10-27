@@ -35,8 +35,8 @@ export const useKaderByOpdId = (opdId: number, isSuperAdmin: boolean) =>
       const endpoint = isSuperAdmin ? `/kader?opd_id=${opdId}` : "/opd-admin/kader";
       const { data } = await apiClient.get(endpoint);
       if (!data.success) throw new Error(data.message || "Gagal memuat kader");
-      return (data.data as unknown[]).map((k: unknown) => ({
-        label: k.nama_kader as string,
+      return (data.data as { kader_id: number; nama_kader: string }[]).map((k) => ({
+        label: k.nama_kader,
         value: String(k.kader_id),
       }));
     },

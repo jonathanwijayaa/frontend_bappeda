@@ -45,7 +45,7 @@ export const useStatistikRelawanPerKader = () =>
   useQuery({
     queryFn: async (): Promise<ChartData[]> => {
       const { data } = await apiClient.get("/statistik/relawan-per-kader");
-      return data.data.map((d: ChartData) => ({ ...d, value: parseInt(d.value as unknown) }));
+      return data.data.map((d: ChartData) => ({ ...d, value: parseInt(String(d.value)) }));
     },
     queryKey: STATISTIK_KEYS.relawanPerKader(),
   });
@@ -55,7 +55,7 @@ export const useStatistikKaderPerOpd = () =>
   useQuery({
     queryFn: async (): Promise<ChartData[]> => {
       const { data } = await apiClient.get("/statistik/kader-per-opd");
-      return data.data.map((d: ChartData) => ({ ...d, value: parseInt(d.value as unknown) }));
+      return data.data.map((d: ChartData) => ({ ...d, value: parseInt(String(d.value)) }));
     },
     queryKey: STATISTIK_KEYS.kaderPerOpd(),
   });

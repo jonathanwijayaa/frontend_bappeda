@@ -3,7 +3,9 @@
 # (tanpa performance/*, screenshot-ui, accessControl, xss), berurutan:
 # 1 worker lalu 10 worker, masing-masing ke folder results/<tanggal>-<n>-worker/.
 #
-# Pemakaian:  powershell -ExecutionPolicy Bypass -File scripts/rerun.ps1 [-Workers 1,10]
+# Pemakaian:  powershell -ExecutionPolicy Bypass -File scripts/rerun.ps1 [-Workers 1]
+# Catatan: lewat -File, "-Workers 1,10" terbaca sebagai angka 110. Untuk dua run,
+# jalankan tanpa -Workers (default 1 lalu 10).
 
 param(
   [int[]]$Workers = @(1, 10),
