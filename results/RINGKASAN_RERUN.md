@@ -1,6 +1,6 @@
 # Ringkasan Eksekusi Ulang (Think Time & Load Time)
 
-Tanggal eksekusi: 2026-10-27. Proyek: chromium, 1 worker. THINK_TIME 1,2 s, LOAD_TIME 10 s, retries 0, timeout per test 120 s (blok serial TCDR.32–35: 180 s).
+Tanggal eksekusi: 2026-10-27. Proyek: chromium, 1 worker. THINK_TIME 1,2 s, LOAD_TIME 10 s, retries 0, timeout per test 120 s (blok serial TCDR.32–35: 180 s). Perangkat: laptop pengganti Intel i7-5600U (2 core / 4 thread), RAM 16 GB, berbeda dari perangkat baseline.
 
 Cakupan: 527 test, sama dengan baseline (tanpa `performance/*`, `screenshot-ui`, `accessControl`, `xss`). Hasil mentah di `results/2026-10-27-1-worker/`: `results.json`, laporan HTML (`html-report/`), log terminal (`log.txt`), dan `summary.png`.
 
@@ -453,9 +453,13 @@ di run ini:
   baseline tidak tersedia, jadi penyebab kegagalan di baseline tidak dapat dipastikan.
 - **TCDR.17**: tetap gagal (cacat aplikasi, bagian 2).
 - Tidak ada TC yang baru gagal dibanding baseline setelah uji ulang kelompok A dan B.
-- Durasi naik dari 28m57s menjadi 2h14m50s karena think time 1,2 s setelah setiap aksi
-  (ditambah gangguan jaringan pada sebagian run). Kenaikan ini memang diharapkan dan
-  bukan penurunan kinerja aplikasi.
+- Durasi naik dari 28m57s menjadi 2h14m50s, tetapi **tidak sebanding langsung** dengan
+  baseline. Run ini dijalankan di perangkat yang berbeda dari baseline (laptop pengganti
+  Intel i7-5600U, 2 core / 4 thread, RAM 16 GB). Selisihnya berasal dari gabungan tiga
+  faktor yang tidak dapat dipisahkan dari data ini: (1) think time 1,2 s setelah setiap
+  aksi, (2) perbedaan perangkat, dan (3) dua periode gangguan jaringan selama run. Untuk
+  memisahkannya, run perlu diulang di perangkat baseline, atau di perangkat ini dengan
+  `THINK_TIME_MS=0`.
 
 ### 5. Test yang di-skip (8, disengaja)
 

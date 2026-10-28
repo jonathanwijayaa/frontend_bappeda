@@ -422,7 +422,7 @@ Pada run final (27 Okt 2026) tidak ada test yang gagal karena batas waktu test. 
 
 Rincian lengkap ada di [`results/RINGKASAN_RERUN.md`](results/RINGKASAN_RERUN.md). Hasil mentah di `results/2026-10-27-1-worker/` (laporan HTML, `results.json`, `log.txt`, `summary.png`) dan uji ulangnya di `ulang/`.
 
-- **1 worker (27 Okt 2026, chromium):** 527 test → **491 lulus, 25 gagal, 8 skip, 3 tidak jalan**, 0 flaky. Durasi **2h14m50s** (baseline 28m57s); kenaikannya terutama dari think time.
+- **1 worker (27 Okt 2026, chromium):** 527 test → **491 lulus, 25 gagal, 8 skip, 3 tidak jalan**, 0 flaky. Durasi **2h14m50s** (baseline 28m57s). Durasi ini **tidak sebanding langsung** dengan baseline, karena dijalankan di laptop pengganti (i7-5600U, 2 core / 4 thread, RAM 16 GB). Selisihnya adalah gabungan dari think time, perbedaan perangkat, dan gangguan jaringan, yang tidak dapat dipisahkan dari data ini.
 - **25 kegagalan, semuanya diuji ulang sekali (1 worker, retries 0):**
   - 14 karena jaringan laptop putus (`ERR_NETWORK_CHANGED`, `ERR_INTERNET_DISCONNECTED`, login tertahan di `/login`). Hasil uji ulang: 13 lulus, dan TCDO.1 Super Admin skip (skip bersyarat yang disengaja). TCDR.33–35 OPD yang tidak jalan ikut lulus.
   - 11 karena templat Excel tidak ada (`ENOENT`). Templat resmi dari `src/excel/` disalin ke `src/assets/files/`. Hasil uji ulang: 9 lulus.

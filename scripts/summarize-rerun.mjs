@@ -153,7 +153,8 @@ const jumlah = (st) => run.tests.filter((t) => t.status === st).length;
 L.push("# Ringkasan Eksekusi Ulang (Think Time & Load Time)", "");
 L.push(
   `Tanggal eksekusi: ${tanggalRun}. Proyek: chromium, 1 worker. THINK_TIME 1,2 s, LOAD_TIME 10 s, ` +
-    "retries 0, timeout per test 120 s (blok serial TCDR.32–35: 180 s).",
+    "retries 0, timeout per test 120 s (blok serial TCDR.32–35: 180 s). Perangkat: laptop " +
+    "pengganti Intel i7-5600U (2 core / 4 thread), RAM 16 GB, berbeda dari perangkat baseline.",
   "",
   "Cakupan: 527 test, sama dengan baseline (tanpa `performance/*`, `screenshot-ui`, " +
     "`accessControl`, `xss`). Hasil mentah di `results/" + path.basename(dirRun) + "/`: " +
