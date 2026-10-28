@@ -1,0 +1,1615 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "D:\\Lavy\\frontend_bappeda\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--project=chromium",
+      "--workers=1",
+      "--last-failed",
+      "--reporter=list,html,json",
+      "--output=D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang/test-results"
+    ],
+    "configFile": "D:\\Lavy\\frontend_bappeda\\playwright.config.ts",
+    "rootDir": "D:/Lavy/frontend_bappeda/src/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "D:/Lavy/frontend_bappeda/results/2026-10-27-1-worker/ulang/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "D:/Lavy/frontend_bappeda/src/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      },
+      {
+        "outputDir": "D:/Lavy/frontend_bappeda/results/2026-10-27-1-worker/ulang/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "D:/Lavy/frontend_bappeda/src/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      },
+      {
+        "outputDir": "D:/Lavy/frontend_bappeda/results/2026-10-27-1-worker/ulang/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "D:/Lavy/frontend_bappeda/src/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "chromium",
+        "testDir": "D:\\Lavy\\frontend_bappeda\\src\\tests",
+        "snapshotDir": "D:\\Lavy\\frontend_bappeda\\src\\tests",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 120000,
+        "use": {
+          "actionTimeout": 10000,
+          "navigationTimeout": 10000,
+          "screenshot": "on",
+          "trace": "retain-on-failure",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list"
+      ],
+      [
+        "html"
+      ],
+      [
+        "json"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "daftar kader\\daftarKader.spec.ts",
+      "file": "daftar kader/daftarKader.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Daftar Kader - Super Admin",
+          "file": "daftar kader/daftarKader.spec.ts",
+          "line": 76,
+          "column": 8,
+          "specs": [
+            {
+              "title": "TCDK.10 Super Admin upload Kader data excel file",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 15842,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:23:56.115Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\daftar kader-daftarKader-D-f1a35-pload-Kader-data-excel-file-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "be526952445b036298c5-f0b6e6907e2491689d95",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 458,
+              "column": 5
+            },
+            {
+              "title": "TCDK.11 Super Admin upload invalid template excel Kader data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 11572,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:24:13.220Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\daftar kader-daftarKader-D-2c94e-d-template-excel-Kader-data-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "be526952445b036298c5-22bfb7a054c648124351",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 474,
+              "column": 5
+            },
+            {
+              "title": "TCDK.13 Super Admin cancel upload Kader data excel",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 11433,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:24:24.843Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\daftar kader-daftarKader-D-3823e-cel-upload-Kader-data-excel-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "be526952445b036298c5-cba4df57c0e2b126dc1c",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 513,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "Daftar Kader - OPD",
+          "file": "daftar kader/daftarKader.spec.ts",
+          "line": 76,
+          "column": 8,
+          "specs": [
+            {
+              "title": "TCDK.10 OPD upload Kader data excel file",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 12571,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:25:49.329Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\daftar kader-daftarKader-D-7c61b-pload-Kader-data-excel-file-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "be526952445b036298c5-3b24b360c439de13bc3b",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 458,
+              "column": 5
+            },
+            {
+              "title": "TCDK.11 OPD upload invalid template excel Kader data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10495,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:26:01.926Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\daftar kader-daftarKader-D-93439-d-template-excel-Kader-data-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "be526952445b036298c5-160408b047841c3a32ae",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 474,
+              "column": 5
+            },
+            {
+              "title": "TCDK.13 OPD cancel upload Kader data excel",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10496,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:26:12.443Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\daftar kader-daftarKader-D-a5f62-cel-upload-Kader-data-excel-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "be526952445b036298c5-b2ac1e11fcb436c5082a",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 513,
+              "column": 5
+            },
+            {
+              "title": "TCDK.26 OPD navigates between Kader table pages",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 9288,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:26:31.521Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\daftar kader-daftarKader-D-a2271-s-between-Kader-table-pages-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "be526952445b036298c5-5f83a6df4be035d2f5d0",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 723,
+              "column": 5
+            }
+          ],
+          "suites": [
+            {
+              "title": "TCDK.6-9 OPD Fill Form Invalid",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 181,
+              "column": 10,
+              "specs": [
+                {
+                  "title": "TCDK.28 OPD cannot reuse an existing Kader name",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 120000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 32731,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-10-28T01:25:16.573Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\daftar kader-daftarKader-D-ca4b0-euse-an-existing-Kader-name-chromium\\test-finished-1.png"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "be526952445b036298c5-1808d709134404f5b89d",
+                  "file": "daftar kader/daftarKader.spec.ts",
+                  "line": 417,
+                  "column": 7
+                }
+              ],
+              "suites": [
+                {
+                  "title": "TCDK.27 OPD invalid Alamat PIC",
+                  "file": "daftar kader/daftarKader.spec.ts",
+                  "line": 381,
+                  "column": 12,
+                  "specs": [
+                    {
+                      "title": "TCDK.27 OPD Alamat too long",
+                      "ok": true,
+                      "tags": [],
+                      "tests": [
+                        {
+                          "timeout": 120000,
+                          "annotations": [],
+                          "expectedStatus": "passed",
+                          "projectId": "chromium",
+                          "projectName": "chromium",
+                          "results": [
+                            {
+                              "workerIndex": 0,
+                              "parallelIndex": 0,
+                              "status": "passed",
+                              "duration": 19949,
+                              "errors": [],
+                              "stdout": [],
+                              "stderr": [],
+                              "retry": 0,
+                              "startTime": "2026-10-28T01:24:36.318Z",
+                              "annotations": [],
+                              "attachments": [
+                                {
+                                  "name": "screenshot",
+                                  "contentType": "image/png",
+                                  "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\daftar kader-daftarKader-D-59b1a-TCDK-27-OPD-Alamat-too-long-chromium\\test-finished-1.png"
+                                }
+                              ]
+                            }
+                          ],
+                          "status": "expected"
+                        }
+                      ],
+                      "id": "be526952445b036298c5-d03f90206acd6f732d8e",
+                      "file": "daftar kader/daftarKader.spec.ts",
+                      "line": 402,
+                      "column": 11
+                    },
+                    {
+                      "title": "TCDK.27 OPD Alamat with digits only",
+                      "ok": true,
+                      "tags": [],
+                      "tests": [
+                        {
+                          "timeout": 120000,
+                          "annotations": [],
+                          "expectedStatus": "passed",
+                          "projectId": "chromium",
+                          "projectName": "chromium",
+                          "results": [
+                            {
+                              "workerIndex": 0,
+                              "parallelIndex": 0,
+                              "status": "passed",
+                              "duration": 20237,
+                              "errors": [],
+                              "stdout": [],
+                              "stderr": [],
+                              "retry": 0,
+                              "startTime": "2026-10-28T01:24:56.305Z",
+                              "annotations": [],
+                              "attachments": [
+                                {
+                                  "name": "screenshot",
+                                  "contentType": "image/png",
+                                  "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\daftar kader-daftarKader-D-4022e-OPD-Alamat-with-digits-only-chromium\\test-finished-1.png"
+                                }
+                              ]
+                            }
+                          ],
+                          "status": "expected"
+                        }
+                      ],
+                      "id": "be526952445b036298c5-45707d0fb8628c4d093a",
+                      "file": "daftar kader/daftarKader.spec.ts",
+                      "line": 402,
+                      "column": 11
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "TCDK.14-21 OPD Search Bar",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 528,
+              "column": 10,
+              "specs": [
+                {
+                  "title": "TCDK.18 OPD input with lower case",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 120000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 8534,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-10-28T01:26:22.964Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\daftar kader-daftarKader-D-74b12-8-OPD-input-with-lower-case-chromium\\test-finished-1.png"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "be526952445b036298c5-e3713d7cc80cd6c74b0b",
+                  "file": "daftar kader/daftarKader.spec.ts",
+                  "line": 583,
+                  "column": 9
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "dashboard\\dashboard.spec.ts",
+      "file": "dashboard/dashboard.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Dashboard - OPD",
+          "file": "dashboard/dashboard.spec.ts",
+          "line": 100,
+          "column": 8,
+          "specs": [
+            {
+              "title": "TCD.1 OPD access Dashboard page",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5127,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:26:40.895Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\dashboard-dashboard-Dashbo-69b71-1-OPD-access-Dashboard-page-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "747340cde928aa6c3216-49188b64c030fd13a247",
+              "file": "dashboard/dashboard.spec.ts",
+              "line": 116,
+              "column": 5
+            },
+            {
+              "title": "TCD.2 OPD hover on bar chart diagram",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 7498,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:26:46.067Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\dashboard-dashboard-Dashbo-c70c9--hover-on-bar-chart-diagram-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "747340cde928aa6c3216-387d4632f9c251b8c9ae",
+              "file": "dashboard/dashboard.spec.ts",
+              "line": 121,
+              "column": 5
+            },
+            {
+              "title": "TCD.7 OPD switches the main chart data filter",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8374,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:26:53.593Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\dashboard-dashboard-Dashbo-01229--the-main-chart-data-filter-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "747340cde928aa6c3216-cea366e6c0f0fd19034a",
+              "file": "dashboard/dashboard.spec.ts",
+              "line": 182,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "data relawan\\dataRelawan.spec.ts",
+      "file": "data relawan/dataRelawan.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Data Relawan - Super Admin",
+          "file": "data relawan/dataRelawan.spec.ts",
+          "line": 39,
+          "column": 8,
+          "specs": [
+            {
+              "title": "TCDR.17 Super Admin upload Relawan data excel file",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 22125,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i)\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i)\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i)\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i)\u001b[22m\n\n    at D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts:506:9",
+                        "location": {
+                          "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                          "column": 9,
+                          "line": 506
+                        },
+                        "snippet": "  504 |       await expect(\n  505 |         page.getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i),\n> 506 |       ).toBeVisible();\n      |         ^\n  507 |     });\n  508 |\n  509 |     // TCDR.18 Upload Invalid Excel"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                            "column": 9,
+                            "line": 506
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i)\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i)\u001b[22m\n\n\n  504 |       await expect(\n  505 |         page.getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i),\n> 506 |       ).toBeVisible();\n      |         ^\n  507 |     });\n  508 |\n  509 |     // TCDR.18 Upload Invalid Excel\n    at D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts:506:9"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:27:53.810Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-2627b-oad-Relawan-data-excel-file-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-2627b-oad-Relawan-data-excel-file-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-2627b-oad-Relawan-data-excel-file-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                        "column": 9,
+                        "line": 506
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "8ab5e6bfade7aee34657-e58e2caebb8c28a1eea2",
+              "file": "data relawan/dataRelawan.spec.ts",
+              "line": 493,
+              "column": 5
+            },
+            {
+              "title": "TCDR.18 Super Admin upload invalid template excel Relawan data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10631,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:28:18.601Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-86eec-template-excel-Relawan-data-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ab5e6bfade7aee34657-14f45ccbb5cc0ac6992b",
+              "file": "data relawan/dataRelawan.spec.ts",
+              "line": 510,
+              "column": 5
+            },
+            {
+              "title": "TCDR.20 Super Admin cancel upload Relawan data excel",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10093,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:28:29.523Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-36754-l-upload-Relawan-data-excel-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ab5e6bfade7aee34657-3a394ffc8330128c76af",
+              "file": "data relawan/dataRelawan.spec.ts",
+              "line": 547,
+              "column": 5
+            }
+          ],
+          "suites": [
+            {
+              "title": "TCDR.6-9 Super Admin Fill Form Invalid",
+              "file": "data relawan/dataRelawan.spec.ts",
+              "line": 130,
+              "column": 10,
+              "specs": [],
+              "suites": [
+                {
+                  "title": "TCDR.7 Super Admin invalid NIK",
+                  "file": "data relawan/dataRelawan.spec.ts",
+                  "line": 188,
+                  "column": 12,
+                  "specs": [
+                    {
+                      "title": "TCDR.7 Empty NIK",
+                      "ok": true,
+                      "tags": [],
+                      "tests": [
+                        {
+                          "timeout": 120000,
+                          "annotations": [],
+                          "expectedStatus": "passed",
+                          "projectId": "chromium",
+                          "projectName": "chromium",
+                          "results": [
+                            {
+                              "workerIndex": 0,
+                              "parallelIndex": 0,
+                              "status": "passed",
+                              "duration": 51714,
+                              "errors": [],
+                              "stdout": [],
+                              "stderr": [],
+                              "retry": 0,
+                              "startTime": "2026-10-28T01:27:02.062Z",
+                              "annotations": [],
+                              "attachments": [
+                                {
+                                  "name": "screenshot",
+                                  "contentType": "image/png",
+                                  "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-ca6a0-nvalid-NIK-TCDR-7-Empty-NIK-chromium\\test-finished-1.png"
+                                }
+                              ]
+                            }
+                          ],
+                          "status": "expected"
+                        }
+                      ],
+                      "id": "8ab5e6bfade7aee34657-9da1e4fad78dbb896d3f",
+                      "file": "data relawan/dataRelawan.spec.ts",
+                      "line": 225,
+                      "column": 11
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Data Relawan - OPD",
+          "file": "data relawan/dataRelawan.spec.ts",
+          "line": 39,
+          "column": 8,
+          "specs": [
+            {
+              "title": "TCDR.17 OPD upload Relawan data excel file",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 22003,
+                      "error": {
+                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i)\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i)\u001b[22m\n",
+                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i)\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i)\u001b[22m\n\n    at D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts:506:9",
+                        "location": {
+                          "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                          "column": 9,
+                          "line": 506
+                        },
+                        "snippet": "  504 |       await expect(\n  505 |         page.getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i),\n> 506 |       ).toBeVisible();\n      |         ^\n  507 |     });\n  508 |\n  509 |     // TCDR.18 Upload Invalid Excel"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                            "column": 9,
+                            "line": 506
+                          },
+                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i)\nExpected: visible\nTimeout: 10000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i) with timeout 10000ms\u001b[22m\n\u001b[2m  - waiting for getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i)\u001b[22m\n\n\n  504 |       await expect(\n  505 |         page.getByText(/berhasil|success|data baru ditambahkan|relawan baru ditambahkan/i),\n> 506 |       ).toBeVisible();\n      |         ^\n  507 |     });\n  508 |\n  509 |     // TCDR.18 Upload Invalid Excel\n    at D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts:506:9"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:29:22.090Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-cf45f-oad-Relawan-data-excel-file-chromium\\test-failed-1.png"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-cf45f-oad-Relawan-data-excel-file-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-cf45f-oad-Relawan-data-excel-file-chromium\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                        "column": 9,
+                        "line": 506
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "8ab5e6bfade7aee34657-cac95f803e6f5b633799",
+              "file": "data relawan/dataRelawan.spec.ts",
+              "line": 493,
+              "column": 5
+            },
+            {
+              "title": "TCDR.18 OPD upload invalid template excel Relawan data",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 11295,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:29:46.098Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-438a2-template-excel-Relawan-data-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ab5e6bfade7aee34657-b3f90f164be0dae99702",
+              "file": "data relawan/dataRelawan.spec.ts",
+              "line": 510,
+              "column": 5
+            },
+            {
+              "title": "TCDR.19 OPD click Templat Excel Relawan Kader hyperlink",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 9112,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:29:57.691Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-4c586-cel-Relawan-Kader-hyperlink-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ab5e6bfade7aee34657-9d46e2b74e6ca32fea0c",
+              "file": "data relawan/dataRelawan.spec.ts",
+              "line": 536,
+              "column": 5
+            },
+            {
+              "title": "TCDR.20 OPD cancel upload Relawan data excel",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10310,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T01:30:06.830Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-2dc72-l-upload-Relawan-data-excel-chromium\\test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "8ab5e6bfade7aee34657-bc5e611cd16144230847",
+              "file": "data relawan/dataRelawan.spec.ts",
+              "line": 547,
+              "column": 5
+            }
+          ],
+          "suites": [
+            {
+              "title": "TCDR.6-9 OPD Fill Form Invalid",
+              "file": "data relawan/dataRelawan.spec.ts",
+              "line": 130,
+              "column": 10,
+              "specs": [],
+              "suites": [
+                {
+                  "title": "TCDR.9 OPD invalid phone number",
+                  "file": "data relawan/dataRelawan.spec.ts",
+                  "line": 308,
+                  "column": 12,
+                  "specs": [
+                    {
+                      "title": "TCDR.9 Phone number too short",
+                      "ok": true,
+                      "tags": [],
+                      "tests": [
+                        {
+                          "timeout": 120000,
+                          "annotations": [],
+                          "expectedStatus": "passed",
+                          "projectId": "chromium",
+                          "projectName": "chromium",
+                          "results": [
+                            {
+                              "workerIndex": 1,
+                              "parallelIndex": 0,
+                              "status": "passed",
+                              "duration": 42403,
+                              "errors": [],
+                              "stdout": [],
+                              "stderr": [],
+                              "retry": 0,
+                              "startTime": "2026-10-28T01:28:39.640Z",
+                              "annotations": [],
+                              "attachments": [
+                                {
+                                  "name": "screenshot",
+                                  "contentType": "image/png",
+                                  "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-117af-DR-9-Phone-number-too-short-chromium\\test-finished-1.png"
+                                }
+                              ]
+                            }
+                          ],
+                          "status": "expected"
+                        }
+                      ],
+                      "id": "8ab5e6bfade7aee34657-c05622b89d3decbb01ee",
+                      "file": "data relawan/dataRelawan.spec.ts",
+                      "line": 338,
+                      "column": 11
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "title": "TCDR.32-35 OPD Pengajuan Perubahan Data",
+              "file": "data relawan/dataRelawan.spec.ts",
+              "line": 733,
+              "column": 19,
+              "specs": [
+                {
+                  "title": "TCDR.32 OPD access Relawan Review",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 180000,
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                            "line": 733,
+                            "column": 19
+                          }
+                        }
+                      ],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 2,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 25331,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-10-28T01:30:17.170Z",
+                          "annotations": [
+                            {
+                              "type": "serial",
+                              "location": {
+                                "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                                "line": 733,
+                                "column": 19
+                              }
+                            }
+                          ],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-8705b-2-OPD-access-Relawan-Review-chromium\\test-finished-1.png"
+                            },
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-8705b-2-OPD-access-Relawan-Review-chromium\\test-finished-2.png"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "8ab5e6bfade7aee34657-12667dd39b3f426c0f0d",
+                  "file": "data relawan/dataRelawan.spec.ts",
+                  "line": 766,
+                  "column": 7
+                },
+                {
+                  "title": "TCDR.33 OPD accept Pengajuan perubahan data",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 180000,
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                            "line": 733,
+                            "column": 19
+                          }
+                        }
+                      ],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 2,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 13281,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-10-28T01:30:42.570Z",
+                          "annotations": [
+                            {
+                              "type": "serial",
+                              "location": {
+                                "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                                "line": 733,
+                                "column": 19
+                              }
+                            }
+                          ],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-5a36c-pt-Pengajuan-perubahan-data-chromium\\test-finished-1.png"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "8ab5e6bfade7aee34657-76f1172a1908596baeab",
+                  "file": "data relawan/dataRelawan.spec.ts",
+                  "line": 775,
+                  "column": 7
+                },
+                {
+                  "title": "TCDR.34 OPD decline Pengajuan perubahan data",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 180000,
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                            "line": 733,
+                            "column": 19
+                          }
+                        }
+                      ],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 2,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 26527,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-10-28T01:30:55.896Z",
+                          "annotations": [
+                            {
+                              "type": "serial",
+                              "location": {
+                                "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                                "line": 733,
+                                "column": 19
+                              }
+                            }
+                          ],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-27d31-ne-Pengajuan-perubahan-data-chromium\\test-finished-1.png"
+                            },
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-27d31-ne-Pengajuan-perubahan-data-chromium\\test-finished-2.png"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "8ab5e6bfade7aee34657-c323bcc1c86d8dde84fb",
+                  "file": "data relawan/dataRelawan.spec.ts",
+                  "line": 786,
+                  "column": 7
+                },
+                {
+                  "title": "TCDR.35 OPD add verification notes to Pengajuan perubahan",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 180000,
+                      "annotations": [
+                        {
+                          "type": "serial",
+                          "location": {
+                            "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                            "line": 733,
+                            "column": 19
+                          }
+                        }
+                      ],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 2,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 28535,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-10-28T01:31:22.500Z",
+                          "annotations": [
+                            {
+                              "type": "serial",
+                              "location": {
+                                "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\data relawan\\dataRelawan.spec.ts",
+                                "line": 733,
+                                "column": 19
+                              }
+                            }
+                          ],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-396e4-otes-to-Pengajuan-perubahan-chromium\\test-finished-1.png"
+                            },
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\data relawan-dataRelawan-D-396e4-otes-to-Pengajuan-perubahan-chromium\\test-finished-2.png"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "8ab5e6bfade7aee34657-5ec1e427c3924706c887",
+                  "file": "data relawan/dataRelawan.spec.ts",
+                  "line": 799,
+                  "column": 7
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "dokumen\\dokumen.spec.ts",
+      "file": "dokumen/dokumen.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Dokumen - Super Admin",
+          "file": "dokumen/dokumen.spec.ts",
+          "line": 129,
+          "column": 8,
+          "specs": [],
+          "suites": [
+            {
+              "title": "TCDO.1-4 Super Admin Download",
+              "file": "dokumen/dokumen.spec.ts",
+              "line": 146,
+              "column": 10,
+              "specs": [
+                {
+                  "title": "TCDO.1 Super Admin downloads the application user guide",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 120000,
+                      "annotations": [
+                        {
+                          "type": "skip",
+                          "description": "Tombol Unduh \"Buku Panduan Aplikasi\" tidak menghasilkan berkas: dokumennya belum punya downloadUrl di Dokumen.tsx",
+                          "location": {
+                            "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\dokumen\\dokumen.spec.ts",
+                            "line": 155,
+                            "column": 18
+                          }
+                        }
+                      ],
+                      "expectedStatus": "skipped",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 2,
+                          "parallelIndex": 0,
+                          "status": "skipped",
+                          "duration": 16705,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-10-28T01:31:51.103Z",
+                          "annotations": [
+                            {
+                              "type": "skip",
+                              "description": "Tombol Unduh \"Buku Panduan Aplikasi\" tidak menghasilkan berkas: dokumennya belum punya downloadUrl di Dokumen.tsx",
+                              "location": {
+                                "file": "D:\\Lavy\\frontend_bappeda\\src\\tests\\dokumen\\dokumen.spec.ts",
+                                "line": 155,
+                                "column": 18
+                              }
+                            }
+                          ],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "D:\\Lavy\\frontend_bappeda\\results\\2026-10-27-1-worker\\ulang\\test-results\\dokumen-dokumen-Dokumen----f0498--the-application-user-guide-chromium\\test-finished-1.png"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "skipped"
+                    }
+                  ],
+                  "id": "4b76594102fea1d7361c-d2cae027bb82bcc96c0b",
+                  "file": "dokumen/dokumen.spec.ts",
+                  "line": 148,
+                  "column": 9
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-10-28T01:23:53.125Z",
+    "duration": 495156.954,
+    "expected": 25,
+    "skipped": 1,
+    "unexpected": 2,
+    "flaky": 0
+  }
+}

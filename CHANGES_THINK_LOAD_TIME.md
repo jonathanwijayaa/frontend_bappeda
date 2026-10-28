@@ -8,7 +8,11 @@ Branch: `feat/think-load-time` (dari `testing` @ `5bdf9c8`). Belum di-push atau 
 | `d02a1be` | Bagian 2: pseudocode (`docs/pseudocode/`) dan skrip pengecek |
 | `a25377a` | Perbaikan: `playwright.config.ts` tidak lagi meng-import dari `src/` (error IDE tsconfig) |
 | `7667b49` | Perbaikan: durasi mengetik di autocomplete tidak dihitung ke LOAD_TIME |
-| (commit Bagian 3) | Laporan ini, `results/`, `scripts/rerun.ps1`, `scripts/summarize-rerun.mjs` |
+| `39c9453` | Laporan sementara (run 21 Okt) |
+| `6e9fc9e` | Perbaikan skrip: field modal pengajuan dicari lewat label (`submitPengajuan.helper.ts`) |
+| `ad109ce` | Perbaikan skrip: TCDR.35 mengisi catatan verifikator sebelum klik Tolak |
+| `26ecf45` | Perbaikan tipe di kode aplikasi agar `npx tsc --noEmit` bersih (logika tidak berubah) |
+| (commit Bagian 3) | Laporan ini, `results/` final, `scripts/rerun-gagal.ps1`, `scripts/summarize-rerun.mjs` |
 
 Nilai yang dipakai (final, sesuai skripsi): **THINK_TIME = 1200 ms**, **LOAD_TIME = 10000 ms**, **retries = 0**.
 
@@ -24,7 +28,8 @@ Nilai yang dipakai (final, sesuai skripsi): **THINK_TIME = 1200 ms**, **LOAD_TIM
 | `docs/pseudocode/00_umum.md` … `15_sqli-api.md`, `pseudocode.json` | Pseudocode Bab IV dan Lampiran A |
 | `scripts/pseudocode-lib.mjs`, `build-pseudocode.mjs`, `check-pseudocode.mjs` | Pembangkit `pseudocode.json` dan pengecek (baris ≤ 72, karakter, cakupan TC-ID) |
 | `scripts/rerun.ps1` | Eksekusi ulang 527 test (1 lalu 10 worker) ke `results/<tanggal>-<n>-worker/` |
-| `scripts/summarize-rerun.mjs` | Membangkitkan `results/RINGKASAN_RERUN.md` dari `results.json` |
+| `scripts/summarize-rerun.mjs` | Membangkitkan `results/RINGKASAN_RERUN.md` dari `results.json` run dan uji ulang |
+| `scripts/rerun-gagal.ps1` | Uji ulang test yang gagal/tidak jalan pada satu run (dari `.last-run.json`) ke `<folder-run>/ulang/`, tanpa menimpa hasil run asal |
 
 ### Diubah
 
@@ -36,7 +41,9 @@ Nilai yang dipakai (final, sesuai skripsi): **THINK_TIME = 1200 ms**, **LOAD_TIM
 | `formKader.helper.ts` | Think setelah setiap field dan aksi autocomplete OPD; timeout 10 s / 20 s → LOAD_TIME |
 | `formRelawan.helper.ts` | Think setelah setiap field, klik, dan pilihan; **loop retry autocomplete dan simpan dihapus**; timeout → LOAD_TIME |
 | `formSuratKeputusan.helper.ts` | Think setelah setiap aksi; **4 loop retry dan pengisian ulang dihapus**; timeout → LOAD_TIME |
-| `submitPengajuan.helper.ts` | Think pada aksi di context Relawan; timeout → LOAD_TIME |
+| `submitPengajuan.helper.ts` | Think pada aksi di context Relawan; timeout → LOAD_TIME; field modal dicari lewat label (`6e9fc9e`) |
+| `data relawan/dataRelawan.spec.ts` › TCDR.35 | Urutan langkah: isi catatan verifikator, lalu klik Tolak (`ad109ce`); locator & assertion tetap |
+| Kode aplikasi (9 file di `src/components`, `src/hooks`, `src/context`) | Hanya anotasi tipe (`unknown` → tipe yang tepat) dan satu import tak terpakai (`26ecf45`) |
 | 12 spec fungsional + `security/sqlInjection.spec.ts` | Aksi langsung → wrapper think; timeout hardcode → LOAD_TIME; `test.describe.configure({ timeout })` per file dihapus (memakai config) |
 | `security/sqlInjectionApi.spec.ts` | **Hanya** `timeout: LOAD_TIME` pada request context (tanpa think time) |
 
@@ -406,24 +413,21 @@ Di spec yang dikecualikan (`xss.spec.ts` 2×, `screenshot-ui.spec.ts` 2×), `wai
 | Semua test (`config.timeout`) | **120 s** | Test terpanjang: TCDR.12 Super Admin, ± 36 aksi × 1,2 s ≈ 43 s, ditambah pengetikan per karakter ± 8 s dan penantian kondisi normal 1–3 s per langkah ± 25 s, sehingga ± 76 s. Dibulatkan ke 120 s supaya kegagalan muncul karena LOAD_TIME, bukan karena batas test. |
 | Blok serial TCDR.32–35 | **180 s** | Login di dua context (admin + relawan), ± 22 aksi × 1,2 s ≈ 26 s per siklus pengajuan, hingga 2 siklus ditambah reload halaman ± 110 s. Dibulatkan ke 180 s. |
 
-Pada run 21 Okt hanya satu test yang mencapai batas 120 s: TCDR.29 OPD (132 s), yang juga gagal karena notifikasi tidak muncul dalam LOAD_TIME (lihat `results/RINGKASAN_RERUN.md` 5.1 D).
+Pada run final (27 Okt 2026) tidak ada test yang gagal karena batas waktu test. Test terlama adalah TCDR.12 Super Admin, 70 s, sesuai perkiraan ± 76 s di atas.
 
 ---
 
 ## 6. Ringkasan hasil eksekusi ulang
 
-Rincian lengkap ada di [`results/RINGKASAN_RERUN.md`](results/RINGKASAN_RERUN.md). Status: **sementara**.
+Rincian lengkap ada di [`results/RINGKASAN_RERUN.md`](results/RINGKASAN_RERUN.md). Hasil mentah di `results/2026-10-27-1-worker/` (laporan HTML, `results.json`, `log.txt`, `summary.png`) dan uji ulangnya di `ulang/`.
 
-- **1 worker (21 Okt 2026, laptop pengganti i7-5600U, 2 core / 4 thread, RAM 16 GB):** 527 test → 490 lulus, 22 gagal, 9 skip, 6 tidak dijalankan (TCDR.33–35 × 2). Durasi 148m12s, sedangkan baseline 28m57s; kenaikannya terutama dari think time. Durasi **tidak sebanding langsung** karena perangkatnya berbeda.
-- **10 worker:** belum ada hasil. Run terhenti di awal karena sesi tertutup.
-- Dari 22 kegagalan:
-  - 12 karena templat Excel Kader/Relawan tidak ada di laptop pengganti (diabaikan `.gitignore`).
-  - 6 artefak pengetikan, sudah diperbaiki di `7667b49`.
-  - 2 TCDR.32 karena cacat skrip helper pengajuan yang sudah ada sejak baseline.
-  - **2 kegagalan valid:** TCD.3 Super Admin (melebihi LOAD_TIME) dan TCDR.29 OPD (perlu verifikasi manual).
-- Dibanding baseline: TCDR.6, TCDR.8, TCDR.11, dan TCSH.1 **kini lulus**. TCDR.32 tetap gagal. TCDR.35 tidak dijalankan. TCDR.17 gagal karena sebab lingkungan, sehingga tidak sebanding.
-
-**Sebelum run final:** pulihkan kedua templat Excel, putuskan perbaikan helper pengajuan (lihat 7.2), lalu jalankan `scripts/rerun.ps1` di laptop baseline.
+- **1 worker (27 Okt 2026, chromium):** 527 test → **491 lulus, 25 gagal, 8 skip, 3 tidak jalan**, 0 flaky. Durasi **2h14m50s** (baseline 28m57s); kenaikannya terutama dari think time.
+- **25 kegagalan, semuanya diuji ulang sekali (1 worker, retries 0):**
+  - 14 karena jaringan laptop putus (`ERR_NETWORK_CHANGED`, `ERR_INTERNET_DISCONNECTED`, login tertahan di `/login`). Hasil uji ulang: 13 lulus, dan TCDO.1 Super Admin skip (skip bersyarat yang disengaja). TCDR.33–35 OPD yang tidak jalan ikut lulus.
+  - 11 karena templat Excel tidak ada (`ENOENT`). Templat resmi dari `src/excel/` disalin ke `src/assets/files/`. Hasil uji ulang: 9 lulus.
+  - **Tersisa 1 TC gagal: TCDR.17** (Super Admin & OPD), **gagal valid – cacat aplikasi**. Di `DataRelawan.tsx:372` tertulis `onConfirm={async () => {}}`, sehingga data unggahan relawan tidak pernah disimpan.
+- **Dibanding baseline:** TCDR.6, TCDR.8, TCDR.11, dan TCSH.1 kini lulus. TCDR.32 dan TCDR.35 kini lulus setelah perbaikan skrip (`6e9fc9e`, `ad109ce`) dan data uji. TCDR.17 tetap gagal. Tidak ada TC yang baru gagal.
+- **10 worker: tidak dijalankan** atas keputusan peneliti, karena perangkat uji tidak sanggup menjalankan 10 browser paralel. Dua percobaan terhenti sebelum selesai, dan hasil parsialnya tidak dipakai.
 
 ---
 
@@ -442,10 +446,16 @@ Rincian lengkap ada di [`results/RINGKASAN_RERUN.md`](results/RINGKASAN_RERUN.md
 | TCMO.15 | Dikelompokkan bersama TCMO.24–28 (pencarian). Nomor TCMO.16–23 tidak ada di skrip. |
 | Tidak diotomasi | TCL.7 (tidak ada fitur pendaftaran), TCMO.7 (skrip status dinonaktifkan), TCMO.16–23 (tidak ada di skrip), TCDR.14 / TCDR.30 / TCDR.31 (skrip dikomentari), TCLA.10 (belum ada tombol ekspor). Di pseudocode ditulis `// … tidak diotomasi: <alasan>`. Bila TC tersebut memang dieksekusi manual, ganti menjadi `dieksekusi manual`. |
 
-### 7.2 Temuan yang perlu keputusan
+**Hasil pengecekan kode (27 Okt 2026):**
+- **TCDK.7:** kode test konsisten. Judulnya "TCDK.7 … invalid NIK PIC" (`daftarKader.spec.ts:266`), dan variasi datanya memang NIK PIC. Form Tambah Kader (`DaftarKader.tsx`) tidak punya field Status. Jadi yang perlu disesuaikan adalah sheet kasus uji, bukan skripnya.
+- **TCS ↔ TCD:** dokumentasi di `stastistik.spec.ts:11-15` sesuai dengan judul test di `dashboard.spec.ts`: TCD.9 adalah sebaran relawan per Kelurahan (baris 211), dan TCD.10 adalah relawan per Kader (baris 219). Pemetaan bersilang TCS.2 → TCD.10 dan TCS.3 → TCD.9 adalah pemetaan yang benar.
 
-1. **Helper `submitPengajuan` tidak mengisi Alamat Baru dan No. HP Baru.** Locator `getByRole("textbox", { name: /alamat/i })` dan `/nomor hp/i` tidak cocok lagi, karena nama aksesibel field di modal sekarang adalah placeholder. Akibatnya pengajuan hanya berisi catatan dan tidak pernah terkirim. Inilah penyebab TCDR.32 gagal dan TCDR.33–35 tidak berjalan, baik di baseline maupun di run ini. Usulan: cari field lewat label-nya, seperti `modalField()` di `profil.spec.ts`. Belum saya ubah karena ini mengubah logika helper.
-2. **Templat Excel.** `Template_Data_Kader.xlsx` dan `Template_Data_Relawan.xlsx` diabaikan `.gitignore` (`src/assets/files/*.xlsx`), sehingga tidak ada di clone baru. Usulan: tambahkan pengecualian `!src/assets/files/Template_Data_*.xlsx` dan commit kedua berkas.
+### 7.2 Temuan
+
+1. **Helper `submitPengajuan` (sudah diperbaiki, `6e9fc9e`).** Locator lama `getByRole("textbox", { name: /alamat/i })` dan `/nomor hp/i` tidak cocok dengan field modal, sehingga pengajuan tidak pernah terkirim. Ini penyebab TCDR.32 gagal di baseline. Field kini dicari lewat label-nya.
+2. **Templat Excel (belum diputuskan).** `baseExcel.helper.ts` membaca `src/assets/files/Template_Data_{Kader,Relawan}.xlsx`, tetapi `.gitignore` mengabaikan `src/assets/files/*.xlsx`, sehingga berkas itu tidak ada di clone baru. Templat resmi yang sama ada di `src/excel/`. Usulan: ubah path di `baseExcel.helper.ts` ke `src/excel/`, atau commit kedua berkas dengan pengecualian `.gitignore`. Untuk run ini, berkas disalin secara lokal.
+3. **Cacat aplikasi: unggah Excel relawan tidak menyimpan data** (`DataRelawan.tsx:372`, `onConfirm={async () => {}}`), menyebabkan TCDR.17 gagal. Hook `useBulkRelawan` sudah tersedia tetapi tidak dipakai.
+4. **Data uji.** Relawan uji (NIK 2222222222222222) harus punya penugasan pada kader milik OPD akun uji ("Kader Demo"). Tanpa itu, admin OPD tidak melihat pengajuannya dan TCDR.32–35 OPD gagal. Penugasan ini sudah ditambahkan lewat aplikasi.
 
 ### 7.3 Pseudocode
 
@@ -456,6 +466,6 @@ Rincian lengkap ada di [`results/RINGKASAN_RERUN.md`](results/RINGKASAN_RERUN.md
 
 ### 7.4 Verifikasi
 
-- `npx tsc --noEmit`: 29 error, **semuanya sudah ada sebelumnya** di kode aplikasi React (`src/components`, `src/hooks`, `src/context`). Tidak ada error di `src/tests`, `src/helpers`, atau config. `tsc -p tsconfig.node.json`: bersih.
+- `npx tsc --noEmit`: **bersih**. Sebelumnya ada 30 error di kode aplikasi, peninggalan commit `90159f6` yang mengganti `any` dengan `unknown`, dan sudah diperbaiki di `26ecf45`. `vite build`: lulus.
 - ESLint dan Prettier (lefthook pre-commit): lulus.
 - `npx playwright test --list`: 593 test, judul tidak berubah.
