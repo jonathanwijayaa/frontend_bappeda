@@ -43,6 +43,7 @@ Nilai yang dipakai (final, sesuai skripsi): **THINK_TIME = 1200 ms**, **LOAD_TIM
 | `formSuratKeputusan.helper.ts` | Think setelah setiap aksi; **4 loop retry dan pengisian ulang dihapus**; timeout → LOAD_TIME |
 | `submitPengajuan.helper.ts` | Think pada aksi di context Relawan; timeout → LOAD_TIME; field modal dicari lewat label (`6e9fc9e`) |
 | `data relawan/dataRelawan.spec.ts` › TCDR.35 | Urutan langkah: isi catatan verifikator, lalu klik Tolak (`ad109ce`); locator & assertion tetap |
+| `baseExcel.helper.ts` | Templat Kader & Relawan dibaca dari `src/excel/` (templat resmi), bukan `src/assets/files/` yang di-ignore git |
 | Kode aplikasi (9 file di `src/components`, `src/hooks`, `src/context`) | Hanya anotasi tipe (`unknown` → tipe yang tepat) dan satu import tak terpakai (`26ecf45`) |
 | 12 spec fungsional + `security/sqlInjection.spec.ts` | Aksi langsung → wrapper think; timeout hardcode → LOAD_TIME; `test.describe.configure({ timeout })` per file dihapus (memakai config) |
 | `security/sqlInjectionApi.spec.ts` | **Hanya** `timeout: LOAD_TIME` pada request context (tanpa think time) |
@@ -453,7 +454,7 @@ Rincian lengkap ada di [`results/RINGKASAN_RERUN.md`](results/RINGKASAN_RERUN.md
 ### 7.2 Temuan
 
 1. **Helper `submitPengajuan` (sudah diperbaiki, `6e9fc9e`).** Locator lama `getByRole("textbox", { name: /alamat/i })` dan `/nomor hp/i` tidak cocok dengan field modal, sehingga pengajuan tidak pernah terkirim. Ini penyebab TCDR.32 gagal di baseline. Field kini dicari lewat label-nya.
-2. **Templat Excel (belum diputuskan).** `baseExcel.helper.ts` membaca `src/assets/files/Template_Data_{Kader,Relawan}.xlsx`, tetapi `.gitignore` mengabaikan `src/assets/files/*.xlsx`, sehingga berkas itu tidak ada di clone baru. Templat resmi yang sama ada di `src/excel/`. Usulan: ubah path di `baseExcel.helper.ts` ke `src/excel/`, atau commit kedua berkas dengan pengecualian `.gitignore`. Untuk run ini, berkas disalin secara lokal.
+2. **Templat Excel (sudah diperbaiki setelah run final).** Sebelumnya `baseExcel.helper.ts` membaca `src/assets/files/Template_Data_{Kader,Relawan}.xlsx`, tetapi `.gitignore` mengabaikan `src/assets/files/*.xlsx`, sehingga berkas itu tidak ada di clone baru. Untuk uji ulang run final, berkas disalin secara lokal dari `src/excel/`. Setelah itu, path di helper diubah ke templat resmi di `src/excel/`, dan TCDK.10 serta TCDR.18 Super Admin lulus tanpa salinan lokal.
 3. **Cacat aplikasi: unggah Excel relawan tidak menyimpan data** (`DataRelawan.tsx:372`, `onConfirm={async () => {}}`), menyebabkan TCDR.17 gagal. Hook `useBulkRelawan` sudah tersedia tetapi tidak dipakai.
 4. **Data uji.** Relawan uji (NIK 2222222222222222) harus punya penugasan pada kader milik OPD akun uji ("Kader Demo"). Tanpa itu, admin OPD tidak melihat pengajuannya dan TCDR.32–35 OPD gagal. Penugasan ini sudah ditambahkan lewat aplikasi.
 

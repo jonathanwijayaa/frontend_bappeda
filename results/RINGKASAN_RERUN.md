@@ -407,7 +407,8 @@ Kelompok B: `baseExcel.helper.ts` membaca templat dari `src/assets/files/`, fold
 di-*ignore* git (`src/assets/files/*.xlsx`), sehingga berkas tidak ikut ter-*clone*.
 Templat resmi yang sama (yang diunduh pengguna dari halaman Dokumen) ada di
 `src/excel/`; berkas itu disalin ke `src/assets/files/` sebelum uji ulang. Kode test
-tidak diubah.
+tidak diubah. Setelah uji ulang, path di `baseExcel.helper.ts` diarahkan ke `src/excel/`,
+sehingga salinan lokal tidak diperlukan lagi.
 
 ### 2. Kegagalan yang tersisa: TCDR.17 — gagal valid, cacat aplikasi
 

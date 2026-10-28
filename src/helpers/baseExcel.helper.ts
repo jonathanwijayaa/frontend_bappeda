@@ -61,7 +61,9 @@ export function generateKaderExcel(options?: GenerateOptions) {
   const { type = "valid", total = 1 } = options || {};
   const outputDir = ensureOutputDir();
 
-  const templatePath = path.resolve("src/assets/files/Template_Data_Kader.xlsx");
+  // Templat resmi yang juga diunduh pengguna di halaman Dokumen. Jangan pakai
+  // src/assets/files/: *.xlsx di sana di-ignore git sehingga tidak ikut ter-clone.
+  const templatePath = path.resolve("src/excel/Template_Data_Kader.xlsx");
   const outputPath = path.join(outputDir, `KADER_${Date.now()}.xlsx`);
 
   const workbook = XLSX.readFile(templatePath);
@@ -98,7 +100,8 @@ export function generateRelawanExcel(options?: GenerateOptions) {
   const { type = "valid", total = 1 } = options || {};
   const outputDir = ensureOutputDir();
 
-  const templatePath = path.resolve("src/assets/files/Template_Data_Relawan.xlsx");
+  // Templat resmi, lihat catatan di generateKaderExcel
+  const templatePath = path.resolve("src/excel/Template_Data_Relawan.xlsx");
   const outputPath = path.join(outputDir, `RELAWAN_${Date.now()}.xlsx`);
 
   const workbook = XLSX.readFile(templatePath);
