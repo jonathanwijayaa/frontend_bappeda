@@ -66,9 +66,6 @@ report-1-worker/
 playwright-report/
 playwright-report-lama/
 screenshots/
-
-# Artefak eksekusi ulang (laporan HTML & screenshot), dan paket kiriman
 results.zip
 results/**/html-report/
 results/**/test-results/
-kirim-ke-claude/
