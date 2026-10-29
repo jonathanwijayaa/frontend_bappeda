@@ -41,7 +41,11 @@ jobs:
           node-version: 20
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      # pnpm-workspace.yaml belum memutuskan allowBuilds (bcrypt, core-js,
+      # esbuild, lefthook), sehingga di CI pnpm gagal dengan
+      # ERR_PNPM_IGNORED_BUILDS. Build script tersebut tidak dibutuhkan untuk
+      # menjalankan Playwright, jadi cukup dilewati.
+      - run: pnpm install --frozen-lockfile --config.strict-dep-builds=false
 
       - run: pnpm exec playwright install --with-deps chromium
 
