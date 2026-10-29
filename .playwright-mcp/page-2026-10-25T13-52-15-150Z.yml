@@ -1,0 +1,57 @@
+- generic [ref=f4e3]:
+  - generic [ref=f4e4]:
+    - generic [ref=f4e5]:
+      - img "Logo Bappeda" [ref=f4e6]
+      - generic [ref=f4e7]:
+        - paragraph [ref=f4e8]: Bappeda
+        - paragraph [ref=f4e9]: Yogyakarta
+      - button "Collapse Sidebar" [ref=f4e10]
+    - navigation [ref=f4e13]:
+      - link "Dashboard" [ref=f4e14] [cursor=pointer]:
+        - /url: /dashboard
+      - link "Manajemen OPD" [ref=f4e19] [cursor=pointer]:
+        - /url: /manajemen-opd
+      - link "Kader" [ref=f4e25] [cursor=pointer]:
+        - /url: /daftar-kader
+      - link "Relawan" [ref=f4e31] [cursor=pointer]:
+        - /url: /data-relawan
+      - link "Surat Keputusan" [ref=f4e38] [cursor=pointer]:
+        - /url: /surat-keputusan
+      - link "Log Aktivitas" [ref=f4e43] [cursor=pointer]:
+        - /url: /log-aktifitas
+      - link "Dokumen" [ref=f4e48] [cursor=pointer]:
+        - /url: /dokumen
+      - link "Riwayat Relawan" [ref=f4e52] [cursor=pointer]:
+        - /url: /histori-relawan
+    - link "Saran/Hotline" [ref=f4e59] [cursor=pointer]:
+      - /url: /saran-hotline
+  - generic [ref=f4e63]:
+    - generic [ref=f4e65]:
+      - generic [ref=f4e66]:
+        - heading "Relawan" [level=1] [ref=f4e67]
+        - paragraph [ref=f4e68]: Kelola data relawan dan penugasan mereka
+      - generic [ref=f4e69]:
+        - generic [ref=f4e70]:
+          - paragraph [ref=f4e71]: Demo Super Admin 1
+          - paragraph [ref=f4e72]: Super Admin
+        - button [ref=f4e73]:
+          - img "Demo Super Admin 1" [ref=f4e74] [cursor=pointer]
+    - main [ref=f4e75]:
+      - generic [ref=f4e76]:
+        - generic [ref=f4e78]:
+          - button "Tambah Relawan" [ref=f4e79]
+          - button "Unggah dari Excel" [ref=f4e81]
+        - generic [ref=f4e87]:
+          - generic [ref=f4e88]:
+            - generic [ref=f4e89]:
+              - heading "Pengajuan Perubahan Data" [level=2] [ref=f4e90]
+              - generic [ref=f4e91]:
+                - button "Perlu Review" [ref=f4e92]
+                - button "Riwayat Selesai" [ref=f4e93]
+            - textbox "Cari NIK, nama, verifikator..." [ref=f4e100]
+          - generic [ref=f4e101]: Memuat data pengajuan...
+        - generic [ref=f4e107]:
+          - generic [ref=f4e108]:
+            - heading "Daftar Relawan" [level=2] [ref=f4e109]
+            - textbox "Cari relawan..." [ref=f4e116]
+          - generic [ref=f4e117]: Memuat data relawan...

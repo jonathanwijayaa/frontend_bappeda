@@ -1,0 +1,17 @@
+- generic [ref=e8]:
+  - img "Logo Bappeda" [ref=e10]
+  - heading "Selamat Datang" [level=1] [ref=e11]
+  - generic [ref=e12]:
+    - generic [ref=e13]:
+      - generic [ref=e14]: NIK
+      - textbox "NIK" [ref=e16]:
+        - /placeholder: ""
+    - generic [ref=e17]:
+      - generic [ref=e18]: Password
+      - generic [ref=e19]:
+        - textbox "Password" [ref=e20]:
+          - /placeholder: ""
+        - button [ref=e21]
+      - link "Lupa Password ?" [ref=e26] [cursor=pointer]:
+        - /url: "#"
+    - button "Masuk" [ref=e27]

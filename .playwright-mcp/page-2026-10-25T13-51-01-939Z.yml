@@ -1,0 +1,168 @@
+- generic [ref=f1e3]:
+  - generic [ref=f1e4]:
+    - generic [ref=f1e5]:
+      - img "Logo Bappeda" [ref=f1e6]
+      - generic [ref=f1e7]:
+        - paragraph [ref=f1e8]: Bappeda
+        - paragraph [ref=f1e9]: Yogyakarta
+      - button "Collapse Sidebar" [ref=f1e10]
+    - navigation [ref=f1e13]:
+      - link "Dashboard" [ref=f1e14] [cursor=pointer]:
+        - /url: /dashboard
+      - link "Manajemen OPD" [ref=f1e19] [cursor=pointer]:
+        - /url: /manajemen-opd
+      - link "Kader" [ref=f1e25] [cursor=pointer]:
+        - /url: /daftar-kader
+      - link "Relawan" [ref=f1e31] [cursor=pointer]:
+        - /url: /data-relawan
+      - link "Surat Keputusan" [ref=f1e38] [cursor=pointer]:
+        - /url: /surat-keputusan
+      - link "Log Aktivitas" [ref=f1e43] [cursor=pointer]:
+        - /url: /log-aktifitas
+      - link "Dokumen" [ref=f1e48] [cursor=pointer]:
+        - /url: /dokumen
+      - link "Riwayat Relawan" [ref=f1e52] [cursor=pointer]:
+        - /url: /histori-relawan
+    - link "Saran/Hotline" [ref=f1e59] [cursor=pointer]:
+      - /url: /saran-hotline
+  - generic [ref=f1e63]:
+    - generic [ref=f1e65]:
+      - generic [ref=f1e66]:
+        - heading "Relawan" [level=1] [ref=f1e67]
+        - paragraph [ref=f1e68]: Kelola data relawan dan penugasan mereka
+      - generic [ref=f1e69]:
+        - generic [ref=f1e70]:
+          - paragraph [ref=f1e71]: Demo Super Admin 1
+          - paragraph [ref=f1e72]: Super Admin
+        - button [ref=f1e73]:
+          - img "Demo Super Admin 1" [ref=f1e74] [cursor=pointer]
+    - main [ref=f1e75]:
+      - generic [ref=f1e76]:
+        - generic [ref=f1e78]:
+          - button "Tambah Relawan" [ref=f1e79]
+          - button "Unggah dari Excel" [ref=f1e81]
+        - generic [ref=f1e87]:
+          - generic [ref=f1e88]:
+            - generic [ref=f1e89]:
+              - heading "Pengajuan Perubahan Data" [level=2] [ref=f1e90]
+              - generic [ref=f1e91]:
+                - button "Perlu Review 3" [ref=f1e121]:
+                  - text: Perlu Review
+                  - generic [ref=f1e122]: "3"
+                - button "Riwayat Selesai" [ref=f1e93]
+            - textbox "Cari NIK, nama, verifikator..." [ref=f1e100]
+          - table [ref=f1e124]:
+            - rowgroup [ref=f1e125]:
+              - row [ref=f1e126]:
+                - columnheader "NIK" [ref=f1e127]
+                - columnheader "NAMA LENGKAP" [ref=f1e130]
+                - columnheader "TANGGAL PENGAJUAN" [ref=f1e133]
+                - columnheader "STATUS" [ref=f1e136]
+                - columnheader "DIVERIFIKASI OLEH" [ref=f1e139]
+                - columnheader "AKSI" [ref=f1e142]
+            - rowgroup [ref=f1e143]:
+              - row [ref=f1e144]:
+                - cell "2222222222222222" [ref=f1e145]
+                - cell "PIC Kader Demo" [ref=f1e147]
+                - cell "25 Okt 2026, 20.38" [ref=f1e149]
+                - cell "Menunggu Review" [ref=f1e151]
+                - cell "Belum diproses" [ref=f1e155]
+                - cell [ref=f1e157]:
+                  - button "Review" [ref=f1e159]
+              - row [ref=f1e160]:
+                - cell "2222222222222222" [ref=f1e161]
+                - cell "PIC Kader Demo" [ref=f1e163]
+                - cell "25 Okt 2026, 20.38" [ref=f1e165]
+                - cell "Menunggu Review" [ref=f1e167]
+                - cell "Belum diproses" [ref=f1e171]
+                - cell [ref=f1e173]:
+                  - button "Review" [ref=f1e175]
+              - row [ref=f1e176]:
+                - cell "2222222222222222" [ref=f1e177]
+                - cell "PIC Kader Demo" [ref=f1e179]
+                - cell "25 Okt 2026, 20.37" [ref=f1e181]
+                - cell "Menunggu Review" [ref=f1e183]
+                - cell "Belum diproses" [ref=f1e187]
+                - cell [ref=f1e189]:
+                  - button "Review" [ref=f1e191]
+              - row [ref=f1e192]:
+                - cell [ref=f1e193]
+              - row [ref=f1e194]:
+                - cell [ref=f1e195]
+          - generic [ref=f1e196]:
+            - generic [ref=f1e197]: Menampilkan 1-3 dari 3 Pengajuan
+            - generic [ref=f1e198]:
+              - button "Sebelumnya" [disabled] [ref=f1e199]
+              - button "1" [ref=f1e202]
+              - button "Selanjutnya" [disabled] [ref=f1e203]
+        - generic [ref=f1e107]:
+          - generic [ref=f1e108]:
+            - heading "Daftar Relawan" [level=2] [ref=f1e109]
+            - generic [ref=f1e110]:
+              - textbox "Cari relawan..." [ref=f1e116]: "2222222222222222"
+              - button "Ekspor PDF" [ref=f1e206]
+          - table [ref=f1e212]:
+            - rowgroup [ref=f1e213]:
+              - row [ref=f1e214]:
+                - columnheader "NIK" [ref=f1e215] [cursor=pointer]
+                - columnheader "NAMA" [ref=f1e221] [cursor=pointer]
+                - columnheader "ALAMAT" [ref=f1e227]
+                - columnheader "KEMANTREN" [ref=f1e230]
+                - columnheader "KELURAHAN" [ref=f1e233]
+                - columnheader "AKSI" [ref=f1e236]
+            - rowgroup [ref=f1e237]:
+              - row [ref=f1e238]:
+                - cell "2222222222222222" [ref=f1e239]
+                - cell "PIC Kader Demo" [ref=f1e240]
+                - cell "341 Considine Mills, Yogyakarta" [ref=f1e242]
+                - cell "Danurejan" [ref=f1e244]
+                - cell "Bausasran" [ref=f1e246]
+                - cell [ref=f1e248]:
+                  - button "Detail" [ref=f1e250]
+              - row [ref=f1e251]:
+                - cell [ref=f1e252]
+              - row [ref=f1e253]:
+                - cell [ref=f1e254]
+              - row [ref=f1e255]:
+                - cell [ref=f1e256]
+              - row [ref=f1e257]:
+                - cell [ref=f1e258]
+          - generic [ref=f1e259]:
+            - generic [ref=f1e260]: Menampilkan 1-1 dari 1 Relawan
+            - generic [ref=f1e261]:
+              - button "Sebelumnya" [disabled] [ref=f1e262]
+              - button "1" [ref=f1e265]
+              - button "Selanjutnya" [disabled] [ref=f1e266]
+        - generic [ref=f1e271]:
+          - generic [ref=f1e273]:
+            - generic [ref=f1e274]:
+              - heading "Detail Relawan" [level=2] [ref=f1e275]
+              - paragraph [ref=f1e276]: Mode Edit — ubah data lalu klik Simpan
+            - button [ref=f1e277]
+          - generic [ref=f1e282]:
+            - button "Batal" [active] [ref=f1e313]
+            - generic [ref=f1e285]:
+              - generic [ref=f1e286]: Nama Relawan
+              - textbox [ref=f1e287]: PIC Kader Demo
+            - generic [ref=f1e288]:
+              - generic [ref=f1e289]: NIK
+              - textbox [ref=f1e290]: "2222222222222222"
+            - generic [ref=f1e291]:
+              - generic [ref=f1e292]: Alamat KTP
+              - textbox [ref=f1e293]: 341 Considine Mills, Yogyakarta
+            - generic [ref=f1e294]:
+              - generic [ref=f1e295]: No. HP
+              - textbox [ref=f1e296]: "08987540006"
+            - generic [ref=f1e297]:
+              - generic [ref=f1e298]: Kemantren
+              - textbox "Cari nama Kemantren..." [ref=f1e315]: Danurejan
+            - generic [ref=f1e300]:
+              - generic [ref=f1e301]: Kelurahan
+              - textbox "Cari nama Kelurahan..." [ref=f1e317]: Bausasran
+            - generic [ref=f1e303]:
+              - generic [ref=f1e304]: Jenis Kelamin
+              - button "Laki-laki (L)" [ref=f1e307]
+            - heading "Daftar Penugasan:" [level=3] [ref=f1e312]
+            - generic [ref=f1e318]:
+              - button "Batal" [ref=f1e319]
+              - button "Simpan Perubahan" [ref=f1e320]

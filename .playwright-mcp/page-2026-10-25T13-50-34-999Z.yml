@@ -1,0 +1,179 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e28]:
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - img "Logo Bappeda" [ref=e31]
+        - generic [ref=e32]:
+          - paragraph [ref=e33]: Bappeda
+          - paragraph [ref=e34]: Yogyakarta
+        - button "Collapse Sidebar" [ref=e35]
+      - navigation [ref=e38]:
+        - link "Dashboard" [ref=e39] [cursor=pointer]:
+          - /url: /dashboard
+        - link "Manajemen OPD" [ref=e44] [cursor=pointer]:
+          - /url: /manajemen-opd
+        - link "Kader" [ref=e50] [cursor=pointer]:
+          - /url: /daftar-kader
+        - link "Relawan" [ref=e56] [cursor=pointer]:
+          - /url: /data-relawan
+        - link "Surat Keputusan" [ref=e63] [cursor=pointer]:
+          - /url: /surat-keputusan
+        - link "Log Aktivitas" [ref=e68] [cursor=pointer]:
+          - /url: /log-aktifitas
+        - link "Dokumen" [ref=e73] [cursor=pointer]:
+          - /url: /dokumen
+        - link "Riwayat Relawan" [ref=e77] [cursor=pointer]:
+          - /url: /histori-relawan
+      - link "Saran/Hotline" [ref=e84] [cursor=pointer]:
+        - /url: /saran-hotline
+    - generic [ref=e88]:
+      - generic [ref=e90]:
+        - generic [ref=e91]:
+          - heading "Dashboard" [level=1] [ref=e92]
+          - paragraph [ref=e93]: Ringkasan data dan informasi utama sistem
+        - generic [ref=e94]:
+          - generic [ref=e95]:
+            - paragraph [ref=e96]: Demo Super Admin 1
+            - paragraph [ref=e97]: Super Admin
+          - button [ref=e98]:
+            - img "Demo Super Admin 1" [ref=e99] [cursor=pointer]
+      - main [ref=e100]:
+        - generic [ref=e101]:
+          - generic [ref=e102]:
+            - paragraph [ref=e103]: Data ditampilkan secara real-time
+            - generic [ref=e104]: "Data per: Minggu, 25 Oktober 2026 pukul 20.50 WIB"
+          - generic [ref=e109]:
+            - generic [ref=e117]:
+              - paragraph [ref=e118]: Total Relawan Aktif
+              - paragraph [ref=e119]: "531"
+            - generic [ref=e126]:
+              - paragraph [ref=e127]: Total Kader
+              - paragraph [ref=e128]: "336"
+            - generic [ref=e135]:
+              - paragraph [ref=e136]: Total OPD Terdaftar
+              - paragraph [ref=e137]: "274"
+            - generic [ref=e145]:
+              - paragraph [ref=e146]: Pengajuan Pending
+              - paragraph [ref=e147]: "3"
+          - generic [ref=e148]:
+            - generic [ref=e150]:
+              - heading "Jumlah Relawan per OPD Semua Periode Data (Juni 2024 — Oktober 2026) Top 10 Data" [level=3] [ref=e152]:
+                - generic [ref=e153]:
+                  - generic [ref=e154]:
+                    - generic [ref=e155]: Jumlah Relawan per OPD
+                    - generic [ref=e156]: Semua Periode Data (Juni 2024 — Oktober 2026)
+                  - button "Top 10 Data" [ref=e159]
+              - generic [ref=e168]:
+                - img [ref=e169]:
+                  - generic [ref=e173]:
+                    - generic [ref=e174]: Opd Demo
+                    - generic [ref=e176]: Dinas Kesehata...
+                    - generic [ref=e178]: Dinas Pemberda...
+                    - generic [ref=e180]: Dinas Sosial T...
+                    - generic [ref=e182]: OPD Adams Grou...
+                    - generic [ref=e184]: OPD Schamberge...
+                    - generic [ref=e186]: OPD Schulist L...
+                    - generic [ref=e188]: OPD Kunde Doy...
+                    - generic [ref=e190]: OPD Schuppe Ba...
+                    - generic [ref=e192]: OPD Balistreri...
+                  - generic [ref=e195]:
+                    - generic [ref=e196]: "0"
+                    - generic [ref=e198]: "350"
+                    - generic [ref=e200]: "700"
+                    - generic [ref=e202]: "1050"
+                    - generic [ref=e204]: "1400"
+                - generic:
+                  - generic:
+                    - paragraph: OPD Schamberger Group
+                    - list:
+                      - listitem: "jumlah : 0"
+            - generic [ref=e207]:
+              - heading "Demografi Gender Relawan" [level=3] [ref=e209]
+              - generic [ref=e214]:
+                - img [ref=e215]:
+                  - generic [ref=e217]:
+                    - generic [ref=e218]: 18%
+                    - generic [ref=e220]: 82%
+                - list [ref=e223]:
+                  - listitem [ref=e224]:
+                    - generic [ref=e227]: Perempuan (94)
+                  - listitem [ref=e229]:
+                    - generic [ref=e232]: Laki-laki (437)
+          - generic [ref=e234]:
+            - generic [ref=e236]:
+              - heading "Relawan dengan Penugasan Terbanyak" [level=3] [ref=e238]
+              - generic [ref=e249]:
+                - generic [ref=e250]:
+                  - generic [ref=e260]:
+                    - paragraph [ref=e261]: Charlie Abbott
+                    - paragraph [ref=e262]: Opd Demo
+                  - generic [ref=e263]: 972 Penugasan
+                - generic [ref=e265]:
+                  - generic [ref=e275]:
+                    - paragraph [ref=e276]: Mabel Lang
+                    - paragraph [ref=e277]: Opd Demo
+                  - generic [ref=e278]: 64 Penugasan
+                - generic [ref=e280]:
+                  - generic [ref=e287]:
+                    - paragraph [ref=e288]: Earl Kuhn
+                    - paragraph [ref=e289]: Opd Demo
+                  - generic [ref=e290]: 18 Penugasan
+                - generic [ref=e292]:
+                  - generic [ref=e293]:
+                    - generic [ref=e294]: "#4"
+                    - generic [ref=e296]:
+                      - paragraph [ref=e297]: Johnny Hickle
+                      - paragraph [ref=e298]: Opd Demo
+                  - generic [ref=e299]: 12 Penugasan
+                - generic [ref=e301]:
+                  - generic [ref=e302]:
+                    - generic [ref=e303]: "#5"
+                    - generic [ref=e305]:
+                      - paragraph [ref=e306]: Kelly Gulgowski
+                      - paragraph [ref=e307]: Opd Demo
+                  - generic [ref=e308]: 12 Penugasan
+            - generic [ref=e311]:
+              - heading "Sebaran Relawan per Kelurahan" [level=3] [ref=e313]
+              - img [ref=e319]:
+                - generic [ref=e323]:
+                  - generic [ref=e324]: "0"
+                  - generic [ref=e326]: "14"
+                  - generic [ref=e328]: "28"
+                - generic [ref=e331]:
+                  - generic [ref=e332]: Pringgokusuman
+                  - generic [ref=e334]: Notoprajan
+                  - generic [ref=e336]: Prawirodirjan
+                  - generic [ref=e338]: Gowongan
+                  - generic [ref=e340]: Gunungketur
+          - generic [ref=e342]:
+            - generic [ref=e343]:
+              - heading "Jumlah Relawan Per Kader" [level=3] [ref=e345]
+              - img [ref=e351]:
+                - generic [ref=e355]:
+                  - generic [ref=e356]: "0"
+                  - generic [ref=e358]: "10"
+                  - generic [ref=e360]: "20"
+                  - generic [ref=e362]: "30"
+                  - generic [ref=e364]: "40"
+                - generic [ref=e367]:
+                  - generic [ref=e368]: KADERKESEHATAN
+                  - generic [ref=e370]: Kader Demo
+                  - generic [ref=e372]: KaderYvonne Ke...
+                  - generic [ref=e374]: POSYANDU
+                  - generic [ref=e376]: TAGANA
+            - generic [ref=e378]:
+              - heading "Jumlah Kader Per OPD" [level=3] [ref=e380]
+              - img [ref=e386]:
+                - generic [ref=e390]:
+                  - generic [ref=e391]: "0"
+                  - generic [ref=e393]: "30"
+                  - generic [ref=e395]: "60"
+                  - generic [ref=e397]: "90"
+                  - generic [ref=e399]: "120"
+                - generic [ref=e402]:
+                  - generic [ref=e403]: Opd Demo
+                  - generic [ref=e405]: DinasPerhubung...
+                  - generic [ref=e407]: DinasKebudayaa...
+                  - generic [ref=e409]: DinasPariwisat...
+                  - generic [ref=e411]: DinasPemberday...
+  - generic [aria-hidden] [ref=e413]: Opd Demo

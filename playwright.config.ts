@@ -91,7 +91,7 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 10 : undefined,
 
   /* Run your local dev server before starting the tests */
   // webServer: {
