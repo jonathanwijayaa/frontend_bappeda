@@ -4,7 +4,7 @@ import Button from "./Button";
 import * as XLSX from "xlsx";
 
 interface FileReviewModalProps {
-  data: unknown[];
+  data: Record<string, unknown>[];
   dataType: "kader" | "opd" | "relawan";
   // Mengubah emptyColumns menjadi errorMessages agar menampung info error kosong maupun salah format
   errors?: { errorMessages: string[]; rowNumber: number }[];
@@ -157,7 +157,7 @@ const FileReviewModal: React.FC<FileReviewModalProps> = ({
     }
   };
 
-  const renderTableRows = (displayData: unknown[]) => {
+  const renderTableRows = (displayData: Record<string, unknown>[]) => {
     return displayData.map((item, index) => {
       const r: Record<string, unknown> = {};
       for (const key of Object.keys(item)) {

@@ -1,6 +1,17 @@
 import { faker } from "@faker-js/faker";
-import { expect, Locator, Page } from "@playwright/test";
+import { expect, Page } from "@playwright/test";
 import path from "path";
+
+import {
+  checkThink,
+  clickThink,
+  fillThink,
+  LOAD_TIME,
+  pesanLoadTime,
+  typeThink,
+  uploadThink,
+  waitLoaded,
+} from "@/helpers/timing.helper";
 
 const OPD_LIST = [
   "Opd Demo",
@@ -36,9 +47,7 @@ interface IFillSKForm {
 // <label>X</label> -> elemen berikutnya. Locator berbasis indeks (nth) dihindari
 // karena urutannya berubah tergantung role dan isi halaman di balik modal.
 const fieldWrapper = (page: Page, label: string) =>
-  page
-    .locator(`xpath=//label[normalize-space(text())="${label}"]/following-sibling::*[1]`)
-    .first();
+  page.locator(`xpath=//label[normalize-space(text())="${label}"]/following-sibling::*[1]`).first();
 
 const fieldInput = (page: Page, label: string) =>
   fieldWrapper(page, label).locator("xpath=descendant-or-self::input").first();
@@ -79,89 +88,41 @@ function generateSafeSKNumber(): string {
   return `${skNumber}/${skSubNumber}/${skOpd}/${currentYear}`;
 }
 
-async function ensureTextboxValue(
-  locator: Locator,
-  expectedValue: string,
-  maxRetry = 3,
-): Promise<void> {
-  for (let i = 0; i < maxRetry; i++) {
-    const currentValue = await locator.inputValue();
-
-    if (currentValue === expectedValue) {
-      await expect(locator).toHaveValue(expectedValue);
-      return;
-    }
-
-    await locator.click();
-    await locator.fill("");
-    await locator.fill(expectedValue);
-  }
-
-  await expect(locator).toHaveValue(expectedValue);
-}
+// Nama file yang tampil di modal setelah dilampirkan
+const fileChip = (page: Page, filePath: string) =>
+  page.getByText(path.basename(filePath), { exact: true });
 
 /**
- * Melampirkan file PDF dan memastikan file benar-benar masuk ke state komponen.
+ * Melampirkan file PDF SEKALI dan menunggu file masuk ke state komponen.
  *
  * Komponen memakai react-dropzone: file yang tampil berasal dari state React,
- * bukan dari FileList input. Kalau form ter-reset, FileList bisa tetap terisi
- * padahal state-nya sudah kosong — karena itu yang diperiksa adalah nama file
- * yang tampil di modal, dan input dikosongkan dulu supaya event change terpicu.
+ * bukan dari FileList input, jadi yang ditunggu adalah nama file yang tampil
+ * di modal. Tidak ada percobaan ulang: bila nama file tidak tampil dalam
+ * LOAD_TIME (mis. form ter-reset oleh re-render halaman induk), itu kegagalan
+ * valid aplikasi.
  */
-export async function ensureFileAttached(
-  page: Page,
-  filePath: string,
-  maxRetry = 3,
-): Promise<void> {
-  const fileInput = page.locator("input[type='file']");
-  const fileChip = page.getByText(path.basename(filePath), { exact: true });
-
-  for (let attempt = 1; attempt <= maxRetry; attempt++) {
-    if (await fileChip.isVisible()) return;
-
-    await fileInput.setInputFiles([]);
-    await fileInput.setInputFiles(filePath);
-
-    try {
-      await expect(fileChip).toBeVisible({ timeout: 5000 });
-      return;
-    } catch (error) {
-      if (attempt === maxRetry) {
-        throw error;
-      }
-      console.log(`File SK belum terlampir, ulangi (${attempt}/${maxRetry})`);
-    }
-  }
+export async function attachFile(page: Page, filePath: string): Promise<void> {
+  await uploadThink(page.locator("input[type='file']"), filePath);
+  await waitLoaded(fileChip(page, filePath), `file "${path.basename(filePath)}" terlampir`);
 }
 
 /**
- * Memilih OPD pada autocomplete (khusus super admin).
+ * Memilih OPD pada autocomplete (khusus super admin), SEKALI ketik.
  *
- * AutocompleteInput hanya memfilter saat teks diketik, jadi bila daftar OPD
- * baru selesai dimuat setelah pengetikan, dropdown tetap kosong — pengetikan
- * diulang sampai opsinya muncul.
+ * AutocompleteInput hanya memfilter saat teks diketik; bila daftar OPD tidak
+ * muncul dalam LOAD_TIME setelah pengetikan, itu kegagalan valid.
  */
-export async function selectOPDOption(page: Page, opd: string, maxRetry = 3): Promise<void> {
+export async function selectOPDOption(page: Page, opd: string): Promise<void> {
   const textbox = opdField(page);
   const option = opdOptions(page).filter({ hasText: exactText(opd) });
 
-  for (let attempt = 1; attempt <= maxRetry; attempt++) {
-    try {
-      await textbox.click();
-      await textbox.fill("");
-      await textbox.pressSequentially(opd, { delay: 80 });
+  await clickThink(textbox);
+  await textbox.fill("");
+  await typeThink(textbox, opd);
 
-      await expect(option.first()).toBeVisible({ timeout: 5000 });
-      await option.first().click();
-      await expect(page.getByText("✓ OPD valid dipilih")).toBeVisible({ timeout: 10000 });
-      return;
-    } catch (error) {
-      if (attempt === maxRetry) {
-        throw error;
-      }
-      console.log(`Opsi OPD "${opd}" belum muncul, ulangi (${attempt}/${maxRetry})`);
-    }
-  }
+  await waitLoaded(option.first(), `opsi OPD "${opd}" muncul di daftar`);
+  await clickThink(option.first());
+  await waitLoaded(page.getByText("✓ OPD valid dipilih"), "konfirmasi OPD valid tampil");
 }
 
 /**
@@ -173,11 +134,13 @@ export async function pickKaderFromForm(page: Page): Promise<string> {
 
   try {
     // Checkbox baru muncul setelah daftar kader milik OPD selesai dimuat
-    await expect(labels.first()).toBeVisible({ timeout: 15000 });
+    await expect(labels.first()).toBeVisible({ timeout: LOAD_TIME });
   } catch {
     throw new Error(
-      `Tidak ada checkbox kader pada OPD "${await opdField(page).inputValue()}". ` +
-        "OPD tersebut kemungkinan belum memiliki kader terdaftar.",
+      pesanLoadTime(
+        `tidak ada checkbox kader pada OPD "${await opdField(page).inputValue()}". ` +
+          "OPD tersebut kemungkinan belum memiliki kader terdaftar.",
+      ),
     );
   }
 
@@ -195,7 +158,12 @@ export async function pickKaderFromForm(page: Page): Promise<string> {
 
 /** Menyelaraskan data OPD & KADER dengan isi form (OPD menentukan daftar kadernya). */
 export async function syncKaderWithForm(page: Page, data: SKData): Promise<SKData> {
-  await expect.poll(() => opdField(page).inputValue(), { timeout: 15000 }).not.toBe("");
+  await expect
+    .poll(() => opdField(page).inputValue(), {
+      message: pesanLoadTime("field OPD pada form SK terisi"),
+      timeout: LOAD_TIME,
+    })
+    .not.toBe("");
 
   data.OPD = (await opdField(page).inputValue()).trim();
   data.KADER = await pickKaderFromForm(page);
@@ -232,44 +200,44 @@ export const fillSKForm = async ({ data, page, isSuperAdmin }: IFillSKForm) => (
     await this.selectKader();
   },
 
+  /**
+   * Memeriksa seluruh isian form masih sesuai data. Tidak ada pengisian ulang:
+   * bila isian hilang (form ter-reset oleh re-render), itu kegagalan valid.
+   */
   async expectFillALL() {
-    await ensureTextboxValue(noSKField(page), data["NO SK"]);
-    await ensureTextboxValue(judulSKField(page), data["JUDUL SK"]);
-    await ensureTextboxValue(tanggalTerbitField(page), data["TANGGAL TERBIT"]);
-    await ensureTextboxValue(batasAktifField(page), data["BATAS AKTIF"]);
+    await expect(noSKField(page)).toHaveValue(data["NO SK"]);
+    await expect(judulSKField(page)).toHaveValue(data["JUDUL SK"]);
+    await expect(tanggalTerbitField(page)).toHaveValue(data["TANGGAL TERBIT"]);
+    await expect(batasAktifField(page)).toHaveValue(data["BATAS AKTIF"]);
 
     await expect(opdField(page)).toHaveValue(data.OPD);
     if (isSuperAdmin) {
       await expect(page.getByText("✓ OPD valid dipilih")).toBeVisible();
     }
 
-    const kader = page.getByRole("checkbox", { name: exactText(data.KADER) });
-    if (!(await kader.isChecked())) {
-      await kader.check();
-    }
-    await expect(kader).toBeChecked();
+    await expect(page.getByRole("checkbox", { name: exactText(data.KADER) })).toBeChecked();
 
     // File diperiksa paling akhir: state file paling rentan hilang saat form re-render
-    await ensureFileAttached(page, data.FILE);
+    await expect(fileChip(page, data.FILE)).toBeVisible();
   },
 
   async fillNoSK() {
-    await noSKField(page).fill(data["NO SK"]);
+    await fillThink(noSKField(page), data["NO SK"]);
     await expect(noSKField(page)).toHaveValue(data["NO SK"]);
   },
 
   async fillJudulSK() {
-    await judulSKField(page).fill(data["JUDUL SK"]);
+    await fillThink(judulSKField(page), data["JUDUL SK"]);
     await expect(judulSKField(page)).toHaveValue(data["JUDUL SK"]);
   },
 
   async fillTanggalTerbit() {
-    await tanggalTerbitField(page).fill(data["TANGGAL TERBIT"]);
+    await fillThink(tanggalTerbitField(page), data["TANGGAL TERBIT"]);
     await expect(tanggalTerbitField(page)).toHaveValue(data["TANGGAL TERBIT"]);
   },
 
   async fillBatasAktif() {
-    await batasAktifField(page).fill(data["BATAS AKTIF"]);
+    await fillThink(batasAktifField(page), data["BATAS AKTIF"]);
     await expect(batasAktifField(page)).toHaveValue(data["BATAS AKTIF"]);
   },
 
@@ -287,15 +255,20 @@ export const fillSKForm = async ({ data, page, isSuperAdmin }: IFillSKForm) => (
     await syncKaderWithForm(page, data);
 
     const checkbox = page.getByRole("checkbox", { name: exactText(data.KADER) });
-    await checkbox.check();
+    await checkThink(checkbox);
     await expect(checkbox).toBeChecked();
   },
 
   async uploadFile() {
-    await ensureFileAttached(page, data.FILE);
+    await attachFile(page, data.FILE);
   },
 
-  async submitButton(maxRetry = 3) {
+  /**
+   * Satu kali klik "Unggah SK", lalu tunggu form tertutup (maks LOAD_TIME).
+   * Tidak ada pengisian ulang/percobaan ulang: form yang ter-reset sendiri
+   * sebelum submit adalah kegagalan valid aplikasi.
+   */
+  async submitButton() {
     const submitButton = page.getByRole("button", { name: "Unggah SK" });
 
     // Form menolak lewat alert() bawaan browser; pesannya ditangkap supaya
@@ -308,36 +281,14 @@ export const fillSKForm = async ({ data, page, isSuperAdmin }: IFillSKForm) => (
     page.on("dialog", onDialog);
 
     try {
-      for (let i = 1; i <= maxRetry; i++) {
-        alerts.length = 0;
-        await submitButton.click();
+      await clickThink(submitButton);
 
-        try {
-          // Tunggu sampai tombol hilang/disabled
-          await expect(submitButton).toBeHidden({ timeout: 5000 });
-          return;
-        } catch (error) {
-          if (i === maxRetry) {
-            throw alerts.length > 0
-              ? new Error(`Form SK ditolak aplikasi: ${alerts.join(" | ")}`)
-              : error;
-          }
-
-          // Form bisa ter-reset sendiri saat halaman induk re-render,
-          // sehingga isian hilang tepat sebelum submit → isi ulang lalu coba lagi
-          if (alerts.some((message) => /masih kosong/i.test(message))) {
-            console.log(`Form ter-reset sebelum submit, isi ulang (${i}/${maxRetry})`);
-            await this.fillAll();
-            await this.expectFillALL();
-            continue;
-          }
-
-          if (alerts.length > 0) {
-            throw new Error(`Form SK ditolak aplikasi: ${alerts.join(" | ")}`);
-          }
-
-          console.log(`Retry submit (${i}/${maxRetry})`);
-        }
+      try {
+        await waitLoaded(submitButton, "form SK tertutup setelah unggah", "hidden");
+      } catch (error) {
+        throw alerts.length > 0
+          ? new Error(`Form SK ditolak aplikasi: ${alerts.join(" | ")}`)
+          : error;
       }
     } finally {
       page.off("dialog", onDialog);
@@ -349,7 +300,7 @@ export const selectKader = async ({ data, page }: IFillSKForm) => {
   await syncKaderWithForm(page, data);
 
   const checkbox = page.getByRole("checkbox", { name: exactText(data.KADER) });
-  await checkbox.check();
+  await checkThink(checkbox);
   await expect(checkbox).toBeChecked();
 };
 

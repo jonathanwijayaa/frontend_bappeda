@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useDropzone } from "react-dropzone";
+import { useDropzone, type FileRejection } from "react-dropzone";
 import Modal from "./Modal";
 import Button from "./Button";
 import { Upload, X, FileText } from "lucide-react";
@@ -81,7 +81,7 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
           .then((result) => {
             if (result.success) {
               setOpdOptions(
-                result.data.map((o: unknown) => ({
+                result.data.map((o: { nama_opd: string; opd_id: number }) => ({
                   label: o.nama_opd,
                   value: String(o.opd_id),
                 })),
@@ -114,9 +114,9 @@ const UploadPDFModal: React.FC<UploadPDFModalProps> = ({
   }, [metadata.opd_id, isOpen]);
 
   // === Fitur Drag & Drop menggunakan react-dropzone ===
-  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: unknown[]) => {
+  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
     if (rejectedFiles.length > 0) {
-      const isSizeError = rejectedFiles[0].errors.some((e: unknown) => e.code === "file-too-large");
+      const isSizeError = rejectedFiles[0].errors.some((e) => e.code === "file-too-large");
       if (isSizeError) {
         alert("Ukuran file maksimal 2MB");
       } else {

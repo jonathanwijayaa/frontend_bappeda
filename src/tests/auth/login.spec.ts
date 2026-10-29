@@ -1,5 +1,6 @@
 import { credentials } from "@/helpers/credentials.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { clickThink, fillThink } from "@/helpers/timing.helper";
 import { expect, Page, test } from "@playwright/test";
 
 const BASE_URL = "https://frontend-bappeda.vercel.app/";
@@ -24,9 +25,9 @@ const avatarButton = (page: Page) =>
   page.locator("xpath=//h1/parent::div/following-sibling::div[1]//button").first();
 
 const isiLogin = async (page: Page, nik: string, password: string) => {
-  await nikField(page).fill(nik);
-  await passwordField(page).fill(password);
-  await masukButton(page).click();
+  await fillThink(nikField(page), nik);
+  await fillThink(passwordField(page), password);
+  await clickThink(masukButton(page));
 };
 
 const tetapDiHalamanLogin = async (page: Page) => {
@@ -108,11 +109,11 @@ test.describe("TCL.2 Login with invalid NIK and invalid Password", () => {
 
   for (const credential of invalidCredentialCases) {
     test(`TCL.2 ${credential.title}`, async ({ page }) => {
-      await nikField(page).fill(credential.nik);
+      await fillThink(nikField(page), credential.nik);
       await expect(nikField(page)).toHaveValue(credential.nilaiInput);
 
-      await passwordField(page).fill(credential.password);
-      await masukButton(page).click();
+      await fillThink(passwordField(page), credential.password);
+      await clickThink(masukButton(page));
 
       await expect(pesanError(page, "NIK tidak ditemukan")).toBeVisible();
       await tetapDiHalamanLogin(page);
@@ -189,21 +190,21 @@ test.describe("TCL.6 Wrong NIK but correct password", () => {
 
 // TCL.8 Show / hide password
 test("TCL.8 Show password", async ({ page }) => {
-  await passwordField(page).fill("rahasia123");
+  await fillThink(passwordField(page), "rahasia123");
   await expect(passwordField(page)).toHaveAttribute("type", "password");
 
-  await togglePasswordButton(page).click();
+  await clickThink(togglePasswordButton(page));
   await expect(passwordField(page)).toHaveAttribute("type", "text");
   await expect(passwordField(page)).toHaveValue("rahasia123");
 
   // Klik kedua menyembunyikan lagi
-  await togglePasswordButton(page).click();
+  await clickThink(togglePasswordButton(page));
   await expect(passwordField(page)).toHaveAttribute("type", "password");
 });
 
 // TCL.9 Lupa password
 test("TCL.9 Click forget password", async ({ page }) => {
-  await page.getByRole("link", { name: /lupa password/i }).click();
+  await clickThink(page.getByRole("link", { name: /lupa password/i }));
 
   // Tautannya masih href="#" dengan preventDefault(), jadi belum membawa ke
   // mana pun. Dilewati dengan alasan jelas sampai alur reset password dibuat.
@@ -217,10 +218,10 @@ test("TCL.9 Click forget password", async ({ page }) => {
 
 // TCL.10 Field NIK hanya menerima angka
 test("TCL.10 NIK field only accepts up to 16 digits", async ({ page }) => {
-  await nikField(page).fill("abc-12 34!@#56");
+  await fillThink(nikField(page), "abc-12 34!@#56");
   await expect(nikField(page)).toHaveValue("123456");
 
-  await nikField(page).fill("1".repeat(20));
+  await fillThink(nikField(page), "1".repeat(20));
   await expect(nikField(page)).toHaveValue("1".repeat(16));
 });
 
@@ -271,8 +272,8 @@ test.describe("TCL.14 Logout", () => {
       await loginBAPPEDA({ NIK: kasus.creds.NIK, page, password: kasus.creds.password });
       await expect(page).toHaveURL(/dashboard/);
 
-      await avatarButton(page).click();
-      await page.getByRole("button", { name: "Keluar" }).click();
+      await clickThink(avatarButton(page));
+      await clickThink(page.getByRole("button", { name: "Keluar" }));
 
       await expect(page).toHaveURL(/\/login/);
 
@@ -290,8 +291,8 @@ test.describe("TCL.14 Logout", () => {
     });
     await expect(page).toHaveURL(/profil-relawan/);
 
-    await page.getByRole("button", { name: "Menu", exact: true }).click();
-    await page.getByRole("button", { name: "Keluar" }).click();
+    await clickThink(page.getByRole("button", { name: "Menu", exact: true }));
+    await clickThink(page.getByRole("button", { name: "Keluar" }));
 
     await expect(page).toHaveURL(/\/login/);
 

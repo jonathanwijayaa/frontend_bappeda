@@ -1,5 +1,6 @@
 import { credentials } from "@/helpers/credentials.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { LOAD_TIME } from "@/helpers/timing.helper";
 import { expect, test } from "@playwright/test";
 
 /**
@@ -34,7 +35,7 @@ for (const { label, creds } of roles) {
     await expect(page.getByRole("link", { name: /statistik/i })).toHaveCount(0);
 
     // Grafik yang dulu ada di Statistik sekarang tampil di Dashboard
-    await expect(page.getByText(/memuat data dashboard/i)).toBeHidden({ timeout: 30_000 });
+    await expect(page.getByText(/memuat data dashboard/i)).toBeHidden({ timeout: LOAD_TIME });
     await expect(page.getByRole("heading", { name: /demografi gender relawan/i })).toBeVisible();
   });
 }

@@ -1,0 +1,65 @@
+- generic [ref=f3e3]:
+  - generic [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - img "Logo Bappeda" [ref=f3e6]
+      - generic [ref=f3e7]:
+        - paragraph [ref=f3e8]: Bappeda
+        - paragraph [ref=f3e9]: Yogyakarta
+      - button "Collapse Sidebar" [ref=f3e10]
+    - navigation [ref=f3e13]:
+      - link "Dashboard" [ref=f3e14] [cursor=pointer]:
+        - /url: /dashboard
+      - link "Manajemen OPD" [ref=f3e19] [cursor=pointer]:
+        - /url: /manajemen-opd
+      - link "Kader" [ref=f3e25] [cursor=pointer]:
+        - /url: /daftar-kader
+      - link "Relawan" [ref=f3e31] [cursor=pointer]:
+        - /url: /data-relawan
+      - link "Surat Keputusan" [ref=f3e38] [cursor=pointer]:
+        - /url: /surat-keputusan
+      - link "Log Aktivitas" [ref=f3e43] [cursor=pointer]:
+        - /url: /log-aktifitas
+      - link "Dokumen" [ref=f3e48] [cursor=pointer]:
+        - /url: /dokumen
+      - link "Riwayat Relawan" [ref=f3e52] [cursor=pointer]:
+        - /url: /histori-relawan
+    - link "Saran/Hotline" [ref=f3e59] [cursor=pointer]:
+      - /url: /saran-hotline
+  - generic [ref=f3e63]:
+    - generic [ref=f3e65]:
+      - generic [ref=f3e66]:
+        - heading "Riwayat Relawan" [level=1] [ref=f3e67]
+        - paragraph [ref=f3e68]: Lihat riwayat data dan penugasan seluruh relawan
+      - generic [ref=f3e69]:
+        - generic [ref=f3e70]:
+          - paragraph [ref=f3e71]: Demo Super Admin 1
+          - paragraph [ref=f3e72]: Super Admin
+        - button [ref=f3e73]:
+          - img "Demo Super Admin 1" [ref=f3e74] [cursor=pointer]
+    - main [ref=f3e75]:
+      - generic [ref=f3e76]:
+        - generic [ref=f3e80]:
+          - heading "Filter Riwayat" [level=3] [ref=f3e86]
+          - generic [ref=f3e87]:
+            - generic [ref=f3e88]:
+              - generic [ref=f3e89]: Nama OPD
+              - button "Semua OPD" [ref=f3e91]
+            - generic [ref=f3e95]:
+              - generic [ref=f3e96]: Kemantren
+              - button "Semua Kemantren" [ref=f3e98]
+            - generic [ref=f3e102]:
+              - generic [ref=f3e103]: Tahun Awal
+              - button "Tahun Awal" [ref=f3e105]
+            - generic [ref=f3e112]:
+              - generic [ref=f3e113]: Nama Kader
+              - button "Semua Kader" [ref=f3e115]
+            - generic [ref=f3e119]:
+              - generic [ref=f3e120]: Kelurahan
+              - button "Pilih Kemantren dulu" [disabled] [ref=f3e122]
+            - generic [ref=f3e126]:
+              - generic [ref=f3e127]: Tahun Akhir
+              - button "Tahun Akhir" [ref=f3e129]
+        - textbox "Cari nama atau NIK relawan..." [ref=f3e137]
+        - generic [ref=f3e138]:
+          - heading "Tabel Riwayat Data Relawan" [level=3] [ref=f3e140]
+          - generic [ref=f3e141]: Memuat riwayat data relawan...

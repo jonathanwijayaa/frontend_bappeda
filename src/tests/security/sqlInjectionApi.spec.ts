@@ -1,5 +1,6 @@
 /// <reference types="node" />
 import { credentials } from "@/helpers/credentials.helper";
+import { LOAD_TIME } from "@/helpers/timing.helper";
 import { APIRequestContext, expect, request as playwrightRequest, test } from "@playwright/test";
 
 /**
@@ -62,7 +63,9 @@ test.describe("SQL Injection — API level", () => {
   let ctx: APIRequestContext;
 
   test.beforeAll(async () => {
-    ctx = await playwrightRequest.newContext({ baseURL: API_BASE });
+    // Tanpa think time (bukan interaksi pengguna); LOAD_TIME menjadi batas
+    // waktu setiap request API.
+    ctx = await playwrightRequest.newContext({ baseURL: API_BASE, timeout: LOAD_TIME });
 
     const res = await ctx.post("/auth/login", {
       data: { nik: credentials.superAdmin.NIK, password: credentials.superAdmin.password },

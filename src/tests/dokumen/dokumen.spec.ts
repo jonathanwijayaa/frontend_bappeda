@@ -1,10 +1,9 @@
 import { credentials } from "@/helpers/credentials.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { clickThink, LOAD_TIME } from "@/helpers/timing.helper";
 import { expect, Download, Page, test } from "@playwright/test";
 import * as fs from "fs";
 import XLSX from "xlsx";
-
-test.describe.configure({ timeout: 90_000 });
 
 const BASE_URL = "https://frontend-bappeda.vercel.app/";
 
@@ -107,9 +106,9 @@ const deskripsiDokumen = (page: Page, judul: string) =>
 
 // Mengklik "Unduh" lalu menunggu berkasnya. Mengembalikan null bila tombolnya
 // tidak menghasilkan unduhan sama sekali.
-const unduh = async (page: Page, judul: string, timeout = 15_000): Promise<Download | null> => {
-  const menunggu = page.waitForEvent("download", { timeout }).catch(() => null);
-  await unduhButton(page, judul).click();
+const unduh = async (page: Page, judul: string): Promise<Download | null> => {
+  const menunggu = page.waitForEvent("download", { timeout: LOAD_TIME }).catch(() => null);
+  await clickThink(unduhButton(page, judul));
   return menunggu;
 };
 
@@ -138,7 +137,7 @@ for (const role of roles) {
       });
 
       await expect(page).toHaveURL(/dashboard/);
-      await page.getByRole("link", { name: "Dokumen" }).click();
+      await clickThink(page.getByRole("link", { name: "Dokumen" }));
       await expect(page).toHaveURL(/dokumen/);
       await expect(page.getByRole("heading", { name: "Buku Panduan Aplikasi" })).toBeVisible();
     });

@@ -1,0 +1,115 @@
+- generic [ref=f2e3]:
+  - generic [ref=f2e4]:
+    - generic [ref=f2e5]:
+      - img "Logo Bappeda" [ref=f2e6]
+      - generic [ref=f2e7]:
+        - paragraph [ref=f2e8]: Bappeda
+        - paragraph [ref=f2e9]: Yogyakarta
+      - button "Collapse Sidebar" [ref=f2e10]
+    - navigation [ref=f2e13]:
+      - link "Dashboard" [ref=f2e14] [cursor=pointer]:
+        - /url: /dashboard
+      - link "Manajemen OPD" [ref=f2e19] [cursor=pointer]:
+        - /url: /manajemen-opd
+      - link "Kader" [ref=f2e25] [cursor=pointer]:
+        - /url: /daftar-kader
+      - link "Relawan" [ref=f2e31] [cursor=pointer]:
+        - /url: /data-relawan
+      - link "Surat Keputusan" [ref=f2e38] [cursor=pointer]:
+        - /url: /surat-keputusan
+      - link "Log Aktivitas" [ref=f2e43] [cursor=pointer]:
+        - /url: /log-aktifitas
+      - link "Dokumen" [ref=f2e48] [cursor=pointer]:
+        - /url: /dokumen
+      - link "Riwayat Relawan" [ref=f2e52] [cursor=pointer]:
+        - /url: /histori-relawan
+    - link "Saran/Hotline" [ref=f2e59] [cursor=pointer]:
+      - /url: /saran-hotline
+  - generic [ref=f2e63]:
+    - generic [ref=f2e65]:
+      - generic [ref=f2e66]:
+        - heading "Kader" [level=1] [ref=f2e67]
+        - paragraph [ref=f2e68]: Kelola data kader yang terdaftar dalam sistem
+      - generic [ref=f2e69]:
+        - generic [ref=f2e70]:
+          - paragraph [ref=f2e71]: Demo Super Admin 1
+          - paragraph [ref=f2e72]: Super Admin
+        - button [ref=f2e73]:
+          - img "Demo Super Admin 1" [ref=f2e74] [cursor=pointer]
+    - main [ref=f2e75]:
+      - generic [ref=f2e76]:
+        - generic [ref=f2e77]:
+          - generic [ref=f2e78]:
+            - button "Tambah Kader Baru" [ref=f2e79]
+            - button "Unggah dari Excel" [ref=f2e81]
+          - textbox "Cari" [ref=f2e90]: Kader Demo
+        - generic [ref=f2e93]:
+          - generic [ref=f2e94]:
+            - heading "Daftar Kader" [level=2] [ref=f2e95]
+            - button "Ekspor PDF" [ref=f2e96]
+          - table [ref=f2e106]:
+            - rowgroup [ref=f2e107]:
+              - row [ref=f2e108]:
+                - columnheader "NAMA KADER" [ref=f2e109]
+                - columnheader "STATUS" [ref=f2e112]
+                - columnheader "OPD" [ref=f2e115]
+                - columnheader "PIC" [ref=f2e118]
+                - columnheader "DESKRIPSI" [ref=f2e121]
+                - columnheader "AKSI" [ref=f2e124]
+            - rowgroup [ref=f2e125]:
+              - row [ref=f2e221]:
+                - cell "Kader Demo" [ref=f2e222]
+                - cell "Aktif" [ref=f2e129]
+                - cell "Opd Demo" [ref=f2e224]
+                - cell "PIC Kader Demo" [ref=f2e226]
+                - cell "merdeka demo" [ref=f2e228]
+                - cell [ref=f2e137]:
+                  - generic [ref=f2e139]:
+                    - button "Detail" [active] [ref=f2e140]
+                    - button "Nonaktif" [ref=f2e141]
+              - row [ref=f2e230]:
+                - cell [ref=f2e231]
+              - row [ref=f2e232]:
+                - cell [ref=f2e233]
+              - row [ref=f2e234]:
+                - cell [ref=f2e235]
+              - row [ref=f2e236]:
+                - cell [ref=f2e237]
+          - generic [ref=f2e206]:
+            - generic [ref=f2e207]: Menampilkan 1-1 dari 1 Kader
+            - generic [ref=f2e208]:
+              - button "Sebelumnya" [disabled] [ref=f2e209]
+              - button "1" [ref=f2e212]
+              - button "Selanjutnya" [disabled] [ref=f2e218]
+        - generic [ref=f2e240]:
+          - generic [ref=f2e242]:
+            - generic [ref=f2e243]:
+              - heading "Detail Kader" [level=2] [ref=f2e244]
+              - paragraph [ref=f2e245]: Edit informasi kader
+            - button [ref=f2e246]
+          - generic [ref=f2e251]:
+            - generic [ref=f2e252]:
+              - generic [ref=f2e253]: OPD
+              - textbox [disabled] [ref=f2e254]: Opd Demo
+            - generic [ref=f2e255]:
+              - generic [ref=f2e256]: Nama Kader
+              - textbox [ref=f2e257]: Kader Demo
+            - generic [ref=f2e258]:
+              - generic [ref=f2e259]: Deskripsi
+              - textbox [ref=f2e260]: merdeka demo
+            - generic [ref=f2e261]:
+              - generic [ref=f2e262]:
+                - heading "Informasi PIC Aktif" [level=3] [ref=f2e263]
+                - button "Ganti PIC" [ref=f2e264]
+              - generic [ref=f2e265]:
+                - generic [ref=f2e266]: Nama PIC
+                - generic [ref=f2e267]: PIC Kader Demo
+                - generic [ref=f2e268]: NIK PIC
+                - generic [ref=f2e269]: "2222222222222222"
+                - generic [ref=f2e270]: No. HP PIC
+                - generic [ref=f2e271]: 0898-7540-006
+                - generic [ref=f2e272]: PIC Sejak
+                - generic [ref=f2e273]: 8/9/2026
+            - generic [ref=f2e274]:
+              - generic [ref=f2e275]: "Dibuat: 8/9/2026, 20.55.21"
+              - button "Simpan Perubahan" [disabled] [ref=f2e276]

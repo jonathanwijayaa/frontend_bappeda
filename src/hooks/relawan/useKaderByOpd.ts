@@ -12,8 +12,8 @@ const fetchKaderByOpd = async (opdId: number, isOPD: boolean): Promise<AutoOptio
   const endpoint = isOPD ? "/opd-admin/kader" : `/kader?opd_id=${opdId}`;
   const { data } = await apiClient.get(endpoint);
   if (!data.success) return [];
-  return (data.data as unknown[]).map((k) => ({
-    label: k.nama_kader as string,
+  return (data.data as { kader_id: number; nama_kader: string }[]).map((k) => ({
+    label: k.nama_kader,
     value: String(k.kader_id),
   }));
 };

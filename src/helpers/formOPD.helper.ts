@@ -1,6 +1,8 @@
 import { faker } from "@faker-js/faker";
 import type { Page } from "@playwright/test";
 
+import { fillThink } from "@/helpers/timing.helper";
+
 export interface OPDData {
   "NAMA OPD": string;
   STATUS: string;
@@ -30,7 +32,7 @@ export const buildOPDData = (): OPDData => ({
 });
 export const fillOPDForm = async ({ data, page }: IFillOPDForm) => ({
   async fillAlamat() {
-    await page.getByRole("textbox", { name: "Alamat OPD" }).fill(data.ALAMAT);
+    await fillThink(page.getByRole("textbox", { name: "Alamat OPD" }), data.ALAMAT);
   },
   async fillAll() {
     await this.fillNamaOPD();
@@ -40,15 +42,15 @@ export const fillOPDForm = async ({ data, page }: IFillOPDForm) => ({
     await this.fillNIKPIC();
   },
   async fillKontak() {
-    await page.getByRole("textbox", { name: "Nomor telepon / email" }).fill(data.KONTAK);
+    await fillThink(page.getByRole("textbox", { name: "Nomor telepon / email" }), data.KONTAK);
   },
   async fillNamaOPD() {
-    await page.getByRole("textbox", { name: "Nama Dinas / OPD" }).fill(data["NAMA OPD"]);
+    await fillThink(page.getByRole("textbox", { name: "Nama Dinas / OPD" }), data["NAMA OPD"]);
   },
   async fillPIC() {
-    await page.getByRole("textbox", { name: "Penanggung jawab" }).fill(data.PIC);
+    await fillThink(page.getByRole("textbox", { name: "Penanggung jawab" }), data.PIC);
   },
   async fillNIKPIC() {
-    await page.getByRole("textbox", { name: "digit NIK PIC" }).fill(data["NIK PIC"]);
+    await fillThink(page.getByRole("textbox", { name: "digit NIK PIC" }), data["NIK PIC"]);
   },
 });

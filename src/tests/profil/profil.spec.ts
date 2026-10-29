@@ -1,9 +1,8 @@
 import { credentials } from "@/helpers/credentials.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { clickThink, fillThink, LOAD_TIME, uploadThink } from "@/helpers/timing.helper";
 import { expect, Page, test } from "@playwright/test";
 import path from "path";
-
-test.describe.configure({ timeout: 90_000 });
 
 const BASE_URL = "https://frontend-bappeda.vercel.app/";
 const FOTO_VALID = path.resolve("src/assets/image/a.jpg");
@@ -23,11 +22,11 @@ const avatarButton = (page: Page) =>
   page.locator("xpath=//h1/parent::div/following-sibling::div[1]//button").first();
 
 const bukaProfil = async (page: Page) => {
-  await avatarButton(page).click();
-  await page.getByRole("button", { name: "Edit Profil" }).click();
+  await clickThink(avatarButton(page));
+  await clickThink(page.getByRole("button", { name: "Edit Profil" }));
 
   await expect(page).toHaveURL(/\/profil$/);
-  await expect(page.getByText(/memuat profil/i)).toBeHidden({ timeout: 30_000 });
+  await expect(page.getByText(/memuat profil/i)).toBeHidden({ timeout: LOAD_TIME });
   await expect(page.getByRole("heading", { name: "Informasi Pribadi" })).toBeVisible();
 };
 
@@ -71,7 +70,7 @@ const lewatiJikaNamaBermasalah = (nama: string) =>
 // toast lama harus benar-benar hilang dulu agar assertion kedua tidak lolos
 // hanya karena membaca toast sebelumnya.
 const tungguToastHilang = async (page: Page, teks: string) => {
-  await expect(page.getByText(teks)).toBeHidden({ timeout: 15_000 });
+  await expect(page.getByText(teks)).toBeHidden({ timeout: LOAD_TIME });
 };
 
 for (const role of rolesAdmin) {
@@ -102,18 +101,18 @@ for (const role of rolesAdmin) {
         // tersembunyi, bukan <button>, jadi file diisikan langsung ke input-nya.
         await expect(page.getByText("Ganti", { exact: true })).toBeVisible();
 
-        await fileInput(page).setInputFiles(FOTO_VALID);
+        await uploadThink(fileInput(page), FOTO_VALID);
 
         // Foto dibaca jadi base64 untuk preview, belum tersimpan ke server
         await expect.poll(() => avatarSrc(page)).toMatch(/^data:image\//);
 
-        await simpanProfilButton(page).click();
+        await clickThink(simpanProfilButton(page));
         await expect(page.getByText(TOAST_PROFIL_SUKSES)).toBeVisible();
 
         // Kembalikan ke avatar bawaan supaya data akun tidak berubah setelah uji
         await tungguToastHilang(page, TOAST_PROFIL_SUKSES);
-        await page.getByRole("button", { name: "Hapus" }).click();
-        await simpanProfilButton(page).click();
+        await clickThink(page.getByRole("button", { name: "Hapus" }));
+        await clickThink(simpanProfilButton(page));
 
         await expect(page.getByText(TOAST_PROFIL_SUKSES)).toBeVisible();
         await expect.poll(() => avatarSrc(page)).toContain("ui-avatars.com");
@@ -129,9 +128,9 @@ for (const role of rolesAdmin) {
         const namaUji = `${namaAwal} Uji`;
         const hpUji = `0813${Date.now().toString().slice(-8)}`;
 
-        await namaField(page).fill(namaUji);
-        await noHpField(page).fill(hpUji);
-        await simpanProfilButton(page).click();
+        await fillThink(namaField(page), namaUji);
+        await fillThink(noHpField(page), hpUji);
+        await clickThink(simpanProfilButton(page));
 
         await expect(page.getByText(TOAST_PROFIL_SUKSES)).toBeVisible();
 
@@ -141,9 +140,9 @@ for (const role of rolesAdmin) {
 
         // Kembalikan ke nilai semula
         await tungguToastHilang(page, TOAST_PROFIL_SUKSES);
-        await namaField(page).fill(namaAwal);
-        await noHpField(page).fill(hpAwal);
-        await simpanProfilButton(page).click();
+        await fillThink(namaField(page), namaAwal);
+        await fillThink(noHpField(page), hpAwal);
+        await clickThink(simpanProfilButton(page));
 
         await expect(page.getByText(TOAST_PROFIL_SUKSES)).toBeVisible();
         await expect(namaField(page)).toHaveValue(namaAwal);
@@ -178,8 +177,8 @@ for (const role of rolesAdmin) {
 
       for (const phoneCase of invalidPhoneCases) {
         test(`TCP.4 ${role.label} ${phoneCase.title}`, async ({ page }) => {
-          await noHpField(page).fill(phoneCase.value);
-          await simpanProfilButton(page).click();
+          await fillThink(noHpField(page), phoneCase.value);
+          await clickThink(simpanProfilButton(page));
 
           await expect(page.getByText(/nomor hp tidak valid/i)).toBeVisible();
           await expect(page.getByText(TOAST_PROFIL_SUKSES)).toBeHidden();
@@ -192,9 +191,9 @@ for (const role of rolesAdmin) {
       // Halaman ini tidak punya tombol Batal; perubahan dibuang saat user
       // berpindah halaman tanpa menekan Simpan.
       const namaAwal = await namaField(page).inputValue();
-      await namaField(page).fill("Nama Yang Tidak Disimpan");
+      await fillThink(namaField(page), "Nama Yang Tidak Disimpan");
 
-      await page.getByRole("link", { name: "Dashboard" }).click();
+      await clickThink(page.getByRole("link", { name: "Dashboard" }));
       await expect(page).toHaveURL(/dashboard/);
 
       await bukaProfil(page);
@@ -205,7 +204,7 @@ for (const role of rolesAdmin) {
 
     // TCP.6 Negative: simpan tanpa mengubah apa pun
     test(`TCP.6 ${role.label} saves without changing anything`, async ({ page }) => {
-      await simpanProfilButton(page).click();
+      await clickThink(simpanProfilButton(page));
 
       await expect(page.getByText(/tidak ada data yang disimpan/i)).toBeVisible();
       await expect(page.getByText(TOAST_PROFIL_SUKSES)).toBeHidden();
@@ -216,7 +215,7 @@ for (const role of rolesAdmin) {
       const srcAwal = await avatarSrc(page);
 
       // Dibuat saat test berjalan supaya tidak perlu menyimpan berkas besar di repo
-      await fileInput(page).setInputFiles({
+      await uploadThink(fileInput(page), {
         buffer: Buffer.alloc(1024 * 1024 + 1),
         mimeType: "image/jpeg",
         name: "foto-terlalu-besar.jpg",
@@ -229,10 +228,10 @@ for (const role of rolesAdmin) {
 
     // TCP.8 Hapus foto profil
     test(`TCP.8 ${role.label} removes the selected profile picture`, async ({ page }) => {
-      await fileInput(page).setInputFiles(FOTO_VALID);
+      await uploadThink(fileInput(page), FOTO_VALID);
       await expect.poll(() => avatarSrc(page)).toMatch(/^data:image\//);
 
-      await page.getByRole("button", { name: "Hapus" }).click();
+      await clickThink(page.getByRole("button", { name: "Hapus" }));
 
       // Kembali ke avatar bawaan; belum disimpan selama tombol Simpan tidak ditekan
       await expect.poll(() => avatarSrc(page)).toContain("ui-avatars.com");
@@ -289,11 +288,11 @@ for (const role of rolesAdmin) {
 
       for (const passwordCase of invalidPasswordCases) {
         test(`TCP.10 ${role.label} ${passwordCase.title}`, async ({ page }) => {
-          await passwordLamaField(page).fill(passwordCase.lama);
-          await passwordBaruField(page).fill(passwordCase.baru);
-          await konfirmasiPasswordField(page).fill(passwordCase.konfirmasi);
+          await fillThink(passwordLamaField(page), passwordCase.lama);
+          await fillThink(passwordBaruField(page), passwordCase.baru);
+          await fillThink(konfirmasiPasswordField(page), passwordCase.konfirmasi);
 
-          await simpanPasswordButton(page).click();
+          await clickThink(simpanPasswordButton(page));
 
           await expect(page.getByText(passwordCase.pesan)).toBeVisible();
           await expect(page.getByText(/password berhasil diperbarui/i)).toBeHidden();
@@ -305,25 +304,27 @@ for (const role of rolesAdmin) {
     test(`TCP.28 ${role.label} saves a name containing digits`, async ({ page }) => {
       // Tidak ada validasi nama di sisi aplikasi; penolakan datang dari backend,
       // sehingga nama akun tidak ikut berubah saat kasus ini dijalankan.
-      await namaField(page).fill("Nama Uji 123");
-      await simpanProfilButton(page).click();
+      await fillThink(namaField(page), "Nama Uji 123");
+      await clickThink(simpanProfilButton(page));
 
       await expect(page.getByText(/nama lengkap tidak boleh mengandung angka/i)).toBeVisible({
-        timeout: 20_000,
+        timeout: LOAD_TIME,
       });
       await expect(page.getByText(TOAST_PROFIL_SUKSES)).toBeHidden();
     });
 
     // TCP.11 Negative: password lama salah
     test(`TCP.11 ${role.label} enters a wrong current password`, async ({ page }) => {
-      await passwordLamaField(page).fill("PasswordLamaSalah123");
-      await passwordBaruField(page).fill("Rahasia123!");
-      await konfirmasiPasswordField(page).fill("Rahasia123!");
+      await fillThink(passwordLamaField(page), "PasswordLamaSalah123");
+      await fillThink(passwordBaruField(page), "Rahasia123!");
+      await fillThink(konfirmasiPasswordField(page), "Rahasia123!");
 
-      await simpanPasswordButton(page).click();
+      await clickThink(simpanPasswordButton(page));
 
       // Ditolak server, sehingga password akun tetap seperti semula
-      await expect(page.getByText(/password lama tidak sesuai/i)).toBeVisible({ timeout: 20_000 });
+      await expect(page.getByText(/password lama tidak sesuai/i)).toBeVisible({
+        timeout: LOAD_TIME,
+      });
       await expect(page.getByText(/password berhasil diperbarui/i)).toBeHidden();
     });
   });
@@ -361,16 +362,16 @@ const konfirmasiDialog = (page: Page) =>
   page.getByRole("heading", { name: "Konfirmasi Pengajuan" });
 
 const bukaModalPengajuan = async (page: Page) => {
-  await page.getByRole("button", { name: "Ajukan Pembaruan Data" }).click();
+  await clickThink(page.getByRole("button", { name: "Ajukan Pembaruan Data" }));
   await expect(page.getByRole("heading", { name: "Ajukan Pembaruan Data" })).toBeVisible();
 };
 
 // Pengajuan dikirim dua tahap: "Ajukan" membuka dialog konfirmasi, lalu
 // "Ya, Ajukan" yang benar-benar mengirim ke server.
 const kirimPengajuan = async (page: Page) => {
-  await ajukanButton(page).click();
+  await clickThink(ajukanButton(page));
   await expect(konfirmasiDialog(page)).toBeVisible();
-  await page.getByRole("button", { name: "Ya, Ajukan" }).click();
+  await clickThink(page.getByRole("button", { name: "Ya, Ajukan" }));
 };
 
 test.describe("Profil - Relawan", () => {
@@ -385,7 +386,7 @@ test.describe("Profil - Relawan", () => {
 
     // Relawan langsung diarahkan ke profilnya setelah login
     await expect(page).toHaveURL(/profil-relawan/);
-    await expect(infoValue(page, "NIK")).toBeVisible({ timeout: 30_000 });
+    await expect(infoValue(page, "NIK")).toBeVisible({ timeout: LOAD_TIME });
   });
 
   // TCP.12 Tampilan informasi pribadi relawan
@@ -436,13 +437,13 @@ test.describe("Profil - Relawan", () => {
     const alamatSekarang = (await infoValue(page, "Alamat KTP").innerText()).trim();
 
     await bukaModalPengajuan(page);
-    await modalField(page, "Alamat Baru").fill(alamatSekarang);
-    await modalField(page, "Catatan / Alasan Perubahan").fill("Pengujian otomatis E2E");
+    await fillThink(modalField(page, "Alamat Baru"), alamatSekarang);
+    await fillThink(modalField(page, "Catatan / Alasan Perubahan"), "Pengujian otomatis E2E");
 
     await kirimPengajuan(page);
 
     await expect(page.getByText(/berhasil dikirim dan sedang menunggu review/i)).toBeVisible({
-      timeout: 20_000,
+      timeout: LOAD_TIME,
     });
     await expect(page.getByRole("heading", { name: "Ajukan Pembaruan Data" })).toBeHidden();
   });
@@ -461,13 +462,13 @@ test.describe("Profil - Relawan", () => {
     for (const phoneCase of invalidPhoneCases) {
       test(`TCP.15 Relawan ${phoneCase.title}`, async ({ page }) => {
         await bukaModalPengajuan(page);
-        await modalField(page, "No. HP Baru").fill(phoneCase.value);
-        await modalField(page, "Catatan / Alasan Perubahan").fill("Uji nomor HP tidak valid");
+        await fillThink(modalField(page, "No. HP Baru"), phoneCase.value);
+        await fillThink(modalField(page, "Catatan / Alasan Perubahan"), "Uji nomor HP tidak valid");
 
         await kirimPengajuan(page);
 
         await expect(page.getByText(/format nomor hp tidak valid/i)).toBeVisible({
-          timeout: 20_000,
+          timeout: LOAD_TIME,
         });
         await expect(page.getByText(/berhasil dikirim/i)).toBeHidden();
       });
@@ -477,16 +478,16 @@ test.describe("Profil - Relawan", () => {
   // TCP.16 Batal / tutup modal
   test("TCP.16 Relawan cancels Ajukan Pembaruan Data", async ({ page }) => {
     await bukaModalPengajuan(page);
-    await modalField(page, "Alamat Baru").fill("Alamat Yang Tidak Diajukan");
+    await fillThink(modalField(page, "Alamat Baru"), "Alamat Yang Tidak Diajukan");
 
-    await page.getByRole("button", { name: "Batal" }).click();
+    await clickThink(page.getByRole("button", { name: "Batal" }));
     await expect(page.getByRole("heading", { name: "Ajukan Pembaruan Data" })).toBeHidden();
 
     // Modal dibuka ulang dalam keadaan kosong, dan tombol X juga menutupnya
     await bukaModalPengajuan(page);
     await expect(modalField(page, "Alamat Baru")).toHaveValue("");
 
-    await modalCloseButton(page).click();
+    await clickThink(modalCloseButton(page));
     await expect(page.getByRole("heading", { name: "Ajukan Pembaruan Data" })).toBeHidden();
     await expect(page.getByText(/berhasil dikirim/i)).toBeHidden();
   });
@@ -494,7 +495,7 @@ test.describe("Profil - Relawan", () => {
   // TCP.17 Negative: tidak ada data yang diubah
   test("TCP.17 Relawan submits without changing any data", async ({ page }) => {
     await bukaModalPengajuan(page);
-    await modalField(page, "Catatan / Alasan Perubahan").fill("Tanpa perubahan data");
+    await fillThink(modalField(page, "Catatan / Alasan Perubahan"), "Tanpa perubahan data");
 
     await kirimPengajuan(page);
 
@@ -505,7 +506,7 @@ test.describe("Profil - Relawan", () => {
   // TCP.18 Negative: catatan wajib diisi
   test("TCP.18 Relawan submits without filling the reason", async ({ page }) => {
     await bukaModalPengajuan(page);
-    await modalField(page, "Alamat Baru").fill("Jl. Uji Tanpa Catatan No. 1, Yogyakarta");
+    await fillThink(modalField(page, "Alamat Baru"), "Jl. Uji Tanpa Catatan No. 1, Yogyakarta");
 
     await kirimPengajuan(page);
 
@@ -518,13 +519,13 @@ test.describe("Profil - Relawan", () => {
     await bukaModalPengajuan(page);
 
     const kemantren = modalField(page, "Kemantren Baru");
-    await kemantren.click();
+    await clickThink(kemantren);
 
     const saran = modalSaran(page, "Kemantren Baru");
     await expect(saran.first()).toBeVisible();
 
     const pilihan = (await saran.first().innerText()).trim();
-    await saran.first().click();
+    await clickThink(saran.first());
 
     await expect(kemantren).toHaveValue(pilihan);
     // Memilih Kemantren mengosongkan Kelurahan yang sudah terlanjur diisi
@@ -532,21 +533,21 @@ test.describe("Profil - Relawan", () => {
 
     // Daftar Kelurahan menyesuaikan Kemantren yang baru dipilih
     const kelurahan = modalField(page, "Kelurahan Baru");
-    await kelurahan.click();
-    await expect(modalSaran(page, "Kelurahan Baru").first()).toBeVisible({ timeout: 15_000 });
+    await clickThink(kelurahan);
+    await expect(modalSaran(page, "Kelurahan Baru").first()).toBeVisible({ timeout: LOAD_TIME });
   });
 
   // TCP.20 Batalkan dialog konfirmasi
   test("TCP.20 Relawan cancels the confirmation dialog", async ({ page }) => {
     await bukaModalPengajuan(page);
-    await modalField(page, "Alamat Baru").fill("Jl. Uji Konfirmasi No. 1, Yogyakarta");
-    await modalField(page, "Catatan / Alasan Perubahan").fill("Uji batal konfirmasi");
+    await fillThink(modalField(page, "Alamat Baru"), "Jl. Uji Konfirmasi No. 1, Yogyakarta");
+    await fillThink(modalField(page, "Catatan / Alasan Perubahan"), "Uji batal konfirmasi");
 
-    await ajukanButton(page).click();
+    await clickThink(ajukanButton(page));
     await expect(konfirmasiDialog(page)).toBeVisible();
 
     // Tombol Batal di dialog konfirmasi (dialog dirender di atas modal)
-    await page.getByRole("button", { name: "Batal" }).last().click();
+    await clickThink(page.getByRole("button", { name: "Batal" }).last());
 
     await expect(konfirmasiDialog(page)).toBeHidden();
     // Kembali ke modal dengan isian yang masih utuh, tanpa mengirim apa pun
@@ -588,8 +589,8 @@ test.describe("Ubah Kata Sandi - Relawan", () => {
 
     await expect(page).toHaveURL(/profil-relawan/);
 
-    await page.getByRole("button", { name: "Menu", exact: true }).click();
-    await page.getByRole("button", { name: "Ubah Kata Sandi" }).first().click();
+    await clickThink(page.getByRole("button", { name: "Menu", exact: true }));
+    await clickThink(page.getByRole("button", { name: "Ubah Kata Sandi" }).first());
 
     await expect(page).toHaveURL(/ubah-password/);
     await expect(page.getByRole("heading", { name: "Ubah Kata Sandi" })).toBeVisible();
@@ -614,23 +615,23 @@ test.describe("Ubah Kata Sandi - Relawan", () => {
     // Tiap syarat diuji satu per satu lewat peringatan yang muncul saat belum terpenuhi
     const kasusKurang = ["abc", "abcdefgh", "abcdefg1", "abcdefgh!"];
     for (const sandi of kasusKurang) {
-      await sandiBaruField(page).fill(sandi);
+      await fillThink(sandiBaruField(page), sandi);
       await expect(page.getByText(/harap penuhi semua syarat kata sandi/i)).toBeVisible();
     }
 
-    await sandiBaruField(page).fill("Rahasia123!");
+    await fillThink(sandiBaruField(page), "Rahasia123!");
     await expect(page.getByText(/harap penuhi semua syarat kata sandi/i)).toBeHidden();
   });
 
   // TCP.23 Konfirmasi kata sandi
   test("TCP.23 Relawan confirms the new password", async ({ page }) => {
-    await sandiBaruField(page).fill("Rahasia123!");
-    await konfirmasiSandiField(page).fill("Rahasia999!");
+    await fillThink(sandiBaruField(page), "Rahasia123!");
+    await fillThink(konfirmasiSandiField(page), "Rahasia999!");
 
     await expect(page.getByText("Kata Sandi tidak cocok.")).toBeVisible();
     await expect(submitPasswordButton(page)).toBeDisabled();
 
-    await konfirmasiSandiField(page).fill("Rahasia123!");
+    await fillThink(konfirmasiSandiField(page), "Rahasia123!");
 
     await expect(page.getByText("Kata sandi cocok")).toBeVisible();
   });
@@ -640,12 +641,14 @@ test.describe("Ubah Kata Sandi - Relawan", () => {
     // Kata sandi lama diverifikasi ke server sambil mengetik (debounce 700ms),
     // dan tombol simpan tetap terkunci selama hasilnya belum valid — sehingga
     // kata sandi akun tidak pernah benar-benar berubah saat pengujian.
-    await sandiLamaField(page).fill("KataSandiLamaSalah123");
+    await fillThink(sandiLamaField(page), "KataSandiLamaSalah123");
 
-    await expect(page.getByText(/kata sandi lama tidak sesuai/i)).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByText(/kata sandi lama tidak sesuai/i)).toBeVisible({
+      timeout: LOAD_TIME,
+    });
 
-    await sandiBaruField(page).fill("Rahasia123!");
-    await konfirmasiSandiField(page).fill("Rahasia123!");
+    await fillThink(sandiBaruField(page), "Rahasia123!");
+    await fillThink(konfirmasiSandiField(page), "Rahasia123!");
 
     await expect(submitPasswordButton(page)).toBeDisabled();
   });
@@ -659,13 +662,13 @@ test.describe("Ubah Kata Sandi - Relawan", () => {
     ];
 
     for (const { field, id } of kolom) {
-      await field.fill("Rahasia123!");
+      await fillThink(field, "Rahasia123!");
       await expect(field).toHaveAttribute("type", "password");
 
-      await toggleLihatSandi(page, id).click();
+      await clickThink(toggleLihatSandi(page, id));
       await expect(field).toHaveAttribute("type", "text");
 
-      await toggleLihatSandi(page, id).click();
+      await clickThink(toggleLihatSandi(page, id));
       await expect(field).toHaveAttribute("type", "password");
     }
   });
