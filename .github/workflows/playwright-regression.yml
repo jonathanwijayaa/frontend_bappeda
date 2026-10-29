@@ -1,0 +1,120 @@
+# Simpan di repo sebagai: .github/workflows/playwright-regression.yml
+# Jalankan manual dari tab Actions > "Playwright Regression" > Run workflow.
+name: Playwright Regression
+
+on:
+  workflow_dispatch:
+    inputs:
+      shards:
+        description: "Jumlah mesin (shard). 1 = satu mesin saja"
+        default: "1"
+        required: true
+      workers:
+        description: "Jumlah worker per mesin"
+        default: "10"
+        required: true
+      branch:
+        description: "Branch yang diuji"
+        default: "testing"
+        required: true
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.m.outputs.matrix }}
+    steps:
+      - id: m
+        run: echo "matrix=[$(seq -s, 1 ${{ inputs.shards }})]" >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: ${{ fromJson(needs.setup.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Catat waktu mulai
+        run: echo "Mulai shard ${{ matrix.shardIndex }}: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+      - name: Jalankan pengujian
+        # Ganti nama variabel di bawah sesuai isi file .env di proyekmu,
+        # lalu isi nilainya di Settings > Secrets and variables > Actions.
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+          API_URL: ${{ secrets.API_URL }}
+          SUPERADMIN_NIK: ${{ secrets.SUPERADMIN_NIK }}
+          SUPERADMIN_PASSWORD: ${{ secrets.SUPERADMIN_PASSWORD }}
+          OPD_NIK: ${{ secrets.OPD_NIK }}
+          OPD_PASSWORD: ${{ secrets.OPD_PASSWORD }}
+          RELAWAN_NIK: ${{ secrets.RELAWAN_NIK }}
+          RELAWAN_PASSWORD: ${{ secrets.RELAWAN_PASSWORD }}
+        run: >
+          npx playwright test
+          --project=chromium
+          --workers=${{ inputs.workers }}
+          --shard=${{ matrix.shardIndex }}/${{ inputs.shards }}
+          --retries=0
+          --reporter=blob,list
+
+      - name: Catat waktu selesai
+        if: always()
+        run: echo "Selesai shard ${{ matrix.shardIndex }}: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: blob-report-${{ matrix.shardIndex }}
+          path: blob-report
+          retention-days: 30
+
+  merge-report:
+    if: always()
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: all-blob-reports
+          pattern: blob-report-*
+          merge-multiple: true
+
+      - name: Gabungkan laporan HTML
+        run: npx playwright merge-reports --reporter=html ./all-blob-reports
+
+      - name: Gabungkan laporan JSON
+        run: PLAYWRIGHT_JSON_OUTPUT_NAME=results.json npx playwright merge-reports --reporter=json ./all-blob-reports
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-gabungan
+          path: |
+            playwright-report
+            results.json
+          retention-days: 30
