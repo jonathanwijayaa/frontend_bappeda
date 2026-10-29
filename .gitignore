@@ -66,3 +66,5 @@ report-1-worker/
 playwright-report/
 playwright-report-lama/
 screenshots/
+results.zip
+/results
