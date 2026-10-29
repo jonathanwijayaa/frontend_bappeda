@@ -158,7 +158,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } catch (err: unknown) {
       console.error("Login error:", err);
       const errorMessage =
-        err.response?.data?.message ||
+        (err as { response?: { data?: { message?: string } } }).response?.data?.message ||
         "Tidak dapat terhubung ke server. Pastikan backend berjalan.";
       return { message: errorMessage, success: false };
     }

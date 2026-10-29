@@ -1,10 +1,7 @@
 import { credentials } from "@/helpers/credentials.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { clickThink, fillThink, LOAD_TIME, pesanLoadTime } from "@/helpers/timing.helper";
 import { expect, Page, test } from "@playwright/test";
-
-// Halaman ini memuat seluruh relawan sekaligus (200+ baris) lalu memfilter di
-// sisi klien, jadi login + muat data butuh waktu lebih lama dari default.
-test.describe.configure({ timeout: 90_000 });
 
 const BASE_URL = "https://frontend-bappeda.vercel.app/";
 
@@ -35,52 +32,51 @@ const exactText = (value: string) =>
 
 // Popup Select/YearPicker ditutup lewat mousedown di luar popup
 const tutupPopup = async (page: Page) => {
-  await page.getByRole("heading", { name: "Riwayat Relawan", exact: true }).click();
+  await clickThink(page.getByRole("heading", { name: "Riwayat Relawan", exact: true }));
 };
 
 // Beberapa daftar opsi (mis. Kelurahan) baru terisi setelah request wilayah
-// selesai, jadi popup dibuka ulang sampai jumlah opsinya memenuhi `minimal`.
+// selesai. Popup dibuka SEKALI; opsinya dirender langsung dari props (Select.tsx),
+// jadi cukup ditunggu sampai jumlah opsinya memenuhi `minimal` (maks LOAD_TIME).
 const bacaOpsiSelect = async (page: Page, label: string, minimal = 0) => {
-  let opsi: string[] = [];
+  await clickThink(filterTrigger(page, label));
+  await expect(selectPopup(page)).toBeVisible();
 
+  const tombolOpsi = selectPopup(page).locator("button");
   await expect
-    .poll(
-      async () => {
-        await filterTrigger(page, label).click();
-        await expect(selectPopup(page)).toBeVisible();
-
-        opsi = (await selectPopup(page).locator("button").allInnerTexts()).map((t) => t.trim());
-        await tutupPopup(page);
-
-        return opsi.length - 1;
-      },
-      { timeout: 15_000 },
-    )
+    .poll(async () => (await tombolOpsi.count()) - 1, {
+      message: pesanLoadTime(`opsi filter "${label}" termuat (minimal ${minimal})`),
+      timeout: LOAD_TIME,
+    })
     .toBeGreaterThanOrEqual(minimal);
+
+  const opsi = (await tombolOpsi.allInnerTexts()).map((t) => t.trim());
+  await tutupPopup(page);
 
   // Opsi pertama adalah placeholder (reset filter), bukan nilai sebenarnya
   return { placeholder: opsi[0], nilai: opsi.slice(1) };
 };
 
 const pilihFilter = async (page: Page, label: string, nilai: string) => {
-  await filterTrigger(page, label).click();
+  await clickThink(filterTrigger(page, label));
   await expect(selectPopup(page)).toBeVisible();
 
-  await selectPopup(page)
-    .locator("button")
-    .filter({ hasText: exactText(nilai) })
-    .first()
-    .click();
+  await clickThink(
+    selectPopup(page)
+      .locator("button")
+      .filter({ hasText: exactText(nilai) })
+      .first(),
+  );
 
   await expect(selectPopup(page)).toBeHidden();
   await expect(filterTrigger(page, label)).toHaveText(exactText(nilai));
 };
 
 const pilihTahun = async (page: Page, label: string, tahun: string) => {
-  await filterTrigger(page, label).click();
+  await clickThink(filterTrigger(page, label));
   await expect(yearPopup(page)).toBeVisible();
 
-  await yearPopup(page).getByRole("button", { name: tahun, exact: true }).click();
+  await clickThink(yearPopup(page).getByRole("button", { name: tahun, exact: true }));
 
   await expect(yearPopup(page)).toBeHidden();
   await expect(filterTrigger(page, label)).toContainText(tahun);
@@ -139,7 +135,7 @@ const detailCloseButton = (page: Page) =>
     .first();
 
 const bukaDetail = async (page: Page, indeksBaris = 0) => {
-  await barisData(page).nth(indeksBaris).getByRole("button", { name: "Detail" }).click();
+  await clickThink(barisData(page).nth(indeksBaris).getByRole("button", { name: "Detail" }));
   await expect(page.getByRole("heading", { name: JUDUL_DETAIL })).toBeVisible();
 };
 
@@ -154,7 +150,7 @@ const tungguTerurut = async (page: Page, kolom: keyof typeof KOLOM, arah: "asc" 
         const urut = [...nilai].sort((a, b) => (arah === "asc" ? 1 : -1) * bandingkan(a, b));
         return nilai.join("|") === urut.join("|");
       },
-      { timeout: 10_000 },
+      { timeout: LOAD_TIME },
     )
     .toBe(true);
 
@@ -166,11 +162,11 @@ const ujiSortKolom = async (page: Page, header: string, kolom: keyof typeof KOLO
   const kolomHeader = page.getByRole("columnheader", { name: header, exact: true });
 
   // Klik 1: menaik
-  await kolomHeader.click();
+  await clickThink(kolomHeader);
   const menaik = await tungguTerurut(page, kolom, "asc");
 
   // Klik 2: menurun
-  await kolomHeader.click();
+  await clickThink(kolomHeader);
   const menurun = await tungguTerurut(page, kolom, "desc");
 
   // Data tersortir untuk SELURUH hasil filter, jadi halaman 1 versi menaik dan
@@ -178,9 +174,9 @@ const ujiSortKolom = async (page: Page, header: string, kolom: keyof typeof KOLO
   expect(menurun[0]).not.toBe(menaik[0]);
 
   // Klik 3: kembali ke urutan asli (sort 3 kondisi: asc → desc → reset)
-  await kolomHeader.click();
+  await clickThink(kolomHeader);
   await expect
-    .poll(async () => (await nilaiKolom(page, kolom)).join("|"), { timeout: 10_000 })
+    .poll(async () => (await nilaiKolom(page, kolom)).join("|"), { timeout: LOAD_TIME })
     .toBe(urutanAwal.join("|"));
 };
 
@@ -196,11 +192,13 @@ for (const role of roles) {
       });
 
       await expect(page).toHaveURL(/dashboard/);
-      await page.getByRole("link", { name: /riwayat relawan/i }).click();
+      await clickThink(page.getByRole("link", { name: /riwayat relawan/i }));
       await expect(page).toHaveURL(/histori-relawan/);
 
       // Tabel baru terisi setelah GET relawan selesai
-      await expect(page.getByText(/memuat riwayat data relawan/i)).toBeHidden({ timeout: 30_000 });
+      await expect(page.getByText(/memuat riwayat data relawan/i)).toBeHidden({
+        timeout: LOAD_TIME,
+      });
       await expect(barisData(page).first()).toBeVisible();
     });
 
@@ -264,7 +262,7 @@ for (const role of roles) {
     test(`TCHR.5 ${role.label} cannot pick a conflicting year range`, async ({ page }) => {
       await pilihTahun(page, "Tahun Awal", "2024");
 
-      await filterTrigger(page, "Tahun Akhir").click();
+      await clickThink(filterTrigger(page, "Tahun Akhir"));
       await expect(yearPopup(page)).toBeVisible();
 
       // Tahun Akhir hanya boleh menawarkan tahun >= Tahun Awal, sehingga
@@ -278,7 +276,7 @@ for (const role of roles) {
       expect(Math.min(...tahunTersedia)).toBeGreaterThanOrEqual(2024);
 
       // Rentang yang valid tetap bisa dipilih
-      await yearPopup(page).getByRole("button", { name: "2026", exact: true }).click();
+      await clickThink(yearPopup(page).getByRole("button", { name: "2026", exact: true }));
       await expect(filterTrigger(page, "Tahun Akhir")).toContainText("2026");
       await expect(barisData(page).first().or(emptyState(page))).toBeVisible();
     });
@@ -348,7 +346,7 @@ for (const role of roles) {
           const keyword = searchCase.kata(baris);
 
           // Pencarian berjalan saat mengetik (onChange), bukan saat menekan Enter
-          await searchField(page).fill(keyword);
+          await fillThink(searchField(page), keyword);
 
           if (!searchCase.adaHasil) {
             await expect(emptyState(page)).toBeVisible();
@@ -448,10 +446,10 @@ for (const role of roles) {
       const { nilai: daftarKemantren } = await bacaOpsiSelect(page, "Kemantren", 1);
       await pilihKemantrenBerisi(page, daftarKemantren);
       await pilihTahun(page, "Tahun Awal", "2024");
-      await searchField(page).fill("demo");
+      await fillThink(searchField(page), "demo");
 
       await expect(resetFilterButton(page)).toBeVisible();
-      await resetFilterButton(page).click();
+      await clickThink(resetFilterButton(page));
 
       await expect(resetFilterButton(page)).toBeHidden();
       await expect(filterTrigger(page, "Kemantren")).toHaveText(/semua kemantren/i);
@@ -489,12 +487,12 @@ for (const role of roles) {
 
       const halamanSatu = await nilaiKolom(page, "nik");
 
-      await page.getByRole("button", { name: "Selanjutnya" }).click();
+      await clickThink(page.getByRole("button", { name: "Selanjutnya" }));
 
       await expect(infoJumlah(page)).toHaveText(/Menampilkan 6–/);
       expect(await nilaiKolom(page, "nik")).not.toEqual(halamanSatu);
 
-      await page.getByRole("button", { name: "Sebelumnya" }).click();
+      await clickThink(page.getByRole("button", { name: "Sebelumnya" }));
 
       await expect(infoJumlah(page)).toHaveText(/Menampilkan 1–5 dari/);
       expect(await nilaiKolom(page, "nik")).toEqual(halamanSatu);
@@ -558,7 +556,7 @@ for (const role of roles) {
         ).toBeVisible();
       }
 
-      await detailCloseButton(page).click();
+      await clickThink(detailCloseButton(page));
       await expect(page.getByRole("heading", { name: JUDUL_DETAIL })).toBeHidden();
     });
   });
@@ -585,8 +583,8 @@ test("TCHR.23 Super Admin sees Kader options scoped to the selected OPD", async 
     password: credentials.superAdmin.password,
   });
 
-  await page.getByRole("link", { name: /riwayat relawan/i }).click();
-  await expect(page.getByText(/memuat riwayat data relawan/i)).toBeHidden({ timeout: 30_000 });
+  await clickThink(page.getByRole("link", { name: /riwayat relawan/i }));
+  await expect(page.getByText(/memuat riwayat data relawan/i)).toBeHidden({ timeout: LOAD_TIME });
   await expect(barisData(page).first()).toBeVisible();
 
   const { nilai: semuaKader } = await bacaOpsiSelect(page, "Nama Kader", 1);
@@ -621,8 +619,8 @@ test("TCHR.24 OPD can only see its own OPD in the history", async ({ page }) => 
     password: credentials.opd.password,
   });
 
-  await page.getByRole("link", { name: /riwayat relawan/i }).click();
-  await expect(page.getByText(/memuat riwayat data relawan/i)).toBeHidden({ timeout: 30_000 });
+  await clickThink(page.getByRole("link", { name: /riwayat relawan/i }));
+  await expect(page.getByText(/memuat riwayat data relawan/i)).toBeHidden({ timeout: LOAD_TIME });
   await expect(barisData(page).first()).toBeVisible();
 
   // Filter OPD dikunci: tidak bisa diklik dan sudah terisi nama instansinya
@@ -671,10 +669,10 @@ test("TCHR.26 Riwayat Relawan handles a failed data request", async ({ page }) =
 
   // Gagalkan permintaan data riwayat untuk menguji penanganan errornya
   await page.route("**/admin/relawan", (route) => route.abort());
-  await page.getByRole("link", { name: /riwayat relawan/i }).click();
+  await clickThink(page.getByRole("link", { name: /riwayat relawan/i }));
   await expect(page).toHaveURL(/histori-relawan/);
 
-  await expect(page.getByText(/memuat riwayat data relawan/i)).toBeHidden({ timeout: 30_000 });
+  await expect(page.getByText(/memuat riwayat data relawan/i)).toBeHidden({ timeout: LOAD_TIME });
   await expect(emptyState(page)).toBeVisible();
   await expect(page.getByText(/belum ada riwayat data relawan yang tercatat/i)).toBeVisible();
   await expect(page.getByRole("table")).toBeHidden();

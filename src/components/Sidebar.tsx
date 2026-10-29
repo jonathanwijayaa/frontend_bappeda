@@ -9,7 +9,6 @@ import {
   Users,
   FileText,
   Clock,
-  BarChart3,
   MessageSquare,
   ChevronLeft,
   ChevronRight,

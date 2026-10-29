@@ -67,4 +67,6 @@ playwright-report/
 playwright-report-lama/
 screenshots/
 results.zip
-/results
+results/**/html-report/
+results/**/test-results/
+kirim-ke-claude/

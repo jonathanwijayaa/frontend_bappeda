@@ -1,6 +1,8 @@
 import { faker } from "@faker-js/faker";
 import { expect, Page } from "@playwright/test";
 
+import { clickThink, fillThink, typeThink, waitLoaded } from "@/helpers/timing.helper";
+
 const OPD_LIST = [
   "Opd Demo",
   "Dinas Kesehatan",
@@ -117,7 +119,7 @@ export const cancelKaderButton = (page: Page) => page.getByRole("button", { name
 
 export const fillKaderForm = ({ data, page, isSuperAdmin }: IFillKaderForm) => ({
   async fillAlamatPIC() {
-    await kaderField.alamatPIC(page).fill(data["ALAMAT PIC"]);
+    await fillThink(kaderField.alamatPIC(page), data["ALAMAT PIC"]);
   },
 
   async fillAll() {
@@ -136,27 +138,27 @@ export const fillKaderForm = ({ data, page, isSuperAdmin }: IFillKaderForm) => (
   },
 
   async fillDeskripsi() {
-    await kaderField.deskripsi(page).fill(data.DESKRIPSI);
+    await fillThink(kaderField.deskripsi(page), data.DESKRIPSI);
   },
 
   async fillKelurahanPIC() {
-    await kaderField.kelurahanPIC(page).fill(data["KELURAHAN PIC"]);
+    await fillThink(kaderField.kelurahanPIC(page), data["KELURAHAN PIC"]);
   },
 
   async fillKemantren() {
-    await kaderField.kemantren(page).fill(data.KEMANTREN);
+    await fillThink(kaderField.kemantren(page), data.KEMANTREN);
   },
 
   async fillNamaKader() {
-    await kaderField.namaKader(page).fill(data["NAMA KADER"]);
+    await fillThink(kaderField.namaKader(page), data["NAMA KADER"]);
   },
 
   async fillNIKPIC() {
-    await kaderField.nikPIC(page).fill(data["NIK PIC"]);
+    await fillThink(kaderField.nikPIC(page), data["NIK PIC"]);
   },
 
   async fillNoHP() {
-    await kaderField.noHP(page).fill(data["NO HP"]);
+    await fillThink(kaderField.noHP(page), data["NO HP"]);
   },
 
   /**
@@ -166,21 +168,22 @@ export const fillKaderForm = ({ data, page, isSuperAdmin }: IFillKaderForm) => (
   async fillOPD() {
     const textbox = kaderField.opd(page);
 
-    await textbox.click();
+    await clickThink(textbox);
     await textbox.fill("");
-    await textbox.pressSequentially(data.OPD, { delay: 60 });
+    await typeThink(textbox, data.OPD, 60);
 
     const option = page.getByRole("listitem").filter({ hasText: data.OPD }).first();
-    await expect(option).toBeVisible({ timeout: 10_000 });
-    await option.click();
+    await waitLoaded(option, `opsi OPD "${data.OPD}" muncul di daftar`);
+    await clickThink(option);
 
-    await expect(page.getByText("✓ OPD ditemukan dan siap disimpan")).toBeVisible({
-      timeout: 10_000,
-    });
+    await waitLoaded(
+      page.getByText("✓ OPD ditemukan dan siap disimpan"),
+      "konfirmasi OPD valid tampil",
+    );
   },
 
   async fillPIC() {
-    await kaderField.pic(page).fill(data.PIC);
+    await fillThink(kaderField.pic(page), data.PIC);
   },
 
   /** Memeriksa seluruh isian form sudah sesuai data yang dikirim. */
@@ -207,17 +210,19 @@ export const fillKaderForm = ({ data, page, isSuperAdmin }: IFillKaderForm) => (
    * Untuk kasus negatif modalnya sengaja dibiarkan terbuka.
    */
   async submit({ expectClose = true }: { expectClose?: boolean } = {}) {
-    await submitKaderButton(page).click();
+    await clickThink(submitKaderButton(page));
 
     if (expectClose) {
-      await expect(page.getByRole("heading", { name: "Tambah Kader Baru" })).toBeHidden({
-        timeout: 20_000,
-      });
+      await waitLoaded(
+        page.getByRole("heading", { name: "Tambah Kader Baru" }),
+        "modal Tambah Kader tertutup setelah simpan",
+        "hidden",
+      );
     }
   },
 
   async cancel() {
-    await cancelKaderButton(page).click();
+    await clickThink(cancelKaderButton(page));
     await expect(page.getByRole("heading", { name: "Tambah Kader Baru" })).toBeHidden();
   },
 });

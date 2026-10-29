@@ -9,6 +9,8 @@ import Button from "./Button";
 import FileReviewModal from "./FileReviewModal";
 import { REGEX_PATTERNS } from "../../utils/regex";
 
+type ExcelRow = Record<string, unknown>;
+
 interface UploadExcelModalProps {
   dataType: "kader" | "opd" | "relawan";
   isOpdUser?: boolean;
@@ -97,7 +99,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [error, setError] = useState<string>("");
-  const [parsedData, setParsedData] = useState<unknown[]>([]);
+  const [parsedData, setParsedData] = useState<ExcelRow[]>([]);
   const [parsedErrors, setParsedErrors] = useState<
     { errorMessages: string[]; rowNumber: number }[]
   >([]);
@@ -122,7 +124,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
     onDrop,
   });
 
-  const validateDataAndGetErrors = (data: unknown[]) => {
+  const validateDataAndGetErrors = (data: ExcelRow[]) => {
     if (!data || data.length === 0)
       return {
         globalError: "File tidak mengandung data. Pastikan ada baris isi di bawah header.",
@@ -147,7 +149,7 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
     const fieldsToCheck = getRequiredFieldChecks(dataType, isOpdUser);
 
     // Helper membaca nilai cell murni (Ditarik ke atas agar bisa dipakai di Phase 1)
-    const getRowVal = (row: unknown, possibleKeys: string[]) => {
+    const getRowVal = (row: ExcelRow, possibleKeys: string[]) => {
       const key = Object.keys(row).find((k) =>
         possibleKeys.includes(k.toLowerCase().replace(/[^a-z0-9]/g, "")),
       );
@@ -318,13 +320,14 @@ const UploadExcelModal: React.FC<UploadExcelModalProps> = ({
       const workbook = XLSX.read(data, { type: "array" });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+      const jsonData = XLSX.utils.sheet_to_json<ExcelRow>(worksheet, { defval: "" });
 
-      const sanitizedData = jsonData.map((row: unknown) => {
+      const sanitizedData = jsonData.map((row) => {
         const newRow = { ...row };
         for (const key in newRow) {
-          if (typeof newRow[key] === "string" && newRow[key].startsWith("'")) {
-            newRow[key] = newRow[key].substring(1);
+          const value = newRow[key];
+          if (typeof value === "string" && value.startsWith("'")) {
+            newRow[key] = value.substring(1);
           }
 
           const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");

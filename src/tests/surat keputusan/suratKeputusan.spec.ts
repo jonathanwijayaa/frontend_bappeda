@@ -1,6 +1,7 @@
 import { credentials } from "@/helpers/credentials.helper";
 import { buildSKData, fillSKForm } from "@/helpers/formSuratKeputusan.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { clickThink, fillThink, LOAD_TIME, pressThink, uploadThink } from "@/helpers/timing.helper";
 import { expect, Page, test } from "@playwright/test";
 import path from "path";
 
@@ -28,7 +29,7 @@ for (const { label, creds } of roles) {
       });
 
       await expect(page).toHaveURL(/dashboard/);
-      await page.getByRole("link", { name: "Surat Keputusan" }).click();
+      await clickThink(page.getByRole("link", { name: "Surat Keputusan" }));
       await expect(page).toHaveURL(/surat-keputusan/);
     });
 
@@ -42,7 +43,7 @@ for (const { label, creds } of roles) {
         isSuperAdmin: label === "Super Admin",
       });
 
-      await page.getByRole("button", { name: /upload sk/i }).click();
+      await clickThink(page.getByRole("button", { name: /upload sk/i }));
 
       await form.fillAll();
       await form.expectFillALL();
@@ -55,12 +56,12 @@ for (const { label, creds } of roles) {
     test(`TCSK.2 ${label} cancels the SK upload process`, async ({ page }) => {
       const filePath = path.resolve("src/assets/files/Sample_SK.pdf");
 
-      await page.getByRole("button", { name: /upload sk/i }).click();
+      await clickThink(page.getByRole("button", { name: /upload sk/i }));
 
       const fileInput = page.locator("input[type='file']");
-      await fileInput.setInputFiles(filePath);
+      await uploadThink(fileInput, filePath);
 
-      await page.getByRole("button", { name: /batal/i }).click();
+      await clickThink(page.getByRole("button", { name: /batal/i }));
 
       await expect(
         page.getByRole("heading", { name: "Surat Keputusan", exact: true }),
@@ -158,8 +159,8 @@ for (const { label, creds } of roles) {
             keyword = searchCase.transform ? searchCase.transform(keyword) : keyword;
           }
 
-          await searchInput.fill(keyword);
-          await searchInput.press("Enter");
+          await fillThink(searchInput, keyword);
+          await pressThink(searchInput, "Enter");
 
           if (searchCase.expectNoData) {
             await expect(
@@ -182,8 +183,8 @@ for (const { label, creds } of roles) {
     // TCSK.9 Export Tabel
     test(`TCSK.9 ${label} exports the Daftar Surat Keputusan table`, async ({ page }) => {
       const [download] = await Promise.all([
-        page.waitForEvent("download"),
-        page.getByRole("button", { name: /ekspor pdf/i }).click(),
+        page.waitForEvent("download", { timeout: LOAD_TIME }),
+        clickThink(page.getByRole("button", { name: /ekspor pdf/i })),
       ]);
 
       expect(download.suggestedFilename()).toMatch(/sk|surat-keputusan/i);
@@ -192,12 +193,9 @@ for (const { label, creds } of roles) {
     // TCSK.10-11 Detail SK
     test.describe(`TCSK.10-11 ${label} Detail Surat Keputusan`, () => {
       test.beforeEach(async ({ page }) => {
-        await page
-          .getByRole("button", { name: /detail/i })
-          .first()
-          .click();
+        await clickThink(page.getByRole("button", { name: /detail/i }).first());
         await expect(page.getByRole("heading", { name: /detail surat keputusan/i })).toBeVisible();
-        await expect(page.getByText("Memuat detail...")).toBeHidden({ timeout: 20_000 });
+        await expect(page.getByText("Memuat detail...")).toBeHidden({ timeout: LOAD_TIME });
       });
 
       // TCSK.10
@@ -211,7 +209,7 @@ for (const { label, creds } of roles) {
         // Tombol itu hanya ada untuk SK yang punya file dan tidak punya teks, jadi
         // dicari sebagai tombol tanpa teks di dalam baris tabel — dulu memakai
         // class CSS dan indeks tombol ke-6 di seluruh halaman.
-        await modalCloseButton(page, "Detail Surat Keputusan").click();
+        await clickThink(modalCloseButton(page, "Detail Surat Keputusan"));
 
         const tombolPreview = page
           .locator("table tbody tr")
@@ -219,7 +217,7 @@ for (const { label, creds } of roles) {
           .filter({ hasNotText: /\S/ })
           .first();
         test.skip((await tombolPreview.count()) === 0, "Tidak ada SK berfile di halaman ini");
-        await tombolPreview.click();
+        await clickThink(tombolPreview);
 
         await expect(page.getByRole("heading", { name: "Preview Surat Keputusan" })).toBeVisible();
         await expect(

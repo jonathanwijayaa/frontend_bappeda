@@ -2,10 +2,8 @@ import { generateKaderExcel } from "@/helpers/baseExcel.helper";
 import { credentials } from "@/helpers/credentials.helper";
 import { buildKaderData, fillKaderForm, kaderField } from "@/helpers/formKader.helper";
 import { loginBAPPEDA } from "@/helpers/loginBAPPEDA.helper";
+import { clickThink, fillThink, LOAD_TIME, uploadThink } from "@/helpers/timing.helper";
 import { expect, Page, test } from "@playwright/test";
-
-// Form kader punya banyak field dan beberapa test menunggu balasan server.
-test.describe.configure({ timeout: 120_000 });
 
 const BASE_URL = "https://frontend-bappeda.vercel.app/";
 
@@ -57,7 +55,7 @@ const tambahKaderButton = (page: Page) =>
   page.getByRole("button", { name: "Tambah Kader Baru", exact: true });
 
 const bukaFormTambah = async (page: Page) => {
-  await tambahKaderButton(page).click();
+  await clickThink(tambahKaderButton(page));
   await expect(page.getByRole("heading", { name: "Tambah Kader Baru" })).toBeVisible();
 };
 
@@ -86,10 +84,10 @@ for (const role of roles) {
       });
 
       await expect(page).toHaveURL(/dashboard/);
-      await page.getByRole("link", { name: "Kader", exact: true }).click();
+      await clickThink(page.getByRole("link", { name: "Kader", exact: true }));
       await expect(page).toHaveURL(/daftar-kader/);
 
-      await expect(page.getByText(/memuat data kader/i)).toBeHidden({ timeout: 30_000 });
+      await expect(page.getByText(/memuat data kader/i)).toBeHidden({ timeout: LOAD_TIME });
       await expect(barisData(page).first()).toBeVisible();
     });
 
@@ -153,7 +151,7 @@ for (const role of roles) {
 
         // Notifikasi cepat hilang, jadi keberhasilan dipastikan dari datanya:
         // kader baru harus bisa ditemukan lewat pencarian.
-        await searchField(page).fill(kaderData["NAMA KADER"]);
+        await fillThink(searchField(page), kaderData["NAMA KADER"]);
         await expect(barisData(page).first()).toBeVisible();
 
         // Aplikasi menyimpan nama lewat toTitleCase(), jadi kapitalisasinya bisa
@@ -174,7 +172,7 @@ for (const role of roles) {
 
         // URL halaman tidak pernah berubah saat modal dibuka/ditutup, jadi yang
         // diperiksa adalah modalnya benar-benar tertutup dan data tidak tersimpan
-        await searchField(page).fill(kaderData["NAMA KADER"]);
+        await fillThink(searchField(page), kaderData["NAMA KADER"]);
         await expect(emptyState(page)).toBeVisible();
       });
     });
@@ -287,7 +285,7 @@ for (const role of roles) {
         }) => {
           // Field NIK memakai maxLength=16, jadi kelebihan digit tidak pernah
           // sampai ke validasi aplikasi — input-nya yang memotong.
-          await kaderField.nikPIC(page).fill("3201000000000000999");
+          await fillThink(kaderField.nikPIC(page), "3201000000000000999");
 
           await expect(kaderField.nikPIC(page)).toHaveValue("3201000000000000");
         });
@@ -448,7 +446,7 @@ for (const role of roles) {
 
         // Semua field diisi kecuali OPD, yang hanya diketik bebas tanpa dipilih
         await form.fillAll();
-        await kaderField.opd(page).fill("OPD Yang Tidak Terdaftar");
+        await fillThink(kaderField.opd(page), "OPD Yang Tidak Terdaftar");
 
         await form.submit({ expectClose: false });
 
@@ -460,16 +458,16 @@ for (const role of roles) {
     test(`TCDK.10 ${role.label} upload Kader data excel file`, async ({ page }) => {
       const filePath = generateKaderExcel({ total: 5, type: "valid" });
 
-      await page.getByRole("button", { name: "Unggah dari Excel" }).click();
-      await page.locator("input[type='file']").setInputFiles(filePath);
-      await page.getByRole("button", { name: "Lanjutkan" }).click();
+      await clickThink(page.getByRole("button", { name: "Unggah dari Excel" }));
+      await uploadThink(page.locator("input[type='file']"), filePath);
+      await clickThink(page.getByRole("button", { name: "Lanjutkan" }));
 
       // Dipastikan dulu semua baris lolos validasi, supaya kegagalan data
       // tidak terbaca sebagai kegagalan proses simpan
       await expect(page.getByRole("heading", { name: "Data Kotor (0)" })).toBeVisible();
-      await page.getByRole("button", { name: "Simpan Data Bersih" }).click();
+      await clickThink(page.getByRole("button", { name: "Simpan Data Bersih" }));
 
-      await expect(page.getByText(/berhasil|success/i)).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByText(/berhasil|success/i)).toBeVisible({ timeout: LOAD_TIME });
     });
 
     // TCDK.11 Upload Invalid Excel
@@ -477,9 +475,9 @@ for (const role of roles) {
       const totalBarisInvalid = 3;
       const filePath = generateKaderExcel({ total: totalBarisInvalid, type: "invalid" });
 
-      await page.getByRole("button", { name: "Unggah dari Excel" }).click();
-      await page.locator("input[type='file']").setInputFiles(filePath);
-      await page.getByRole("button", { name: "Lanjutkan" }).click();
+      await clickThink(page.getByRole("button", { name: "Unggah dari Excel" }));
+      await uploadThink(page.locator("input[type='file']"), filePath);
+      await clickThink(page.getByRole("button", { name: "Lanjutkan" }));
 
       // Seluruh baris ditolak: tidak ada data bersih untuk disimpan
       await expect(page.getByRole("heading", { name: "Data Bersih (0)" })).toBeVisible();
@@ -503,8 +501,8 @@ for (const role of roles) {
 
     // TCDK.12 Download Template Excel
     test(`TCDK.12 ${role.label} click Templat Excel Data Kader hyperlink`, async ({ page }) => {
-      await page.getByRole("button", { name: "Unggah dari Excel" }).click();
-      await page.getByRole("link", { name: /templat excel data kader/i }).click();
+      await clickThink(page.getByRole("button", { name: "Unggah dari Excel" }));
+      await clickThink(page.getByRole("link", { name: /templat excel data kader/i }));
 
       // Tautannya mengarah ke halaman Dokumen tempat seluruh template disimpan
       await expect(page).toHaveURL(/dokumen/);
@@ -515,10 +513,10 @@ for (const role of roles) {
     test(`TCDK.13 ${role.label} cancel upload Kader data excel`, async ({ page }) => {
       const filePath = generateKaderExcel({ total: 1, type: "valid" });
 
-      await page.getByRole("button", { name: "Unggah dari Excel" }).click();
-      await page.locator("input[type='file']").setInputFiles(filePath);
+      await clickThink(page.getByRole("button", { name: "Unggah dari Excel" }));
+      await uploadThink(page.locator("input[type='file']"), filePath);
 
-      await modalCloseButton(page, "Unggah Data Kader").click();
+      await clickThink(modalCloseButton(page, "Unggah Data Kader"));
 
       // Modal harus tertutup — sebelumnya hanya memeriksa judul halaman, yang
       // tetap terlihat di belakang modal sehingga selalu lolos
@@ -591,7 +589,7 @@ for (const role of roles) {
           const keyword = searchCase.kata(baris);
 
           // Pencarian berjalan saat mengetik (onChange), bukan saat menekan Enter
-          await searchField(page).fill(keyword);
+          await fillThink(searchField(page), keyword);
 
           if (!searchCase.adaHasil) {
             await expect(emptyState(page)).toBeVisible();
@@ -618,8 +616,8 @@ for (const role of roles) {
     // TCDK.22 Export Tabel
     test(`TCDK.22 ${role.label} export Daftar Kader tabel`, async ({ page }) => {
       const [download] = await Promise.all([
-        page.waitForEvent("download"),
-        page.getByRole("button", { name: "Ekspor PDF" }).click(),
+        page.waitForEvent("download", { timeout: LOAD_TIME }),
+        clickThink(page.getByRole("button", { name: "Ekspor PDF" })),
       ]);
 
       expect(download.suggestedFilename()).toMatch(/^daftar-kader-\d{4}-\d{2}-\d{2}\.pdf$/);
@@ -631,7 +629,7 @@ for (const role of roles) {
       const nama = (await nilaiKolom(page, role.kolom.nama))[0];
       const pic = (await nilaiKolom(page, role.kolom.pic))[0];
 
-      await barisData(page).first().getByRole("button", { name: "Detail" }).click();
+      await clickThink(barisData(page).first().getByRole("button", { name: "Detail" }));
 
       await expect(page.getByRole("heading", { name: "Detail Kader" })).toBeVisible();
       await expect(detailField(page, "Nama Kader")).toHaveValue(nama);
@@ -645,16 +643,16 @@ for (const role of roles) {
 
       // Tombol simpan baru aktif setelah ada perubahan
       await expect(page.getByRole("button", { name: "Simpan Perubahan" })).toBeDisabled();
-      await detailField(page, "Deskripsi").fill("Deskripsi uji perubahan");
+      await fillThink(detailField(page, "Deskripsi"), "Deskripsi uji perubahan");
       await expect(page.getByRole("button", { name: "Simpan Perubahan" })).toBeEnabled();
     });
 
     // TCDK.30 Modal Ganti PIC
     test(`TCDK.30 ${role.label} opens the change PIC form`, async ({ page }) => {
-      await barisData(page).first().getByRole("button", { name: "Detail" }).click();
+      await clickThink(barisData(page).first().getByRole("button", { name: "Detail" }));
       await expect(page.getByRole("heading", { name: "Detail Kader" })).toBeVisible();
 
-      await page.getByRole("button", { name: "Ganti PIC" }).click();
+      await clickThink(page.getByRole("button", { name: "Ganti PIC" }));
 
       await expect(page.getByRole("heading", { name: "Ganti PIC Kader" })).toBeVisible();
       await expect(page.getByRole("textbox", { name: "16 digit NIK" })).toBeVisible();
@@ -665,10 +663,10 @@ for (const role of roles) {
       await expect(page.getByRole("textbox", { name: "Alamat KTP" })).toBeVisible();
 
       // Field kosong ditolak sebelum permintaan dikirim ke server
-      await page.getByRole("button", { name: "Simpan PIC Baru" }).click();
+      await clickThink(page.getByRole("button", { name: "Simpan PIC Baru" }));
       await expect(page.getByText(/semua data pribadi pic wajib diisi/i)).toBeVisible();
 
-      await page.getByRole("button", { name: "Batal" }).click();
+      await clickThink(page.getByRole("button", { name: "Batal" }));
       await expect(page.getByRole("heading", { name: "Ganti PIC Kader" })).toBeHidden();
     });
 
@@ -684,23 +682,23 @@ for (const role of roles) {
         // Label tombolnya mengikuti status baris: "Nonaktif" untuk kader aktif,
         // "Aktifkan" untuk kader yang sedang tidak aktif.
         const tombolToggle = statusAwal === "Aktif" ? "Nonaktif" : "Aktifkan";
-        await baris.getByRole("button", { name: tombolToggle }).click();
+        await clickThink(baris.getByRole("button", { name: tombolToggle }));
 
         await expect(page.getByRole("heading", { name: "Konfirmasi" })).toBeVisible();
-        await page.getByRole("button", { name: "Lanjutkan" }).click();
+        await clickThink(page.getByRole("button", { name: "Lanjutkan" }));
 
         await expect(page.getByRole("heading", { name: "Konfirmasi" })).toBeHidden();
         await expect
-          .poll(async () => (await nilaiKolom(page, role.kolom.status))[0], { timeout: 20_000 })
+          .poll(async () => (await nilaiKolom(page, role.kolom.status))[0], { timeout: LOAD_TIME })
           .not.toBe(statusAwal);
 
         // Kembalikan ke status semula supaya data tidak berubah setelah pengujian
         const tombolKembali = statusAwal === "Aktif" ? "Aktifkan" : "Nonaktif";
-        await barisData(page).first().getByRole("button", { name: tombolKembali }).click();
-        await page.getByRole("button", { name: "Lanjutkan" }).click();
+        await clickThink(barisData(page).first().getByRole("button", { name: tombolKembali }));
+        await clickThink(page.getByRole("button", { name: "Lanjutkan" }));
 
         await expect
-          .poll(async () => (await nilaiKolom(page, role.kolom.status))[0], { timeout: 20_000 })
+          .poll(async () => (await nilaiKolom(page, role.kolom.status))[0], { timeout: LOAD_TIME })
           .toBe(statusAwal);
       });
 
@@ -710,10 +708,10 @@ for (const role of roles) {
         const statusAwal = (await nilaiKolom(page, role.kolom.status))[0];
         const tombolToggle = statusAwal === "Aktif" ? "Nonaktif" : "Aktifkan";
 
-        await baris.getByRole("button", { name: tombolToggle }).click();
+        await clickThink(baris.getByRole("button", { name: tombolToggle }));
         await expect(page.getByRole("heading", { name: "Konfirmasi" })).toBeVisible();
 
-        await page.getByRole("button", { name: "Batal" }).click();
+        await clickThink(page.getByRole("button", { name: "Batal" }));
 
         // Dialog tertutup dan status barisnya tidak berubah
         await expect(page.getByRole("heading", { name: "Konfirmasi" })).toBeHidden();
@@ -732,12 +730,12 @@ for (const role of roles) {
 
       const halamanSatu = await nilaiKolom(page, role.kolom.nama);
 
-      await page.getByRole("button", { name: "Selanjutnya" }).click();
+      await clickThink(page.getByRole("button", { name: "Selanjutnya" }));
 
       await expect(infoJumlah(page)).toHaveText(new RegExp(`Menampilkan 6-10 dari ${total} Kader`));
       expect(await nilaiKolom(page, role.kolom.nama)).not.toEqual(halamanSatu);
 
-      await page.getByRole("button", { name: "Sebelumnya" }).click();
+      await clickThink(page.getByRole("button", { name: "Sebelumnya" }));
 
       await expect(infoJumlah(page)).toHaveText(new RegExp(`Menampilkan 1-5 dari ${total} Kader`));
       expect(await nilaiKolom(page, role.kolom.nama)).toEqual(halamanSatu);
