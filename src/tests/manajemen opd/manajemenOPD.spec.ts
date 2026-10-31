@@ -176,6 +176,7 @@ test.describe("TCMO.6 Super Admin fill invalid OPD name", () => {
 });
 
 // ================ Function tidak digunakan ===================
+// Deferred TC: TCMO.7 ditunda, skrip di bawah tidak dijalankan.
 // // TCMO.7 Invalid Status
 // test.describe("TCMO.7 Super Admin fill invalid Status", () => {
 // test.beforeEach(async ({ page }) => {

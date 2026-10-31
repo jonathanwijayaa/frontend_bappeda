@@ -5,6 +5,9 @@ import { expect, Page, test } from "@playwright/test";
 
 const BASE_URL = "https://frontend-bappeda.vercel.app/";
 
+// Deferred TC: TCLA.1 dan TCLA.10 ditunda (dilewati, tidak dijalankan)
+const DEFERRED = { annotation: { description: "Deferred TC", type: "deferred" } };
+
 // ── Locator ──────────────────────────────────────────────────────────────
 const searchField = (page: Page) => page.getByPlaceholder("Cari");
 
@@ -145,16 +148,20 @@ test.describe("Log Aktifitas - Super Admin", () => {
   // TCLA.1-3 Filter
   test.describe("TCLA.1-3 Super Admin Filter", () => {
     // TCLA.1 Urutan waktu log
-    test("TCLA.1 Super Admin views the log sorted by newest activity", async ({ page }) => {
-      // Halaman ini tidak punya filter periode waktu; yang dijamin adalah log
-      // ditampilkan berurutan dari aktivitas terbaru.
-      const waktu = (await nilaiKolom(page, "waktu")).map(waktuKeAngka);
+    test.skip(
+      "TCLA.1 Super Admin views the log sorted by newest activity",
+      DEFERRED,
+      async ({ page }) => {
+        // Halaman ini tidak punya filter periode waktu; yang dijamin adalah log
+        // ditampilkan berurutan dari aktivitas terbaru.
+        const waktu = (await nilaiKolom(page, "waktu")).map(waktuKeAngka);
 
-      expect(waktu.length).toBeGreaterThan(1);
-      for (let i = 1; i < waktu.length; i++) {
-        expect(waktu[i - 1]).toBeGreaterThanOrEqual(waktu[i]);
-      }
-    });
+        expect(waktu.length).toBeGreaterThan(1);
+        for (let i = 1; i < waktu.length; i++) {
+          expect(waktu[i - 1]).toBeGreaterThanOrEqual(waktu[i]);
+        }
+      },
+    );
 
     // TCLA.2 Filter jenis aksi
     test("TCLA.2 Super Admin filters data by activity type", async ({ page }) => {
@@ -277,8 +284,8 @@ test.describe("Log Aktifitas - Super Admin", () => {
   });
 
   // TCLA.10 Export Log Table
-  // BELUM ADA DI APLIKASI: halaman Log Aktivitas tidak punya tombol export
-  // seperti Data Relawan / Manajemen OPD, sehingga test case-nya ditunda
+  // Deferred TC. BELUM ADA DI APLIKASI: halaman Log Aktivitas tidak punya tombol
+  // export seperti Data Relawan / Manajemen OPD, sehingga test case-nya ditunda
   // sampai fiturnya dibuat. Lihat catatan di laporan.
 
   // TCLA.11 Navigate to Log Table
@@ -408,32 +415,32 @@ test.describe("Log Aktifitas - Super Admin", () => {
 
   // TCLA.18 Isi detail perubahan
   test("TCLA.18 Super Admin views the recorded value changes", async ({ page }) => {
+    // Perubahan nilai (Sebelum/Sesudah) hanya ditampilkan untuk log "Ubah Data"
+    await pilihFilter(page, filterAksi(page), "Ubah Data");
     await bukaDetail(page);
 
-    const tanpaIsi = detailModal(page).getByText(
-      /tidak ada detail data|tidak ada perubahan nilai yang terdeteksi/i,
-    );
-    test.skip(
-      await tanpaIsi.isVisible(),
-      "API /admin/logs tidak mengirim old_value & new_value, sehingga detail perubahan selalu kosong",
-    );
-
-    // Blok perubahan menampilkan nama kolom beserta nilainya
+    // Nilai lama & baru diambil dari old_value / new_value pada respons
+    // /admin/logs; bila keduanya tidak terkirim, modal hanya menampilkan
+    // "Tidak ada perubahan nilai yang terdeteksi."
     await expect(
       detailModal(page)
-        .getByText(/^Sebelum$|^Sesudah$/)
-        .first()
-        .or(tanpaIsi),
+        .getByText(/^Sebelum$/)
+        .first(),
+      "Detail perubahan (Sebelum/Sesudah) tidak tampil pada log Ubah Data",
+    ).toBeVisible();
+    await expect(
+      detailModal(page)
+        .getByText(/^Sesudah$/)
+        .first(),
     ).toBeVisible();
   });
 
   // TCLA.19 Pencarian berdasarkan NIK
   test("TCLA.19 Super Admin searches a log by NIK", async ({ page }) => {
+    // NIK pengguna diambil dari field nik pada respons /admin/logs; bila tidak
+    // terkirim, seluruh kolom NIK berisi "-" dan tidak ada yang bisa dicari.
     const nikTerisi = (await nilaiKolom(page, "nik")).find((nilai) => nilai !== "-");
-    test.skip(
-      !nikTerisi,
-      "API /admin/logs tidak mengirim field nik, sehingga kolom NIK selalu kosong",
-    );
+    expect(nikTerisi, 'Kolom NIK di tabel log kosong (semua baris berisi "-")').toBeDefined();
 
     await fillThink(searchField(page), nikTerisi!);
 
