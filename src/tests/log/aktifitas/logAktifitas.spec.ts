@@ -5,7 +5,7 @@ import { expect, Page, test } from "@playwright/test";
 
 const BASE_URL = "https://frontend-bappeda.vercel.app/";
 
-// Deferred TC: TCLA.1, TCLA.10, dan TCLA.11 ditunda (dilewati, tidak dijalankan)
+// Deferred TC: TCLA.1 dan TCLA.10 ditunda (dilewati, tidak dijalankan)
 const DEFERRED = { annotation: { description: "Deferred TC", type: "deferred" } };
 
 // ── Locator ──────────────────────────────────────────────────────────────
@@ -289,16 +289,12 @@ test.describe("Log Aktifitas - Super Admin", () => {
   // sampai fiturnya dibuat. Lihat catatan di laporan.
 
   // TCLA.11 Navigate to Log Table
-  test.skip(
-    "TCLA.11 Super Admin navigates to the Log Aktivitas table",
-    DEFERRED,
-    async ({ page }) => {
-      await expect(page.getByRole("heading", { name: "Log Aktivitas" })).toBeVisible();
-      await expect(page.getByRole("table")).toBeVisible();
-      await expect(ringkasan(page)).toBeVisible();
-      await expect(infoHalaman(page)).toBeVisible();
-    },
-  );
+  test("TCLA.11 Super Admin navigates to the Log Aktivitas table", async ({ page }) => {
+    await expect(page.getByRole("heading", { name: "Log Aktivitas" })).toBeVisible();
+    await expect(page.getByRole("table")).toBeVisible();
+    await expect(ringkasan(page)).toBeVisible();
+    await expect(infoHalaman(page)).toBeVisible();
+  });
 
   // TCLA.12 Kombinasi filter aksi + tabel
   test("TCLA.12 Super Admin combines the action and table filters", async ({ page }) => {
