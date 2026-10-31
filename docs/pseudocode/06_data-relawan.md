@@ -167,8 +167,8 @@ UNTUK SETIAP peran DALAM {Super Admin, Admin OPD} LAKUKAN
         PASTIKAN field "Penugasan" bernilai data.penugasan
     AKHIR TEST
 
-    // TCDR.14 tidak diotomasi: skrip uji nomor SK tidak valid
-    //     dinonaktifkan (dikomentari di spec)
+    // TCDR.14 Deferred TC: skrip uji nomor SK tidak valid ditunda
+    //     (dikomentari di spec)
 
     TEST "TCDR.15 Pilih status keaktifan"
         data ← BangkitkanDataRelawan()
@@ -249,7 +249,13 @@ UNTUK SETIAP peran DALAM {Super Admin, Admin OPD} LAKUKAN
         PASTIKAN judul "Detail Relawan" tampil (maks LOAD_TIME)
     AKHIR TEST
 
-    // TCDR.28–29: detail relawan sudah terbuka
+    PROSEDUR BukaDetailRelawan(nik)
+        ISI pencarian "Cari relawan" dengan nik; TUNGGU THINK_TIME
+        KLIK tombol "Detail" pada baris nik;  TUNGGU THINK_TIME
+        PASTIKAN judul "Detail Relawan" tampil (maks LOAD_TIME)
+    AKHIR PROSEDUR
+
+    // TCDR.28–30: detail relawan pertama sudah terbuka
     TEST "TCDR.28 Ubah data detail relawan"
         KLIK tombol "Edit";                   TUNGGU THINK_TIME
         data ← BangkitkanDataRelawan()
@@ -261,6 +267,8 @@ UNTUK SETIAP peran DALAM {Super Admin, Admin OPD} LAKUKAN
     AKHIR TEST
 
     TEST "TCDR.29 Ubah data penugasan relawan"
+        nik ← nilai field "NIK"
+        jumlahAwal ← jumlah blok penugasan
         KLIK tombol "Edit";                   TUNGGU THINK_TIME
         data ← BangkitkanDataRelawan()
         PilihOPD(data, peran)
@@ -268,9 +276,31 @@ UNTUK SETIAP peran DALAM {Super Admin, Admin OPD} LAKUKAN
         ISI "Penugasan" dengan data.penugasan; TUNGGU THINK_TIME
         KLIK tombol "Simpan";                 TUNGGU THINK_TIME
         PASTIKAN notifikasi "berhasil" tampil (maks LOAD_TIME)
+        BukaDetailRelawan(nik)
+        // Pengecekan lunak: semua ketidaksesuaian dilaporkan
+        PASTIKAN jumlah blok penugasan = jumlahAwal
+            // bila tidak: penugasan terduplikasi
+        PASTIKAN penugasan pertama ber-OPD data.opd,
+            ber-Kader data.kader, dan berisi data.penugasan
     AKHIR TEST
 
-    // TCDR.30–31 tidak diotomasi: skrip dinonaktifkan sementara
+    TEST "TCDR.30 Hapus penugasan pada form detail"
+        nik ← nilai field "NIK"
+        jumlahAwal ← jumlah blok penugasan
+        PASTIKAN jumlahAwal > 0
+        KLIK tombol "Edit";                   TUNGGU THINK_TIME
+        // tanpa dialog konfirmasi
+        KLIK tombol "Hapus Penugasan" pertama; TUNGGU THINK_TIME
+        PASTIKAN notifikasi "berhasil" tampil (maks LOAD_TIME)
+        PASTIKAN jumlah blok penugasan = jumlahAwal - 1
+        KLIK tombol "Simpan";                 TUNGGU THINK_TIME
+        PASTIKAN notifikasi "berhasil" tampil (maks LOAD_TIME)
+        BukaDetailRelawan(nik)
+        PASTIKAN jumlah blok penugasan = jumlahAwal - 1
+            // bila tidak: penugasan yang dihapus dibuat ulang
+    AKHIR TEST
+
+    // TCDR.31 tidak diotomasi: skrip dinonaktifkan sementara
     //     karena form penugasan berubah
 
     // -- TCDR.32–35 Pengajuan Perubahan Data (berurutan) ---------
@@ -330,4 +360,4 @@ UNTUK SETIAP peran DALAM {Super Admin, Admin OPD} LAKUKAN
 AKHIR UNTUK
 ```
 
-**TC-ID yang dicakup (32):** TCDR.1, TCDR.2, TCDR.3, TCDR.4, TCDR.5, TCDR.6, TCDR.7, TCDR.8, TCDR.9, TCDR.10, TCDR.11, TCDR.12, TCDR.13, TCDR.15, TCDR.16, TCDR.17, TCDR.18, TCDR.19, TCDR.20, TCDR.21, TCDR.22, TCDR.23, TCDR.24, TCDR.25, TCDR.26, TCDR.27, TCDR.28, TCDR.29, TCDR.32, TCDR.33, TCDR.34, TCDR.35
+**TC-ID yang dicakup (33):** TCDR.1, TCDR.2, TCDR.3, TCDR.4, TCDR.5, TCDR.6, TCDR.7, TCDR.8, TCDR.9, TCDR.10, TCDR.11, TCDR.12, TCDR.13, TCDR.15, TCDR.16, TCDR.17, TCDR.18, TCDR.19, TCDR.20, TCDR.21, TCDR.22, TCDR.23, TCDR.24, TCDR.25, TCDR.26, TCDR.27, TCDR.28, TCDR.29, TCDR.30, TCDR.32, TCDR.33, TCDR.34, TCDR.35

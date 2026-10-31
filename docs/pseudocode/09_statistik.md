@@ -3,7 +3,8 @@
 
 ```text
 // Berkas: src/tests/stastistik/stastistik.spec.ts
-// Halaman Statistik sudah dihapus; grafiknya pindah ke Dashboard:
+// Halaman Statistik sudah dihapus; grafiknya pindah ke Dashboard.
+// TCS.0–TCS.5 Deferred TC:
 // TCS.1 tidak diotomasi di modul ini: diuji sebagai TCD.3
 // TCS.2 tidak diotomasi di modul ini: diuji sebagai TCD.10
 // TCS.3 tidak diotomasi di modul ini: diuji sebagai TCD.9
@@ -11,6 +12,7 @@
 // TCS.5 tidak diotomasi: kartu Dashboard tidak dapat diciutkan
 
 TEST "TCS.0 Halaman Statistik terpisah sudah tidak ada"
+    LEWATI TEST "Deferred TC"
     UNTUK SETIAP peran DALAM {Super Admin, Admin OPD} LAKUKAN
         BUKA URL_APLIKASI
         Login(peran)

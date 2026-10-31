@@ -114,7 +114,7 @@ UNTUK SETIAP (field, kasus) DALAM {(nama, kasusNama),
     AKHIR UNTUK
 AKHIR UNTUK
 
-// TCMO.7 tidak diotomasi: skrip status OPD dinonaktifkan (fungsi
+// TCMO.7 Deferred TC: skrip status OPD dinonaktifkan (fungsi
 //     pengisian Status tidak dipakai pada form Tambah OPD)
 
 TEST "TCMO.11 Unggah Excel OPD valid"

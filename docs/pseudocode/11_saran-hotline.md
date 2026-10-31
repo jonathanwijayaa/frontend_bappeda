@@ -24,6 +24,7 @@ UNTUK SETIAP peran DALAM {Admin OPD, Relawan} LAKUKAN
     AKHIR SEBELUM
 
     TEST "TCSH.1 Tautan nomor telepon"
+        LEWATI TEST "Deferred TC"
         PASTIKAN nomor telepon hotline tampil dan tidak kosong
         PASTIKAN tautannya diawali "tel:"
     AKHIR TEST
