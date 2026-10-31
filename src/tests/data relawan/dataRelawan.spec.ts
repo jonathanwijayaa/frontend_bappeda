@@ -30,6 +30,20 @@ const modalCloseButton = (page: Page, judul: string) =>
     .locator(`xpath=//h2[normalize-space(text())="${judul}"]/parent::div/following-sibling::button`)
     .first();
 
+// Field pada modal Detail Relawan: <label>X</label> -> input (atau pembungkusnya).
+// Label tidak terhubung ke input, jadi dicari lewat strukturnya. Index dipakai
+// bila ada lebih dari satu blok penugasan.
+const detailField = (page: Page, label: string, index = 0) =>
+  page
+    .locator(`xpath=//label[normalize-space(text())="${label}"]/following-sibling::*[1]`)
+    .nth(index)
+    .locator("xpath=descendant-or-self::input")
+    .first();
+
+// Satu blok penugasan = satu label "Penugasan" di Daftar Penugasan
+const penugasanBlocks = (page: Page) =>
+  page.locator(`xpath=//label[normalize-space(text())="Penugasan"]`);
+
 const roles = [
   { label: "Super Admin", creds: credentials.superAdmin },
   { label: "OPD", creds: credentials.opd },
@@ -690,6 +704,10 @@ for (const { label, creds } of roles) {
 
       // TCDR.29
       test(`TCDR.29 ${label} edit Relawan penugasan detail form`, async ({ page }) => {
+        // Kondisi awal untuk dibandingkan setelah simpan
+        const nik = await detailField(page, "NIK").inputValue();
+        const jumlahPenugasanAwal = await penugasanBlocks(page).count();
+
         await clickThink(page.getByRole("button", { name: /edit/i }));
 
         const relawanData = buildRelawanData();
@@ -700,6 +718,32 @@ for (const { label, creds } of roles) {
         await clickThink(page.getByRole("button", { name: /simpan/i }));
 
         await expect(page.getByText(/berhasil|success/i)).toBeVisible();
+
+        // Buka kembali Detail relawan yang sama: perubahan harus tersimpan pada
+        // penugasan yang diedit, bukan menjadi penugasan baru (duplikat).
+        await fillThink(searchRelawan(page), nik);
+        await clickThink(
+          relawanTable(page).getByRole("row").filter({ hasText: nik }).getByRole("button", {
+            name: "Detail",
+          }),
+        );
+        await expect(page.getByRole("heading", { name: /detail relawan/i })).toBeVisible();
+
+        expect
+          .soft(
+            await penugasanBlocks(page).count(),
+            "Jumlah penugasan berubah setelah simpan (penugasan terduplikasi)",
+          )
+          .toBe(jumlahPenugasanAwal);
+        await expect
+          .soft(opdField(page), "OPD penugasan yang diedit tidak tersimpan")
+          .toHaveValue(relawanData.OPD);
+        await expect
+          .soft(kaderField(page), "Kader penugasan yang diedit tidak tersimpan")
+          .toHaveValue(relawanData.KADER);
+        await expect
+          .soft(detailField(page, "Penugasan"), "Isi field Penugasan tidak tersimpan")
+          .toHaveValue(relawanData.PENUGASAN);
       });
 
       // -------- TCDR.30 - TCDR.31 dihilangkan sementara untuk penyesuaian dengan perubahan form penugasan --------
