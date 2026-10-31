@@ -415,32 +415,32 @@ test.describe("Log Aktifitas - Super Admin", () => {
 
   // TCLA.18 Isi detail perubahan
   test("TCLA.18 Super Admin views the recorded value changes", async ({ page }) => {
+    // Perubahan nilai (Sebelum/Sesudah) hanya ditampilkan untuk log "Ubah Data"
+    await pilihFilter(page, filterAksi(page), "Ubah Data");
     await bukaDetail(page);
 
-    const tanpaIsi = detailModal(page).getByText(
-      /tidak ada detail data|tidak ada perubahan nilai yang terdeteksi/i,
-    );
-    test.skip(
-      await tanpaIsi.isVisible(),
-      "API /admin/logs tidak mengirim old_value & new_value, sehingga detail perubahan selalu kosong",
-    );
-
-    // Blok perubahan menampilkan nama kolom beserta nilainya
+    // Nilai lama & baru diambil dari old_value / new_value pada respons
+    // /admin/logs; bila keduanya tidak terkirim, modal hanya menampilkan
+    // "Tidak ada perubahan nilai yang terdeteksi."
     await expect(
       detailModal(page)
-        .getByText(/^Sebelum$|^Sesudah$/)
-        .first()
-        .or(tanpaIsi),
+        .getByText(/^Sebelum$/)
+        .first(),
+      "Detail perubahan (Sebelum/Sesudah) tidak tampil pada log Ubah Data",
+    ).toBeVisible();
+    await expect(
+      detailModal(page)
+        .getByText(/^Sesudah$/)
+        .first(),
     ).toBeVisible();
   });
 
   // TCLA.19 Pencarian berdasarkan NIK
   test("TCLA.19 Super Admin searches a log by NIK", async ({ page }) => {
+    // NIK pengguna diambil dari field nik pada respons /admin/logs; bila tidak
+    // terkirim, seluruh kolom NIK berisi "-" dan tidak ada yang bisa dicari.
     const nikTerisi = (await nilaiKolom(page, "nik")).find((nilai) => nilai !== "-");
-    test.skip(
-      !nikTerisi,
-      "API /admin/logs tidak mengirim field nik, sehingga kolom NIK selalu kosong",
-    );
+    expect(nikTerisi, 'Kolom NIK di tabel log kosong (semua baris berisi "-")').toBeDefined();
 
     await fillThink(searchField(page), nikTerisi!);
 
