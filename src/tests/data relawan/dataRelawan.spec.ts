@@ -454,6 +454,7 @@ for (const { label, creds } of roles) {
         );
       });
 
+      // Deferred TC: TCDR.14 ditunda, skrip di bawah tidak dijalankan.
       // // TCDR.14 Invalid SK Number
       // test.describe(`TCDR.14 ${label} invalid SK Number`, () => {
       //   const invalidSKCases = [

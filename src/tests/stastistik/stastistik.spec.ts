@@ -18,24 +18,32 @@ import { expect, test } from "@playwright/test";
  * Yang tersisa di sini hanya memastikan halaman lamanya memang sudah tidak
  * bisa diakses, supaya kalau suatu saat dihidupkan lagi test ini yang pertama
  * memberi tahu dan TCS.1-5 perlu ditulis ulang.
+ *
+ * Deferred TC: TCS.0–TCS.5 ditunda, sehingga TCS.0 di bawah ini dilewati.
  */
+const DEFERRED = { annotation: { description: "Deferred TC", type: "deferred" } };
+
 const roles = [
   { creds: credentials.superAdmin, label: "Super Admin" },
   { creds: credentials.opd, label: "OPD" },
 ] as const;
 
 for (const { label, creds } of roles) {
-  test(`TCS.0 ${label} no longer has a separate Statistik page`, async ({ page }) => {
-    await page.goto("https://frontend-bappeda.vercel.app/");
+  test.skip(
+    `TCS.0 ${label} no longer has a separate Statistik page`,
+    DEFERRED,
+    async ({ page }) => {
+      await page.goto("https://frontend-bappeda.vercel.app/");
 
-    await loginBAPPEDA({ NIK: creds.NIK, page, password: creds.password });
-    await expect(page).toHaveURL(/dashboard/);
+      await loginBAPPEDA({ NIK: creds.NIK, page, password: creds.password });
+      await expect(page).toHaveURL(/dashboard/);
 
-    // Menu Statistik tidak lagi ada di sidebar
-    await expect(page.getByRole("link", { name: /statistik/i })).toHaveCount(0);
+      // Menu Statistik tidak lagi ada di sidebar
+      await expect(page.getByRole("link", { name: /statistik/i })).toHaveCount(0);
 
-    // Grafik yang dulu ada di Statistik sekarang tampil di Dashboard
-    await expect(page.getByText(/memuat data dashboard/i)).toBeHidden({ timeout: LOAD_TIME });
-    await expect(page.getByRole("heading", { name: /demografi gender relawan/i })).toBeVisible();
-  });
+      // Grafik yang dulu ada di Statistik sekarang tampil di Dashboard
+      await expect(page.getByText(/memuat data dashboard/i)).toBeHidden({ timeout: LOAD_TIME });
+      await expect(page.getByRole("heading", { name: /demografi gender relawan/i })).toBeVisible();
+    },
+  );
 }

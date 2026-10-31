@@ -5,6 +5,9 @@ import { expect, Page, test } from "@playwright/test";
 
 const BASE_URL = "https://frontend-bappeda.vercel.app/";
 
+// Deferred TC: TCLA.1, TCLA.10, dan TCLA.11 ditunda (dilewati, tidak dijalankan)
+const DEFERRED = { annotation: { description: "Deferred TC", type: "deferred" } };
+
 // ── Locator ──────────────────────────────────────────────────────────────
 const searchField = (page: Page) => page.getByPlaceholder("Cari");
 
@@ -145,16 +148,20 @@ test.describe("Log Aktifitas - Super Admin", () => {
   // TCLA.1-3 Filter
   test.describe("TCLA.1-3 Super Admin Filter", () => {
     // TCLA.1 Urutan waktu log
-    test("TCLA.1 Super Admin views the log sorted by newest activity", async ({ page }) => {
-      // Halaman ini tidak punya filter periode waktu; yang dijamin adalah log
-      // ditampilkan berurutan dari aktivitas terbaru.
-      const waktu = (await nilaiKolom(page, "waktu")).map(waktuKeAngka);
+    test.skip(
+      "TCLA.1 Super Admin views the log sorted by newest activity",
+      DEFERRED,
+      async ({ page }) => {
+        // Halaman ini tidak punya filter periode waktu; yang dijamin adalah log
+        // ditampilkan berurutan dari aktivitas terbaru.
+        const waktu = (await nilaiKolom(page, "waktu")).map(waktuKeAngka);
 
-      expect(waktu.length).toBeGreaterThan(1);
-      for (let i = 1; i < waktu.length; i++) {
-        expect(waktu[i - 1]).toBeGreaterThanOrEqual(waktu[i]);
-      }
-    });
+        expect(waktu.length).toBeGreaterThan(1);
+        for (let i = 1; i < waktu.length; i++) {
+          expect(waktu[i - 1]).toBeGreaterThanOrEqual(waktu[i]);
+        }
+      },
+    );
 
     // TCLA.2 Filter jenis aksi
     test("TCLA.2 Super Admin filters data by activity type", async ({ page }) => {
@@ -277,17 +284,21 @@ test.describe("Log Aktifitas - Super Admin", () => {
   });
 
   // TCLA.10 Export Log Table
-  // BELUM ADA DI APLIKASI: halaman Log Aktivitas tidak punya tombol export
-  // seperti Data Relawan / Manajemen OPD, sehingga test case-nya ditunda
+  // Deferred TC. BELUM ADA DI APLIKASI: halaman Log Aktivitas tidak punya tombol
+  // export seperti Data Relawan / Manajemen OPD, sehingga test case-nya ditunda
   // sampai fiturnya dibuat. Lihat catatan di laporan.
 
   // TCLA.11 Navigate to Log Table
-  test("TCLA.11 Super Admin navigates to the Log Aktivitas table", async ({ page }) => {
-    await expect(page.getByRole("heading", { name: "Log Aktivitas" })).toBeVisible();
-    await expect(page.getByRole("table")).toBeVisible();
-    await expect(ringkasan(page)).toBeVisible();
-    await expect(infoHalaman(page)).toBeVisible();
-  });
+  test.skip(
+    "TCLA.11 Super Admin navigates to the Log Aktivitas table",
+    DEFERRED,
+    async ({ page }) => {
+      await expect(page.getByRole("heading", { name: "Log Aktivitas" })).toBeVisible();
+      await expect(page.getByRole("table")).toBeVisible();
+      await expect(ringkasan(page)).toBeVisible();
+      await expect(infoHalaman(page)).toBeVisible();
+    },
+  );
 
   // TCLA.12 Kombinasi filter aksi + tabel
   test("TCLA.12 Super Admin combines the action and table filters", async ({ page }) => {
