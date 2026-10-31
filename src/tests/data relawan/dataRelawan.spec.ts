@@ -44,6 +44,17 @@ const detailField = (page: Page, label: string, index = 0) =>
 const penugasanBlocks = (page: Page) =>
   page.locator(`xpath=//label[normalize-space(text())="Penugasan"]`);
 
+// Cari relawan lewat NIK lalu buka modal Detail-nya
+const bukaDetailRelawan = async (page: Page, nik: string) => {
+  await fillThink(searchRelawan(page), nik);
+  await clickThink(
+    relawanTable(page).getByRole("row").filter({ hasText: nik }).getByRole("button", {
+      name: "Detail",
+    }),
+  );
+  await expect(page.getByRole("heading", { name: /detail relawan/i })).toBeVisible();
+};
+
 const roles = [
   { label: "Super Admin", creds: credentials.superAdmin },
   { label: "OPD", creds: credentials.opd },
@@ -721,13 +732,7 @@ for (const { label, creds } of roles) {
 
         // Buka kembali Detail relawan yang sama: perubahan harus tersimpan pada
         // penugasan yang diedit, bukan menjadi penugasan baru (duplikat).
-        await fillThink(searchRelawan(page), nik);
-        await clickThink(
-          relawanTable(page).getByRole("row").filter({ hasText: nik }).getByRole("button", {
-            name: "Detail",
-          }),
-        );
-        await expect(page.getByRole("heading", { name: /detail relawan/i })).toBeVisible();
+        await bukaDetailRelawan(page, nik);
 
         expect
           .soft(
@@ -746,15 +751,39 @@ for (const { label, creds } of roles) {
           .toHaveValue(relawanData.PENUGASAN);
       });
 
-      // -------- TCDR.30 - TCDR.31 dihilangkan sementara untuk penyesuaian dengan perubahan form penugasan --------
-      // // TCDR.30
-      // test(`TCDR.30 ${label} delete penugasan on detail form`, async ({ page }) => {
-      //   await page.getByRole("button", { name: /hapus/i }).first().click();
-      //   await page.getByRole("button", { name: /ya|konfirmasi/i }).click();
+      // TCDR.30
+      // Tombol hapus (ikon X, "Hapus Penugasan") ada di tiap blok penugasan pada mode
+      // Edit dan langsung menghapus tanpa dialog konfirmasi.
+      test(`TCDR.30 ${label} delete penugasan on detail form`, async ({ page }) => {
+        const nik = await detailField(page, "NIK").inputValue();
+        const jumlahPenugasanAwal = await penugasanBlocks(page).count();
+        expect(jumlahPenugasanAwal, "Relawan tidak punya penugasan untuk dihapus").toBeGreaterThan(
+          0,
+        );
 
-      //   await expect(page.getByText(/berhasil|success/i)).toBeVisible();
-      // });
+        await clickThink(page.getByRole("button", { name: /edit/i }));
+        await clickThink(page.getByRole("button", { name: "Hapus Penugasan" }).first());
 
+        await expect(page.getByText(/berhasil|success/i)).toBeVisible();
+        await expect
+          .soft(penugasanBlocks(page), "Penugasan yang dihapus masih tampil di form Detail")
+          .toHaveCount(jumlahPenugasanAwal - 1);
+
+        // Simpan perubahan lalu buka kembali Detail: penugasan yang dihapus tidak
+        // boleh muncul lagi.
+        await clickThink(page.getByRole("button", { name: /simpan/i }));
+        await expect(page.getByText(/berhasil|success/i).first()).toBeVisible();
+        await bukaDetailRelawan(page, nik);
+
+        await expect
+          .soft(
+            penugasanBlocks(page),
+            "Jumlah penugasan setelah hapus lalu simpan tidak berkurang satu (penugasan yang dihapus dibuat ulang)",
+          )
+          .toHaveCount(jumlahPenugasanAwal - 1);
+      });
+
+      // -------- TCDR.31 dihilangkan sementara untuk penyesuaian dengan perubahan form penugasan --------
       // // TCDR.31
       // test(`TCDR.31 ${label} click Lihat SK hyperlink`, async ({ page }) => {
       //   await page.getByRole("link", { name: /lihat sk/i }).click();
