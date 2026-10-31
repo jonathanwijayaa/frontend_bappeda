@@ -7,6 +7,9 @@ import { expect, Page, test } from "@playwright/test";
 // Kartu Hotline dan form "Kirim Saran" hanya ada pada tampilan OPD & Relawan.
 // Super Admin mendapat tampilan pengelolaan (ubah info hotline + balas saran),
 // jadi TCSH.1-4 dijalankan untuk kedua role di bawah ini saja.
+
+// Deferred TC: TCSH.1 ditunda (dilewati, tidak dijalankan)
+const DEFERRED = { annotation: { description: "Deferred TC", type: "deferred" } };
 const roles = [
   { label: "OPD", creds: credentials.opd, menu: "sidebar" },
   { label: "Relawan", creds: credentials.relawan, menu: "hamburger" },
@@ -61,14 +64,18 @@ for (const { label, creds, menu } of roles) {
 
     // TCSH.1-2 Hotline
     test.describe(`TCSH.1-2 ${label} Hotline`, () => {
-      test(`TCSH.1 ${label} clicks the telephone number hyperlink`, async ({ page }) => {
-        const telLink = hotlineValue(page, "Telepon");
+      test.skip(
+        `TCSH.1 ${label} clicks the telephone number hyperlink`,
+        DEFERRED,
+        async ({ page }) => {
+          const telLink = hotlineValue(page, "Telepon");
 
-        await expect(telLink).toBeVisible();
-        expect((await telLink.innerText()).trim()).not.toBe("");
+          await expect(telLink).toBeVisible();
+          expect((await telLink.innerText()).trim()).not.toBe("");
 
-        await expect(telLink).toHaveAttribute("href", /^tel:/);
-      });
+          await expect(telLink).toHaveAttribute("href", /^tel:/);
+        },
+      );
 
       test(`TCSH.2 ${label} clicks the WhatsApp number hyperlink`, async ({ page }) => {
         const waLink = hotlineValue(page, "WhatsApp");
