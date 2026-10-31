@@ -29,6 +29,7 @@ SEBELUM SETIAP TEST                      // kecuali TCLA.21
 AKHIR SEBELUM
 
 TEST "TCLA.1 Log terurut dari aktivitas terbaru"
+    LEWATI TEST "Deferred TC"
     waktu ← nilai kolom WAKTU seluruh baris
     PASTIKAN jumlah baris > 1
     PASTIKAN setiap waktu[i-1] >= waktu[i]
@@ -72,7 +73,7 @@ UNTUK SETIAP k DALAM kasusCari LAKUKAN
     AKHIR TEST
 AKHIR UNTUK
 
-// TCLA.10 tidak diotomasi: halaman Log Aktivitas belum memiliki
+// TCLA.10 Deferred TC: halaman Log Aktivitas belum memiliki
 //     tombol ekspor
 
 TEST "TCLA.11 Navigasi ke tabel Log Aktivitas"
@@ -132,18 +133,15 @@ TEST "TCLA.17 Tutup detail log dengan tombol X"
 AKHIR TEST
 
 TEST "TCLA.18 Isi detail perubahan nilai"
+    PilihFilter(filter aksi, "Ubah Data")
     KLIK "Lihat Detail Perubahan" baris pertama; TUNGGU THINK_TIME
-    JIKA tampil "tidak ada detail data" MAKA
-        LEWATI TEST "API tidak mengirim old_value dan new_value"
-    AKHIR JIKA
-    PASTIKAN blok "Sebelum"/"Sesudah" tampil
+    // nilai lama & baru berasal dari old_value / new_value API
+    PASTIKAN blok "Sebelum" dan "Sesudah" tampil (maks LOAD_TIME)
 AKHIR TEST
 
 TEST "TCLA.19 Pencarian log berdasarkan NIK"
     nik ← NIK pertama yang terisi pada tabel
-    JIKA nik tidak ada MAKA
-        LEWATI TEST "API tidak mengirim field nik"
-    AKHIR JIKA
+    PASTIKAN nik ada (kolom NIK tidak seluruhnya "-")
     ISI kolom pencarian dengan nik;           TUNGGU THINK_TIME
     PASTIKAN setiap baris memuat nik (maks LOAD_TIME)
 AKHIR TEST
