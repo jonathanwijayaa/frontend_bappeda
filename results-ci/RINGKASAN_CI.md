@@ -9,7 +9,11 @@ Setiap run punya folder sendiri di `results-ci/run-<id>/`, berisi `report-1w/` d
 | [#40837484932](https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/40837484932) | 29 Okt 2026 | `run-40837484932/` | 527 | 514 / 4 / 9 | 514 / 4 / 9 |
 | [#41236813261](https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/41236813261) (percobaan 3) | 31 Okt 2026 | `run-41236813261/` | 529 | 506 / 13 / 10 | 506 / 13 / 10 |
 | [#41294715153](https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/41294715153) (retest) | 1 Nov 2026 | `run-41294715153/` | 10 | 10 / 0 / 0 | 10 / 0 / 0 |
-| **Hasil akhir** (#41236813261 + retest) | | | 529 | **511 / 8 / 10** | **510 / 9 / 10** |
+| **Hasil akhir** (#41236813261 + retest) | | `laporan-terbaru/` | 529 | **511 / 8 / 10** | **510 / 9 / 10** |
+
+**Laporan terbaru:** `laporan-terbaru/LAPORAN.md`, beserta JSON gabungan `results-1w.json` dan
+`results-10w.json`. Dibangkitkan ulang dengan
+`node scripts/gabung-retest-ci.mjs results-ci/run-41236813261 results-ci/run-41294715153 results-ci/laporan-terbaru`.
 
 ---
 
