@@ -249,7 +249,8 @@ export const buildRelawanData = (): RelawanData => {
     "NAMA LENGKAP": generateSafeName(),
     "JENIS KELAMIN": faker.person.sex() === "male" ? "Laki-laki (L)" : "Perempuan (P)",
     NIK: faker.number.bigInt({ min: 3201000000000000n, max: 3201999999999999n }).toString(),
-    ALAMAT: faker.location.streetAddress() + ", Yogyakarta",
+    // Apostrof (mis. "O'Conner") ditolak REGEX ALAMAT_VALID
+    ALAMAT: faker.location.streetAddress().replace(/'/g, "") + ", Yogyakarta",
     "NO HP": `08${faker.string.numeric(10)}`,
     OPD: opd,
     KEMANTREN: kemantren,

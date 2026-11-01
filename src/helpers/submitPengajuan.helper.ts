@@ -55,7 +55,9 @@ export async function submitPengajuanPerubahan(
     );
 
     // 3. Isi minimal satu field yang berubah agar form valid
-    const newAlamat = data?.alamat ?? `${faker.location.streetAddress()}, Yogyakarta`;
+    // Apostrof (mis. "O'Conner") ditolak REGEX ALAMAT_VALID
+    const newAlamat =
+      data?.alamat ?? `${faker.location.streetAddress().replace(/'/g, "")}, Yogyakarta`;
     const newNoHP = data?.noHP ?? `08${faker.string.numeric(10)}`;
     const newAlasan = faker.lorem.sentence();
 

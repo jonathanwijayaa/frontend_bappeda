@@ -84,7 +84,8 @@ export const buildKaderData = (): KaderData => {
     PIC: generateSafeName(),
     "NIK PIC": faker.number.bigInt({ min: 1000000000000000n, max: 9999999999999999n }).toString(),
     "NO HP": `08${faker.string.numeric(10)}`,
-    "ALAMAT PIC": faker.location.streetAddress() + ", Yogyakarta",
+    // Apostrof (mis. "O'Conner") ditolak REGEX ALAMAT_VALID
+    "ALAMAT PIC": faker.location.streetAddress().replace(/'/g, "") + ", Yogyakarta",
     "KELURAHAN PIC": kelurahan,
     KEMANTREN: kemantren,
   };
