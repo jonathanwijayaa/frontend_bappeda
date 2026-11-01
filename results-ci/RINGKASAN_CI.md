@@ -8,6 +8,53 @@ Setiap run punya folder sendiri di `results-ci/run-<id>/`, berisi `report-1w/` d
 |---|---|---|---:|---|---|
 | [#40837484932](https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/40837484932) | 29 Okt 2026 | `run-40837484932/` | 527 | 514 / 4 / 9 | 514 / 4 / 9 |
 | [#41236813261](https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/41236813261) (percobaan 3) | 31 Okt 2026 | `run-41236813261/` | 529 | 506 / 13 / 10 | 506 / 13 / 10 |
+| [#41294715153](https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/41294715153) (retest) | 1 Nov 2026 | `run-41294715153/` | 10 | 10 / 0 / 0 | 10 / 0 / 0 |
+| **Hasil akhir** (#41236813261 + retest) | | | 529 | **511 / 8 / 10** | **510 / 9 / 10** |
+
+---
+
+## Retest #41294715153 — 1 Nov 2026
+
+Hanya TC yang diperbaiki setelah run #41236813261 yang dijalankan ulang, lewat pola
+`--grep` di `.github/retest-grep.txt`:
+`TCDK\.10 |TCDK\.16 |TCDK\.23 |TCHR\.2 |TCHR\.22` (10 test, Super Admin & OPD). Commit
+`0ee2cac`, konfigurasi dan mesin sama dengan run penuh (`ubuntu-latest`, THINK_TIME 1,2 s,
+LOAD_TIME 10 s, `retries 0`), Run A lalu Run B berurutan.
+
+| Run | Worker | Mulai (UTC) | Durasi | Passed | Failed | Skipped |
+|---|---:|---|---:|---:|---:|---:|
+| A | 1 | 2026-11-01 09:49:19 | 1m35s | 10 | 0 | 0 |
+| B | 10 | 2026-11-01 09:51:57 | 36s | 10 | 0 | 0 |
+
+Kelima TC tidak valid dari run #41236813261 (TCDK.10, TCDK.16, TCDK.23, TCHR.2, TCHR.22)
+lulus di kedua run, untuk kedua peran.
+
+Run penuh #41291462290 (commit `939f7b1`) sempat dipicu lalu dibatalkan di tengah jalan
+(sampai TCDR.8) agar diganti retest ini; hasilnya tidak dipakai.
+
+### Hasil akhir gabungan
+
+Hasil run penuh #41236813261, dengan hasil 10 test di atas menggantikan hasil lamanya.
+Angka percepatan tetap dari run penuh (6,46×), karena retest terlalu kecil untuk
+mengukur paralelisme.
+
+| | 1 worker | 10 worker |
+|---|---:|---:|
+| Passed | 511 | 510 |
+| Failed | 8 | 9 |
+| Skipped | 10 | 10 |
+| Total | 529 | 529 |
+
+Seluruh kegagalan yang tersisa **valid** (bug aplikasi/backend):
+
+| Test | 1w | 10w | Bug |
+|---|---|---|---|
+| TCDR.17 Super Admin & OPD | Gagal | Gagal | Upload Excel relawan tidak mengirim data (`onConfirm={async () => {}}`) |
+| TCDR.29 Super Admin & OPD | Gagal | Gagal | Edit penugasan menggandakan penugasan; field Penugasan tidak tersimpan |
+| TCDR.30 Super Admin & OPD | Gagal | Gagal | Penugasan yang dihapus muncul kembali setelah Simpan |
+| TCLA.18 Super Admin | Gagal | Gagal | API log tidak mengirim `old_value`/`new_value` |
+| TCLA.19 Super Admin | Gagal | Gagal | API log tidak mengirim `nik` |
+| TCMO.11 Super Admin | Lulus | Gagal | `POST /api/opd/bulk` HTTP 500 saat beban paralel (koneksi database dilepas dua kali) |
 
 ---
 
