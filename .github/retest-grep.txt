@@ -1,0 +1,4 @@
+# Pola --grep untuk retest (dibaca workflow playwright-regression.yml).
+# Kosongkan baris pola untuk menjalankan regresi penuh.
+# Retest TC yang diperbaiki setelah run #41236813261.
+TCDK\.10 |TCDK\.16 |TCDK\.23 |TCHR\.2 |TCHR\.22

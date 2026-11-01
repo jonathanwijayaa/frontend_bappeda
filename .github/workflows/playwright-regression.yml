@@ -49,6 +49,11 @@ jobs:
 
       - run: pnpm exec playwright install --with-deps chromium
 
+      - name: Baca pola retest
+        run: |
+          pola="$(grep -v '^#' .github/retest-grep.txt 2>/dev/null | tr -d '\r\n' || true)"
+          echo "RETEST_GREP=$pola" >> "$GITHUB_ENV"
+
       - name: Catat mesin dan waktu mulai
         run: |
           {
@@ -60,9 +65,13 @@ jobs:
             echo "| CPU | $(lscpu | sed -n 's/^Model name:[[:space:]]*//p') |"
             echo "| Node | $(node --version) |"
             echo "| Playwright | $(pnpm exec playwright --version) |"
+            if [ -n "$RETEST_GREP" ]; then echo "| Mode | retest: \`$RETEST_GREP\` |"; else echo "| Mode | run penuh |"; fi
             echo "| Mulai (UTC) | $(date -u +%Y-%m-%dT%H:%M:%SZ) |"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # Retest: bila .github/retest-grep.txt berisi pola, hanya test yang judulnya
+      # cocok yang dijalankan (mis. TC yang diperbaiki setelah run penuh). Kosongkan
+      # file tersebut untuk kembali ke run penuh.
       - name: Jalankan pengujian
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: results-${{ matrix.workers }}w.json
@@ -72,6 +81,7 @@ jobs:
           --workers=${{ matrix.workers }}
           --retries=0
           --reporter=html,json,list
+          ${RETEST_GREP:+--grep "$RETEST_GREP"}
           "src/tests/auth/"
           "src/tests/basic/"
           "src/tests/daftar kader/"
