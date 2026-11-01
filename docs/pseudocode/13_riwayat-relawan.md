@@ -68,9 +68,16 @@ UNTUK SETIAP peran DALAM {Super Admin, Admin OPD} LAKUKAN
     AKHIR TEST
 
     TEST "TCHR.2 Filter berdasarkan Nama Kader"
+        // sel kader bisa berisi "-, Kader A"; nilai "-" dilewati
         kader ← kader pertama yang terisi pada tabel
+        JIKA kader kosong MAKA
+            kader ← opsi pertama BacaOpsi("Nama Kader", 1)
+        AKHIR JIKA
         PilihFilter("Nama Kader", kader)
-        PASTIKAN setiap baris memuat kader; jumlah < jumlah awal
+        PASTIKAN baris data atau teks "Tidak ada data riwayat" tampil
+        JIKA tabel berisi baris data MAKA
+            PASTIKAN setiap baris memuat kader; jumlah < jumlah awal
+        AKHIR JIKA
         PASTIKAN tombol "Reset Filter" tampil
     AKHIR TEST
 
@@ -181,14 +188,18 @@ UNTUK SETIAP peran DALAM {Super Admin, Admin OPD} LAKUKAN
     AKHIR TEST
 
     TEST "TCHR.22 Isi modal detail"
-        KLIK "Detail" pada baris yang punya kader; TUNGGU THINK_TIME
+        // diutamakan baris dengan kader terisi, lalu baris dengan OPD
+        // terisi; penugasan boleh tanpa kader
+        KLIK "Detail" pada baris terpilih;    TUNGGU THINK_TIME
         PASTIKAN bagian "Informasi Pribadi" dan "Daftar Penugasan"
             tampil (maks LOAD_TIME)
         PASTIKAN nama, NIK, jenis kelamin, alamat, nomor HP,
             kemantren, dan kelurahan tampil
-        JIKA baris punya kader MAKA
-            PASTIKAN kartu "Penugasan #n", OPD, kader, dan status
-                tampil
+        JIKA baris punya OPD MAKA
+            PASTIKAN kartu "Penugasan #n", OPD, dan status tampil
+            JIKA baris punya kader MAKA
+                PASTIKAN salah satu kartu memuat kader terisi
+            AKHIR JIKA
         SELAIN ITU
             PASTIKAN teks "belum ada data penugasan terdaftar"
         AKHIR JIKA
