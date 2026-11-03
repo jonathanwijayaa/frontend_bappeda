@@ -10,10 +10,68 @@ Setiap run punya folder sendiri di `results-ci/run-<id>/`, berisi `report-1w/` d
 | [#41236813261](https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/41236813261) (percobaan 3) | 31 Okt 2026 | `run-41236813261/` | 529 | 506 / 13 / 10 | 506 / 13 / 10 |
 | [#41294715153](https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/41294715153) (retest) | 1 Nov 2026 | `run-41294715153/` | 10 | 10 / 0 / 0 | 10 / 0 / 0 |
 | **Hasil akhir** (#41236813261 + retest) | | `laporan-terbaru/` | 529 | **511 / 8 / 10** | **510 / 9 / 10** |
+| [#41417908998](https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/41417908998) (run penuh 2) | 2 Nov 2026 | `run-41417908998/` | 529 | 510 / 9 / 10 | 511 / 8 / 10 |
+| [#41566900310](https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/41566900310) (run penuh 3) | 3 Nov 2026 | `run-41566900310/` | 529 | 511 / 8 / 10 | 511 / 8 / 10 |
+
+Rata-rata durasi ketiga run penuh (#41236813261, #41417908998, #41566900310) ada di
+`rata-rata-durasi.md`.
 
 **Laporan terbaru:** `laporan-terbaru/LAPORAN.md`, beserta JSON gabungan `results-1w.json` dan
 `results-10w.json`. Dibangkitkan ulang dengan
 `node scripts/gabung-retest-ci.mjs results-ci/run-41236813261 results-ci/run-41294715153 results-ci/laporan-terbaru`.
+
+---
+
+## Run penuh 2 (#41417908998, 2 Nov 2026) dan run penuh 3 (#41566900310, 3 Nov 2026)
+
+Dua run penuh tambahan untuk merata-ratakan durasi. Konfigurasi sama dengan run 31 Okt:
+proyek `chromium`, 529 test, THINK_TIME 1,2 s, LOAD_TIME 10 s, `retries 0`, matrix worker
+[1, 10] berurutan (`max-parallel: 1`), `ubuntu-latest` → `ubuntu-24.04` versi 20261025.353.1,
+Playwright 1.64.1. Tidak ada perubahan skrip test atau konfigurasi sejak `0ee2cac`; run 2
+dipicu oleh commit `4f646bc` (menambah `scripts/pulihkan-penugasan.mjs`) dan run 3 oleh commit
+kosong `1f3ab68`.
+
+| Run | Worker | Mulai (UTC) | Selesai (UTC) | Durasi | Passed | Failed | Skipped | Flaky |
+|---|---:|---|---|---:|---:|---:|---:|---:|
+| #41417908998 | 1 | 2026-11-02 09:06:50 | 2026-11-02 11:04:53 | 1h58m03s | 510 | 9 | 10 | 0 |
+| #41417908998 | 10 | 2026-11-02 11:05:52 | 2026-11-02 11:23:41 | 17m49s | 511 | 8 | 10 | 0 |
+| #41566900310 | 1 | 2026-11-03 02:34:45 | 2026-11-03 04:34:09 | 1h59m24s | 511 | 8 | 10 | 0 |
+| #41566900310 | 10 | 2026-11-03 04:35:08 | 2026-11-03 04:56:02 | 20m55s | 511 | 8 | 10 | 0 |
+
+### Kegagalan
+
+Delapan kegagalan valid yang diharapkan muncul di keempat eksekusi: TCDR.17, TCDR.29 dan
+TCDR.30 (Super Admin & OPD), serta TCLA.18 dan TCLA.19 (Super Admin). Penyimpangan dari
+harapan:
+
+- **TCSK.1 Super Admin (run 2, 1 worker) gagal.** `POST /api/admin/sk` dibalas HTTP 400
+  `"value too long for type character varying(100)"` (PG Error 22001), sehingga form SK tidak
+  tertutup dalam LOAD_TIME. Nomor SK acak dari `formSuratKeputusan.helper.ts` berformat
+  `angka/angka/<nama OPD lengkap>/tahun`; kali ini OPD terpilih "Dinas Pemberdayaan Perempuan
+  Perlindungan Anak Pengendalian Penduduk dan Keluarga Berencana" sehingga nomornya 104
+  karakter, melebihi batas kolom 100. Klasifikasi: **kesalahan data uji** (kegagalan tidak
+  valid, muncul acak tergantung OPD terpilih); sekaligus menunjukkan form SK tidak membatasi
+  panjang nomor SK dan pesan galat basis data (`dev_log`) ikut terkirim ke klien. Skrip belum
+  diubah.
+- **TCMO.11 lulus di 10 worker pada run 2 dan run 3.** Pada run 31 Okt TCMO.11 gagal dengan
+  HTTP 500 "Release called on client which has already been released to the pool."; bug
+  koneksi basis data itu intermiten (gagal 1 dari 3 run).
+
+### Data uji
+
+Penugasan relawan dicatat sebelum setiap run dan dipulihkan sesudahnya dengan
+`node scripts/pulihkan-penugasan.mjs catat|pulihkan <snapshot>`:
+
+| Setelah | Relawan uji OPD (NIK 3201299598696155) | Relawan lain | Dihapus |
+|---|---|---|---:|
+| Run 2 | 2 → 45 → 2 penugasan | – | 43 |
+| Run 3 | 2 → 44 → 2 penugasan | Clayton Fisher (OPD) 1 → 2 → 1 | 43 |
+
+Setelah pemulihan run 3, seluruh relawan yang sudah ada sebelum run 2 kembali ke kumpulan
+penugasan semula (dicek terhadap kedua snapshot). Setiap run juga membuat 4 relawan baru
+lewat test tambah relawan; relawan baru tidak disentuh skrip pemulihan. TCDR.28 mengganti
+biodata relawan uji setiap run, sehingga namanya berubah (mis. "Carol Orn", "Cesar Volkman
+Jr"); hal ini tidak dipulihkan.
 
 ---
 
@@ -72,7 +130,8 @@ Data penugasan relawan OPD uji dibersihkan sebelum run.
 Konfigurasi sama dengan run 29 Okt kecuali jumlah test: proyek `chromium`, **529 test**
 (TCDR.30 menambah 2), THINK_TIME 1,2 s, LOAD_TIME 10 s, `retries 0`, timeout per test
 120 s. Mesin: GitHub-hosted runner `ubuntu-latest` → image `ubuntu-24.04`
-(versi 20261021.618), repo privat. Run A dan Run B berurutan (`max-parallel: 1`).
+(versi 20261025.353.1; sebelumnya tertulis 20261021.618, yang merupakan versi provisioner
+runner, bukan versi image), repo privat. Run A dan Run B berurutan (`max-parallel: 1`).
 
 ### Hasil
 
