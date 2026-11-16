@@ -99,31 +99,37 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
     return null;
   };
 
-  // ── Effect 1: Reset form data HANYA ketika relawan berbeda (ganti baris tabel)
-  // Tidak boleh bergantung pada isOPD/userOpdName karena perubahan state kaderOptions
-  // di parent (DataRelawan) dapat memicu re-render yang mengubah referensi prop-prop
-  // tersebut, dan itu akan me-reset form saat user sedang mengedit.
-  useEffect(() => {
-    if (!relawan) return;
-    const assigns = Array.isArray(relawan.assignments) ? relawan.assignments : [];
-    setDetailFormData({
-      alamat: relawan.alamat || "-",
-      assignments: assigns,
-      jenisKelamin: (relawan.jenisKelamin as "L" | "P") || "L",
-      kelurahan: relawan.kelurahan || "-",
-      kemantren: relawan.kemantren || "-",
-      namaRelawan: relawan.namaLengkap || "",
-      nik: relawan.nik || "",
-      no_hp: relawan.no_hp || "-",
-    });
+  // Reset seluruh form detail kembali ke data awal relawan dan matikan edit mode
+  const resetToRelawanData = () => {
+    if (relawan) {
+      const assigns = Array.isArray(relawan.assignments) ? relawan.assignments : [];
+      setDetailFormData({
+        alamat: relawan.alamat || "-",
+        assignments: assigns,
+        jenisKelamin: (relawan.jenisKelamin as "L" | "P") || "L",
+        kelurahan: relawan.kelurahan || "-",
+        kemantren: relawan.kemantren || "-",
+        namaRelawan: relawan.namaLengkap || "",
+        nik: relawan.nik || "",
+        no_hp: relawan.no_hp || "-",
+      });
+    }
     setIsEditMode(false);
+    setErrorMsg(null);
+  };
+
+  // ── Effect 1: Reset form data setiap kali modal dibuka atau ganti relawan
+  useEffect(() => {
+    if (isOpen && relawan) {
+      resetToRelawanData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [relawan?.relawan_id ?? relawan?.nik]);
+  }, [isOpen, relawan?.relawan_id ?? relawan?.nik]);
 
   // ── Effect 2: Pre-fetch kader options setiap kali relawan (atau konteks OPD) berubah
-  // Dipisah agar tidak ikut mereset form data.
+  // Dipisah agar tidak ikut mereset form data saat user sedang edit.
   useEffect(() => {
-    if (!relawan) return;
+    if (!isOpen || !relawan) return;
     const assigns = Array.isArray(relawan.assignments) ? relawan.assignments : [];
     assigns.forEach((assign, idx) => {
       if (assign.opd || isOPD) {
@@ -131,7 +137,12 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
       }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [relawan?.relawan_id ?? relawan?.nik, isOPD, userOpdName]);
+  }, [isOpen, relawan?.relawan_id ?? relawan?.nik, isOPD, userOpdName]);
+
+  const handleClose = () => {
+    resetToRelawanData();
+    onClose();
+  };
 
   const handleAddAssignment = () => {
     const newIndex = detailFormData.assignments.length;
@@ -220,7 +231,7 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title="Detail Relawan"
       subtitle={isEditMode ? "Mode Edit — ubah data lalu klik Simpan" : "Informasi lengkap relawan"}
       maxWidth="2xl"
@@ -238,8 +249,12 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
             variant="outline"
             size="sm"
             onClick={() => {
-              setErrorMsg(null);
-              setIsEditMode(!isEditMode);
+              if (isEditMode) {
+                resetToRelawanData();
+              } else {
+                setErrorMsg(null);
+                setIsEditMode(true);
+              }
             }}
             className={isEditMode ? "border-gray-400 text-gray-600" : "border-blue-500 text-blue-600"}
           >
@@ -381,7 +396,7 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
         {isEditMode && (
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <Button
-              onClick={() => setIsEditMode(false)}
+              onClick={resetToRelawanData}
               className="bg-gray-200 text-gray-700 hover:bg-gray-300 px-6"
             >
               Batal

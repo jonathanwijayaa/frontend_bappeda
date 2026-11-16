@@ -1,5 +1,5 @@
 //DaftarKader.tsx — Role-aware: Super Admin & OPD
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { Plus, FileDown, Loader2, Upload } from "lucide-react";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -63,6 +63,32 @@ const DaftarKader: React.FC = () => {
     opd_id: 0,
     opd_name: "",
   });
+
+  const resetAddForm = useCallback(() => {
+    setFormData({
+      alamat_pic: "",
+      deskripsi: "",
+      kelurahan_pic: "",
+      kemantren_pic: "",
+      nama_kader: "",
+      nama_pic: "",
+      nik_pic: "",
+      no_hp_pic: "",
+      opd_id: 0,
+      opd_name: "",
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isModalOpen) {
+      resetAddForm();
+    }
+  }, [isModalOpen, resetAddForm]);
+
+  const handleCloseAddModal = () => {
+    setIsModalOpen(false);
+    resetAddForm();
+  };
 
   const [detailFormData, setDetailFormData] = useState({
     deskripsi: "",
@@ -711,7 +737,7 @@ const DaftarKader: React.FC = () => {
       {/* Modal Tambah Kader */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseAddModal}
         title="Tambah Kader Baru"
         subtitle={
           isSuperAdmin
@@ -843,7 +869,7 @@ const DaftarKader: React.FC = () => {
           <div className="flex justify-between pt-6">
             <Button
               type="button"
-              onClick={() => setIsModalOpen(false)}
+              onClick={handleCloseAddModal}
               className="bg-red-600 hover:bg-red-700 text-white px-8"
             >
               Batal

@@ -116,6 +116,7 @@ export const TambahRelawanModal: React.FC<TambahRelawanModalProps> = ({
         nik: "",
         no_hp: "",
       });
+      setErrorMsg(null);
     }
   }, [isOpen]);
 

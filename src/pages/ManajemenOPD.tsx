@@ -1,5 +1,5 @@
 //ManejemenOPD.tsx
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Plus, FileDown, Upload, Loader2 } from "lucide-react";
 import Card from "../components/ui/Card";
 import Button from "../components/ui/Button";
@@ -50,6 +50,21 @@ const ManajemenOPD: React.FC = () => {
     nik_pic: "",
     pic: "",
   });
+
+  const resetAddForm = () => {
+    setFormData({ alamat: "", kontak: "", nama_opd: "", nik_pic: "", pic: "" });
+  };
+
+  useEffect(() => {
+    if (!isModalOpen) {
+      resetAddForm();
+    }
+  }, [isModalOpen]);
+
+  const handleCloseAddModal = () => {
+    setIsModalOpen(false);
+    resetAddForm();
+  };
 
   const [detailFormData, setDetailFormData] = useState({
     alamat: "",
@@ -449,7 +464,7 @@ const columns = [
       {/* Add OPD Modal */}
       <Modal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseAddModal}
         title="Tambah OPD Baru"
         subtitle="Isi data OPD yang ingin ditambahkan"
         maxWidth="2xl"
@@ -498,7 +513,7 @@ const columns = [
           <div className="flex justify-between pt-6">
             <Button
               type="button"
-              onClick={() => setIsModalOpen(false)}
+              onClick={handleCloseAddModal}
               className="bg-red-600 hover:bg-red-700 text-white px-8"
             >
               Batal
