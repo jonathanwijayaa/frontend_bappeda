@@ -13,6 +13,7 @@ const OPD_LIST = [
   "Dinas Pemberdayaan Perempuan Perlindungan Anak Pengendalian Penduduk dan Keluarga Berencana",
 ];
 
+
 const KEMANTREN_LIST = [
   "Danurejan",
   "Gedongtengen",
@@ -31,21 +32,81 @@ const KEMANTREN_LIST = [
 ];
 
 const KELURAHAN_MAP: Record<string, string[]> = {
-  Danurejan: ["Bausasran", "Suryatmajan", "Tegalpanggung"],
-  Gedongtengen: ["Pringgokusuman", "Sosromenduran"],
-  Gondokusuman: ["Baciro", "Demangan", "Klitren", "Kotabaru", "Terban"],
-  Gondomanan: ["Ngupasan", "Prawirodirjan"],
-  Jetis: ["Bumijo", "Cokrodiningratan", "Gowongan"],
-  Kotagede: ["Prenggan", "Rejowinangun", "Purbayan"],
-  Kraton: ["Kadipaten", "Panembahan", "Patehan"],
-  Mantrijeron: ["Gedongkiwo", "Mantrijeron", "Suryodiningratan"],
-  Mergangsan: ["Brontokusuman", "Keparakan", "Wirogunan"],
-  Ngampilan: ["Ngampilan", "Notoprajan"],
-  Pakualaman: ["Gunungketur", "Purwokinanti"],
-  Tegalrejo: ["Bener", "Karangwaru", "Kricak", "Tegalrejo"],
-  Umbulharjo: ["Giwangan", "Muja Muju", "Pandeyan", "Sorosutan", "Tahunan", "Warungboto", "Semaki"],
-  Wirobrajan: ["Pakuncen", "Patangpuluhan", "Wirobrajan"],
+  Danurejan: [
+    "Bausasran",
+    "Suryatmajan",
+    "Tegalpanggung",
+  ],
+  Gedongtengen: [
+    "Pringgokusuman",
+    "Sosromenduran",
+  ],
+  Gondokusuman: [
+    "Baciro",
+    "Demangan",
+    "Klitren",
+    "Kotabaru",
+    "Terban",
+  ],
+  Gondomanan: [
+    "Ngupasan",
+    "Prawirodirjan",
+  ],
+  Jetis: [
+    "Bumijo",
+    "Cokrodiningratan",
+    "Gowongan",
+  ],
+  Kotagede: [
+    "Prenggan",
+    "Purbayan",
+    "Rejowinangun",
+  ],
+  Kraton: [
+    "Kadipaten",
+    "Panembahan",
+    "Patehan",
+  ],
+  Mantrijeron: [
+    "Gedongkiwo",
+    "Mantrijeron",
+    "Suryodiningratan",
+  ],
+  Mergangsan: [
+    "Brontokusuman",
+    "Keparakan",
+    "Wirogunan",
+  ],
+  Ngampilan: [
+    "Ngampilan",
+    "Notoprajan",
+  ],
+  Pakualaman: [
+    "Gunungketur",
+    "Purwokinanti",
+  ],
+  Tegalrejo: [
+    "Bener",
+    "Karangwaru",
+    "Kricak",
+    "Tegalrejo",
+  ],
+  Umbulharjo: [
+    "Giwangan",
+    "Mujamuju",
+    "Pandeyan",
+    "Semaki",
+    "Sorosutan",
+    "Tahunan",
+    "Warungboto",
+  ],
+  Wirobrajan: [
+    "Pakuncen",
+    "Patangpuluhan",
+    "Wirobrajan",
+  ],
 };
+
 
 export interface KaderData {
   OPD: string;

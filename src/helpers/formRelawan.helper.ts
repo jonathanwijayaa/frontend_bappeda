@@ -12,17 +12,17 @@ import {
 } from "@/helpers/timing.helper";
 
 const OPD_LIST = [
-  "Opd Demo",
+  // "Opd Demo",
   "Dinas Kesehatan",
-  // "Dinas Perhubungan",
+  "Dinas Perhubungan",
   "Dinas Sosial Tenaga Kerja dan Transmigrasi",
-  // "Dinas Pariwisata",
-  // "Dinas Kebudayaan",
+  "Dinas Pariwisata",
+  "Dinas Kebudayaan",
   "Dinas Pemberdayaan Perempuan Perlindungan Anak Pengendalian Penduduk dan Keluarga Berencana",
 ];
 
 const KADER_MAP: Record<string, string[]> = {
-  "Opd Demo": ["Kader Demo", "Kader Yvonne Keeling"],
+  // "Opd Demo": ["Kader Demo", "Kader Yvonne Keeling"],
 
   "Dinas Kesehatan": ["KADER KESEHATAN"],
 
@@ -41,6 +41,7 @@ const KADER_MAP: Record<string, string[]> = {
   ],
 };
 
+
 const KEMANTREN_LIST = [
   "Danurejan",
   "Gedongtengen",
@@ -55,24 +56,85 @@ const KEMANTREN_LIST = [
   "Pakualaman",
   "Tegalrejo",
   "Umbulharjo",
+  "Wirobrajan",
 ];
 
 const KELURAHAN_MAP: Record<string, string[]> = {
-  Danurejan: ["Bausasran", "Suryatmajan", "Tegalpanggung"],
-  Gedongtengen: ["Pringgokusuman", "Sosromenduran"],
-  Gondokusuman: ["Baciro", "Demangan", "Klitren", "Kotabaru", "Terban"],
-  Gondomanan: ["Ngupasan", "Prawirodirjan"],
-  Jetis: ["Bumijo", "Cokrodiningratan", "Gowongan"],
-  Kotagede: ["Prenggan", "Rejowinangun"],
-  Kraton: ["Kadipaten", "Panembahan", "Patehan"],
-  Mantrijeron: ["Gedongkiwo", "Mantrijeron", "Suryodiningratan"],
-  Mergangsan: ["Brontokusuman", "Keparakan", "Wirogunan"],
-  Ngampilan: ["Ngampilan", "Notoprajan"],
-  Pakualaman: ["Gunungketur", "Purwokinanti"],
-  Tegalrejo: ["Bener", "Karangwaru", "Kricak", "Tegalrejo"],
-  Umbulharjo: ["Giwangan", "Pandeyan", "Sorosutan", "Tahunan", "Warungboto", "Semaki"],
-  Wirobrajan: ["Pakuncen", "Patangpuluhan", "Wirobrajan"],
+  Danurejan: [
+    "Bausasran",
+    "Suryatmajan",
+    "Tegalpanggung",
+  ],
+  Gedongtengen: [
+    "Pringgokusuman",
+    "Sosromenduran",
+  ],
+  Gondokusuman: [
+    "Baciro",
+    "Demangan",
+    "Klitren",
+    "Kotabaru",
+    "Terban",
+  ],
+  Gondomanan: [
+    "Ngupasan",
+    "Prawirodirjan",
+  ],
+  Jetis: [
+    "Bumijo",
+    "Cokrodiningratan",
+    "Gowongan",
+  ],
+  Kotagede: [
+    "Prenggan",
+    "Purbayan",
+    "Rejowinangun",
+  ],
+  Kraton: [
+    "Kadipaten",
+    "Panembahan",
+    "Patehan",
+  ],
+  Mantrijeron: [
+    "Gedongkiwo",
+    "Mantrijeron",
+    "Suryodiningratan",
+  ],
+  Mergangsan: [
+    "Brontokusuman",
+    "Keparakan",
+    "Wirogunan",
+  ],
+  Ngampilan: [
+    "Ngampilan",
+    "Notoprajan",
+  ],
+  Pakualaman: [
+    "Gunungketur",
+    "Purwokinanti",
+  ],
+  Tegalrejo: [
+    "Bener",
+    "Karangwaru",
+    "Kricak",
+    "Tegalrejo",
+  ],
+  Umbulharjo: [
+    "Giwangan",
+    "Mujamuju",
+    "Pandeyan",
+    "Semaki",
+    "Sorosutan",
+    "Tahunan",
+    "Warungboto",
+  ],
+  Wirobrajan: [
+    "Pakuncen",
+    "Patangpuluhan",
+    "Wirobrajan",
+  ],
 };
+
 
 // Tabel Pengajuan Perubahan Data
 export const pengajuanTable = (page: Page) =>
@@ -90,10 +152,6 @@ export const searchPengajuan = (page: Page) => page.getByPlaceholder(/cari penga
 // Search bar Daftar Relawan
 export const searchRelawan = (page: Page) => page.getByPlaceholder(/cari relawan/i);
 
-// Field pada form relawan dicari lewat strukturnya: <label>X</label> -> <div> -> input.
-// Ini perlu karena label tidak terhubung ke input-nya; khusus role OPD, field OPD
-// bahkan dikunci (disabled) tanpa placeholder sehingga tidak punya accessible name
-// dan tidak bisa ditemukan lewat getByRole("textbox", { name: /opd/i }).
 // Index dipakai bila ada lebih dari satu blok penugasan.
 const fieldWrapper = (page: Page, label: string, index = 0) =>
   page
