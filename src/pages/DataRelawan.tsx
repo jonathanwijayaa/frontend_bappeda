@@ -215,7 +215,7 @@ const DataRelawan: React.FC = () => {
 
   const handleDeletePenugasan = async (penugasanId: number, _index: number) => {
     if (!penugasanId || penugasanId <= 0) {
-      // Penugasan baru (belum tersimpan di DB), cukup hapus dari state lokal
+      // Penugasan baru (belum tersimpan di DB) — hapus hanya dari local state di modal
       return;
     }
     try {
@@ -331,6 +331,7 @@ const DataRelawan: React.FC = () => {
         relawan={selectedRelawan}
         isOPD={isOPD}
         userOpdName={user?.nama_opd}
+        userOpdId={user?.opd_id}
         opdOptions={opdOptions}
         kemantrenOptions={kemantrenOptions}
         kelurahanOptions={kelurahanOptions}
