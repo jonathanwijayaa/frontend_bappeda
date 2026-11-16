@@ -99,29 +99,39 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
     return null;
   };
 
+  // ── Effect 1: Reset form data HANYA ketika relawan berbeda (ganti baris tabel)
+  // Tidak boleh bergantung pada isOPD/userOpdName karena perubahan state kaderOptions
+  // di parent (DataRelawan) dapat memicu re-render yang mengubah referensi prop-prop
+  // tersebut, dan itu akan me-reset form saat user sedang mengedit.
   useEffect(() => {
-    if (relawan) {
-      const assigns = Array.isArray(relawan.assignments) ? relawan.assignments : [];
-      setDetailFormData({
-        alamat: relawan.alamat || "-",
-        assignments: assigns,
-        jenisKelamin: (relawan.jenisKelamin as "L" | "P") || "L",
-        kelurahan: relawan.kelurahan || "-",
-        kemantren: relawan.kemantren || "-",
-        namaRelawan: relawan.namaLengkap || "",
-        nik: relawan.nik || "",
-        no_hp: relawan.no_hp || "-",
-      });
-      setIsEditMode(false);
+    if (!relawan) return;
+    const assigns = Array.isArray(relawan.assignments) ? relawan.assignments : [];
+    setDetailFormData({
+      alamat: relawan.alamat || "-",
+      assignments: assigns,
+      jenisKelamin: (relawan.jenisKelamin as "L" | "P") || "L",
+      kelurahan: relawan.kelurahan || "-",
+      kemantren: relawan.kemantren || "-",
+      namaRelawan: relawan.namaLengkap || "",
+      nik: relawan.nik || "",
+      no_hp: relawan.no_hp || "-",
+    });
+    setIsEditMode(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relawan?.relawan_id ?? relawan?.nik]);
 
-      // Pre-fetch kader options for each assignment
-      assigns.forEach((assign, idx) => {
-        if (assign.opd || isOPD) {
-          onOpdChangeAssignment(idx, assign.opd || userOpdName || "");
-        }
-      });
-    }
-  }, [relawan, isOPD, userOpdName]);
+  // ── Effect 2: Pre-fetch kader options setiap kali relawan (atau konteks OPD) berubah
+  // Dipisah agar tidak ikut mereset form data.
+  useEffect(() => {
+    if (!relawan) return;
+    const assigns = Array.isArray(relawan.assignments) ? relawan.assignments : [];
+    assigns.forEach((assign, idx) => {
+      if (assign.opd || isOPD) {
+        onOpdChangeAssignment(idx, assign.opd || userOpdName || "");
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relawan?.relawan_id ?? relawan?.nik, isOPD, userOpdName]);
 
   const handleAddAssignment = () => {
     const newIndex = detailFormData.assignments.length;
