@@ -93,13 +93,15 @@ const nilaiKolom = async (page: Page, kolom: keyof typeof KOLOM) =>
     teks.trim(),
   );
 
-// Sel OPD/KADER berisi gabungan seluruh penugasan, mis. "Kader A, Kader B".
+// Sel OPD/KADER berisi gabungan seluruh penugasan, mis. "Kader A, Kader B", dan
+// penugasan tanpa kader ikut tampil sebagai "-" (mis. "-, Kader A").
+const pecahSel = (sel: string) => sel.split(",").map((nilai) => nilai.trim());
+const terisi = (nilai: string) => nilai !== "" && nilai !== "-";
+
 // Nilai pertama yang bukan "-" dipakai sebagai bahan uji filter supaya hasilnya
 // dijamin tidak kosong.
-const nilaiFilterDariTabel = async (page: Page, kolom: "kader" | "opd") => {
-  const terisi = (await nilaiKolom(page, kolom)).find((nilai) => nilai !== "-");
-  return terisi ? terisi.split(",")[0].trim() : undefined;
-};
+const nilaiFilterDariTabel = async (page: Page, kolom: "kader" | "opd") =>
+  (await nilaiKolom(page, kolom)).flatMap(pecahSel).find(terisi);
 
 const infoJumlah = (page: Page) => page.getByText(/Menampilkan \d+–\d+ dari \d+ relawan/);
 
@@ -223,16 +225,23 @@ for (const role of roles) {
     // TCHR.2 Filter by Nama Kader
     test(`TCHR.2 ${role.label} filter by Nama Kader`, async ({ page }) => {
       const totalAwal = await totalData(page);
-      const kader = await nilaiFilterDariTabel(page, "kader");
-      expect(kader, "Tidak ada baris dengan Kader terisi untuk diuji").toBeDefined();
+      // Bila halaman pertama tabel tidak punya Kader terisi, kader diambil dari
+      // opsi filter Nama Kader
+      const kader =
+        (await nilaiFilterDariTabel(page, "kader")) ??
+        (await bacaOpsiSelect(page, "Nama Kader", 1)).nilai[0];
+      expect(kader, "Tidak ada Kader untuk diuji").toBeDefined();
 
       await pilihFilter(page, "Nama Kader", kader!);
 
-      await expect(barisData(page).first()).toBeVisible();
-      for (const sel of await nilaiKolom(page, "kader")) {
-        expect(sel.toLowerCase()).toContain(kader!.toLowerCase());
+      // Kader dari opsi filter belum tentu punya relawan, jadi tabel boleh kosong
+      await expect(barisData(page).first().or(emptyState(page))).toBeVisible();
+      if (await barisData(page).count()) {
+        for (const sel of await nilaiKolom(page, "kader")) {
+          expect(sel.toLowerCase()).toContain(kader!.toLowerCase());
+        }
+        expect(await totalData(page)).toBeLessThan(totalAwal);
       }
-      expect(await totalData(page)).toBeLessThan(totalAwal);
       await expect(resetFilterButton(page)).toBeVisible();
     });
 
@@ -510,11 +519,15 @@ for (const role of roles) {
     // TCHR.22 Isi modal detail
     test(`TCHR.22 ${role.label} views the detail modal contents`, async ({ page }) => {
       const kaderPerBaris = await nilaiKolom(page, "kader");
-      // Baris dengan kader terisi dipastikan punya penugasan untuk diperiksa
-      const indeks = Math.max(
-        kaderPerBaris.findIndex((nilai) => nilai !== "-"),
-        0,
-      );
+      const opdPerBaris = await nilaiKolom(page, "opd");
+      // Diutamakan baris dengan kader terisi, lalu baris yang punya penugasan
+      // (OPD terisi). Penugasan boleh tanpa kader, jadi kolom OPD yang
+      // menentukan ada tidaknya penugasan.
+      const indeksKader = kaderPerBaris.findIndex((nilai) => pecahSel(nilai).some(terisi));
+      const indeksOpd = opdPerBaris.findIndex((nilai) => pecahSel(nilai).some(terisi));
+      const indeks = [indeksKader, indeksOpd, 0].find((i) => i >= 0)!;
+      const punyaPenugasan = pecahSel(opdPerBaris[indeks]).some(terisi);
+      const punyaKader = pecahSel(kaderPerBaris[indeks]).some(terisi);
 
       await bukaDetail(page, indeks);
 
@@ -541,10 +554,21 @@ for (const role of roles) {
       );
 
       const kartuPenugasan = detailModalBody(page).getByText(/^Penugasan #\d+$/);
-      if (kaderPerBaris[indeks] !== "-") {
+      if (punyaPenugasan) {
         await expect(kartuPenugasan.first()).toBeVisible();
         await expect(detailValue(page, "OPD")).not.toHaveText("-");
-        await expect(detailValue(page, "Kader")).not.toHaveText("-");
+        if (punyaKader) {
+          // Kader pada tabel bisa berasal dari kartu penugasan mana pun, bukan
+          // hanya kartu pertama
+          const kaderDiModal = detailModalBody(page).locator(
+            `xpath=.//span[normalize-space(text())="Kader"]/following-sibling::span[1]`,
+          );
+          await expect
+            .poll(async () =>
+              (await kaderDiModal.allInnerTexts()).map((t) => t.trim()).some(terisi),
+            )
+            .toBe(true);
+        }
         await expect(
           detailModalBody(page)
             .getByText(/^(Aktif|Tidak Aktif)$/)

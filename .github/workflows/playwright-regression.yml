@@ -1,120 +1,112 @@
-# Simpan di repo sebagai: .github/workflows/playwright-regression.yml
-# Jalankan manual dari tab Actions > "Playwright Regression" > Run workflow.
+# Regresi Playwright untuk skripsi: Run A (1 worker) lalu Run B (10 worker),
+# berurutan di mesin ubuntu-latest, think time 1,2 s & load time 10 s
+# (timing.helper.ts), retries 0.
+#
+# Dipicu oleh push ke branch ci/playwright-regression (workflow_dispatch hanya
+# bisa dipakai bila file ini ada di branch default).
+#
+# Cakupan = 527 test chromium, sama dengan baseline 30 Sep 2026 dan run laptop
+# 27 Okt 2026 (scripts/rerun.ps1): tanpa performance/* (load test ke server dev
+# bersama), screenshot-ui, security/xss, security/accessControl.
+#
+# Tidak butuh Secrets: URL dan akun uji ditulis langsung di spec/helper,
+# THINK_TIME_MS / LOAD_TIME_MS / VITE_API_URL punya nilai default.
 name: Playwright Regression
 
 on:
-  workflow_dispatch:
-    inputs:
-      shards:
-        description: "Jumlah mesin (shard). 1 = satu mesin saja"
-        default: "1"
-        required: true
-      workers:
-        description: "Jumlah worker per mesin"
-        default: "10"
-        required: true
-      branch:
-        description: "Branch yang diuji"
-        default: "testing"
-        required: true
+  push:
+    branches: [ci/playwright-regression]
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: ${{ steps.m.outputs.matrix }}
-    steps:
-      - id: m
-        run: echo "matrix=[$(seq -s, 1 ${{ inputs.shards }})]" >> "$GITHUB_OUTPUT"
-
   test:
-    needs: setup
+    name: Regresi ${{ matrix.workers }} worker
     runs-on: ubuntu-latest
     timeout-minutes: 300
     strategy:
       fail-fast: false
+      # Run A lalu Run B, tidak bersamaan (server dev dipakai bersama tim)
+      max-parallel: 1
       matrix:
-        shardIndex: ${{ fromJson(needs.setup.outputs.matrix) }}
+        workers: [1, 10]
     steps:
       - uses: actions/checkout@v4
+
+      # Versi pnpm sama dengan yang dipakai membuat pnpm-lock.yaml
+      - uses: pnpm/action-setup@v4
         with:
-          ref: ${{ inputs.branch }}
+          version: 12.14.0
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: pnpm
 
-      - run: npm ci
+      # pnpm-workspace.yaml belum memutuskan allowBuilds (bcrypt, core-js,
+      # esbuild, lefthook), sehingga di CI pnpm gagal dengan
+      # ERR_PNPM_IGNORED_BUILDS. Build script tersebut tidak dibutuhkan untuk
+      # menjalankan Playwright, jadi cukup dilewati.
+      - run: pnpm install --frozen-lockfile --config.strict-dep-builds=false
 
-      - run: npx playwright install --with-deps chromium
+      - run: pnpm exec playwright install --with-deps chromium
 
-      - name: Catat waktu mulai
-        run: echo "Mulai shard ${{ matrix.shardIndex }}: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      - name: Baca pola retest
+        run: |
+          pola="$(grep -v '^#' .github/retest-grep.txt 2>/dev/null | tr -d '\r\n' || true)"
+          echo "RETEST_GREP=$pola" >> "$GITHUB_ENV"
 
+      - name: Catat mesin dan waktu mulai
+        run: |
+          {
+            echo "## Run ${{ matrix.workers }} worker"
+            echo ""
+            echo "| Item | Nilai |"
+            echo "|---|---|"
+            echo "| Mesin | $(lsb_release -ds), $(nproc) vCPU, $(free -g | awk '/Mem:/{print $2}') GB RAM |"
+            echo "| CPU | $(lscpu | sed -n 's/^Model name:[[:space:]]*//p') |"
+            echo "| Node | $(node --version) |"
+            echo "| Playwright | $(pnpm exec playwright --version) |"
+            if [ -n "$RETEST_GREP" ]; then echo "| Mode | retest: \`$RETEST_GREP\` |"; else echo "| Mode | run penuh |"; fi
+            echo "| Mulai (UTC) | $(date -u +%Y-%m-%dT%H:%M:%SZ) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Retest: bila .github/retest-grep.txt berisi pola, hanya test yang judulnya
+      # cocok yang dijalankan (mis. TC yang diperbaiki setelah run penuh). Kosongkan
+      # file tersebut untuk kembali ke run penuh.
       - name: Jalankan pengujian
-        # Ganti nama variabel di bawah sesuai isi file .env di proyekmu,
-        # lalu isi nilainya di Settings > Secrets and variables > Actions.
         env:
-          BASE_URL: ${{ secrets.BASE_URL }}
-          API_URL: ${{ secrets.API_URL }}
-          SUPERADMIN_NIK: ${{ secrets.SUPERADMIN_NIK }}
-          SUPERADMIN_PASSWORD: ${{ secrets.SUPERADMIN_PASSWORD }}
-          OPD_NIK: ${{ secrets.OPD_NIK }}
-          OPD_PASSWORD: ${{ secrets.OPD_PASSWORD }}
-          RELAWAN_NIK: ${{ secrets.RELAWAN_NIK }}
-          RELAWAN_PASSWORD: ${{ secrets.RELAWAN_PASSWORD }}
+          PLAYWRIGHT_JSON_OUTPUT_NAME: results-${{ matrix.workers }}w.json
         run: >
-          npx playwright test
+          pnpm exec playwright test
           --project=chromium
-          --workers=${{ inputs.workers }}
-          --shard=${{ matrix.shardIndex }}/${{ inputs.shards }}
+          --workers=${{ matrix.workers }}
           --retries=0
-          --reporter=blob,list
+          --reporter=html,json,list
+          ${RETEST_GREP:+--grep "$RETEST_GREP"}
+          "src/tests/auth/"
+          "src/tests/basic/"
+          "src/tests/daftar kader/"
+          "src/tests/dashboard/"
+          "src/tests/data relawan/"
+          "src/tests/dokumen/"
+          "src/tests/log/aktifitas/"
+          "src/tests/manajemen opd/"
+          "src/tests/profil/"
+          "src/tests/riwayat relawan/"
+          "src/tests/saran hotline/"
+          "src/tests/stastistik/"
+          "src/tests/surat keputusan/"
+          "src/tests/security/sqlInjection"
 
       - name: Catat waktu selesai
         if: always()
-        run: echo "Selesai shard ${{ matrix.shardIndex }}: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        run: |
+          echo "| Selesai (UTC) | $(date -u +%Y-%m-%dT%H:%M:%SZ) |" >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: blob-report-${{ matrix.shardIndex }}
-          path: blob-report
-          retention-days: 30
-
-  merge-report:
-    if: always()
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.branch }}
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-
-      - run: npm ci
-
-      - uses: actions/download-artifact@v4
-        with:
-          path: all-blob-reports
-          pattern: blob-report-*
-          merge-multiple: true
-
-      - name: Gabungkan laporan HTML
-        run: npx playwright merge-reports --reporter=html ./all-blob-reports
-
-      - name: Gabungkan laporan JSON
-        run: PLAYWRIGHT_JSON_OUTPUT_NAME=results.json npx playwright merge-reports --reporter=json ./all-blob-reports
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report-gabungan
+          name: report-${{ matrix.workers }}w
           path: |
-            playwright-report
-            results.json
+            playwright-report/
+            results-${{ matrix.workers }}w.json
           retention-days: 30

@@ -582,11 +582,14 @@ for (const role of roles) {
       for (const searchCase of searchCases) {
         test(`${searchCase.id} ${role.label} ${searchCase.title}`, async ({ page }) => {
           const totalAwal = await totalKader(page);
+          // Kader tanpa PIC tampil "-" di kolom PIC, jadi PIC diambil dari baris
+          // pertama yang PIC-nya terisi
           const baris = {
             nama: (await nilaiKolom(page, role.kolom.nama))[0],
-            pic: (await nilaiKolom(page, role.kolom.pic))[0],
+            pic: (await nilaiKolom(page, role.kolom.pic)).find((pic) => pic !== "-") ?? "-",
           };
           const keyword = searchCase.kata(baris);
+          expect(keyword, "Tidak ada kader dengan PIC terisi untuk diuji").not.toBe("-");
 
           // Pencarian berjalan saat mengetik (onChange), bukan saat menekan Enter
           await fillThink(searchField(page), keyword);
@@ -638,7 +641,10 @@ for (const role of roles) {
 
       // Informasi PIC aktif dan tombol penggantinya
       await expect(page.getByRole("heading", { name: "Informasi PIC Aktif" })).toBeVisible();
-      await expect(detailPICValue(page, "Nama PIC")).toHaveText(pic);
+      // Kader tanpa PIC tampil "-" di tabel, tetapi "Belum ada PIC" di Detail
+      await expect(detailPICValue(page, "Nama PIC")).toHaveText(
+        pic === "-" ? "Belum ada PIC" : pic,
+      );
       await expect(page.getByRole("button", { name: "Ganti PIC" })).toBeEnabled();
 
       // Tombol simpan baru aktif setelah ada perubahan

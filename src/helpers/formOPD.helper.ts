@@ -25,7 +25,8 @@ function generateSafeOPDName(): string {
 export const buildOPDData = (): OPDData => ({
   "NAMA OPD": `OPD ${generateSafeOPDName()}`,
   STATUS: "Aktif",
-  ALAMAT: faker.location.streetAddress() + ", Yogyakarta",
+  // Apostrof (mis. "O'Conner") ditolak REGEX ALAMAT_VALID
+  ALAMAT: faker.location.streetAddress().replace(/'/g, "") + ", Yogyakarta",
   PIC: faker.person.fullName(),
   "NIK PIC": faker.number.bigInt({ min: 1000000000000000n, max: 9999999999999999n }).toString(),
   KONTAK: `08${faker.string.numeric(10)}`,

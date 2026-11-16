@@ -228,11 +228,12 @@ UNTUK SETIAP peran DALAM {Super Admin, Admin OPD} LAKUKAN
         PASTIKAN tabel tampil
     AKHIR TEST
 
-    // Pencarian: kata kunci diambil dari baris pertama tabel
+    // Pencarian: kata kunci diambil dari baris pertama tabel; nama PIC
+    // dari baris pertama yang PIC-nya terisi (bukan "-")
     kasusCari ← {id, kataKunci, adaHasil}
         {"TCDK.14", nama kader, ya}
         {"TCDK.15", 8 huruf pertama nama kader, ya}            // EP
-        {"TCDK.16", nama PIC, ya}                              // EP
+        {"TCDK.16", nama PIC terisi pertama, ya}               // EP
         {"TCDK.17", nama kader huruf besar, ya}                // EP
         {"TCDK.18", nama kader huruf kecil, ya}                // EP
         {"TCDK.19", "Kader", ya}                               // EP
@@ -240,6 +241,7 @@ UNTUK SETIAP peran DALAM {Super Admin, Admin OPD} LAKUKAN
         {"TCDK.21", "@#$%^&*()", tidak}                        // EP
     UNTUK SETIAP k DALAM kasusCari LAKUKAN
         TEST "<k.id> Pencarian kader"
+            PASTIKAN k.kataKunci ≠ "-" (ada kader dengan PIC terisi)
             ISI kolom pencarian dengan k.kataKunci; TUNGGU THINK_TIME
             JIKA k.adaHasil MAKA
                 PASTIKAN setiap baris memuat k.kataKunci pada nama
@@ -263,6 +265,7 @@ UNTUK SETIAP peran DALAM {Super Admin, Admin OPD} LAKUKAN
         KLIK tombol "Detail" baris pertama;   TUNGGU THINK_TIME
         PASTIKAN judul "Detail Kader" tampil (maks LOAD_TIME)
         PASTIKAN nama kader dan nama PIC sesuai baris pertama
+            (PIC "-" di tabel tampil "Belum ada PIC" di Detail)
         PASTIKAN field OPD nonaktif; "Ganti PIC" aktif
         PASTIKAN tombol "Simpan Perubahan" nonaktif
         ISI "Deskripsi" dengan "Deskripsi uji perubahan"

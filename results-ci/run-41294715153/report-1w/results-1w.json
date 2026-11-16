@@ -1,0 +1,748 @@
+{
+  "config": {
+    "argv": [
+      "/opt/hostedtoolcache/node/20.20.2/x64/bin/node",
+      "/home/runner/work/frontend_bappeda/frontend_bappeda/node_modules/.pnpm/@playwright+test@1.64.1/node_modules/@playwright/test/cli.js",
+      "test",
+      "--project=chromium",
+      "--workers=1",
+      "--retries=0",
+      "--reporter=html,json,list",
+      "--grep",
+      "TCDK\\.10 |TCDK\\.16 |TCDK\\.23 |TCHR\\.2 |TCHR\\.22",
+      "src/tests/auth/",
+      "src/tests/basic/",
+      "src/tests/daftar kader/",
+      "src/tests/dashboard/",
+      "src/tests/data relawan/",
+      "src/tests/dokumen/",
+      "src/tests/log/aktifitas/",
+      "src/tests/manajemen opd/",
+      "src/tests/profil/",
+      "src/tests/riwayat relawan/",
+      "src/tests/saran hotline/",
+      "src/tests/stastistik/",
+      "src/tests/surat keputusan/",
+      "src/tests/security/sqlInjection"
+    ],
+    "configFile": "/home/runner/work/frontend_bappeda/frontend_bappeda/playwright.config.ts",
+    "rootDir": "/home/runner/work/frontend_bappeda/frontend_bappeda/src/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "ci": {
+        "commitHref": "https://github.com/jonathanwijayaa/frontend_bappeda/commit/0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+        "commitHash": "0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+        "buildHref": "https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/41294715153"
+      },
+      "gitCommit": {
+        "shortHash": "0ee2cac",
+        "hash": "0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+        "subject": "ci: tambah mode retest lewat .github/retest-grep.txt",
+        "body": "ci: tambah mode retest lewat .github/retest-grep.txt\n\nBila file berisi pola, workflow hanya menjalankan test yang judulnya cocok (--grep). Diisi dengan TC yang diperbaiki setelah run #41236813261: TCDK.10, TCDK.16, TCDK.23, TCHR.2, TCHR.22.\n",
+        "author": {
+          "name": "Yudistira Adiyoga",
+          "email": "yudistira.adiyoga@gmail.com",
+          "time": 1793525781000
+        },
+        "committer": {
+          "name": "Yudistira Adiyoga",
+          "email": "yudistira.adiyoga@gmail.com",
+          "time": 1793525781000
+        },
+        "branch": "ci/playwright-regression"
+      },
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/jonathanwijayaa/frontend_bappeda/commit/0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+            "commitHash": "0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+            "buildHref": "https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/41294715153"
+          },
+          "gitCommit": {
+            "shortHash": "0ee2cac",
+            "hash": "0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+            "subject": "ci: tambah mode retest lewat .github/retest-grep.txt",
+            "body": "ci: tambah mode retest lewat .github/retest-grep.txt\n\nBila file berisi pola, workflow hanya menjalankan test yang judulnya cocok (--grep). Diisi dengan TC yang diperbaiki setelah run #41236813261: TCDK.10, TCDK.16, TCDK.23, TCHR.2, TCHR.22.\n",
+            "author": {
+              "name": "Yudistira Adiyoga",
+              "email": "yudistira.adiyoga@gmail.com",
+              "time": 1793525781000
+            },
+            "committer": {
+              "name": "Yudistira Adiyoga",
+              "email": "yudistira.adiyoga@gmail.com",
+              "time": 1793525781000
+            },
+            "branch": "ci/playwright-regression"
+          },
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "/home/runner/work/frontend_bappeda/frontend_bappeda/src/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      },
+      {
+        "outputDir": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/jonathanwijayaa/frontend_bappeda/commit/0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+            "commitHash": "0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+            "buildHref": "https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/41294715153"
+          },
+          "gitCommit": {
+            "shortHash": "0ee2cac",
+            "hash": "0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+            "subject": "ci: tambah mode retest lewat .github/retest-grep.txt",
+            "body": "ci: tambah mode retest lewat .github/retest-grep.txt\n\nBila file berisi pola, workflow hanya menjalankan test yang judulnya cocok (--grep). Diisi dengan TC yang diperbaiki setelah run #41236813261: TCDK.10, TCDK.16, TCDK.23, TCHR.2, TCHR.22.\n",
+            "author": {
+              "name": "Yudistira Adiyoga",
+              "email": "yudistira.adiyoga@gmail.com",
+              "time": 1793525781000
+            },
+            "committer": {
+              "name": "Yudistira Adiyoga",
+              "email": "yudistira.adiyoga@gmail.com",
+              "time": 1793525781000
+            },
+            "branch": "ci/playwright-regression"
+          },
+          "actualWorkers": 1
+        },
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "/home/runner/work/frontend_bappeda/frontend_bappeda/src/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      },
+      {
+        "outputDir": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/jonathanwijayaa/frontend_bappeda/commit/0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+            "commitHash": "0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+            "buildHref": "https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/41294715153"
+          },
+          "gitCommit": {
+            "shortHash": "0ee2cac",
+            "hash": "0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+            "subject": "ci: tambah mode retest lewat .github/retest-grep.txt",
+            "body": "ci: tambah mode retest lewat .github/retest-grep.txt\n\nBila file berisi pola, workflow hanya menjalankan test yang judulnya cocok (--grep). Diisi dengan TC yang diperbaiki setelah run #41236813261: TCDK.10, TCDK.16, TCDK.23, TCHR.2, TCHR.22.\n",
+            "author": {
+              "name": "Yudistira Adiyoga",
+              "email": "yudistira.adiyoga@gmail.com",
+              "time": 1793525781000
+            },
+            "committer": {
+              "name": "Yudistira Adiyoga",
+              "email": "yudistira.adiyoga@gmail.com",
+              "time": 1793525781000
+            },
+            "branch": "ci/playwright-regression"
+          },
+          "actualWorkers": 1
+        },
+        "id": "webkit",
+        "name": "webkit",
+        "testDir": "/home/runner/work/frontend_bappeda/frontend_bappeda/src/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "ci": {
+            "commitHref": "https://github.com/jonathanwijayaa/frontend_bappeda/commit/0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+            "commitHash": "0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+            "buildHref": "https://github.com/jonathanwijayaa/frontend_bappeda/actions/runs/41294715153"
+          },
+          "gitCommit": {
+            "shortHash": "0ee2cac",
+            "hash": "0ee2cacf5a85c8885580ea9d0c8ffaeed854be82",
+            "subject": "ci: tambah mode retest lewat .github/retest-grep.txt",
+            "body": "ci: tambah mode retest lewat .github/retest-grep.txt\n\nBila file berisi pola, workflow hanya menjalankan test yang judulnya cocok (--grep). Diisi dengan TC yang diperbaiki setelah run #41236813261: TCDK.10, TCDK.16, TCDK.23, TCHR.2, TCHR.22.\n",
+            "author": {
+              "name": "Yudistira Adiyoga",
+              "email": "yudistira.adiyoga@gmail.com",
+              "time": 1793525781000
+            },
+            "committer": {
+              "name": "Yudistira Adiyoga",
+              "email": "yudistira.adiyoga@gmail.com",
+              "time": 1793525781000
+            },
+            "branch": "ci/playwright-regression"
+          },
+          "actualWorkers": 1
+        },
+        "name": "chromium",
+        "testDir": "/home/runner/work/frontend_bappeda/frontend_bappeda/src/tests",
+        "snapshotDir": "/home/runner/work/frontend_bappeda/frontend_bappeda/src/tests",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 120000,
+        "use": {
+          "actionTimeout": 10000,
+          "navigationTimeout": 10000,
+          "screenshot": "on",
+          "trace": "retain-on-failure",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.8078.4 Safari/537.36",
+          "viewport": {
+            "width": 1280,
+            "height": 720
+          },
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium"
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chromium"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "html"
+      ],
+      [
+        "json"
+      ],
+      [
+        "list"
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.64.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "daftar kader/daftarKader.spec.ts",
+      "file": "daftar kader/daftarKader.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Daftar Kader - Super Admin",
+          "file": "daftar kader/daftarKader.spec.ts",
+          "line": 76,
+          "column": 8,
+          "specs": [
+            {
+              "title": "TCDK.10 Super Admin upload Kader data excel file",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 12267,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T09:49:21.459Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results/daftar kader-daftarKader-D-f1a35-pload-Kader-data-excel-file-chromium/test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "be526952445b036298c5-f0b6e6907e2491689d95",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 458,
+              "column": 5
+            },
+            {
+              "title": "TCDK.23 Super Admin access Kader detail",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8339,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T09:49:41.491Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results/daftar kader-daftarKader-D-57f35-r-Admin-access-Kader-detail-chromium/test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "be526952445b036298c5-6964f8c08c8a60fc4b0a",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 631,
+              "column": 5
+            }
+          ],
+          "suites": [
+            {
+              "title": "TCDK.14-21 Super Admin Search Bar",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 528,
+              "column": 10,
+              "specs": [
+                {
+                  "title": "TCDK.16 Super Admin input PIC name in search bar",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 120000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 6992,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-11-01T09:49:34.476Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results/daftar kader-daftarKader-D-aa221-nput-PIC-name-in-search-bar-chromium/test-finished-1.png"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "be526952445b036298c5-0f6fe9afe48559a0901d",
+                  "file": "daftar kader/daftarKader.spec.ts",
+                  "line": 583,
+                  "column": 9
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Daftar Kader - OPD",
+          "file": "daftar kader/daftarKader.spec.ts",
+          "line": 76,
+          "column": 8,
+          "specs": [
+            {
+              "title": "TCDK.10 OPD upload Kader data excel file",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10659,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T09:49:49.858Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results/daftar kader-daftarKader-D-7c61b-pload-Kader-data-excel-file-chromium/test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "be526952445b036298c5-3b24b360c439de13bc3b",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 458,
+              "column": 5
+            },
+            {
+              "title": "TCDK.23 OPD access Kader detail",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8323,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T09:50:07.524Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results/daftar kader-daftarKader-D-3a2c2--23-OPD-access-Kader-detail-chromium/test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "be526952445b036298c5-e50eb4abe73c32e1e262",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 631,
+              "column": 5
+            }
+          ],
+          "suites": [
+            {
+              "title": "TCDK.14-21 OPD Search Bar",
+              "file": "daftar kader/daftarKader.spec.ts",
+              "line": 528,
+              "column": 10,
+              "specs": [
+                {
+                  "title": "TCDK.16 OPD input PIC name in search bar",
+                  "ok": true,
+                  "tags": [],
+                  "tests": [
+                    {
+                      "timeout": 120000,
+                      "annotations": [],
+                      "expectedStatus": "passed",
+                      "projectId": "chromium",
+                      "projectName": "chromium",
+                      "results": [
+                        {
+                          "workerIndex": 0,
+                          "parallelIndex": 0,
+                          "status": "passed",
+                          "duration": 6945,
+                          "errors": [],
+                          "stdout": [],
+                          "stderr": [],
+                          "retry": 0,
+                          "startTime": "2026-11-01T09:50:00.549Z",
+                          "annotations": [],
+                          "attachments": [
+                            {
+                              "name": "screenshot",
+                              "contentType": "image/png",
+                              "path": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results/daftar kader-daftarKader-D-76df0-nput-PIC-name-in-search-bar-chromium/test-finished-1.png"
+                            }
+                          ]
+                        }
+                      ],
+                      "status": "expected"
+                    }
+                  ],
+                  "id": "be526952445b036298c5-a24670ca8aaae94e5f92",
+                  "file": "daftar kader/daftarKader.spec.ts",
+                  "line": 583,
+                  "column": 9
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "riwayat relawan/riwayatRelawan.spec.ts",
+      "file": "riwayat relawan/riwayatRelawan.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Riwayat Relawan - Super Admin",
+          "file": "riwayat relawan/riwayatRelawan.spec.ts",
+          "line": 186,
+          "column": 8,
+          "specs": [
+            {
+              "title": "TCHR.2 Super Admin filter by Nama Kader",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10693,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T09:50:15.895Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results/riwayat relawan-riwayatRel-73873--Admin-filter-by-Nama-Kader-chromium/test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "769236d2b158da37109f-8bb54caf05567eb405b0",
+              "file": "riwayat relawan/riwayatRelawan.spec.ts",
+              "line": 226,
+              "column": 5
+            },
+            {
+              "title": "TCHR.22 Super Admin views the detail modal contents",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8200,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T09:50:26.610Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results/riwayat relawan-riwayatRel-3468a-s-the-detail-modal-contents-chromium/test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "769236d2b158da37109f-b6cda5b7aab175f6f3da",
+              "file": "riwayat relawan/riwayatRelawan.spec.ts",
+              "line": 520,
+              "column": 5
+            }
+          ]
+        },
+        {
+          "title": "Riwayat Relawan - OPD",
+          "file": "riwayat relawan/riwayatRelawan.spec.ts",
+          "line": 186,
+          "column": 8,
+          "specs": [
+            {
+              "title": "TCHR.2 OPD filter by Nama Kader",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10781,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T09:50:34.835Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results/riwayat relawan-riwayatRel-33dbd--2-OPD-filter-by-Nama-Kader-chromium/test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "769236d2b158da37109f-5c7dc398c5bcd3d8e947",
+              "file": "riwayat relawan/riwayatRelawan.spec.ts",
+              "line": 226,
+              "column": 5
+            },
+            {
+              "title": "TCHR.22 OPD views the detail modal contents",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 8401,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-11-01T09:50:45.639Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "/home/runner/work/frontend_bappeda/frontend_bappeda/test-results/riwayat relawan-riwayatRel-75ea2-s-the-detail-modal-contents-chromium/test-finished-1.png"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "769236d2b158da37109f-23046354df770c974e4f",
+              "file": "riwayat relawan/riwayatRelawan.spec.ts",
+              "line": 520,
+              "column": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-01T09:49:18.827Z",
+    "duration": 95353.97300000001,
+    "expected": 10,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
