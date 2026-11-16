@@ -23,7 +23,7 @@ import { parseErrorMessage } from "../utils/parseErrorMessage";
 import { exportToPDF } from "../utils/exportToPDF";
 import { toTitleCase } from "../utils/formatText";
 import { REGEX_PATTERNS } from "../utils/regex";
-import { useUpdateRelawan, useDeletePenugasan } from "../hooks/relawan/useRelawanMutations";
+import { useUpdateRelawan, useDeletePenugasan, useBulkRelawan } from "../hooks/relawan/useRelawanMutations";
 
 const DataRelawan: React.FC = () => {
   const { isOPD, isSuperAdmin, user } = useAuth();
@@ -62,6 +62,19 @@ const DataRelawan: React.FC = () => {
   // Mutations
   const updateRelawan = useUpdateRelawan(!!isSuperAdmin);
   const deletePenugasan = useDeletePenugasan(!!isSuperAdmin);
+  const bulkRelawan = useBulkRelawan(!!isSuperAdmin);
+
+  const handleExcelUploadConfirm = (data: unknown[]) => {
+    bulkRelawan.mutate(data, {
+      onError: (e: unknown) =>
+        setToast({ message: parseErrorMessage(e, "Gagal mengimpor data relawan dari Excel"), type: "error" }),
+      onSuccess: (d: any) => {
+        setToast({ message: d.message || "Data relawan berhasil diimpor", type: "success" });
+        setIsUploadModalOpen(false);
+        qc.invalidateQueries({ queryKey: RELAWAN_KEYS.all });
+      },
+    });
+  };
 
   // Options & Kader Cache
   // kaderOptionsByOpdId: keyed by opd_id (for caching)
@@ -388,7 +401,7 @@ const DataRelawan: React.FC = () => {
       <UploadExcelModal
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
-        onConfirm={async () => {}}
+        onConfirm={handleExcelUploadConfirm}
         title="Unggah Data Relawan"
         templateName="Data Relawan"
         dataType="relawan"
