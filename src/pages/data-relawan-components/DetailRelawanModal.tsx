@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Plus } from "lucide-react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import Select from "../../components/ui/Select";
@@ -16,6 +16,7 @@ interface DetailRelawanModalProps {
   relawan: RelawanData | null;
   isOPD: boolean;
   userOpdName?: string;
+  userOpdId?: number;
   opdOptions: AutoOption[];
   kemantrenOptions: AutoOption[];
   kelurahanOptions: AutoOption[];
@@ -40,6 +41,7 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
   relawan,
   isOPD,
   userOpdName,
+  userOpdId,
   opdOptions,
   kemantrenOptions,
   kelurahanOptions,
@@ -97,29 +99,84 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
     return null;
   };
 
+  // ── Effect 1: Reset form data HANYA ketika relawan berbeda (ganti baris tabel)
+  // Tidak boleh bergantung pada isOPD/userOpdName karena perubahan state kaderOptions
+  // di parent (DataRelawan) dapat memicu re-render yang mengubah referensi prop-prop
+  // tersebut, dan itu akan me-reset form saat user sedang mengedit.
   useEffect(() => {
-    if (relawan) {
-      const assigns = Array.isArray(relawan.assignments) ? relawan.assignments : [];
-      setDetailFormData({
-        alamat: relawan.alamat || "-",
-        assignments: assigns,
-        jenisKelamin: (relawan.jenisKelamin as "L" | "P") || "L",
-        kelurahan: relawan.kelurahan || "-",
-        kemantren: relawan.kemantren || "-",
-        namaRelawan: relawan.namaLengkap || "",
-        nik: relawan.nik || "",
-        no_hp: relawan.no_hp || "-",
-      });
-      setIsEditMode(false);
+    if (!relawan) return;
+    const assigns = Array.isArray(relawan.assignments) ? relawan.assignments : [];
+    setDetailFormData({
+      alamat: relawan.alamat || "-",
+      assignments: assigns,
+      jenisKelamin: (relawan.jenisKelamin as "L" | "P") || "L",
+      kelurahan: relawan.kelurahan || "-",
+      kemantren: relawan.kemantren || "-",
+      namaRelawan: relawan.namaLengkap || "",
+      nik: relawan.nik || "",
+      no_hp: relawan.no_hp || "-",
+    });
+    setIsEditMode(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relawan?.relawan_id ?? relawan?.nik]);
 
-      // Pre-fetch kader options for each assignment
-      assigns.forEach((assign, idx) => {
-        if (assign.opd || isOPD) {
-          onOpdChangeAssignment(idx, assign.opd || userOpdName || "");
-        }
-      });
+  // ── Effect 2: Pre-fetch kader options setiap kali relawan (atau konteks OPD) berubah
+  // Dipisah agar tidak ikut mereset form data.
+  useEffect(() => {
+    if (!relawan) return;
+    const assigns = Array.isArray(relawan.assignments) ? relawan.assignments : [];
+    assigns.forEach((assign, idx) => {
+      if (assign.opd || isOPD) {
+        onOpdChangeAssignment(idx, assign.opd || userOpdName || "");
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [relawan?.relawan_id ?? relawan?.nik, isOPD, userOpdName]);
+
+  const handleAddAssignment = () => {
+    const newIndex = detailFormData.assignments.length;
+    const newOpdName = isOPD ? userOpdName || "" : "";
+    const newOpdId = isOPD ? (userOpdId || 0) : 0;
+
+    setDetailFormData((prev) => ({
+      ...prev,
+      assignments: [
+        ...prev.assignments,
+        {
+          id: `new-${Date.now()}`,
+          detail: "",
+          kader: "",
+          kader_id: null,
+          nomorSK: "",
+          opd: newOpdName,
+          opd_id: newOpdId,
+          penugasan: "",
+          peran: "",
+          skId: "",
+          status_keaktifan: "Aktif",
+        } as Assignment,
+      ],
+    }));
+
+    if (isOPD || newOpdName) {
+      onOpdChangeAssignment(newIndex, newOpdName);
     }
-  }, [relawan, isOPD, userOpdName]);
+  };
+
+  const handleRemoveAssignment = (index: number) => {
+    const assignment = detailFormData.assignments[index];
+    const penugasanId = parseInt(assignment.id) || 0;
+
+    if (penugasanId > 0) {
+      // Penugasan sudah tersimpan di DB → panggil delete ke backend
+      onDeletePenugasan(penugasanId, index);
+    }
+    // Hapus dari local state (baik penugasan baru maupun yang sudah di-DB)
+    setDetailFormData((prev) => ({
+      ...prev,
+      assignments: prev.assignments.filter((_, i) => i !== index),
+    }));
+  };
 
   const handleOpdChange = (index: number, opdName: string) => {
     const match = opdOptions.find((o) => o.label.toLowerCase() === opdName.toLowerCase());
@@ -287,6 +344,9 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
 
         <div className="pt-4 border-t border-gray-200">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Daftar Penugasan:</h3>
+          {detailFormData.assignments.length === 0 && (
+            <p className="text-sm text-gray-400 italic mb-4">Belum ada data penugasan.</p>
+          )}
           {detailFormData.assignments.map((assignment, index) => (
             <AssignmentFormFields
               key={assignment.id}
@@ -306,9 +366,16 @@ export const DetailRelawanModal: React.FC<DetailRelawanModalProps> = ({
               }}
               onOpdChange={handleOpdChange}
               onKaderChange={handleKaderChange}
-              onRemove={() => onDeletePenugasan(parseInt(assignment.id) || 0, index)}
+              onRemove={handleRemoveAssignment}
             />
           ))}
+          {isEditMode && (
+            <div className="flex justify-center mt-4">
+              <Button type="button" variant="primary" size="sm" onClick={handleAddAssignment}>
+                <Plus size={16} /> Tambah Data Penugasan
+              </Button>
+            </div>
+          )}
         </div>
 
         {isEditMode && (

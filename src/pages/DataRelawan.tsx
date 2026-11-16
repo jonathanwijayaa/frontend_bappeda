@@ -193,9 +193,27 @@ const DataRelawan: React.FC = () => {
     if (!selectedRelawan || !selectedRelawan.relawan_id) return;
     setIsSavingEdit(true);
     try {
+      // Backend di updateRelawan cek assign.penugasan_id:
+      //   - ada penugasan_id → UPDATE penugasan yang sudah ada
+      //   - tidak ada       → INSERT penugasan baru
+      //
+      // Frontend menyimpan id penugasan lama di field `id` (bukan `penugasan_id`),
+      // sehingga perlu dipetakan agar backend mengenalinya.
+      const mappedAssignments = (detailFormData.assignments as any[]).map((a) => {
+        const isNew = typeof a.id === "string" && a.id.startsWith("new-");
+        return {
+          ...a,
+          // Penugasan lama: id-nya numerik string → jadikan penugasan_id
+          // Penugasan baru: id "new-..." → tidak punya penugasan_id (backend INSERT)
+          penugasan_id: isNew ? undefined : parseInt(a.id, 10) || undefined,
+          // Backend membaca `statusKeaktifan` (camelCase)
+          statusKeaktifan: a.status_keaktifan || a.statusKeaktifan || "Aktif",
+        };
+      });
+
       const payload = {
         alamat_ktp: detailFormData.alamat,
-        assignments: detailFormData.assignments,
+        assignments: mappedAssignments,
         jenis_kelamin: detailFormData.jenisKelamin,
         kelurahan: detailFormData.kelurahan,
         kemantren: detailFormData.kemantren,
@@ -215,7 +233,7 @@ const DataRelawan: React.FC = () => {
 
   const handleDeletePenugasan = async (penugasanId: number, _index: number) => {
     if (!penugasanId || penugasanId <= 0) {
-      // Penugasan baru (belum tersimpan di DB), cukup hapus dari state lokal
+      // Penugasan baru (belum tersimpan di DB) — hapus hanya dari local state di modal
       return;
     }
     try {
@@ -331,6 +349,7 @@ const DataRelawan: React.FC = () => {
         relawan={selectedRelawan}
         isOPD={isOPD}
         userOpdName={user?.nama_opd}
+        userOpdId={user?.opd_id}
         opdOptions={opdOptions}
         kemantrenOptions={kemantrenOptions}
         kelurahanOptions={kelurahanOptions}
