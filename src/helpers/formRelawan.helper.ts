@@ -86,7 +86,9 @@ const KELURAHAN_MAP: Record<string, string[]> = {
     "Gowongan",
   ],
   Kotagede: [
-    "Prenggan",
+    // HARUS DITAMBAHKAN: "Prenggan" (ada di KELURAHAN_MAP tapi tidak ada di KELURAHAN_LIST)
+    // "Prenggan",
+    // HARUS DITAMBAHKAN: "Purbayan" (ada di KELURAHAN_MAP tapi tidak ada di KELURAHAN_LIST)
     // "Purbayan",
     "Rejowinangun",
   ],
