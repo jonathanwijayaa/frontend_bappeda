@@ -15,9 +15,6 @@ export const loginBAPPEDA = async ({ NIK, page, password }: ILoginBAPPEDA) => {
   await fillThink(nikField, NIK);
   await fillThink(page.getByRole("textbox", { name: "Password" }), password);
 
-  // Tombol "Masuk" nonaktif selama request login sebelumnya diproses. Dulu klik
-  // dilewati diam-diam bila tombolnya nonaktif, sehingga test gagal jauh di
-  // langkah berikutnya tanpa jejak; sekarang ditunggu sampai aktif lalu diklik.
   const loginButton = page.getByRole("button", { name: "Masuk" });
   await waitLoaded(loginButton, 'tombol "Masuk" aktif', "enabled");
   await clickThink(loginButton);
