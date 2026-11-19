@@ -12,7 +12,7 @@ import {
 } from "@/helpers/timing.helper";
 
 const OPD_LIST = [
-  // "Opd Demo",
+  "Opd Demo",
   "Dinas Kesehatan",
   "Dinas Perhubungan",
   "Dinas Sosial Tenaga Kerja dan Transmigrasi",
@@ -22,7 +22,7 @@ const OPD_LIST = [
 ];
 
 const KADER_MAP: Record<string, string[]> = {
-  // "Opd Demo": ["Kader Demo", "Kader Yvonne Keeling"],
+  "Opd Demo": ["Kader Demo"],
 
   "Dinas Kesehatan": ["KADER KESEHATAN"],
 
