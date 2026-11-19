@@ -26,11 +26,11 @@ const KADER_MAP: Record<string, string[]> = {
 
   "Dinas Kesehatan": ["KADER KESEHATAN"],
 
-  "Dinas Perhubungan": ["Kader Perhubungan C", "Kader Perhubungan D"],
+  "Dinas Perhubungan": ["Kader Perhubungan A", "Kader Perhubungan B"],
 
   "Dinas Sosial Tenaga Kerja dan Transmigrasi": ["PORDAM", "TAGANA", "IPSM"],
 
-  "Dinas Pariwisata": ["Kader Pariwisata"],
+  "Dinas Pariwisata": ["Kader Pariwisata A", "Kader Pariwisata B"],
 
   "Dinas Kebudayaan": ["Kader Kebudayaan A", "Kader Kebudayaan B"],
 
@@ -87,7 +87,7 @@ const KELURAHAN_MAP: Record<string, string[]> = {
   ],
   Kotagede: [
     "Prenggan",
-    "Purbayan",
+    // "Purbayan",
     "Rejowinangun",
   ],
   Kraton: [
